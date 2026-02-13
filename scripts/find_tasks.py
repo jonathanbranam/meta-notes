@@ -53,7 +53,7 @@ def main() -> None:
 
     for filepath, tasks in files_with_tasks:
         wiki_link: str = get_wiki_link(filepath, root_dir)
-        print(f"## {wiki_link}")
+        print(f"## {wiki_link}\n")
 
         for task in tasks:
             print(task.text)
