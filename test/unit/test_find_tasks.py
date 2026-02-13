@@ -12,12 +12,14 @@ from pathlib import Path
 
 import pytest
 
-# Add scripts directory to path to import the module
+# Add scripts directory to path to import the modules
 scripts_dir = Path(__file__).parent.parent.parent / 'scripts'
 sys.path.insert(0, str(scripts_dir))
 
 import find_tasks
-from find_tasks import Task, TaskStatus
+import tasks as tasks_module
+import notes as notes_module
+from tasks import Task, TaskStatus
 
 
 class TestFindTasksInFile:
@@ -28,7 +30,7 @@ class TestFindTasksInFile:
         test_file = tmp_path / "test.md"
         test_file.write_text("- [ ] Simple task\n")
 
-        tasks = find_tasks.find_tasks_in_file(str(test_file))
+        tasks = tasks_module.find_tasks_in_file(str(test_file))
 
         assert len(tasks) == 1
         assert tasks[0].line_no == 1
@@ -41,7 +43,7 @@ class TestFindTasksInFile:
         test_file = tmp_path / "test.md"
         test_file.write_text("- [x] Completed task\n")
 
-        tasks = find_tasks.find_tasks_in_file(str(test_file))
+        tasks = tasks_module.find_tasks_in_file(str(test_file))
 
         assert len(tasks) == 1
         assert tasks[0].status == TaskStatus.COMPLETED
@@ -51,7 +53,7 @@ class TestFindTasksInFile:
         test_file = tmp_path / "test.md"
         test_file.write_text("- [X] Completed task\n")
 
-        tasks = find_tasks.find_tasks_in_file(str(test_file))
+        tasks = tasks_module.find_tasks_in_file(str(test_file))
 
         assert len(tasks) == 1
         assert tasks[0].status == TaskStatus.COMPLETED
@@ -61,7 +63,7 @@ class TestFindTasksInFile:
         test_file = tmp_path / "test.md"
         test_file.write_text("- [>] Rescheduled task\n")
 
-        tasks = find_tasks.find_tasks_in_file(str(test_file))
+        tasks = tasks_module.find_tasks_in_file(str(test_file))
 
         assert len(tasks) == 1
         assert tasks[0].status == TaskStatus.RESCHEDULED
@@ -71,7 +73,7 @@ class TestFindTasksInFile:
         test_file = tmp_path / "test.md"
         test_file.write_text("- [-] Canceled task\n")
 
-        tasks = find_tasks.find_tasks_in_file(str(test_file))
+        tasks = tasks_module.find_tasks_in_file(str(test_file))
 
         assert len(tasks) == 1
         assert tasks[0].status == TaskStatus.CANCELED
@@ -85,7 +87,7 @@ class TestFindTasksInFile:
 """
         test_file.write_text(content)
 
-        tasks = find_tasks.find_tasks_in_file(str(test_file))
+        tasks = tasks_module.find_tasks_in_file(str(test_file))
 
         assert len(tasks) == 3
         assert "Dash bullet" in tasks[0].text
@@ -109,7 +111,7 @@ More text.
 """
         test_file.write_text(content)
 
-        tasks = find_tasks.find_tasks_in_file(str(test_file))
+        tasks = tasks_module.find_tasks_in_file(str(test_file))
 
         assert len(tasks) == 3
         assert "First task" in tasks[0].text
@@ -126,7 +128,7 @@ More text.
 """
         test_file.write_text(content)
 
-        tasks = find_tasks.find_tasks_in_file(str(test_file))
+        tasks = tasks_module.find_tasks_in_file(str(test_file))
 
         assert len(tasks) == 4
 
@@ -142,7 +144,7 @@ Line 5
 """
         test_file.write_text(content)
 
-        tasks = find_tasks.find_tasks_in_file(str(test_file))
+        tasks = tasks_module.find_tasks_in_file(str(test_file))
 
         assert len(tasks) == 2
         assert tasks[0].line_no == 3
@@ -153,7 +155,7 @@ Line 5
         test_file = tmp_path / "test.md"
         test_file.write_text("")
 
-        tasks = find_tasks.find_tasks_in_file(str(test_file))
+        tasks = tasks_module.find_tasks_in_file(str(test_file))
 
         assert len(tasks) == 0
 
@@ -168,7 +170,7 @@ Just some text.
 """
         test_file.write_text(content)
 
-        tasks = find_tasks.find_tasks_in_file(str(test_file))
+        tasks = tasks_module.find_tasks_in_file(str(test_file))
 
         assert len(tasks) == 0
 
@@ -183,14 +185,14 @@ Just some text.
 """
         test_file.write_text(content)
 
-        tasks = find_tasks.find_tasks_in_file(str(test_file))
+        tasks = tasks_module.find_tasks_in_file(str(test_file))
 
         # Only the last one should match (it has proper format)
         assert len(tasks) == 1
 
     def test_nonexistent_file(self):
         """Test handling of nonexistent file."""
-        tasks = find_tasks.find_tasks_in_file("/nonexistent/file.md")
+        tasks = tasks_module.find_tasks_in_file("/nonexistent/file.md")
 
         assert len(tasks) == 0
 
@@ -199,7 +201,7 @@ Just some text.
         test_file = tmp_path / "test.md"
         test_file.write_text("- [x] Complete task\n")
 
-        tasks = find_tasks.find_tasks_in_file(str(test_file))
+        tasks = tasks_module.find_tasks_in_file(str(test_file))
 
         assert len(tasks) == 1
         task = tasks[0]
@@ -210,6 +212,114 @@ Just some text.
         assert isinstance(task.filename, str)
         assert isinstance(task.line_no, int)
 
+    def test_task_with_start_date(self, tmp_path):
+        """Test parsing task with start date."""
+        test_file = tmp_path / "test.md"
+        test_file.write_text("- [ ] Task with start 🛫 2026-02-13\n")
+
+        tasks = tasks_module.find_tasks_in_file(str(test_file))
+
+        assert len(tasks) == 1
+        assert tasks[0].start_date is not None
+        assert tasks[0].start_date.year == 2026
+        assert tasks[0].start_date.month == 2
+        assert tasks[0].start_date.day == 13
+        assert tasks[0].due_date is None
+        assert tasks[0].completed_date is None
+
+    def test_task_with_due_date_spiral_calendar(self, tmp_path):
+        """Test parsing task with due date using 🗓 emoji."""
+        test_file = tmp_path / "test.md"
+        test_file.write_text("- [ ] Task with due date 🗓 2026-03-15\n")
+
+        tasks = tasks_module.find_tasks_in_file(str(test_file))
+
+        assert len(tasks) == 1
+        assert tasks[0].due_date is not None
+        assert tasks[0].due_date.year == 2026
+        assert tasks[0].due_date.month == 3
+        assert tasks[0].due_date.day == 15
+        assert tasks[0].start_date is None
+        assert tasks[0].completed_date is None
+
+    def test_task_with_due_date_calendar(self, tmp_path):
+        """Test parsing task with due date using 📆 emoji."""
+        test_file = tmp_path / "test.md"
+        test_file.write_text("- [ ] Task with due date 📆 2026-04-20\n")
+
+        tasks = tasks_module.find_tasks_in_file(str(test_file))
+
+        assert len(tasks) == 1
+        assert tasks[0].due_date is not None
+        assert tasks[0].due_date.year == 2026
+        assert tasks[0].due_date.month == 4
+        assert tasks[0].due_date.day == 20
+
+    def test_task_with_completed_date(self, tmp_path):
+        """Test parsing task with completed date."""
+        test_file = tmp_path / "test.md"
+        test_file.write_text("- [x] Completed task ✅ 2026-02-10\n")
+
+        tasks = tasks_module.find_tasks_in_file(str(test_file))
+
+        assert len(tasks) == 1
+        assert tasks[0].completed_date is not None
+        assert tasks[0].completed_date.year == 2026
+        assert tasks[0].completed_date.month == 2
+        assert tasks[0].completed_date.day == 10
+
+    def test_task_with_all_dates(self, tmp_path):
+        """Test parsing task with all three dates."""
+        test_file = tmp_path / "test.md"
+        test_file.write_text("- [x] Full task 🛫 2026-02-01 🗓 2026-02-28 ✅ 2026-02-15\n")
+
+        tasks = tasks_module.find_tasks_in_file(str(test_file))
+
+        assert len(tasks) == 1
+        task = tasks[0]
+        assert task.start_date.year == 2026
+        assert task.start_date.month == 2
+        assert task.start_date.day == 1
+        assert task.due_date.year == 2026
+        assert task.due_date.month == 2
+        assert task.due_date.day == 28
+        assert task.completed_date.year == 2026
+        assert task.completed_date.month == 2
+        assert task.completed_date.day == 15
+
+    def test_task_with_no_dates(self, tmp_path):
+        """Test task without any dates."""
+        test_file = tmp_path / "test.md"
+        test_file.write_text("- [ ] Simple task without dates\n")
+
+        tasks = tasks_module.find_tasks_in_file(str(test_file))
+
+        assert len(tasks) == 1
+        assert tasks[0].start_date is None
+        assert tasks[0].due_date is None
+        assert tasks[0].completed_date is None
+
+    def test_task_with_invalid_date_format(self, tmp_path):
+        """Test task with invalid date format."""
+        test_file = tmp_path / "test.md"
+        test_file.write_text("- [ ] Task with bad date 🛫 02-13-2026\n")
+
+        tasks = tasks_module.find_tasks_in_file(str(test_file))
+
+        assert len(tasks) == 1
+        assert tasks[0].start_date is None
+
+    def test_task_with_date_no_whitespace(self, tmp_path):
+        """Test task with date immediately after emoji."""
+        test_file = tmp_path / "test.md"
+        test_file.write_text("- [ ] Task 🛫2026-02-13\n")
+
+        tasks = tasks_module.find_tasks_in_file(str(test_file))
+
+        assert len(tasks) == 1
+        assert tasks[0].start_date is not None
+        assert tasks[0].start_date.day == 13
+
 
 class TestGetWikiLink:
     """Tests for get_wiki_link function."""
@@ -217,7 +327,7 @@ class TestGetWikiLink:
     def test_simple_filename(self, tmp_path):
         """Test wiki link for simple filename."""
         filepath = tmp_path / "test.md"
-        wiki_link = find_tasks.get_wiki_link(str(filepath), str(tmp_path))
+        wiki_link = notes_module.get_wiki_link(str(filepath), str(tmp_path))
 
         assert wiki_link == "[[test]]"
 
@@ -226,21 +336,21 @@ class TestGetWikiLink:
         subdir = tmp_path / "notes" / "work"
         filepath = subdir / "tasks.md"
 
-        wiki_link = find_tasks.get_wiki_link(str(filepath), str(tmp_path))
+        wiki_link = notes_module.get_wiki_link(str(filepath), str(tmp_path))
 
         assert wiki_link == "[[notes/work/tasks]]"
 
     def test_file_without_md_extension(self, tmp_path):
         """Test file without .md extension."""
         filepath = tmp_path / "test.txt"
-        wiki_link = find_tasks.get_wiki_link(str(filepath), str(tmp_path))
+        wiki_link = notes_module.get_wiki_link(str(filepath), str(tmp_path))
 
         assert wiki_link == "[[test.txt]]"
 
     def test_file_in_root(self, tmp_path):
         """Test file in root directory."""
         filepath = tmp_path / "README.md"
-        wiki_link = find_tasks.get_wiki_link(str(filepath), str(tmp_path))
+        wiki_link = notes_module.get_wiki_link(str(filepath), str(tmp_path))
 
         assert wiki_link == "[[README]]"
 
@@ -252,7 +362,7 @@ class TestFindAllMarkdownFiles:
         """Test finding a single markdown file."""
         (tmp_path / "test.md").write_text("content")
 
-        files = find_tasks.find_all_markdown_files(str(tmp_path))
+        files = notes_module.find_all_markdown_files(str(tmp_path))
 
         assert len(files) == 1
         assert files[0].endswith("test.md")
@@ -263,7 +373,7 @@ class TestFindAllMarkdownFiles:
         (tmp_path / "file2.md").write_text("content")
         (tmp_path / "file3.md").write_text("content")
 
-        files = find_tasks.find_all_markdown_files(str(tmp_path))
+        files = notes_module.find_all_markdown_files(str(tmp_path))
 
         assert len(files) == 3
 
@@ -279,7 +389,7 @@ class TestFindAllMarkdownFiles:
         subdir2.mkdir()
         (subdir2 / "note2.md").write_text("content")
 
-        files = find_tasks.find_all_markdown_files(str(tmp_path))
+        files = notes_module.find_all_markdown_files(str(tmp_path))
 
         assert len(files) == 3
 
@@ -290,7 +400,7 @@ class TestFindAllMarkdownFiles:
         (tmp_path / "test.pdf").write_text("content")
         (tmp_path / "README").write_text("content")
 
-        files = find_tasks.find_all_markdown_files(str(tmp_path))
+        files = notes_module.find_all_markdown_files(str(tmp_path))
 
         assert len(files) == 1
         assert files[0].endswith(".md")
@@ -303,14 +413,14 @@ class TestFindAllMarkdownFiles:
         hidden_dir.mkdir()
         (hidden_dir / "hidden.md").write_text("content")
 
-        files = find_tasks.find_all_markdown_files(str(tmp_path))
+        files = notes_module.find_all_markdown_files(str(tmp_path))
 
         assert len(files) == 1
         assert ".hidden" not in files[0]
 
     def test_empty_directory(self, tmp_path):
         """Test empty directory returns no files."""
-        files = find_tasks.find_all_markdown_files(str(tmp_path))
+        files = notes_module.find_all_markdown_files(str(tmp_path))
 
         assert len(files) == 0
 
@@ -320,7 +430,7 @@ class TestFindAllMarkdownFiles:
         (tmp_path / "a.md").write_text("content")
         (tmp_path / "b.md").write_text("content")
 
-        files = find_tasks.find_all_markdown_files(str(tmp_path))
+        files = notes_module.find_all_markdown_files(str(tmp_path))
 
         filenames = [os.path.basename(f) for f in files]
         assert filenames == ["a.md", "b.md", "c.md"]
@@ -338,37 +448,150 @@ class TestTaskStatus:
         assert TaskStatus.OTHER.value == "other"
 
 
+class TestExtractDate:
+    """Tests for _extract_date function."""
+
+    def test_extract_start_date(self):
+        """Test extracting start date with 🛫 emoji."""
+        from datetime import date
+        text = "Task 🛫 2026-02-13 description"
+        result = tasks_module._extract_date(text, '🛫')
+        assert result == date(2026, 2, 13)
+
+    def test_extract_due_date_spiral(self):
+        """Test extracting due date with 🗓 emoji."""
+        from datetime import date
+        text = "Task 🗓 2026-03-15"
+        result = tasks_module._extract_date(text, '🗓')
+        assert result == date(2026, 3, 15)
+
+    def test_extract_due_date_calendar(self):
+        """Test extracting due date with 📆 emoji."""
+        from datetime import date
+        text = "Task 📆 2026-04-20"
+        result = tasks_module._extract_date(text, '📆')
+        assert result == date(2026, 4, 20)
+
+    def test_extract_completed_date(self):
+        """Test extracting completed date with ✅ emoji."""
+        from datetime import date
+        text = "Task ✅ 2026-02-10"
+        result = tasks_module._extract_date(text, '✅')
+        assert result == date(2026, 2, 10)
+
+    def test_extract_date_no_whitespace(self):
+        """Test extracting date without whitespace after emoji."""
+        from datetime import date
+        text = "Task 🛫2026-12-25"
+        result = tasks_module._extract_date(text, '🛫')
+        assert result == date(2026, 12, 25)
+
+    def test_extract_date_not_found(self):
+        """Test when emoji is not in text."""
+        text = "Task without date"
+        result = tasks_module._extract_date(text, '🛫')
+        assert result is None
+
+    def test_extract_date_invalid_format(self):
+        """Test with invalid date format."""
+        text = "Task 🛫 02-13-2026"
+        result = tasks_module._extract_date(text, '🛫')
+        assert result is None
+
+    def test_extract_date_invalid_date(self):
+        """Test with invalid date values."""
+        text = "Task 🛫 2026-13-45"
+        result = tasks_module._extract_date(text, '🛫')
+        assert result is None
+
+
+class TestParseTaskDates:
+    """Tests for _parse_task_dates function."""
+
+    def test_parse_all_dates(self):
+        """Test parsing all three dates."""
+        from datetime import date
+        text = "Task 🛫 2026-02-01 🗓 2026-02-28 ✅ 2026-02-15"
+        start, due, completed = tasks_module._parse_task_dates(text)
+        assert start == date(2026, 2, 1)
+        assert due == date(2026, 2, 28)
+        assert completed == date(2026, 2, 15)
+
+    def test_parse_only_start_date(self):
+        """Test parsing only start date."""
+        from datetime import date
+        text = "Task 🛫 2026-02-01"
+        start, due, completed = tasks_module._parse_task_dates(text)
+        assert start == date(2026, 2, 1)
+        assert due is None
+        assert completed is None
+
+    def test_parse_only_due_date_spiral(self):
+        """Test parsing only due date with 🗓."""
+        from datetime import date
+        text = "Task 🗓 2026-02-28"
+        start, due, completed = tasks_module._parse_task_dates(text)
+        assert start is None
+        assert due == date(2026, 2, 28)
+        assert completed is None
+
+    def test_parse_only_due_date_calendar(self):
+        """Test parsing only due date with 📆."""
+        from datetime import date
+        text = "Task 📆 2026-03-15"
+        start, due, completed = tasks_module._parse_task_dates(text)
+        assert start is None
+        assert due == date(2026, 3, 15)
+        assert completed is None
+
+    def test_parse_no_dates(self):
+        """Test parsing text with no dates."""
+        text = "Task without any dates"
+        start, due, completed = tasks_module._parse_task_dates(text)
+        assert start is None
+        assert due is None
+        assert completed is None
+
+    def test_parse_prefers_first_due_date_emoji(self):
+        """Test that 🗓 is preferred over 📆 if both present."""
+        from datetime import date
+        text = "Task 🗓 2026-02-28 📆 2026-03-15"
+        start, due, completed = tasks_module._parse_task_dates(text)
+        # Should use the first emoji found (🗓)
+        assert due == date(2026, 2, 28)
+
+
 class TestCharToStatus:
     """Tests for _char_to_status function."""
 
     def test_completed_lowercase(self):
         """Test completed status with lowercase x."""
-        assert find_tasks._char_to_status("x") == TaskStatus.COMPLETED
+        assert tasks_module._char_to_status("x") == TaskStatus.COMPLETED
 
     def test_completed_uppercase(self):
         """Test completed status with uppercase X."""
-        assert find_tasks._char_to_status("X") == TaskStatus.COMPLETED
+        assert tasks_module._char_to_status("X") == TaskStatus.COMPLETED
 
     def test_rescheduled(self):
         """Test rescheduled status."""
-        assert find_tasks._char_to_status(">") == TaskStatus.RESCHEDULED
+        assert tasks_module._char_to_status(">") == TaskStatus.RESCHEDULED
 
     def test_canceled(self):
         """Test canceled status."""
-        assert find_tasks._char_to_status("-") == TaskStatus.CANCELED
+        assert tasks_module._char_to_status("-") == TaskStatus.CANCELED
 
     def test_pending(self):
         """Test pending status."""
-        assert find_tasks._char_to_status(" ") == TaskStatus.PENDING
-        assert find_tasks._char_to_status(".") == TaskStatus.PENDING
-        assert find_tasks._char_to_status("o") == TaskStatus.PENDING
-        assert find_tasks._char_to_status("O") == TaskStatus.PENDING
-        assert find_tasks._char_to_status("/") == TaskStatus.PENDING
+        assert tasks_module._char_to_status(" ") == TaskStatus.PENDING
+        assert tasks_module._char_to_status(".") == TaskStatus.PENDING
+        assert tasks_module._char_to_status("o") == TaskStatus.PENDING
+        assert tasks_module._char_to_status("O") == TaskStatus.PENDING
+        assert tasks_module._char_to_status("/") == TaskStatus.PENDING
 
     def test_other_status(self):
         """Test other/unknown status."""
-        assert find_tasks._char_to_status("?") == TaskStatus.OTHER
-        assert find_tasks._char_to_status("!") == TaskStatus.OTHER
+        assert tasks_module._char_to_status("?") == TaskStatus.OTHER
+        assert tasks_module._char_to_status("!") == TaskStatus.OTHER
 
 
 class TestCategorizeStatus:
@@ -376,28 +599,28 @@ class TestCategorizeStatus:
 
     def test_completed_lowercase(self):
         """Test completed status with lowercase x."""
-        assert find_tasks.categorize_status("x") == "completed"
+        assert tasks_module.categorize_status("x") == "completed"
 
     def test_completed_uppercase(self):
         """Test completed status with uppercase X."""
-        assert find_tasks.categorize_status("X") == "completed"
+        assert tasks_module.categorize_status("X") == "completed"
 
     def test_rescheduled(self):
         """Test rescheduled status."""
-        assert find_tasks.categorize_status(">") == "rescheduled"
+        assert tasks_module.categorize_status(">") == "rescheduled"
 
     def test_canceled(self):
         """Test canceled status."""
-        assert find_tasks.categorize_status("-") == "canceled"
+        assert tasks_module.categorize_status("-") == "canceled"
 
     def test_pending(self):
         """Test pending status (space)."""
-        assert find_tasks.categorize_status(" ") == "pending"
+        assert tasks_module.categorize_status(" ") == "pending"
 
     def test_other_status(self):
         """Test other/unknown status."""
-        assert find_tasks.categorize_status("?") == "other"
-        assert find_tasks.categorize_status("!") == "other"
+        assert tasks_module.categorize_status("?") == "other"
+        assert tasks_module.categorize_status("!") == "other"
 
 
 class TestMainFunction:

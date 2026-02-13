@@ -7,10 +7,10 @@
   - [.] Task 4 many subtasks
     - [ ] Subtask
     - [ ] Subtask
-    - [ ] Subtask
+    - [ ] Subtask 🛫 2026-02-16 Tue
     - [X] Subtask
   - [O] Task 5 many subtasks
-    - [ ] Subtask
+    - [ ] Subtask 📆 2026-02-16 Tue
     - [X] Subtask
     - [X] Subtask
     - [X] Subtask
