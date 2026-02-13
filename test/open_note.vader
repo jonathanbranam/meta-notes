@@ -1,0 +1,211 @@
+" Tests for MetaNotesOpen command - opening wiki-style [[links]]
+
+Execute (Setup test environment):
+  " Create temporary directory structure for test notes
+  let g:test_root = tempname()
+  call mkdir(g:test_root . '/note/path', 'p')
+
+  " Create a sample note file
+  call writefile(['# Sample Note', '', 'This is a test note.'],
+        \ g:test_root . '/note/path/Filename.md')
+
+  " Store original directory and change to test root
+  let g:original_dir = getcwd()
+  execute 'cd' g:test_root
+
+Given markdown (Note with wiki-style link):
+  # My Notes
+
+  See related: [[note/path/Filename]]
+
+  More content here.
+
+Execute (Open note with cursor inside brackets):
+  " Position cursor inside the brackets (line 3, col 20)
+  call cursor(3, 20)
+
+  " Execute the MetaNotesOpen command
+  MetaNotesOpen
+
+  " Verify the correct file was opened
+  let expected_file = g:test_root . '/note/path/Filename.md'
+  let current_file = expand('%:p')
+
+  AssertEqual expected_file, current_file, 'Should open the correct note file'
+
+  " Verify we can read the content
+  AssertEqual '# Sample Note', getline(1), 'Should contain the note content'
+
+Execute (Open note with cursor on opening brackets):
+  " Return to the original buffer
+  execute 'edit' g:test_root . '/test.md'
+  call setline(1, ['# My Notes', '', 'See related: [[note/path/Filename]]'])
+
+  " Position cursor on the opening [[ (line 3, col 15)
+  call cursor(3, 15)
+
+  " Execute the MetaNotesOpen command
+  MetaNotesOpen
+
+  " Verify the correct file was opened
+  let expected_file = g:test_root . '/note/path/Filename.md'
+  let current_file = expand('%:p')
+
+  AssertEqual expected_file, current_file, 'Should open note even when cursor is on [['
+
+Execute (Open note with cursor on closing brackets):
+  " Return to the original buffer
+  execute 'edit' g:test_root . '/test.md'
+  call setline(1, ['# My Notes', '', 'See related: [[note/path/Filename]]'])
+
+  " Position cursor on the closing ]] (line 3, col 37)
+  call cursor(3, 37)
+
+  " Execute the MetaNotesOpen command
+  MetaNotesOpen
+
+  " Verify the correct file was opened
+  let expected_file = g:test_root . '/note/path/Filename.md'
+  let current_file = expand('%:p')
+
+  AssertEqual expected_file, current_file, 'Should open note even when cursor is on ]]'
+
+Execute (Create new note when file does not exist):
+  " Return to the original buffer
+  execute 'edit' g:test_root . '/test.md'
+  call setline(1, ['# My Notes', '', 'Link to new: [[project/new-feature]]'])
+
+  " Position cursor inside the brackets for non-existent note
+  call cursor(3, 20)
+
+  " Execute the MetaNotesOpen command
+  MetaNotesOpen
+
+  " Verify the correct file path was set
+  let expected_file = g:test_root . '/project/new-feature.md'
+  let current_file = expand('%:p')
+
+  AssertEqual expected_file, current_file, 'Should create buffer with correct path'
+
+  " Verify the buffer contains the header template
+  AssertEqual '# project/new-feature', getline(1), 'First line should be H1 with note path'
+  AssertEqual '', getline(2), 'Second line should be blank'
+
+  " Verify buffer is modified (not saved yet)
+  Assert &modified, 'Buffer should be marked as modified'
+
+  " Verify file doesn't exist on disk yet (just a buffer)
+  Assert !filereadable(expected_file), 'File should not exist on disk until saved'
+
+Execute (Create new note with deep nested path):
+  " Return to the original buffer
+  execute 'edit' g:test_root . '/test.md'
+  call setline(1, ['# My Notes', '', 'Deep link: [[area/health/fitness/workout-plan]]'])
+
+  " Position cursor inside the brackets
+  call cursor(3, 25)
+
+  " Execute the MetaNotesOpen command
+  MetaNotesOpen
+
+  " Verify the correct file path was set
+  let expected_file = g:test_root . '/area/health/fitness/workout-plan.md'
+  let current_file = expand('%:p')
+
+  AssertEqual expected_file, current_file, 'Should create buffer with deep nested path'
+
+  " Verify the header uses the full path
+  AssertEqual '# area/health/fitness/workout-plan', getline(1), 'Header should include full path'
+  AssertEqual '', getline(2), 'Second line should be blank'
+
+Execute (Error when cursor not in brackets - regular text):
+  " Return to the original buffer
+  execute 'edit' g:test_root . '/test.md'
+  call setline(1, ['# My Notes', '', 'This is regular text without any links.'])
+
+  " Store current buffer info
+  let original_buffer = bufnr('%')
+  let original_file = expand('%:p')
+
+  " Clear previous error message
+  let v:errmsg = ''
+
+  " Position cursor on regular text (line 3, col 10)
+  call cursor(3, 10)
+
+  " Execute the MetaNotesOpen command - should error
+  try
+    MetaNotesOpen
+  catch
+    " Command might throw an error, catch it
+  endtry
+
+  " Verify we're still in the same buffer
+  AssertEqual original_buffer, bufnr('%'), 'Should remain in same buffer'
+  AssertEqual original_file, expand('%:p'), 'Should not change file'
+
+  " Verify an error was reported
+  Assert v:errmsg != '', 'Should set an error message'
+
+Execute (Error when cursor outside brackets - before link):
+  " Return to the original buffer
+  execute 'edit' g:test_root . '/test.md'
+  call setline(1, ['# My Notes', '', 'See note: [[project/example]]'])
+
+  " Store current buffer info
+  let original_buffer = bufnr('%')
+
+  " Clear previous error message
+  let v:errmsg = ''
+
+  " Position cursor before the [[ (line 3, col 8 - on the space before [[)
+  call cursor(3, 8)
+
+  " Execute the MetaNotesOpen command - should error
+  try
+    MetaNotesOpen
+  catch
+  endtry
+
+  " Verify we're still in the same buffer
+  AssertEqual original_buffer, bufnr('%'), 'Should remain in same buffer when cursor outside brackets'
+
+  " Verify an error was reported
+  Assert v:errmsg != '', 'Should set an error message when not in brackets'
+
+Execute (Error when cursor after closing brackets):
+  " Return to the original buffer
+  execute 'edit' g:test_root . '/test.md'
+  call setline(1, ['# My Notes', '', 'See note: [[project/example]] here'])
+
+  " Store current buffer info
+  let original_buffer = bufnr('%')
+
+  " Clear previous error message
+  let v:errmsg = ''
+
+  " Position cursor after the ]] (line 3, col 33 - on the space after ]])
+  call cursor(3, 33)
+
+  " Execute the MetaNotesOpen command - should error
+  try
+    MetaNotesOpen
+  catch
+  endtry
+
+  " Verify we're still in the same buffer
+  AssertEqual original_buffer, bufnr('%'), 'Should remain in same buffer when cursor after brackets'
+
+  " Verify an error was reported
+  Assert v:errmsg != '', 'Should set an error message when cursor after brackets'
+
+Execute (Cleanup):
+  " Restore original directory
+  execute 'cd' g:original_dir
+
+  " Clean up test files
+  call delete(g:test_root, 'rf')
+
+  " Clean up variables
+  unlet g:test_root
+  unlet g:original_dir
