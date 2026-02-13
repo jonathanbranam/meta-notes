@@ -17,6 +17,7 @@ scripts_dir = Path(__file__).parent.parent.parent / 'scripts'
 sys.path.insert(0, str(scripts_dir))
 
 import find_tasks
+from find_tasks import Task, TaskStatus
 
 
 class TestFindTasksInFile:
@@ -30,9 +31,10 @@ class TestFindTasksInFile:
         tasks = find_tasks.find_tasks_in_file(str(test_file))
 
         assert len(tasks) == 1
-        assert tasks[0][0] == 1  # line number
-        assert tasks[0][1] == "- [ ] Simple task"
-        assert tasks[0][2] == " "  # status
+        assert tasks[0].line_no == 1
+        assert tasks[0].text == "- [ ] Simple task"
+        assert tasks[0].status == TaskStatus.PENDING
+        assert tasks[0].filename == str(test_file)
 
     def test_find_completed_task_lowercase_x(self, tmp_path):
         """Test finding completed task with lowercase x."""
@@ -42,7 +44,7 @@ class TestFindTasksInFile:
         tasks = find_tasks.find_tasks_in_file(str(test_file))
 
         assert len(tasks) == 1
-        assert tasks[0][2] == "x"
+        assert tasks[0].status == TaskStatus.COMPLETED
 
     def test_find_completed_task_uppercase_x(self, tmp_path):
         """Test finding completed task with uppercase X."""
@@ -52,7 +54,7 @@ class TestFindTasksInFile:
         tasks = find_tasks.find_tasks_in_file(str(test_file))
 
         assert len(tasks) == 1
-        assert tasks[0][2] == "X"
+        assert tasks[0].status == TaskStatus.COMPLETED
 
     def test_find_rescheduled_task(self, tmp_path):
         """Test finding rescheduled task."""
@@ -62,7 +64,7 @@ class TestFindTasksInFile:
         tasks = find_tasks.find_tasks_in_file(str(test_file))
 
         assert len(tasks) == 1
-        assert tasks[0][2] == ">"
+        assert tasks[0].status == TaskStatus.RESCHEDULED
 
     def test_find_canceled_task(self, tmp_path):
         """Test finding canceled task."""
@@ -72,7 +74,7 @@ class TestFindTasksInFile:
         tasks = find_tasks.find_tasks_in_file(str(test_file))
 
         assert len(tasks) == 1
-        assert tasks[0][2] == "-"
+        assert tasks[0].status == TaskStatus.CANCELED
 
     def test_all_bullet_types(self, tmp_path):
         """Test all three bullet types (-, *, +)."""
@@ -86,9 +88,9 @@ class TestFindTasksInFile:
         tasks = find_tasks.find_tasks_in_file(str(test_file))
 
         assert len(tasks) == 3
-        assert "Dash bullet" in tasks[0][1]
-        assert "Asterisk bullet" in tasks[1][1]
-        assert "Plus bullet" in tasks[2][1]
+        assert "Dash bullet" in tasks[0].text
+        assert "Asterisk bullet" in tasks[1].text
+        assert "Plus bullet" in tasks[2].text
 
     def test_mixed_content(self, tmp_path):
         """Test file with tasks and non-task content."""
@@ -110,9 +112,9 @@ More text.
         tasks = find_tasks.find_tasks_in_file(str(test_file))
 
         assert len(tasks) == 3
-        assert "First task" in tasks[0][1]
-        assert "Second task" in tasks[1][1]
-        assert "Third task" in tasks[2][1]
+        assert "First task" in tasks[0].text
+        assert "Second task" in tasks[1].text
+        assert "Third task" in tasks[2].text
 
     def test_indented_tasks(self, tmp_path):
         """Test tasks with various indentation levels."""
@@ -143,8 +145,8 @@ Line 5
         tasks = find_tasks.find_tasks_in_file(str(test_file))
 
         assert len(tasks) == 2
-        assert tasks[0][0] == 3
-        assert tasks[1][0] == 6
+        assert tasks[0].line_no == 3
+        assert tasks[1].line_no == 6
 
     def test_empty_file(self, tmp_path):
         """Test empty file returns no tasks."""
@@ -191,6 +193,22 @@ Just some text.
         tasks = find_tasks.find_tasks_in_file("/nonexistent/file.md")
 
         assert len(tasks) == 0
+
+    def test_task_attributes(self, tmp_path):
+        """Test that Task object has all required attributes."""
+        test_file = tmp_path / "test.md"
+        test_file.write_text("- [x] Complete task\n")
+
+        tasks = find_tasks.find_tasks_in_file(str(test_file))
+
+        assert len(tasks) == 1
+        task = tasks[0]
+
+        # Check all attributes exist and have correct types
+        assert isinstance(task.text, str)
+        assert isinstance(task.status, TaskStatus)
+        assert isinstance(task.filename, str)
+        assert isinstance(task.line_no, int)
 
 
 class TestGetWikiLink:
@@ -306,6 +324,51 @@ class TestFindAllMarkdownFiles:
 
         filenames = [os.path.basename(f) for f in files]
         assert filenames == ["a.md", "b.md", "c.md"]
+
+
+class TestTaskStatus:
+    """Tests for TaskStatus enum."""
+
+    def test_enum_values(self):
+        """Test that TaskStatus enum has all expected values."""
+        assert TaskStatus.PENDING.value == "pending"
+        assert TaskStatus.COMPLETED.value == "completed"
+        assert TaskStatus.RESCHEDULED.value == "rescheduled"
+        assert TaskStatus.CANCELED.value == "canceled"
+        assert TaskStatus.OTHER.value == "other"
+
+
+class TestCharToStatus:
+    """Tests for _char_to_status function."""
+
+    def test_completed_lowercase(self):
+        """Test completed status with lowercase x."""
+        assert find_tasks._char_to_status("x") == TaskStatus.COMPLETED
+
+    def test_completed_uppercase(self):
+        """Test completed status with uppercase X."""
+        assert find_tasks._char_to_status("X") == TaskStatus.COMPLETED
+
+    def test_rescheduled(self):
+        """Test rescheduled status."""
+        assert find_tasks._char_to_status(">") == TaskStatus.RESCHEDULED
+
+    def test_canceled(self):
+        """Test canceled status."""
+        assert find_tasks._char_to_status("-") == TaskStatus.CANCELED
+
+    def test_pending(self):
+        """Test pending status."""
+        assert find_tasks._char_to_status(" ") == TaskStatus.PENDING
+        assert find_tasks._char_to_status(".") == TaskStatus.PENDING
+        assert find_tasks._char_to_status("o") == TaskStatus.PENDING
+        assert find_tasks._char_to_status("O") == TaskStatus.PENDING
+        assert find_tasks._char_to_status("/") == TaskStatus.PENDING
+
+    def test_other_status(self):
+        """Test other/unknown status."""
+        assert find_tasks._char_to_status("?") == TaskStatus.OTHER
+        assert find_tasks._char_to_status("!") == TaskStatus.OTHER
 
 
 class TestCategorizeStatus:
