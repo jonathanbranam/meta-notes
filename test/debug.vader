@@ -1,0 +1,33 @@
+Execute (Debug test):
+  let g:test_root = tempname()
+  call mkdir(g:test_root . '/note/path', 'p')
+  call writefile(['# Sample Note', '', 'Content'], g:test_root . '/note/path/Filename.md')
+
+  let g:original_dir = getcwd()
+  execute 'cd' g:test_root
+
+  echo "Test root: " . g:test_root
+  echo "Current dir: " . getcwd()
+  echo "File exists: " . filereadable('note/path/Filename.md')
+
+Given markdown:
+  # My Notes
+
+  See related: [[note/path/Filename]]
+
+  More content.
+
+Execute (Test open):
+  call cursor(3, 20)
+  echo "Line: " . getline('.')
+  echo "Col: " . col('.')
+
+  MetaNotesOpen
+
+  echo "Opened file: " . expand('%:p')
+  echo "Expected: " . g:test_root . '/note/path/Filename.md'
+  echo "Match: " . (expand('%:p') == g:test_root . '/note/path/Filename.md')
+
+Execute (Cleanup):
+  execute 'cd' g:original_dir
+  call delete(g:test_root, 'rf')

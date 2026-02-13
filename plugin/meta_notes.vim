@@ -31,10 +31,8 @@ endfunction
 " Testing: Run vader tests
 command! TestMetaNotes execute 'Vader' s:plugin_root . '/test/*.vader'
 
-" TODO: Add your main plugin commands here
-" Example:
-" command! ParaNewProject call meta_notes#para#NewProject()
-" command! ParaNewNote call meta_notes#para#NewNote()
+" Main plugin commands
+command! MetaNotesOpen call meta_notes#notes#Open()
 
 " Restore cpo
 let &cpo = s:save_cpo

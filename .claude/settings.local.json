@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(vim:*)",
+      "Bash(./run_tests.sh:*)"
     ]
   }
 }

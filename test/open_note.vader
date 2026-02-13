@@ -1,5 +1,9 @@
 " Tests for MetaNotesOpen command - opening wiki-style [[links]]
 
+Execute (Load plugin):
+  " Ensure plugin is loaded
+  runtime plugin/meta_notes.vim
+
 Execute (Setup test environment):
   " Create temporary directory structure for test notes
   let g:test_root = tempname()
@@ -21,6 +25,9 @@ Given markdown (Note with wiki-style link):
   More content here.
 
 Execute (Open note with cursor inside brackets):
+  " Ensure we're in the test directory
+  execute 'cd' g:test_root
+
   " Position cursor inside the brackets (line 3, col 20)
   call cursor(3, 20)
 
@@ -28,8 +35,8 @@ Execute (Open note with cursor inside brackets):
   MetaNotesOpen
 
   " Verify the correct file was opened
-  let expected_file = g:test_root . '/note/path/Filename.md'
-  let current_file = expand('%:p')
+  let expected_file = resolve(g:test_root . '/note/path/Filename.md')
+  let current_file = resolve(expand('%:p'))
 
   AssertEqual expected_file, current_file, 'Should open the correct note file'
 
@@ -37,6 +44,9 @@ Execute (Open note with cursor inside brackets):
   AssertEqual '# Sample Note', getline(1), 'Should contain the note content'
 
 Execute (Open note with cursor on opening brackets):
+  " Ensure we're in the test directory
+  execute 'cd' g:test_root
+
   " Return to the original buffer
   execute 'edit' g:test_root . '/test.md'
   call setline(1, ['# My Notes', '', 'See related: [[note/path/Filename]]'])
@@ -48,12 +58,15 @@ Execute (Open note with cursor on opening brackets):
   MetaNotesOpen
 
   " Verify the correct file was opened
-  let expected_file = g:test_root . '/note/path/Filename.md'
-  let current_file = expand('%:p')
+  let expected_file = resolve(g:test_root . '/note/path/Filename.md')
+  let current_file = resolve(expand('%:p'))
 
   AssertEqual expected_file, current_file, 'Should open note even when cursor is on [['
 
 Execute (Open note with cursor on closing brackets):
+  " Ensure we're in the test directory
+  execute 'cd' g:test_root
+
   " Return to the original buffer
   execute 'edit' g:test_root . '/test.md'
   call setline(1, ['# My Notes', '', 'See related: [[note/path/Filename]]'])
@@ -65,12 +78,15 @@ Execute (Open note with cursor on closing brackets):
   MetaNotesOpen
 
   " Verify the correct file was opened
-  let expected_file = g:test_root . '/note/path/Filename.md'
-  let current_file = expand('%:p')
+  let expected_file = resolve(g:test_root . '/note/path/Filename.md')
+  let current_file = resolve(expand('%:p'))
 
   AssertEqual expected_file, current_file, 'Should open note even when cursor is on ]]'
 
 Execute (Create new note when file does not exist):
+  " Ensure we're in the test directory
+  execute 'cd' g:test_root
+
   " Return to the original buffer
   execute 'edit' g:test_root . '/test.md'
   call setline(1, ['# My Notes', '', 'Link to new: [[project/new-feature]]'])
@@ -82,8 +98,8 @@ Execute (Create new note when file does not exist):
   MetaNotesOpen
 
   " Verify the correct file path was set
-  let expected_file = g:test_root . '/project/new-feature.md'
-  let current_file = expand('%:p')
+  let expected_file = resolve(g:test_root . '/project/new-feature.md')
+  let current_file = resolve(expand('%:p'))
 
   AssertEqual expected_file, current_file, 'Should create buffer with correct path'
 
@@ -98,6 +114,9 @@ Execute (Create new note when file does not exist):
   Assert !filereadable(expected_file), 'File should not exist on disk until saved'
 
 Execute (Create new note with deep nested path):
+  " Ensure we're in the test directory
+  execute 'cd' g:test_root
+
   " Return to the original buffer
   execute 'edit' g:test_root . '/test.md'
   call setline(1, ['# My Notes', '', 'Deep link: [[area/health/fitness/workout-plan]]'])
@@ -109,8 +128,8 @@ Execute (Create new note with deep nested path):
   MetaNotesOpen
 
   " Verify the correct file path was set
-  let expected_file = g:test_root . '/area/health/fitness/workout-plan.md'
-  let current_file = expand('%:p')
+  let expected_file = resolve(g:test_root . '/area/health/fitness/workout-plan.md')
+  let current_file = resolve(expand('%:p'))
 
   AssertEqual expected_file, current_file, 'Should create buffer with deep nested path'
 
@@ -134,11 +153,7 @@ Execute (Error when cursor not in brackets - regular text):
   call cursor(3, 10)
 
   " Execute the MetaNotesOpen command - should error
-  try
-    MetaNotesOpen
-  catch
-    " Command might throw an error, catch it
-  endtry
+  silent! MetaNotesOpen
 
   " Verify we're still in the same buffer
   AssertEqual original_buffer, bufnr('%'), 'Should remain in same buffer'
@@ -162,10 +177,7 @@ Execute (Error when cursor outside brackets - before link):
   call cursor(3, 8)
 
   " Execute the MetaNotesOpen command - should error
-  try
-    MetaNotesOpen
-  catch
-  endtry
+  silent! MetaNotesOpen
 
   " Verify we're still in the same buffer
   AssertEqual original_buffer, bufnr('%'), 'Should remain in same buffer when cursor outside brackets'
@@ -188,10 +200,7 @@ Execute (Error when cursor after closing brackets):
   call cursor(3, 33)
 
   " Execute the MetaNotesOpen command - should error
-  try
-    MetaNotesOpen
-  catch
-  endtry
+  silent! MetaNotesOpen
 
   " Verify we're still in the same buffer
   AssertEqual original_buffer, bufnr('%'), 'Should remain in same buffer when cursor after brackets'

@@ -1,0 +1,23 @@
+Execute (Simple setup):
+  let g:test_root = tempname()
+  call mkdir(g:test_root . '/note', 'p')
+  call writefile(['# Sample'], g:test_root . '/note/test.md')
+  execute 'cd' g:test_root
+  echomsg "Test root: " . g:test_root
+  echomsg "CWD: " . getcwd()
+  echomsg "File exists: " . filereadable('note/test.md')
+
+Given markdown:
+  Link: [[note/test]]
+
+Execute (Test open):
+  execute 'cd' g:test_root
+  call cursor(1, 10)
+
+  MetaNotesOpen
+
+  let expected = g:test_root . '/note/test.md'
+  let actual = expand('%:p')
+
+  AssertEqual expected, actual
+  AssertEqual '# Sample', getline(1)
