@@ -74,4 +74,84 @@ Execute (Test case):
 
 See existing tests in `test/` for more examples.
 
+## Python Unit Testing
+
+Python scripts in the `scripts/` directory use pytest for unit testing.
+
+### Test Organization
+
+Tests are organized in `test/unit/` with one test file per module:
+- `test/unit/test_tasks.py` - Tests for `scripts/tasks.py`
+- `test/unit/test_notes.py` - Tests for `scripts/notes.py`
+- `test/unit/test_find_tasks.py` - Tests for `scripts/find_tasks.py`
+
+### Test Style
+
+**Use bare functions instead of test classes:**
+
+```python
+# Good - bare functions with descriptive names
+def test_find_tasks_in_file_simple_uncompleted_task(tmp_path):
+    """Test finding a simple uncompleted task."""
+    test_file = tmp_path / "test.md"
+    test_file.write_text("- [ ] Simple task\n")
+
+    tasks = tasks_module.find_tasks_in_file(str(test_file))
+
+    assert len(tasks) == 1
+    assert tasks[0].status == TaskStatus.PENDING
+
+# Bad - don't use test classes
+class TestFindTasksInFile:  # Avoid this
+    def test_simple_uncompleted_task(self, tmp_path):
+        ...
+```
+
+### Naming Conventions
+
+Test functions should follow this pattern:
+- `test_<module>_<function>_<scenario>`
+- Example: `test_find_tasks_in_file_with_start_date`
+
+Use comments to group related tests:
+```python
+# Tests for find_tasks_in_file function
+
+def test_find_tasks_in_file_simple_task(tmp_path):
+    ...
+
+def test_find_tasks_in_file_with_dates(tmp_path):
+    ...
+
+
+# Tests for _extract_date function
+
+def test_extract_date_valid(tmp_path):
+    ...
+```
+
+### Running Python Tests
+
+```bash
+# Run all Python unit tests
+pipenv run pytest test/unit/
+
+# Run specific test file
+pipenv run pytest test/unit/test_tasks.py
+
+# Run with verbose output
+pipenv run pytest test/unit/ -v
+
+# Run specific test function
+pipenv run pytest test/unit/test_tasks.py::test_find_tasks_in_file_simple_uncompleted_task
+```
+
+### Benefits of Bare Functions
+
+- **Simplicity** - No unnecessary class structure
+- **Clarity** - Function names are fully descriptive
+- **Discovery** - pytest finds all `test_*` functions automatically
+- **Flexibility** - No `self` parameter needed, cleaner fixtures
+- **Focus** - Tests are organized by file, not by class hierarchy
+
 
