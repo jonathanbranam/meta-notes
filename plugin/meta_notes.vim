@@ -38,4 +38,4 @@ command! TestMetaNotes execute 'Vader' s:plugin_root . '/test/*.vader'
 
 " Restore cpo
 let &cpo = s:save_cpo
-unset s:save_cpo
+unlet s:save_cpo
