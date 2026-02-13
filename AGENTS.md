@@ -21,7 +21,7 @@ mkdir -p ~/.vim/pack/testing/start
 git clone https://github.com/junegunn/vader.vim.git ~/.vim/pack/testing/start/vader.vim
 ```
 
-### Running Tests
+### Running Vimscript plugin Tests
 
 Use the provided test script:
 

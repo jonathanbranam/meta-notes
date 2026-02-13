@@ -82,3 +82,83 @@ function! meta_notes#notes#Open() abort
     call cursor(3, 1)
   endif
 endfunction
+
+" Calculate the Monday of the current week
+" Args:
+"   date_str: Optional date string in YYYY-mm-dd format (defaults to today)
+" Returns:
+"   Date string in YYYY-mm-dd format representing the Monday of the week
+" Example:
+"   For Friday 2026-02-13, returns '2026-02-09' (previous Monday)
+"   For Monday 2026-02-09, returns '2026-02-09' (same day)
+function! meta_notes#notes#CalculateWeekStart(...) abort
+  let l:date_str = a:0 > 0 ? a:1 : strftime('%Y-%m-%d')
+
+  " Find the plugin root directory (where scripts/ is located)
+  " Try to use the current file's directory, or fall back to current working directory
+  let l:plugin_root = expand('<sfile>:p:h:h:h')
+  if !isdirectory(l:plugin_root . '/scripts')
+    let l:plugin_root = getcwd()
+  endif
+
+  let l:script_path = l:plugin_root . '/scripts/notes.py'
+
+  let l:python_cmd = printf('python3 -c "import sys; sys.path.insert(0, ''%s''); from datetime import date; from notes import calculate_week_start; print(calculate_week_start(date.fromisoformat(''%s'')).isoformat())"',
+        \ l:plugin_root . '/scripts',
+        \ l:date_str)
+
+  return trim(system(l:python_cmd))
+endfunction
+
+" Calculate the Sunday of the current week
+" Args:
+"   date_str: Optional date string in YYYY-mm-dd format (defaults to today)
+" Returns:
+"   Date string in YYYY-mm-dd format representing the Sunday of the week
+" Example:
+"   For Friday 2026-02-13, returns '2026-02-15' (next Sunday)
+"   For Sunday 2026-02-15, returns '2026-02-15' (same day)
+function! meta_notes#notes#CalculateWeekEnd(...) abort
+  let l:date_str = a:0 > 0 ? a:1 : strftime('%Y-%m-%d')
+
+  " Find the plugin root directory (where scripts/ is located)
+  " Try to use the current file's directory, or fall back to current working directory
+  let l:plugin_root = expand('<sfile>:p:h:h:h')
+  if !isdirectory(l:plugin_root . '/scripts')
+    let l:plugin_root = getcwd()
+  endif
+
+  let l:script_path = l:plugin_root . '/scripts/notes.py'
+
+  let l:python_cmd = printf('python3 -c "import sys; sys.path.insert(0, ''%s''); from datetime import date; from notes import calculate_week_end; print(calculate_week_end(date.fromisoformat(''%s'')).isoformat())"',
+        \ l:plugin_root . '/scripts',
+        \ l:date_str)
+
+  return trim(system(l:python_cmd))
+endfunction
+
+" Open the week plan file for the current week
+" Week plan files are located at: resource/plan/week/Plan YYYY-mm-dd
+" where the date is the Monday of the current week
+" Args:
+"   date_str: Optional date string in YYYY-mm-dd format (defaults to today)
+" Example:
+"   For any day in the week of Feb 9-15, 2026, opens 'resource/plan/week/Plan 2026-02-09.md'
+function! meta_notes#notes#OpenWeekPlan(...) abort
+  let l:date_str = a:0 > 0 ? a:1 : strftime('%Y-%m-%d')
+  let l:week_start = meta_notes#notes#CalculateWeekStart(l:date_str)
+
+  " Construct the week plan file path
+  let l:filepath = 'resource/plan/week/Plan ' . l:week_start . '.md'
+
+  " Check if file exists
+  if filereadable(l:filepath)
+    " Open existing file
+    execute 'edit!' fnameescape(l:filepath)
+  else
+    " Create new file with header template
+    execute 'edit!' fnameescape(l:filepath)
+    call setline(1, ['# Week Plan - ' . l:week_start, ''])
+    call cursor(3, 1)
+  endif
+endfunction
