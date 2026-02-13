@@ -71,62 +71,6 @@ def test_filter_incomplete_tasks_empty_list():
     assert len(result) == 0
 
 
-# Tests for calculate_week_end function
-
-def test_calculate_week_end_on_sunday():
-    """Test that Sunday returns the same day."""
-    # 2026-02-15 is a Sunday
-    today = date(2026, 2, 15)
-
-    result = find_tasks.calculate_week_end(today)
-
-    assert result == today
-
-
-def test_calculate_week_end_on_monday():
-    """Test that Monday returns the following Sunday."""
-    # 2026-02-09 is a Monday
-    today = date(2026, 2, 9)
-    expected = date(2026, 2, 15)  # Following Sunday
-
-    result = find_tasks.calculate_week_end(today)
-
-    assert result == expected
-
-
-def test_calculate_week_end_on_tuesday():
-    """Test that Tuesday returns the following Sunday."""
-    # 2026-02-10 is a Tuesday
-    today = date(2026, 2, 10)
-    expected = date(2026, 2, 15)  # Following Sunday
-
-    result = find_tasks.calculate_week_end(today)
-
-    assert result == expected
-
-
-def test_calculate_week_end_on_saturday():
-    """Test that Saturday returns the next day (Sunday)."""
-    # 2026-02-14 is a Saturday
-    today = date(2026, 2, 14)
-    expected = date(2026, 2, 15)  # Next day (Sunday)
-
-    result = find_tasks.calculate_week_end(today)
-
-    assert result == expected
-
-
-def test_calculate_week_end_midweek():
-    """Test calculation from middle of the week (Thursday)."""
-    # 2026-02-12 is a Thursday
-    today = date(2026, 2, 12)
-    expected = date(2026, 2, 15)  # Following Sunday
-
-    result = find_tasks.calculate_week_end(today)
-
-    assert result == expected
-
-
 # Tests for get_task_relevant_date function
 
 def test_get_task_relevant_date_with_due_date():

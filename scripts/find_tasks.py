@@ -18,7 +18,7 @@ import sys
 from datetime import date, timedelta
 
 from tasks import Task, TaskStatus, find_tasks_in_file, filter_tasks_by_status
-from notes import get_wiki_link, find_all_markdown_files
+from notes import get_wiki_link, find_all_markdown_files, calculate_week_end
 
 
 def filter_incomplete_tasks(tasks: list[Task]) -> list[Task]:
@@ -32,29 +32,6 @@ def filter_incomplete_tasks(tasks: list[Task]) -> list[Task]:
         List containing only tasks with INCOMPLETE status.
     """
     return filter_tasks_by_status(tasks, [TaskStatus.INCOMPLETE])
-
-
-def calculate_week_end(today: date) -> date:
-    """
-    Calculate the end of the current week (Sunday).
-
-    Week runs Monday through Sunday. If today is Sunday, returns today.
-    Otherwise, returns the date of the following Sunday.
-
-    Args:
-        today: The reference date.
-
-    Returns:
-        The date of the current or next Sunday.
-    """
-    # weekday() returns 0 for Monday, 6 for Sunday
-    days_until_sunday = 6 - today.weekday()
-
-    if days_until_sunday < 0:
-        # This shouldn't happen since 6 - weekday() is always >= 0
-        days_until_sunday = 0
-
-    return today + timedelta(days=days_until_sunday)
 
 
 def get_task_relevant_date(task: Task) -> date | None:

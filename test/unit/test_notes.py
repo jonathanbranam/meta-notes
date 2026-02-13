@@ -7,6 +7,7 @@ Tests all notes and wiki link management functions.
 import os
 import sys
 from pathlib import Path
+from datetime import date
 
 import pytest
 
@@ -137,3 +138,115 @@ def test_find_all_markdown_files_are_sorted(tmp_path):
 
     filenames = [os.path.basename(f) for f in files]
     assert filenames == ["a.md", "b.md", "c.md"]
+
+
+# Tests for calculate_week_start function
+
+def test_calculate_week_start_on_monday():
+    """Test that Monday returns the same day."""
+    # 2026-02-09 is a Monday
+    today = date(2026, 2, 9)
+
+    result = notes_module.calculate_week_start(today)
+
+    assert result == today
+
+
+def test_calculate_week_start_on_tuesday():
+    """Test that Tuesday returns the previous Monday."""
+    # 2026-02-10 is a Tuesday
+    today = date(2026, 2, 10)
+    expected = date(2026, 2, 9)  # Previous Monday
+
+    result = notes_module.calculate_week_start(today)
+
+    assert result == expected
+
+
+def test_calculate_week_start_on_sunday():
+    """Test that Sunday returns the previous Monday."""
+    # 2026-02-15 is a Sunday
+    today = date(2026, 2, 15)
+    expected = date(2026, 2, 9)  # Previous Monday
+
+    result = notes_module.calculate_week_start(today)
+
+    assert result == expected
+
+
+def test_calculate_week_start_on_saturday():
+    """Test that Saturday returns the previous Monday."""
+    # 2026-02-14 is a Saturday
+    today = date(2026, 2, 14)
+    expected = date(2026, 2, 9)  # Previous Monday (5 days ago)
+
+    result = notes_module.calculate_week_start(today)
+
+    assert result == expected
+
+
+def test_calculate_week_start_midweek():
+    """Test calculation from middle of the week (Thursday)."""
+    # 2026-02-12 is a Thursday
+    today = date(2026, 2, 12)
+    expected = date(2026, 2, 9)  # Previous Monday
+
+    result = notes_module.calculate_week_start(today)
+
+    assert result == expected
+
+
+# Tests for calculate_week_end function
+
+def test_calculate_week_end_on_sunday():
+    """Test that Sunday returns the same day."""
+    # 2026-02-15 is a Sunday
+    today = date(2026, 2, 15)
+
+    result = notes_module.calculate_week_end(today)
+
+    assert result == today
+
+
+def test_calculate_week_end_on_monday():
+    """Test that Monday returns the following Sunday."""
+    # 2026-02-09 is a Monday
+    today = date(2026, 2, 9)
+    expected = date(2026, 2, 15)  # Following Sunday
+
+    result = notes_module.calculate_week_end(today)
+
+    assert result == expected
+
+
+def test_calculate_week_end_on_tuesday():
+    """Test that Tuesday returns the following Sunday."""
+    # 2026-02-10 is a Tuesday
+    today = date(2026, 2, 10)
+    expected = date(2026, 2, 15)  # Following Sunday
+
+    result = notes_module.calculate_week_end(today)
+
+    assert result == expected
+
+
+def test_calculate_week_end_on_saturday():
+    """Test that Saturday returns the next day (Sunday)."""
+    # 2026-02-14 is a Saturday
+    today = date(2026, 2, 14)
+    expected = date(2026, 2, 15)  # Next day (Sunday)
+
+    result = notes_module.calculate_week_end(today)
+
+    assert result == expected
+
+
+def test_calculate_week_end_midweek():
+    """Test calculation from middle of the week (Thursday)."""
+    # 2026-02-12 is a Thursday
+    today = date(2026, 2, 12)
+    expected = date(2026, 2, 15)  # Following Sunday
+
+    result = notes_module.calculate_week_end(today)
+
+    assert result == expected
