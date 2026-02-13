@@ -94,20 +94,24 @@ endfunction
 function! meta_notes#notes#CalculateWeekStart(...) abort
   let l:date_str = a:0 > 0 ? a:1 : strftime('%Y-%m-%d')
 
-  " Find the plugin root directory (where scripts/ is located)
-  " Try to use the current file's directory, or fall back to current working directory
-  let l:plugin_root = expand('<sfile>:p:h:h:h')
-  if !isdirectory(l:plugin_root . '/scripts')
-    let l:plugin_root = getcwd()
+  " Convert date string to timestamp
+  let l:timestamp = strptime("%Y-%m-%d", l:date_str)
+
+  " Get day of week (0=Sunday, 1=Monday, ..., 6=Saturday)
+  let l:weekday = str2nr(strftime("%w", l:timestamp))
+
+  " Convert to 0=Monday, 1=Tuesday, ..., 6=Sunday
+  let l:dow = (l:weekday + 6) % 7
+
+  " If already Monday, return same date
+  if l:dow == 0
+    return l:date_str
   endif
 
-  let l:script_path = l:plugin_root . '/scripts/notes.py'
+  " Subtract days to get Monday (86400 seconds per day)
+  let l:monday_timestamp = l:timestamp - (l:dow * 86400)
 
-  let l:python_cmd = printf('python3 -c "import sys; sys.path.insert(0, ''%s''); from datetime import date; from notes import calculate_week_start; print(calculate_week_start(date.fromisoformat(''%s'')).isoformat())"',
-        \ l:plugin_root . '/scripts',
-        \ l:date_str)
-
-  return trim(system(l:python_cmd))
+  return strftime('%Y-%m-%d', l:monday_timestamp)
 endfunction
 
 " Calculate the Sunday of the current week
@@ -121,20 +125,25 @@ endfunction
 function! meta_notes#notes#CalculateWeekEnd(...) abort
   let l:date_str = a:0 > 0 ? a:1 : strftime('%Y-%m-%d')
 
-  " Find the plugin root directory (where scripts/ is located)
-  " Try to use the current file's directory, or fall back to current working directory
-  let l:plugin_root = expand('<sfile>:p:h:h:h')
-  if !isdirectory(l:plugin_root . '/scripts')
-    let l:plugin_root = getcwd()
+  " Convert date string to timestamp
+  let l:timestamp = strptime("%Y-%m-%d", l:date_str)
+
+  " Get day of week (0=Sunday, 1=Monday, ..., 6=Saturday)
+  let l:weekday = str2nr(strftime("%w", l:timestamp))
+
+  " Convert to 0=Monday, 1=Tuesday, ..., 6=Sunday
+  let l:dow = (l:weekday + 6) % 7
+
+  " If already Sunday, return same date
+  if l:dow == 6
+    return l:date_str
   endif
 
-  let l:script_path = l:plugin_root . '/scripts/notes.py'
+  " Add days to get Sunday (86400 seconds per day)
+  let l:days_until_sunday = 6 - l:dow
+  let l:sunday_timestamp = l:timestamp + (l:days_until_sunday * 86400)
 
-  let l:python_cmd = printf('python3 -c "import sys; sys.path.insert(0, ''%s''); from datetime import date; from notes import calculate_week_end; print(calculate_week_end(date.fromisoformat(''%s'')).isoformat())"',
-        \ l:plugin_root . '/scripts',
-        \ l:date_str)
-
-  return trim(system(l:python_cmd))
+  return strftime('%Y-%m-%d', l:sunday_timestamp)
 endfunction
 
 " Open the week plan file for the current week
