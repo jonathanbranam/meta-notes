@@ -26,7 +26,7 @@ git clone https://github.com/junegunn/vader.vim.git ~/.vim/pack/testing/start/va
 Use the provided test script:
 
 ```bash
-# Run all tests
+# Run all tests (default: clean output without vim startup noise)
 ./run_tests.sh
 
 # Run specific test file
@@ -34,6 +34,9 @@ Use the provided test script:
 
 # Run with quiet output (summary only)
 ./run_tests.sh --quiet
+
+# Run with full vim debug output
+./run_tests.sh --debug
 
 # Run in interactive mode
 ./run_tests.sh --interactive

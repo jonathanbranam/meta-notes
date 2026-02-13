@@ -20,6 +20,7 @@ OPTIONS:
     -p, --plugin PATH       Path to plugin root (default: current directory)
     -i, --interactive       Run in interactive mode (without !)
     -q, --quiet             Show only summary
+    -d, --debug             Show full vim startup debug output
 
 EXAMPLES:
     # Run all tests
@@ -46,6 +47,7 @@ EOF
 # Parse arguments
 INTERACTIVE=false
 QUIET=false
+DEBUG=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -66,6 +68,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -q|--quiet)
             QUIET=true
+            shift
+            ;;
+        -d|--debug)
+            DEBUG=true
             shift
             ;;
         -*)
@@ -102,16 +108,8 @@ else
 fi
 
 # Run the tests
-if [[ "$QUIET" == "true" ]]; then
-    "$VIM_CMD" -es -Nu <(cat << EOF
-filetype off
-set rtp+=$VADER_PATH
-set rtp+=$PLUGIN_PATH
-filetype plugin indent on
-syntax enable
-EOF
-) +${VADER_CMD} "$TEST_PATH" 2>&1 | grep -E "(Starting Vader|Success|Elapsed)"
-else
+if [[ "$DEBUG" == "true" ]]; then
+    # Show full vim debug output
     "$VIM_CMD" -es -Nu <(cat << EOF
 filetype off
 set rtp+=$VADER_PATH
@@ -120,9 +118,29 @@ filetype plugin indent on
 syntax enable
 EOF
 ) +${VADER_CMD} "$TEST_PATH" 2>&1
+    EXIT_CODE=${PIPESTATUS[0]}
+elif [[ "$QUIET" == "true" ]]; then
+    # Show only summary
+    "$VIM_CMD" -es -Nu <(cat << EOF
+filetype off
+set rtp+=$VADER_PATH
+set rtp+=$PLUGIN_PATH
+filetype plugin indent on
+syntax enable
+EOF
+) +${VADER_CMD} "$TEST_PATH" 2>&1 | grep -E "(Starting Vader|Success|Elapsed)"
+    EXIT_CODE=${PIPESTATUS[0]}
+else
+    # Default: Hide vim startup noise, show test output
+    "$VIM_CMD" -es -Nu <(cat << EOF
+filetype off
+set rtp+=$VADER_PATH
+set rtp+=$PLUGIN_PATH
+filetype plugin indent on
+syntax enable
+EOF
+) +${VADER_CMD} "$TEST_PATH" 2>&1 | sed -n '/^Starting Vader/,$p'
+    EXIT_CODE=${PIPESTATUS[0]}
 fi
-
-# Capture exit code
-EXIT_CODE=${PIPESTATUS[0]}
 
 exit $EXIT_CODE
