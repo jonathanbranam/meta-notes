@@ -7,7 +7,7 @@ Searches recursively through all markdown files and outputs:
 - All tasks defined within that file
 
 Task format: bullet (-, *, +) followed by [status]
-- [ ], [.], [o], [O], [/] = pending/uncompleted
+- [ ], [.], [o], [O], [/], or any other character = incomplete
 - [x] or [X] = completed
 - [>] = rescheduled
 - [-] = canceled

@@ -14,11 +14,10 @@ import sys
 
 class TaskStatus(Enum):
     """Enum representing the status of a task."""
-    PENDING = "pending"
+    INCOMPLETE = "incomplete"
     COMPLETED = "completed"
     RESCHEDULED = "rescheduled"
     CANCELED = "canceled"
-    OTHER = "other"
 
 
 @dataclass
@@ -97,10 +96,9 @@ def _char_to_status(status_char: str) -> TaskStatus:
         return TaskStatus.RESCHEDULED
     elif status_char == '-':
         return TaskStatus.CANCELED
-    elif status_char in (' ', '.', 'o', 'O', '/'):
-        return TaskStatus.PENDING
     else:
-        return TaskStatus.OTHER
+        # Any other character (including space, ., o, O, /, etc.) is incomplete
+        return TaskStatus.INCOMPLETE
 
 
 def find_tasks_in_file(filepath: str) -> list[Task]:

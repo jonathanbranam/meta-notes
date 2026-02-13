@@ -29,7 +29,7 @@ def test_find_tasks_in_file_simple_uncompleted_task(tmp_path):
     assert len(tasks) == 1
     assert tasks[0].line_no == 1
     assert tasks[0].text == "- [ ] Simple task"
-    assert tasks[0].status == TaskStatus.PENDING
+    assert tasks[0].status == TaskStatus.INCOMPLETE
     assert tasks[0].filename == str(test_file)
 
 
@@ -340,11 +340,10 @@ def test_find_tasks_in_file_with_date_no_whitespace(tmp_path):
 
 def test_task_status_enum_values():
     """Test that TaskStatus enum has all expected values."""
-    assert TaskStatus.PENDING.value == "pending"
+    assert TaskStatus.INCOMPLETE.value == "incomplete"
     assert TaskStatus.COMPLETED.value == "completed"
     assert TaskStatus.RESCHEDULED.value == "rescheduled"
     assert TaskStatus.CANCELED.value == "canceled"
-    assert TaskStatus.OTHER.value == "other"
 
 
 # Tests for _extract_date function
@@ -492,19 +491,17 @@ def test_char_to_status_canceled():
     assert tasks_module._char_to_status("-") == TaskStatus.CANCELED
 
 
-def test_char_to_status_pending():
-    """Test pending status."""
-    assert tasks_module._char_to_status(" ") == TaskStatus.PENDING
-    assert tasks_module._char_to_status(".") == TaskStatus.PENDING
-    assert tasks_module._char_to_status("o") == TaskStatus.PENDING
-    assert tasks_module._char_to_status("O") == TaskStatus.PENDING
-    assert tasks_module._char_to_status("/") == TaskStatus.PENDING
-
-
-def test_char_to_status_other_status():
-    """Test other/unknown status."""
-    assert tasks_module._char_to_status("?") == TaskStatus.OTHER
-    assert tasks_module._char_to_status("!") == TaskStatus.OTHER
+def test_char_to_status_incomplete():
+    """Test incomplete status for common and unrecognized characters."""
+    assert tasks_module._char_to_status(" ") == TaskStatus.INCOMPLETE
+    assert tasks_module._char_to_status(".") == TaskStatus.INCOMPLETE
+    assert tasks_module._char_to_status("o") == TaskStatus.INCOMPLETE
+    assert tasks_module._char_to_status("O") == TaskStatus.INCOMPLETE
+    assert tasks_module._char_to_status("/") == TaskStatus.INCOMPLETE
+    # Unrecognized characters should also be incomplete
+    assert tasks_module._char_to_status("?") == TaskStatus.INCOMPLETE
+    assert tasks_module._char_to_status("!") == TaskStatus.INCOMPLETE
+    assert tasks_module._char_to_status("*") == TaskStatus.INCOMPLETE
 
 
 # Tests for categorize_status function
@@ -529,12 +526,9 @@ def test_categorize_status_canceled():
     assert tasks_module.categorize_status("-") == "canceled"
 
 
-def test_categorize_status_pending():
-    """Test pending status (space)."""
-    assert tasks_module.categorize_status(" ") == "pending"
-
-
-def test_categorize_status_other_status():
-    """Test other/unknown status."""
-    assert tasks_module.categorize_status("?") == "other"
-    assert tasks_module.categorize_status("!") == "other"
+def test_categorize_status_incomplete():
+    """Test incomplete status for all unrecognized characters."""
+    assert tasks_module.categorize_status(" ") == "incomplete"
+    assert tasks_module.categorize_status(".") == "incomplete"
+    assert tasks_module.categorize_status("?") == "incomplete"
+    assert tasks_module.categorize_status("!") == "incomplete"
