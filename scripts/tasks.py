@@ -152,3 +152,17 @@ def categorize_status(status: str) -> str:
         String representation of the status category.
     """
     return _char_to_status(status).value
+
+
+def filter_tasks_by_status(tasks: list[Task], statuses: list[TaskStatus]) -> list[Task]:
+    """
+    Filter tasks to only include those with specified statuses.
+
+    Args:
+        tasks: List of Task objects to filter.
+        statuses: List of TaskStatus values to include.
+
+    Returns:
+        List containing only tasks with status in the statuses list.
+    """
+    return [task for task in tasks if task.status in statuses]

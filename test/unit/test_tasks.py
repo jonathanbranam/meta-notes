@@ -532,3 +532,105 @@ def test_categorize_status_incomplete():
     assert tasks_module.categorize_status(".") == "incomplete"
     assert tasks_module.categorize_status("?") == "incomplete"
     assert tasks_module.categorize_status("!") == "incomplete"
+
+
+# Tests for filter_tasks_by_status function
+
+def test_filter_tasks_by_status_single_status():
+    """Test filtering tasks by a single status."""
+    tasks = [
+        Task("- [ ] Incomplete", TaskStatus.INCOMPLETE, "file.md", 1),
+        Task("- [x] Completed", TaskStatus.COMPLETED, "file.md", 2),
+        Task("- [>] Rescheduled", TaskStatus.RESCHEDULED, "file.md", 3),
+    ]
+
+    result = tasks_module.filter_tasks_by_status(tasks, [TaskStatus.INCOMPLETE])
+
+    assert len(result) == 1
+    assert result[0].status == TaskStatus.INCOMPLETE
+
+
+def test_filter_tasks_by_status_multiple_statuses():
+    """Test filtering tasks by multiple statuses."""
+    tasks = [
+        Task("- [ ] Incomplete", TaskStatus.INCOMPLETE, "file.md", 1),
+        Task("- [x] Completed", TaskStatus.COMPLETED, "file.md", 2),
+        Task("- [>] Rescheduled", TaskStatus.RESCHEDULED, "file.md", 3),
+        Task("- [-] Canceled", TaskStatus.CANCELED, "file.md", 4),
+        Task("- [ ] Incomplete 2", TaskStatus.INCOMPLETE, "file.md", 5),
+    ]
+
+    result = tasks_module.filter_tasks_by_status(
+        tasks,
+        [TaskStatus.INCOMPLETE, TaskStatus.COMPLETED]
+    )
+
+    assert len(result) == 3
+    assert result[0].text == "- [ ] Incomplete"
+    assert result[1].text == "- [x] Completed"
+    assert result[2].text == "- [ ] Incomplete 2"
+
+
+def test_filter_tasks_by_status_all_statuses():
+    """Test filtering with all statuses (returns all tasks)."""
+    tasks = [
+        Task("- [ ] Incomplete", TaskStatus.INCOMPLETE, "file.md", 1),
+        Task("- [x] Completed", TaskStatus.COMPLETED, "file.md", 2),
+        Task("- [>] Rescheduled", TaskStatus.RESCHEDULED, "file.md", 3),
+        Task("- [-] Canceled", TaskStatus.CANCELED, "file.md", 4),
+    ]
+
+    result = tasks_module.filter_tasks_by_status(
+        tasks,
+        [TaskStatus.INCOMPLETE, TaskStatus.COMPLETED, TaskStatus.RESCHEDULED, TaskStatus.CANCELED]
+    )
+
+    assert len(result) == 4
+
+
+def test_filter_tasks_by_status_no_matches():
+    """Test filtering when no tasks match the statuses."""
+    tasks = [
+        Task("- [x] Completed", TaskStatus.COMPLETED, "file.md", 1),
+        Task("- [>] Rescheduled", TaskStatus.RESCHEDULED, "file.md", 2),
+    ]
+
+    result = tasks_module.filter_tasks_by_status(tasks, [TaskStatus.INCOMPLETE])
+
+    assert len(result) == 0
+
+
+def test_filter_tasks_by_status_empty_task_list():
+    """Test filtering with empty task list."""
+    result = tasks_module.filter_tasks_by_status([], [TaskStatus.INCOMPLETE])
+
+    assert len(result) == 0
+
+
+def test_filter_tasks_by_status_empty_status_list():
+    """Test filtering with empty status list (returns nothing)."""
+    tasks = [
+        Task("- [ ] Incomplete", TaskStatus.INCOMPLETE, "file.md", 1),
+        Task("- [x] Completed", TaskStatus.COMPLETED, "file.md", 2),
+    ]
+
+    result = tasks_module.filter_tasks_by_status(tasks, [])
+
+    assert len(result) == 0
+
+
+def test_filter_tasks_by_status_preserves_order():
+    """Test that filtering preserves task order."""
+    tasks = [
+        Task("- [ ] Task 1", TaskStatus.INCOMPLETE, "file.md", 1),
+        Task("- [x] Task 2", TaskStatus.COMPLETED, "file.md", 2),
+        Task("- [ ] Task 3", TaskStatus.INCOMPLETE, "file.md", 3),
+        Task("- [ ] Task 4", TaskStatus.INCOMPLETE, "file.md", 4),
+    ]
+
+    result = tasks_module.filter_tasks_by_status(tasks, [TaskStatus.INCOMPLETE])
+
+    assert len(result) == 3
+    assert result[0].text == "- [ ] Task 1"
+    assert result[1].text == "- [ ] Task 3"
+    assert result[2].text == "- [ ] Task 4"
