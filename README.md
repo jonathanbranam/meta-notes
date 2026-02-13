@@ -27,7 +27,7 @@ NOTE: The folder names are singular.
 You have projects you're actively working on – short-term efforts (in your work
 or personal life) that you take on with a certain goal in mind. A project may
 exist as a single note [[project/Order Christmas Presents]] or a folder for a
-larger project [[project/kitchen-remodel]].
+larger project [[project/kitchen-remodel/Tasks]].
 
 ### Areas
 
