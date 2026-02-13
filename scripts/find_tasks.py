@@ -15,6 +15,7 @@ Task format: bullet (-, *, +) followed by [status]
 
 import os
 import sys
+from datetime import date, timedelta
 
 from tasks import Task, TaskStatus, find_tasks_in_file, filter_tasks_by_status
 from notes import get_wiki_link, find_all_markdown_files
@@ -31,6 +32,43 @@ def filter_incomplete_tasks(tasks: list[Task]) -> list[Task]:
         List containing only tasks with INCOMPLETE status.
     """
     return filter_tasks_by_status(tasks, [TaskStatus.INCOMPLETE])
+
+
+def get_task_relevant_date(task: Task) -> date | None:
+    """
+    Get the most relevant date from a task (due_date takes precedence over start_date).
+
+    Args:
+        task: Task object to extract date from.
+
+    Returns:
+        The due_date if present, otherwise start_date, or None if neither exists.
+    """
+    return task.due_date or task.start_date
+
+
+def categorize_task_by_date(task: Task, today: date, week_end: date) -> str:
+    """
+    Categorize a task based on its due/start date.
+
+    Args:
+        task: Task object to categorize.
+        today: Today's date.
+        week_end: Date representing the end of this week.
+
+    Returns:
+        'past_or_current' for tasks due in the past or this week,
+        'future' for tasks due beyond this week,
+        'no_date' for tasks without due or start dates.
+    """
+    relevant_date = get_task_relevant_date(task)
+
+    if relevant_date is None:
+        return 'no_date'
+    elif relevant_date <= week_end:
+        return 'past_or_current'
+    else:
+        return 'future'
 
 
 def format_file_tasks(filepath: str, tasks: list[Task], root_dir: str) -> list[str]:
@@ -59,9 +97,101 @@ def format_file_tasks(filepath: str, tasks: list[Task], root_dir: str) -> list[s
     return lines
 
 
+def collect_categorized_tasks(root_dir: str) -> dict[str, list[tuple[str, list[Task]]]]:
+    """
+    Collect and categorize all incomplete tasks from markdown files.
+
+    Args:
+        root_dir: Directory to search for markdown files.
+
+    Returns:
+        Dictionary with categories as keys ('past_or_current', 'future', 'no_date')
+        and lists of (filepath, tasks) tuples as values.
+    """
+    # Calculate date boundaries
+    today = date.today()
+    week_end = today + timedelta(days=7)
+
+    # Find all markdown files
+    markdown_files = find_all_markdown_files(root_dir)
+
+    # Structure: {category: [(filepath, [tasks])]}
+    categorized_files: dict[str, list[tuple[str, list[Task]]]] = {
+        'past_or_current': [],
+        'future': [],
+        'no_date': []
+    }
+
+    for filepath in markdown_files:
+        all_tasks = find_tasks_in_file(filepath)
+        incomplete_tasks = filter_incomplete_tasks(all_tasks)
+
+        if not incomplete_tasks:
+            continue
+
+        # Categorize tasks by date
+        tasks_by_category: dict[str, list[Task]] = {
+            'past_or_current': [],
+            'future': [],
+            'no_date': []
+        }
+
+        for task in incomplete_tasks:
+            category = categorize_task_by_date(task, today, week_end)
+            tasks_by_category[category].append(task)
+
+        # Add to categorized files (only if tasks exist in that category)
+        for category, tasks in tasks_by_category.items():
+            if tasks:
+                categorized_files[category].append((filepath, tasks))
+
+    return categorized_files
+
+
+def format_section(
+    category: str,
+    header: str,
+    file_tasks: list[tuple[str, list[Task]]],
+    root_dir: str
+) -> list[str]:
+    """
+    Format a single section of the report.
+
+    Args:
+        category: Category name (for identification).
+        header: Markdown header for the section.
+        file_tasks: List of (filepath, tasks) tuples for this section.
+        root_dir: Root directory for generating wiki links.
+
+    Returns:
+        List of formatted output lines for the section.
+    """
+    if not file_tasks:
+        return []
+
+    lines: list[str] = []
+
+    # Add section header
+    lines.append(header)
+    lines.append("")
+
+    # Format each file's tasks in this category
+    for filepath, tasks in file_tasks:
+        file_lines = format_file_tasks(filepath, tasks, root_dir)
+        lines.extend(file_lines)
+        lines.append("")  # Empty line between files
+
+    return lines
+
+
 def generate_report(root_dir: str) -> list[str]:
     """
     Generate a complete report of incomplete tasks in all markdown files.
+
+    Tasks are organized into three sections:
+    1. Past or current week (tasks due in past or within 7 days)
+    2. Future tasks (tasks due more than 7 days out)
+    3. Tasks without dates
 
     Args:
         root_dir: Directory to search for markdown files.
@@ -69,38 +199,48 @@ def generate_report(root_dir: str) -> list[str]:
     Returns:
         List of output lines for the complete report.
     """
-    lines: list[str] = []
-
     # Find all markdown files
     markdown_files = find_all_markdown_files(root_dir)
 
     if not markdown_files:
         return ["No markdown files found."]
 
-    # Process each file and collect incomplete tasks
-    files_with_incomplete_tasks: list[tuple[str, list[Task]]] = []
+    # Collect and categorize tasks
+    categorized_files = collect_categorized_tasks(root_dir)
 
-    for filepath in markdown_files:
-        all_tasks = find_tasks_in_file(filepath)
-        incomplete_tasks = filter_incomplete_tasks(all_tasks)
+    # Check if we have any tasks at all
+    total_tasks = sum(
+        sum(len(tasks) for _, tasks in file_tasks)
+        for file_tasks in categorized_files.values()
+    )
 
-        if incomplete_tasks:
-            files_with_incomplete_tasks.append((filepath, incomplete_tasks))
-
-    # Generate output
-    if not files_with_incomplete_tasks:
+    if total_tasks == 0:
         return ["No incomplete tasks found in any markdown files."]
 
-    # Format each file's tasks
-    for filepath, tasks in files_with_incomplete_tasks:
-        file_lines = format_file_tasks(filepath, tasks, root_dir)
-        lines.extend(file_lines)
-        lines.append("")  # Empty line between files
+    # Generate output for each section
+    lines: list[str] = []
+
+    sections = [
+        ('past_or_current', '# Past & Current Week'),
+        ('future', '# Future (>1 Week)'),
+        ('no_date', '# No Date')
+    ]
+
+    for category, header in sections:
+        section_lines = format_section(
+            category,
+            header,
+            categorized_files[category],
+            root_dir
+        )
+        lines.extend(section_lines)
 
     # Add summary
-    total_tasks = sum(len(tasks) for _, tasks in files_with_incomplete_tasks)
+    total_files = sum(len(file_tasks) for file_tasks in categorized_files.values())
+    task_word = "task" if total_tasks == 1 else "tasks"
+    section_word = "file section" if total_files == 1 else "file sections"
     lines.append("")
-    lines.append(f"Summary: Found {total_tasks} incomplete tasks in {len(files_with_incomplete_tasks)} files")
+    lines.append(f"Summary: Found {total_tasks} incomplete {task_word} in {total_files} {section_word}")
 
     return lines
 

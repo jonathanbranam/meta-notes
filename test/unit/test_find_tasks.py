@@ -7,6 +7,7 @@ Tests the CLI report generation functions.
 import os
 import sys
 from pathlib import Path
+from datetime import date, timedelta
 
 import pytest
 
@@ -70,6 +71,211 @@ def test_filter_incomplete_tasks_empty_list():
     assert len(result) == 0
 
 
+# Tests for get_task_relevant_date function
+
+def test_get_task_relevant_date_with_due_date():
+    """Test getting relevant date when due_date is present."""
+    task_date = date(2026, 2, 15)
+    task = Task("- [ ] Task", TaskStatus.INCOMPLETE, "file.md", 1, due_date=task_date)
+
+    result = find_tasks.get_task_relevant_date(task)
+
+    assert result == task_date
+
+
+def test_get_task_relevant_date_with_start_date_only():
+    """Test getting relevant date when only start_date is present."""
+    task_date = date(2026, 2, 10)
+    task = Task("- [ ] Task", TaskStatus.INCOMPLETE, "file.md", 1, start_date=task_date)
+
+    result = find_tasks.get_task_relevant_date(task)
+
+    assert result == task_date
+
+
+def test_get_task_relevant_date_with_both_dates():
+    """Test that due_date takes precedence over start_date."""
+    start = date(2026, 2, 10)
+    due = date(2026, 2, 15)
+    task = Task("- [ ] Task", TaskStatus.INCOMPLETE, "file.md", 1, start_date=start, due_date=due)
+
+    result = find_tasks.get_task_relevant_date(task)
+
+    assert result == due
+
+
+def test_get_task_relevant_date_with_no_dates():
+    """Test getting relevant date when no dates are present."""
+    task = Task("- [ ] Task", TaskStatus.INCOMPLETE, "file.md", 1)
+
+    result = find_tasks.get_task_relevant_date(task)
+
+    assert result is None
+
+
+# Tests for categorize_task_by_date function
+
+def test_categorize_task_by_date_past():
+    """Test categorizing a task with a past due date."""
+    today = date(2026, 2, 13)
+    week_end = today + timedelta(days=7)
+    past_date = date(2026, 2, 1)
+    task = Task("- [ ] Task", TaskStatus.INCOMPLETE, "file.md", 1, due_date=past_date)
+
+    result = find_tasks.categorize_task_by_date(task, today, week_end)
+
+    assert result == 'past_or_current'
+
+
+def test_categorize_task_by_date_current_week():
+    """Test categorizing a task due within the current week."""
+    today = date(2026, 2, 13)
+    week_end = today + timedelta(days=7)
+    this_week = date(2026, 2, 18)
+    task = Task("- [ ] Task", TaskStatus.INCOMPLETE, "file.md", 1, due_date=this_week)
+
+    result = find_tasks.categorize_task_by_date(task, today, week_end)
+
+    assert result == 'past_or_current'
+
+
+def test_categorize_task_by_date_future():
+    """Test categorizing a task due in the future (beyond this week)."""
+    today = date(2026, 2, 13)
+    week_end = today + timedelta(days=7)
+    future_date = date(2026, 3, 1)
+    task = Task("- [ ] Task", TaskStatus.INCOMPLETE, "file.md", 1, due_date=future_date)
+
+    result = find_tasks.categorize_task_by_date(task, today, week_end)
+
+    assert result == 'future'
+
+
+def test_categorize_task_by_date_no_date():
+    """Test categorizing a task without any dates."""
+    today = date(2026, 2, 13)
+    week_end = today + timedelta(days=7)
+    task = Task("- [ ] Task", TaskStatus.INCOMPLETE, "file.md", 1)
+
+    result = find_tasks.categorize_task_by_date(task, today, week_end)
+
+    assert result == 'no_date'
+
+
+def test_categorize_task_by_date_uses_start_date():
+    """Test categorizing uses start_date when due_date is not present."""
+    today = date(2026, 2, 13)
+    week_end = today + timedelta(days=7)
+    start_date = date(2026, 3, 1)
+    task = Task("- [ ] Task", TaskStatus.INCOMPLETE, "file.md", 1, start_date=start_date)
+
+    result = find_tasks.categorize_task_by_date(task, today, week_end)
+
+    assert result == 'future'
+
+
+# Tests for collect_categorized_tasks function
+
+def test_collect_categorized_tasks_empty_directory(tmp_path):
+    """Test collecting tasks from empty directory."""
+    result = find_tasks.collect_categorized_tasks(str(tmp_path))
+
+    assert result == {
+        'past_or_current': [],
+        'future': [],
+        'no_date': []
+    }
+
+
+def test_collect_categorized_tasks_with_mixed_dates(tmp_path):
+    """Test collecting tasks with various date configurations."""
+    today = date.today()
+    past = (today - timedelta(days=5)).isoformat()
+    current = (today + timedelta(days=3)).isoformat()
+    future = (today + timedelta(days=15)).isoformat()
+
+    file1 = tmp_path / "tasks.md"
+    file1.write_text(f"""# Tasks
+- [ ] Past task 🗓 {past}
+- [ ] Current week task 🗓 {current}
+- [ ] Future task 🗓 {future}
+- [ ] No date task
+""")
+
+    result = find_tasks.collect_categorized_tasks(str(tmp_path))
+
+    # Check that we have tasks in each category
+    assert len(result['past_or_current']) == 1
+    assert len(result['past_or_current'][0][1]) == 2  # 2 tasks (past + current)
+    assert len(result['future']) == 1
+    assert len(result['future'][0][1]) == 1  # 1 task
+    assert len(result['no_date']) == 1
+    assert len(result['no_date'][0][1]) == 1  # 1 task
+
+
+def test_collect_categorized_tasks_filters_completed(tmp_path):
+    """Test that completed tasks are not collected."""
+    today = date.today()
+    task_date = (today + timedelta(days=3)).isoformat()
+
+    file1 = tmp_path / "tasks.md"
+    file1.write_text(f"""# Tasks
+- [ ] Incomplete 🗓 {task_date}
+- [x] Completed 🗓 {task_date}
+""")
+
+    result = find_tasks.collect_categorized_tasks(str(tmp_path))
+
+    # Only incomplete task should be collected
+    assert len(result['past_or_current']) == 1
+    assert len(result['past_or_current'][0][1]) == 1
+    assert "Incomplete" in result['past_or_current'][0][1][0].text
+
+
+# Tests for format_section function
+
+def test_format_section_with_tasks(tmp_path):
+    """Test formatting a section with tasks."""
+    filepath = str(tmp_path / "test.md")
+    tasks = [
+        Task("- [ ] Task 1", TaskStatus.INCOMPLETE, filepath, 1),
+        Task("- [ ] Task 2", TaskStatus.INCOMPLETE, filepath, 2),
+    ]
+    file_tasks = [(filepath, tasks)]
+
+    lines = find_tasks.format_section('no_date', '# No Date', file_tasks, str(tmp_path))
+
+    assert "# No Date" in lines
+    assert "## [[test]]" in lines
+    assert "- [ ] Task 1" in lines
+    assert "- [ ] Task 2" in lines
+
+
+def test_format_section_empty_list(tmp_path):
+    """Test formatting a section with no tasks."""
+    lines = find_tasks.format_section('no_date', '# No Date', [], str(tmp_path))
+
+    assert len(lines) == 0
+
+
+def test_format_section_multiple_files(tmp_path):
+    """Test formatting a section with multiple files."""
+    file1 = str(tmp_path / "test1.md")
+    file2 = str(tmp_path / "test2.md")
+    tasks1 = [Task("- [ ] Task 1", TaskStatus.INCOMPLETE, file1, 1)]
+    tasks2 = [Task("- [ ] Task 2", TaskStatus.INCOMPLETE, file2, 1)]
+    file_tasks = [(file1, tasks1), (file2, tasks2)]
+
+    lines = find_tasks.format_section('no_date', '# No Date', file_tasks, str(tmp_path))
+
+    output = "\n".join(lines)
+    assert "# No Date" in output
+    assert "## [[test1]]" in output
+    assert "## [[test2]]" in output
+    assert "- [ ] Task 1" in output
+    assert "- [ ] Task 2" in output
+
+
 # Tests for format_file_tasks function
 
 def test_format_file_tasks_with_tasks(tmp_path):
@@ -114,7 +320,7 @@ def test_format_file_tasks_nested_file(tmp_path):
 # Tests for generate_report function
 
 def test_generate_report_with_incomplete_tasks(tmp_path):
-    """Test generating report with incomplete tasks."""
+    """Test generating report with incomplete tasks (no dates)."""
     file1 = tmp_path / "tasks.md"
     file1.write_text("""# Tasks
 - [ ] Incomplete task 1
@@ -129,15 +335,16 @@ def test_generate_report_with_incomplete_tasks(tmp_path):
 
     lines = find_tasks.generate_report(str(tmp_path))
 
-    # Should include both files with only incomplete tasks
+    # Should include both files with only incomplete tasks in "No Date" section
     output = "\n".join(lines)
+    assert "# No Date" in output
     assert "[[tasks]]" in output
     assert "[[notes]]" in output
     assert "Incomplete task 1" in output
     assert "Incomplete task 2" in output
     assert "Note task" in output
     assert "Completed task" not in output  # Should be filtered out
-    assert "Found 3 incomplete tasks in 2 files" in output
+    assert "Found 3 incomplete tasks in 2 file sections" in output
 
 
 def test_generate_report_no_incomplete_tasks(tmp_path):
@@ -166,9 +373,10 @@ def test_generate_report_file_with_only_completed_tasks(tmp_path):
     lines = find_tasks.generate_report(str(tmp_path))
 
     output = "\n".join(lines)
+    assert "# No Date" in output
     assert "[[incomplete]]" in output
     assert "[[completed]]" not in output  # File should not appear
-    assert "Found 1 incomplete task" in output
+    assert "Found 1 incomplete task in 1 file section" in output
 
 
 def test_generate_report_no_markdown_files(tmp_path):
@@ -190,6 +398,61 @@ def test_generate_report_empty_files(tmp_path):
     assert lines[0] == "No incomplete tasks found in any markdown files."
 
 
+def test_generate_report_with_all_three_sections(tmp_path):
+    """Test generating report with tasks in all three date categories."""
+    today = date.today()
+    past = (today - timedelta(days=5)).isoformat()
+    current = (today + timedelta(days=3)).isoformat()
+    future = (today + timedelta(days=15)).isoformat()
+
+    file1 = tmp_path / "tasks.md"
+    file1.write_text(f"""# Tasks
+- [ ] Past task 🗓 {past}
+- [ ] Current week task 🗓 {current}
+- [ ] Future task 🗓 {future}
+- [ ] No date task
+""")
+
+    lines = find_tasks.generate_report(str(tmp_path))
+    output = "\n".join(lines)
+
+    # Check all three sections are present
+    assert "# Past & Current Week" in output
+    assert "# Future (>1 Week)" in output
+    assert "# No Date" in output
+
+    # Check tasks are in output
+    assert "Past task" in output
+    assert "Current week task" in output
+    assert "Future task" in output
+    assert "No date task" in output
+
+    # Check summary
+    assert "Found 4 incomplete tasks" in output
+
+
+def test_generate_report_only_future_tasks(tmp_path):
+    """Test report with only future tasks."""
+    today = date.today()
+    future = (today + timedelta(days=15)).isoformat()
+
+    file1 = tmp_path / "tasks.md"
+    file1.write_text(f"""# Tasks
+- [ ] Future task 1 🗓 {future}
+- [ ] Future task 2 🗓 {future}
+""")
+
+    lines = find_tasks.generate_report(str(tmp_path))
+    output = "\n".join(lines)
+
+    # Only future section should be present
+    assert "# Future (>1 Week)" in output
+    assert "# Past & Current Week" not in output
+    assert "# No Date" not in output
+    assert "Future task 1" in output
+    assert "Future task 2" in output
+
+
 # Tests for main function (integration tests)
 
 def test_main_with_incomplete_tasks(tmp_path, capsys, monkeypatch):
@@ -206,11 +469,12 @@ def test_main_with_incomplete_tasks(tmp_path, capsys, monkeypatch):
     find_tasks.main()
 
     captured = capsys.readouterr()
+    assert "# No Date" in captured.out
     assert "[[tasks]]" in captured.out
     assert "Task 1" in captured.out
     assert "Task 3" in captured.out
     assert "Task 2" not in captured.out  # Completed task should not appear
-    assert "Found 2 incomplete tasks in 1 file" in captured.out
+    assert "Found 2 incomplete tasks in 1 file section" in captured.out
 
 
 def test_main_no_incomplete_tasks(tmp_path, capsys, monkeypatch):
@@ -249,10 +513,11 @@ def test_main_mixed_files(tmp_path, capsys, monkeypatch):
 
     captured = capsys.readouterr()
     # Only files with incomplete tasks should appear
+    assert "# No Date" in captured.out
     assert "[[incomplete]]" in captured.out
     assert "[[completed]]" not in captured.out
     assert "[[mixed]]" in captured.out
-    assert "Found 2 incomplete tasks in 2 files" in captured.out
+    assert "Found 2 incomplete tasks in 2 file sections" in captured.out
 
 
 def test_main_invalid_directory(capsys, monkeypatch):
