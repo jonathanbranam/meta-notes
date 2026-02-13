@@ -34,6 +34,29 @@ def filter_incomplete_tasks(tasks: list[Task]) -> list[Task]:
     return filter_tasks_by_status(tasks, [TaskStatus.INCOMPLETE])
 
 
+def calculate_week_end(today: date) -> date:
+    """
+    Calculate the end of the current week (Sunday).
+
+    Week runs Monday through Sunday. If today is Sunday, returns today.
+    Otherwise, returns the date of the following Sunday.
+
+    Args:
+        today: The reference date.
+
+    Returns:
+        The date of the current or next Sunday.
+    """
+    # weekday() returns 0 for Monday, 6 for Sunday
+    days_until_sunday = 6 - today.weekday()
+
+    if days_until_sunday < 0:
+        # This shouldn't happen since 6 - weekday() is always >= 0
+        days_until_sunday = 0
+
+    return today + timedelta(days=days_until_sunday)
+
+
 def get_task_relevant_date(task: Task) -> date | None:
     """
     Get the most relevant date from a task (due_date takes precedence over start_date).
@@ -97,20 +120,20 @@ def format_file_tasks(filepath: str, tasks: list[Task], root_dir: str) -> list[s
     return lines
 
 
-def collect_categorized_tasks(root_dir: str) -> dict[str, list[tuple[str, list[Task]]]]:
+def collect_categorized_tasks(root_dir: str, today: date) -> dict[str, list[tuple[str, list[Task]]]]:
     """
     Collect and categorize all incomplete tasks from markdown files.
 
     Args:
         root_dir: Directory to search for markdown files.
+        today: Reference date to use for categorization.
 
     Returns:
         Dictionary with categories as keys ('past_or_current', 'future', 'no_date')
         and lists of (filepath, tasks) tuples as values.
     """
-    # Calculate date boundaries
-    today = date.today()
-    week_end = today + timedelta(days=7)
+    # Calculate date boundaries (week ends on Sunday)
+    week_end = calculate_week_end(today)
 
     # Find all markdown files
     markdown_files = find_all_markdown_files(root_dir)
@@ -184,7 +207,7 @@ def format_section(
     return lines
 
 
-def generate_report(root_dir: str) -> list[str]:
+def generate_report(root_dir: str, today: date) -> list[str]:
     """
     Generate a complete report of incomplete tasks in all markdown files.
 
@@ -195,6 +218,7 @@ def generate_report(root_dir: str) -> list[str]:
 
     Args:
         root_dir: Directory to search for markdown files.
+        today: Reference date to use for categorization.
 
     Returns:
         List of output lines for the complete report.
@@ -206,7 +230,7 @@ def generate_report(root_dir: str) -> list[str]:
         return ["No markdown files found."]
 
     # Collect and categorize tasks
-    categorized_files = collect_categorized_tasks(root_dir)
+    categorized_files = collect_categorized_tasks(root_dir, today)
 
     # Check if we have any tasks at all
     total_tasks = sum(
@@ -256,8 +280,11 @@ def main() -> None:
         print(f"Error: {root_dir} is not a directory", file=sys.stderr)
         sys.exit(1)
 
+    # Get current date
+    today = date.today()
+
     # Generate and print report
-    report_lines = generate_report(root_dir)
+    report_lines = generate_report(root_dir, today)
     output = "\n".join(report_lines)
     print(output)
 

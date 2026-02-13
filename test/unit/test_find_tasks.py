@@ -71,6 +71,62 @@ def test_filter_incomplete_tasks_empty_list():
     assert len(result) == 0
 
 
+# Tests for calculate_week_end function
+
+def test_calculate_week_end_on_sunday():
+    """Test that Sunday returns the same day."""
+    # 2026-02-15 is a Sunday
+    today = date(2026, 2, 15)
+
+    result = find_tasks.calculate_week_end(today)
+
+    assert result == today
+
+
+def test_calculate_week_end_on_monday():
+    """Test that Monday returns the following Sunday."""
+    # 2026-02-09 is a Monday
+    today = date(2026, 2, 9)
+    expected = date(2026, 2, 15)  # Following Sunday
+
+    result = find_tasks.calculate_week_end(today)
+
+    assert result == expected
+
+
+def test_calculate_week_end_on_tuesday():
+    """Test that Tuesday returns the following Sunday."""
+    # 2026-02-10 is a Tuesday
+    today = date(2026, 2, 10)
+    expected = date(2026, 2, 15)  # Following Sunday
+
+    result = find_tasks.calculate_week_end(today)
+
+    assert result == expected
+
+
+def test_calculate_week_end_on_saturday():
+    """Test that Saturday returns the next day (Sunday)."""
+    # 2026-02-14 is a Saturday
+    today = date(2026, 2, 14)
+    expected = date(2026, 2, 15)  # Next day (Sunday)
+
+    result = find_tasks.calculate_week_end(today)
+
+    assert result == expected
+
+
+def test_calculate_week_end_midweek():
+    """Test calculation from middle of the week (Thursday)."""
+    # 2026-02-12 is a Thursday
+    today = date(2026, 2, 12)
+    expected = date(2026, 2, 15)  # Following Sunday
+
+    result = find_tasks.calculate_week_end(today)
+
+    assert result == expected
+
+
 # Tests for get_task_relevant_date function
 
 def test_get_task_relevant_date_with_due_date():
@@ -178,7 +234,8 @@ def test_categorize_task_by_date_uses_start_date():
 
 def test_collect_categorized_tasks_empty_directory(tmp_path):
     """Test collecting tasks from empty directory."""
-    result = find_tasks.collect_categorized_tasks(str(tmp_path))
+    today = date(2026, 2, 13)
+    result = find_tasks.collect_categorized_tasks(str(tmp_path), today)
 
     assert result == {
         'past_or_current': [],
@@ -189,10 +246,11 @@ def test_collect_categorized_tasks_empty_directory(tmp_path):
 
 def test_collect_categorized_tasks_with_mixed_dates(tmp_path):
     """Test collecting tasks with various date configurations."""
-    today = date.today()
-    past = (today - timedelta(days=5)).isoformat()
-    current = (today + timedelta(days=3)).isoformat()
-    future = (today + timedelta(days=15)).isoformat()
+    # 2026-02-13 is a Friday, so week_end will be 2026-02-15 (Sunday)
+    today = date(2026, 2, 13)
+    past = date(2026, 2, 8).isoformat()  # Last Sunday (past)
+    current = date(2026, 2, 14).isoformat()  # Tomorrow Saturday (this week)
+    future = date(2026, 2, 16).isoformat()  # Next Monday (after this Sunday)
 
     file1 = tmp_path / "tasks.md"
     file1.write_text(f"""# Tasks
@@ -202,7 +260,7 @@ def test_collect_categorized_tasks_with_mixed_dates(tmp_path):
 - [ ] No date task
 """)
 
-    result = find_tasks.collect_categorized_tasks(str(tmp_path))
+    result = find_tasks.collect_categorized_tasks(str(tmp_path), today)
 
     # Check that we have tasks in each category
     assert len(result['past_or_current']) == 1
@@ -215,8 +273,9 @@ def test_collect_categorized_tasks_with_mixed_dates(tmp_path):
 
 def test_collect_categorized_tasks_filters_completed(tmp_path):
     """Test that completed tasks are not collected."""
-    today = date.today()
-    task_date = (today + timedelta(days=3)).isoformat()
+    # 2026-02-13 is a Friday, so week_end will be 2026-02-15 (Sunday)
+    today = date(2026, 2, 13)
+    task_date = date(2026, 2, 14).isoformat()  # Tomorrow Saturday (this week)
 
     file1 = tmp_path / "tasks.md"
     file1.write_text(f"""# Tasks
@@ -224,7 +283,7 @@ def test_collect_categorized_tasks_filters_completed(tmp_path):
 - [x] Completed 🗓 {task_date}
 """)
 
-    result = find_tasks.collect_categorized_tasks(str(tmp_path))
+    result = find_tasks.collect_categorized_tasks(str(tmp_path), today)
 
     # Only incomplete task should be collected
     assert len(result['past_or_current']) == 1
@@ -321,6 +380,7 @@ def test_format_file_tasks_nested_file(tmp_path):
 
 def test_generate_report_with_incomplete_tasks(tmp_path):
     """Test generating report with incomplete tasks (no dates)."""
+    today = date(2026, 2, 13)
     file1 = tmp_path / "tasks.md"
     file1.write_text("""# Tasks
 - [ ] Incomplete task 1
@@ -333,7 +393,7 @@ def test_generate_report_with_incomplete_tasks(tmp_path):
 - [ ] Note task
 """)
 
-    lines = find_tasks.generate_report(str(tmp_path))
+    lines = find_tasks.generate_report(str(tmp_path), today)
 
     # Should include both files with only incomplete tasks in "No Date" section
     output = "\n".join(lines)
@@ -349,6 +409,7 @@ def test_generate_report_with_incomplete_tasks(tmp_path):
 
 def test_generate_report_no_incomplete_tasks(tmp_path):
     """Test generating report when no incomplete tasks exist."""
+    today = date(2026, 2, 13)
     file1 = tmp_path / "tasks.md"
     file1.write_text("""# Tasks
 - [x] Completed task
@@ -356,7 +417,7 @@ def test_generate_report_no_incomplete_tasks(tmp_path):
 - [-] Canceled task
 """)
 
-    lines = find_tasks.generate_report(str(tmp_path))
+    lines = find_tasks.generate_report(str(tmp_path), today)
 
     assert len(lines) == 1
     assert lines[0] == "No incomplete tasks found in any markdown files."
@@ -364,13 +425,14 @@ def test_generate_report_no_incomplete_tasks(tmp_path):
 
 def test_generate_report_file_with_only_completed_tasks(tmp_path):
     """Test that files with only completed tasks are not shown."""
+    today = date(2026, 2, 13)
     file1 = tmp_path / "incomplete.md"
     file1.write_text("- [ ] Incomplete task\n")
 
     file2 = tmp_path / "completed.md"
     file2.write_text("- [x] Completed task\n")
 
-    lines = find_tasks.generate_report(str(tmp_path))
+    lines = find_tasks.generate_report(str(tmp_path), today)
 
     output = "\n".join(lines)
     assert "# No Date" in output
@@ -381,7 +443,8 @@ def test_generate_report_file_with_only_completed_tasks(tmp_path):
 
 def test_generate_report_no_markdown_files(tmp_path):
     """Test generating report with no markdown files."""
-    lines = find_tasks.generate_report(str(tmp_path))
+    today = date(2026, 2, 13)
+    lines = find_tasks.generate_report(str(tmp_path), today)
 
     assert len(lines) == 1
     assert lines[0] == "No markdown files found."
@@ -389,10 +452,11 @@ def test_generate_report_no_markdown_files(tmp_path):
 
 def test_generate_report_empty_files(tmp_path):
     """Test generating report with empty files."""
+    today = date(2026, 2, 13)
     file1 = tmp_path / "empty.md"
     file1.write_text("# Header\n\nJust text, no tasks.\n")
 
-    lines = find_tasks.generate_report(str(tmp_path))
+    lines = find_tasks.generate_report(str(tmp_path), today)
 
     assert len(lines) == 1
     assert lines[0] == "No incomplete tasks found in any markdown files."
@@ -400,10 +464,11 @@ def test_generate_report_empty_files(tmp_path):
 
 def test_generate_report_with_all_three_sections(tmp_path):
     """Test generating report with tasks in all three date categories."""
-    today = date.today()
-    past = (today - timedelta(days=5)).isoformat()
-    current = (today + timedelta(days=3)).isoformat()
-    future = (today + timedelta(days=15)).isoformat()
+    # 2026-02-13 is a Friday, so week_end will be 2026-02-15 (Sunday)
+    today = date(2026, 2, 13)
+    past = date(2026, 2, 8).isoformat()  # Last Sunday (past)
+    current = date(2026, 2, 14).isoformat()  # Tomorrow Saturday (this week)
+    future = date(2026, 2, 16).isoformat()  # Next Monday (after this Sunday)
 
     file1 = tmp_path / "tasks.md"
     file1.write_text(f"""# Tasks
@@ -413,7 +478,7 @@ def test_generate_report_with_all_three_sections(tmp_path):
 - [ ] No date task
 """)
 
-    lines = find_tasks.generate_report(str(tmp_path))
+    lines = find_tasks.generate_report(str(tmp_path), today)
     output = "\n".join(lines)
 
     # Check all three sections are present
@@ -433,8 +498,9 @@ def test_generate_report_with_all_three_sections(tmp_path):
 
 def test_generate_report_only_future_tasks(tmp_path):
     """Test report with only future tasks."""
-    today = date.today()
-    future = (today + timedelta(days=15)).isoformat()
+    # 2026-02-13 is a Friday, so week_end will be 2026-02-15 (Sunday)
+    today = date(2026, 2, 13)
+    future = date(2026, 2, 16).isoformat()  # Next Monday (after this Sunday)
 
     file1 = tmp_path / "tasks.md"
     file1.write_text(f"""# Tasks
@@ -442,7 +508,7 @@ def test_generate_report_only_future_tasks(tmp_path):
 - [ ] Future task 2 🗓 {future}
 """)
 
-    lines = find_tasks.generate_report(str(tmp_path))
+    lines = find_tasks.generate_report(str(tmp_path), today)
     output = "\n".join(lines)
 
     # Only future section should be present
