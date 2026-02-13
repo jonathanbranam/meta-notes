@@ -1,0 +1,36 @@
+" Basic tests to verify vader.vim setup
+
+Given markdown (Simple markdown note):
+  # Test Note
+
+  This is a basic note for testing.
+
+  - Item 1
+  - Item 2
+
+Do (No operation - just verify buffer):
+
+Expect (Buffer content unchanged):
+  # Test Note
+
+  This is a basic note for testing.
+
+  - Item 1
+  - Item 2
+
+" ===================================================================
+
+Given markdown (PARA-style note with links):
+  # Project Note
+
+  Related: [[area/health]]
+  See also: [[resource/vim-tips]]
+
+Execute (Verify buffer content):
+  " No-op: just checking Given/Expect works
+
+Expect (Content remains the same):
+  # Project Note
+
+  Related: [[area/health]]
+  See also: [[resource/vim-tips]]
