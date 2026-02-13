@@ -3,7 +3,8 @@
     "allow": [
       "Bash(tree:*)",
       "Bash(vim:*)",
-      "Bash(./run_tests.sh:*)"
+      "Bash(./run_tests.sh:*)",
+      "Bash(pipenv run pytest:*)"
     ]
   }
 }
