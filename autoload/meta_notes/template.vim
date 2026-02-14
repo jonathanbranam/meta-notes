@@ -94,8 +94,9 @@ function! meta_notes#template#ProcessVariables(line, context) abort
 
     " Get the base date from context
     if !has_key(a:context, l:var_name)
-      " Unknown variable, leave as-is
-      let l:result = substitute(l:result, l:pattern, l:match, '')
+      " Unknown variable, replace with HTML comment indicating error
+      let l:replacement = '<!-- ERROR: Unknown variable "' . l:var_name . '" -->'
+      let l:result = substitute(l:result, l:pattern, l:replacement, '')
       continue
     endif
 

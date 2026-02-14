@@ -18,8 +18,9 @@ Execute (FindTemplate should find folder-specific template.md):
 
 " Test: FindTemplate function finds standard template when no folder template exists
 Execute (FindTemplate should find standard template when no folder template):
-  " Create a test file path in a folder without template
-  call mkdir('test_folder/no_template', 'p')
+  " Create the standard template directory and file
+  call mkdir('resource/template', 'p')
+  call writefile(['# Daily Template'], 'resource/template/daily.md')
 
   " Test finding daily template
   let result = meta_notes#template#FindTemplate('resource/daily-notes/26-Q1/2026-02-14.md', 'daily')
@@ -27,6 +28,9 @@ Execute (FindTemplate should find standard template when no folder template):
 
 " Test: FindTemplate returns empty string when no template found
 Execute (FindTemplate should return empty string when no template found):
+  " Create a test file path in a folder without template
+  call mkdir('test_folder/no_template', 'p')
+
   " Test with a folder that has no template and no template type
   let result = meta_notes#template#FindTemplate('test_folder/no_template/note.md')
   AssertEqual '', result
@@ -57,6 +61,12 @@ Execute (ProcessVariables should handle week variables):
   let context = {'week_start': '2026-02-09', 'week_end': '2026-02-15'}
   let result = meta_notes#template#ProcessVariables('Week: {{week_start}} to {{week_end:%Y-%m-%d}}', context)
   AssertEqual 'Week: 2026-02-09 Mon to 2026-02-15', result
+
+" Test: ProcessVariables replaces undefined variables with error comment
+Execute (ProcessVariables should replace undefined variables with error comment):
+  let context = {'date': '2026-02-14'}
+  let result = meta_notes#template#ProcessVariables('Date: {{date}}, Name: {{name}}', context)
+  AssertEqual 'Date: 2026-02-14 Sat, Name: <!-- ERROR: Unknown variable "name" -->', result
 
 " Test: ProcessTemplate skips YAML frontmatter
 Execute (ProcessTemplate should skip YAML frontmatter):

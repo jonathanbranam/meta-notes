@@ -7,7 +7,7 @@ Execute (Setup - Create test directory structure):
 Execute (MetaNotesOpen uses folder-specific template.md):
   " Create a template in the project folder
   call writefile([
-        \ '# Project: {{name}}',
+        \ '# Project: {{project_name}}',
         \ '',
         \ '## Goal',
         \ '',
@@ -18,19 +18,18 @@ Execute (MetaNotesOpen uses folder-specific template.md):
 
   " Create a note with a wiki link
   edit test.md
-  call setline(1, 'See [[project/test-project/my-note]]')
+  call setline(1, 'See [[project/test-project/Home]]')
   call cursor(1, 10)
 
   " Open the link (should create new note with template)
-  " TODO: fix this, it hangs here when there is a template
-  " MetaNotesOpen
+  MetaNotesOpen
 
   " Verify we're in the new file
   Assert expand('%') == 'project/test-project/my-note.md', 'Should open the new note'
 
   " Verify template was applied
   let lines = getline(1, '$')
-  Assert lines[0] == '# Project: {{name}}', 'First line should match template'
+  Assert lines[0] == '# Project: test-project', 'First line should match template'
   Assert lines[2] == '## Goal', 'Should have Goal section from template'
   Assert lines[4] == '## Tasks', 'Should have Tasks section from template'
   Assert lines[6] == '## Notes', 'Should have Notes section from template'
