@@ -43,8 +43,13 @@ command! MetaNotesDailyPrev call meta_notes#notes#DailyPrev()
 command! MetaNotesDailyNext call meta_notes#notes#DailyNext()
 command! MetaNotesJumpToWeek call meta_notes#notes#JumpToWeek()
 
+
 " Initialization command
 command! MetaNotesInit call meta_notes#notes#Init()
+
+" File operations
+command! -nargs=? -complete=file MetaNotesArchive call meta_notes#file_ops#Archive(<f-args>)
+
 
 " Restore cpo
 let &cpo = s:save_cpo

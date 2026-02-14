@@ -1,0 +1,130 @@
+" Tests for MetaNotesArchive command
+
+Before:
+  " Clean up any existing test files before each test
+  call system('rm -rf project/test-archive-* area/test-archive-* resource/test-archive-* archive/project/test-archive-* archive/area/test-archive-* archive/resource/test-archive-*')
+
+After:
+  " Clean up test files after each test
+  call system('rm -rf project/test-archive-* area/test-archive-* resource/test-archive-* archive/project/test-archive-* archive/area/test-archive-* archive/resource/test-archive-*')
+
+" Test: Archive a single file from project folder
+Execute (MetaNotesArchive should move file from project to archive/project):
+  " Create test file
+  call writefile(['# Test Project'], 'project/test-archive-file.md')
+
+  " Verify file exists before archiving
+  Assert filereadable('project/test-archive-file.md')
+
+  " Archive the file
+  call meta_notes#file_ops#Archive('project/test-archive-file.md')
+
+  " Verify file moved to archive
+  Assert filereadable('archive/project/test-archive-file.md')
+  Assert !filereadable('project/test-archive-file.md')
+
+" Test: Archive a folder from project
+Execute (MetaNotesArchive should move folder from project to archive/project):
+  " Create test folder
+  call mkdir('project/test-archive-folder', 'p')
+  call writefile(['# Folder Note'], 'project/test-archive-folder/note.md')
+
+  " Verify folder exists before archiving
+  Assert isdirectory('project/test-archive-folder')
+  Assert filereadable('project/test-archive-folder/note.md')
+
+  " Archive the folder
+  call meta_notes#file_ops#Archive('project/test-archive-folder')
+
+  " Verify folder moved to archive
+  Assert isdirectory('archive/project/test-archive-folder')
+  Assert filereadable('archive/project/test-archive-folder/note.md')
+  Assert !isdirectory('project/test-archive-folder')
+
+" Test: Archive from area folder
+Execute (MetaNotesArchive should move folder from area to archive/area):
+  " Create test folder
+  call mkdir('area/test-archive-area', 'p')
+  call writefile(['# Test Area'], 'area/test-archive-area/note.md')
+
+  " Verify folder exists
+  Assert isdirectory('area/test-archive-area')
+
+  " Archive the folder
+  call meta_notes#file_ops#Archive('area/test-archive-area')
+
+  " Verify moved to archive/area
+  Assert isdirectory('archive/area/test-archive-area')
+  Assert filereadable('archive/area/test-archive-area/note.md')
+  Assert !isdirectory('area/test-archive-area')
+
+" Test: Archive from resource folder
+Execute (MetaNotesArchive should move file from resource to archive/resource):
+  " Create test file
+  call writefile(['# Test Resource'], 'resource/test-archive-resource.md')
+
+  " Verify file exists
+  Assert filereadable('resource/test-archive-resource.md')
+
+  " Archive the file
+  call meta_notes#file_ops#Archive('resource/test-archive-resource.md')
+
+  " Verify moved to archive/resource
+  Assert filereadable('archive/resource/test-archive-resource.md')
+  Assert !filereadable('resource/test-archive-resource.md')
+
+" Test: Archive current buffer updates buffer location
+Execute (MetaNotesArchive with no args should archive current buffer):
+  " Create a test file and open it
+  call writefile(['# Current Buffer Test'], 'project/test-archive-current.md')
+  edit project/test-archive-current.md
+
+  " Archive current buffer
+  MetaNotesArchive
+
+  " Verify buffer location updated
+  AssertEqual 'archive/project/test-archive-current.md', expand('%:p:.')
+
+  " Verify file moved
+  Assert filereadable('archive/project/test-archive-current.md')
+  Assert !filereadable('project/test-archive-current.md')
+
+  " Close buffer
+  bwipeout!
+
+" Test: Cannot archive from invalid location
+Execute (MetaNotesArchive should fail for non-PARA folders):
+  " Create a file in an invalid location
+  call writefile(['# Invalid'], 'test-invalid.md')
+
+  " Try to archive it (should fail with echoerr)
+  try
+    call meta_notes#file_ops#Archive('test-invalid.md')
+    " If we get here, the function didn't throw an error
+    AssertEqual 1, 0, 'Expected error but function succeeded'
+  catch /Can only archive items from project/
+    " Expected error caught
+  endtry
+
+  " File should not be moved
+  Assert filereadable('test-invalid.md')
+
+  " Clean up
+  call delete('test-invalid.md')
+
+" Test: Cannot archive already archived item
+Execute (MetaNotesArchive should fail for already archived items):
+  " Create a file in archive
+  call writefile(['# Already Archived'], 'archive/project/test-already-archived.md')
+
+  " Try to archive it (should fail with echoerr)
+  try
+    call meta_notes#file_ops#Archive('archive/project/test-already-archived.md')
+    " If we get here, the function didn't throw an error
+    AssertEqual 1, 0, 'Expected error but function succeeded'
+  catch /Can only archive items from project/
+    " Expected error caught
+  endtry
+
+  " Clean up
+  call delete('archive/project/test-already-archived.md')
