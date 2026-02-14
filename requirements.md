@@ -242,6 +242,19 @@ Week Plan: [[resource/plan/week/Plan {{week_start}}]]
 
 ## Notes
 
+## Time Tracking
+
+### Log
+
+### Time Block
+
+| Time    | Plan                                 | Actual                      |
+| ------- | ------------------------------------ | --------------------------- |
+| 8:00am  |                                      |                             |
+| 8:15am  |                                      |                             |
+| 8:30am  |                                      |                             |
+| 8:45am  |                                      |                             |
+| 9:00am  |                                      |                             |
 ```
 
 ## Note Management
