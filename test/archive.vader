@@ -128,3 +128,53 @@ Execute (MetaNotesArchive should fail for already archived items):
 
   " Clean up
   call delete('archive/project/test-already-archived.md')
+
+" Test: Batch archive with wildcard
+Execute (MetaNotesArchive should support batch operations with wildcards):
+  " Create multiple files in a folder
+  call mkdir('project/test-batch-folder', 'p')
+  call writefile(['# File 1'], 'project/test-batch-folder/file1.md')
+  call writefile(['# File 2'], 'project/test-batch-folder/file2.md')
+  call writefile(['# File 3'], 'project/test-batch-folder/file3.md')
+
+  " Archive all files with wildcard
+  call meta_notes#file_ops#Archive('project/test-batch-folder/*.md')
+
+  " Verify all files moved to archive
+  Assert filereadable('archive/project/test-batch-folder/file1.md')
+  Assert filereadable('archive/project/test-batch-folder/file2.md')
+  Assert filereadable('archive/project/test-batch-folder/file3.md')
+  Assert !filereadable('project/test-batch-folder/file1.md')
+  Assert !filereadable('project/test-batch-folder/file2.md')
+  Assert !filereadable('project/test-batch-folder/file3.md')
+
+  " Folder should still exist (only files archived)
+  Assert isdirectory('project/test-batch-folder')
+
+" Test: Batch archive entire folder contents
+Execute (MetaNotesArchive should archive all items in folder):
+  " Create folder with files and subfolders
+  call mkdir('project/test-batch-mixed/subfolder', 'p')
+  call writefile(['# File A'], 'project/test-batch-mixed/fileA.md')
+  call writefile(['# File B'], 'project/test-batch-mixed/fileB.md')
+  call writefile(['# Sub File'], 'project/test-batch-mixed/subfolder/subfile.md')
+
+  " Archive everything in the folder
+  call meta_notes#file_ops#Archive('project/test-batch-mixed/*')
+
+  " Verify all items moved
+  Assert filereadable('archive/project/test-batch-mixed/fileA.md')
+  Assert filereadable('archive/project/test-batch-mixed/fileB.md')
+  Assert isdirectory('archive/project/test-batch-mixed/subfolder')
+  Assert filereadable('archive/project/test-batch-mixed/subfolder/subfile.md')
+
+" Test: Wildcard with no matches
+Execute (MetaNotesArchive should fail gracefully when wildcard matches nothing):
+  " Try to archive with a wildcard that matches nothing
+  try
+    call meta_notes#file_ops#Archive('project/nonexistent-folder/*')
+    " If we get here, function should have failed
+    AssertEqual 1, 0, 'Expected error for no matches'
+  catch /No items match wildcard pattern/
+    " Expected error caught
+  endtry

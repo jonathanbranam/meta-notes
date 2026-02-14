@@ -4,16 +4,48 @@
 " Archive a file or folder to the archive directory
 " Args:
 "   path: Path to file or folder to archive (optional, defaults to current buffer)
+"         Can include wildcards (*, ?) for batch operations
 " Behavior:
 "   - Moves project/item → archive/project/item
 "   - Moves area/item → archive/area/item
 "   - Moves resource/item → archive/resource/item
 "   - Preserves directory structure
 "   - Updates the current buffer if archiving current file
+"   - Supports wildcards for batch archiving (e.g., project/folder/*)
 function! meta_notes#file_ops#Archive(...) abort
   " Get the path to archive
   let l:path = a:0 > 0 ? a:1 : expand('%:p:.')
 
+  " Check if path contains wildcards
+  if l:path =~ '[*?]'
+    " Batch operation - expand wildcard and archive each item
+    let l:items = glob(l:path, 0, 1)
+
+    if len(l:items) == 0
+      echoerr 'No items match wildcard pattern: ' . l:path
+      return
+    endif
+
+    let l:archived_count = 0
+    let l:failed_count = 0
+
+    for l:item in l:items
+      try
+        call meta_notes#file_ops#Archive(l:item)
+        let l:archived_count += 1
+      catch
+        let l:failed_count += 1
+        echohl WarningMsg
+        echo 'Failed to archive: ' . l:item . ' (' . v:exception . ')'
+        echohl None
+      endtry
+    endfor
+
+    echo 'Archived ' . l:archived_count . ' item(s)' . (l:failed_count > 0 ? ' (' . l:failed_count . ' failed)' : '')
+    return
+  endif
+
+  " Single item operation
   " Remove .md extension if present for consistent handling
   let l:path_no_ext = substitute(l:path, '\.md$', '', '')
 
