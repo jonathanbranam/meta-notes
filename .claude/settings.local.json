@@ -4,7 +4,14 @@
       "Bash(tree:*)",
       "Bash(vim:*)",
       "Bash(./run_tests.sh:*)",
-      "Bash(pipenv run pytest:*)"
+      "Bash(pipenv run pytest:*)",
+      "Bash(bd :*)",
+      "Bash(bd create:*)",
+      "Bash(bd list:*)",
+      "Bash(bd count:*)",
+      "Bash(bd sync:*)",
+      "Bash(git pull:*)",
+      "Bash(git push:*)"
     ]
   }
 }
