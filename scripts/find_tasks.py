@@ -449,6 +449,17 @@ Examples:
     # Get current date
     today = date.today()
 
+    # Check if we're using filters (if so, use filtered output; otherwise use categorized report)
+    using_filters = args.folder or due_on or due_by or due_between or args.status != 'incomplete'
+
+    if not using_filters:
+        # Use categorized report (for backward compatibility with templates)
+        lines = generate_report(args.root_dir, today)
+        output = "\n".join(lines)
+        print(output)
+        return
+
+    # Filtered mode: apply filters and show simple output
     # Find all markdown files
     markdown_files = find_all_markdown_files(args.root_dir)
 
