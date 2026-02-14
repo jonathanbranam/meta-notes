@@ -76,7 +76,6 @@ function! meta_notes#notes#Open() abort
     " Open existing file
     execute 'edit!' fnameescape(filepath)
   else
-    " TODO: test with this removed and see if it is required
     " Create parent directory if it doesn't exist
     let folder = fnamemodify(filepath, ':h')
     if !isdirectory(folder)

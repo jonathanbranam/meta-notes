@@ -1,5 +1,12 @@
 " Tests for daily note functions
 
+Execute (Setup - Create temporary test directory):
+  let g:test_dir = tempname()
+  call mkdir(g:test_dir, 'p')
+  execute 'cd' g:test_dir
+  call mkdir('resource/daily-notes/26-Q1', 'p')
+  call mkdir('resource/daily-notes/26-Q3', 'p')
+
 Execute (Test CalculateQuarter - January is Q1):
   let result = meta_notes#notes#CalculateQuarter('2026-01-15')
   AssertEqual 'Q1', result
@@ -49,10 +56,6 @@ Execute (Test CalculateQuarter - December is Q4):
   AssertEqual 'Q4', result
 
 Execute (Test OpenDaily creates file with correct path for Q1):
-  " Clean up any existing file and directory first
-  silent! call delete('resource/daily-notes/26-Q1/2026-02-13 Fri.md')
-  silent! call delete('resource/daily-notes/26-Q1', 'd')
-
   " Open daily note for Friday, Feb 13, 2026
   call meta_notes#notes#OpenDaily('2026-02-13')
 
@@ -63,15 +66,8 @@ Execute (Test OpenDaily creates file with correct path for Q1):
   let first_line = getline(1)
   AssertEqual '# Daily Note - 2026-02-13 Fri', first_line
 
-  " Clean up
-  silent! call delete('resource/daily-notes/26-Q1/2026-02-13 Fri.md')
-  silent! call delete('resource/daily-notes/26-Q1', 'd')
 
 Execute (Test OpenDaily creates file with correct path for Q3):
-  " Clean up any existing file and directory first
-  silent! call delete('resource/daily-notes/26-Q3/2026-07-15 Wed.md')
-  silent! call delete('resource/daily-notes/26-Q3', 'd')
-
   " Open daily note for Wednesday, July 15, 2026
   call meta_notes#notes#OpenDaily('2026-07-15')
 
@@ -82,13 +78,9 @@ Execute (Test OpenDaily creates file with correct path for Q3):
   let first_line = getline(1)
   AssertEqual '# Daily Note - 2026-07-15 Wed', first_line
 
-  " Clean up
-  silent! call delete('resource/daily-notes/26-Q3/2026-07-15 Wed.md')
-  silent! call delete('resource/daily-notes/26-Q3', 'd')
-
 Execute (Test OpenDaily creates directory if it doesn't exist):
-  " Clean up any existing directory first
-  silent! call delete('resource/daily-notes/26-Q1', 'rf')
+  " Remove the directory to test creation
+  call delete('resource/daily-notes/26-Q1', 'rf')
 
   " Ensure directory doesn't exist
   Assert !isdirectory('resource/daily-notes/26-Q1')
@@ -99,9 +91,6 @@ Execute (Test OpenDaily creates directory if it doesn't exist):
   " Verify directory was created
   Assert isdirectory('resource/daily-notes/26-Q1')
 
-  " Clean up
-  silent! call delete('resource/daily-notes/26-Q1/2026-02-13 Fri.md')
-  silent! call delete('resource/daily-notes/26-Q1', 'd')
 
 Execute (Test MetaNotesDaily command with date argument):
   " Clean up any existing file first
@@ -118,17 +107,9 @@ Execute (Test MetaNotesDaily command with date argument):
   let first_line = getline(1)
   AssertEqual '# Daily Note - 2026-02-13 Fri', first_line
 
-  " Clean up
-  silent! call delete('resource/daily-notes/26-Q1/2026-02-13 Fri.md')
-  silent! call delete('resource/daily-notes/26-Q1', 'd')
 
 Execute (Test OpenDaily opens existing file):
-  " Clean up first
-  silent! call delete('resource/daily-notes/26-Q1/2026-02-13 Fri.md')
-  silent! call delete('resource/daily-notes/26-Q1', 'd')
-
   " Create a test file by opening it, writing content, and saving
-  call mkdir('resource/daily-notes/26-Q1', 'p')
   execute 'edit! resource/daily-notes/26-Q1/2026-02-13 Fri.md'
   call setline(1, ['# Existing Daily Note', '', 'This is existing content'])
   write
@@ -148,6 +129,6 @@ Execute (Test OpenDaily opens existing file):
   let third_line = getline(3)
   AssertEqual 'This is existing content', third_line
 
-  " Clean up
-  silent! call delete('resource/daily-notes/26-Q1/2026-02-13 Fri.md')
-  silent! call delete('resource/daily-notes/26-Q1', 'd')
+Execute (Cleanup - Remove temporary test directory):
+  execute 'cd -'
+  call delete(g:test_dir, 'rf')

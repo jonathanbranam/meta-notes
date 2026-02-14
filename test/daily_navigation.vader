@@ -1,9 +1,11 @@
 " Tests for daily note navigation functions
 
-Execute (Setup - Create test daily notes):
-  " Create directory structure
-  silent! call delete('resource/daily-notes/26-Q1', 'rf')
+Execute (Setup - Create temporary test directory):
+  let g:test_dir = tempname()
+  call mkdir(g:test_dir, 'p')
+  execute 'cd' g:test_dir
   call mkdir('resource/daily-notes/26-Q1', 'p')
+  call mkdir('resource/plan/week', 'p')
 
   " Create three daily notes for testing
   call writefile(['# Daily Note - 2026-02-10 Mon', '', 'Content for Feb 10'],
@@ -171,8 +173,6 @@ Execute (Test JumpToWeek from daily note):
   " Should now be on the weekly plan for Feb 9 (Monday of that week)
   Assert expand('%') =~ 'resource/plan/week/Plan 2026-02-09.md'
 
-  " Clean up the created weekly plan
-  silent! call delete('resource/plan/week/Plan 2026-02-09.md')
 
 Execute (Test JumpToWeek from non-daily note shows error):
   " Open a non-daily note buffer
@@ -197,11 +197,7 @@ Execute (Test MetaNotesJumpToWeek command):
   " Should now be on the weekly plan for Feb 9 (Monday of that week)
   Assert expand('%') =~ 'resource/plan/week/Plan 2026-02-09.md'
 
-  " Clean up the created weekly plan
-  silent! call delete('resource/plan/week/Plan 2026-02-09.md')
 
-Execute (Cleanup - Remove test daily notes):
-  " Clean up all test files
-  silent! call delete('resource/daily-notes/26-Q1', 'rf')
-  silent! call delete('resource/daily-notes/25-Q4', 'rf')
-  silent! call delete('resource/plan/week', 'rf')
+Execute (Cleanup - Remove temporary test directory):
+  execute 'cd -'
+  call delete(g:test_dir, 'rf')
