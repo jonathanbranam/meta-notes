@@ -1,13 +1,10 @@
 " Tests for template support (folder-specific and standard templates)
 
-Execute (Setup - Create test directory structure):
-  " Clean up any existing test files
-  call system('rm -rf test_folder')
+Execute (Setup - Create temporary test directory):
+  let g:test_dir = tempname()
+  call mkdir(g:test_dir, 'p')
+  execute 'cd' g:test_dir
   call mkdir('test_folder', 'p')
-
-Execute (Cleanup):
-  " Clean up test files after all tests
-  call system('rm -rf test_folder')
 
 " Test: FindTemplate function finds folder-specific template
 Execute (FindTemplate should find folder-specific template.md):
@@ -133,3 +130,7 @@ Execute (MetaNotesOpen should use simple header when no template):
 
   " Close and clean up
   bwipeout!
+
+Execute (Cleanup - Remove temporary test directory):
+  execute 'cd -'
+  call delete(g:test_dir, 'rf')
