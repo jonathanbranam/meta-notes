@@ -51,6 +51,9 @@ command! MetaNotesInit call meta_notes#notes#Init()
 command! -nargs=? -complete=file MetaNotesArchive call meta_notes#file_ops#Archive(<f-args>)
 command! -nargs=? MetaNotesRename call meta_notes#file_ops#Rename(<f-args>)
 
+" Time tracking
+command! MetaNotesTimeReport call meta_notes#time_tracking#ShowReport()
+
 
 " Restore cpo
 let &cpo = s:save_cpo

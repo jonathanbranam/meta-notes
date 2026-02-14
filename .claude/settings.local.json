@@ -19,7 +19,8 @@
       "Bash(date:*)",
       "Bash(ls:*)",
       "Bash(cat:*)",
-      "Bash(printf:*)"
+      "Bash(printf:*)",
+      "Bash(pipenv run python:*)"
     ]
   }
 }
