@@ -30,7 +30,10 @@ from time_tracking import (
     calculate_duration,
     calculate_total_time_by_tag,
     calculate_work_vs_nonwork,
-    format_duration
+    format_duration,
+    is_off_plan,
+    compare_plan_vs_actual,
+    calculate_plan_adherence
 )
 
 
@@ -736,3 +739,172 @@ def test_format_duration_zero():
     duration = timedelta()
     result = format_duration(duration)
     assert result == "0m"
+
+
+# Tests for is_off_plan function
+
+def test_is_off_plan_with_strikethrough():
+    """Test detecting off-plan entry with strikethrough."""
+    assert is_off_plan("~~emergency meeting~~") is True
+
+
+def test_is_off_plan_partial_strikethrough():
+    """Test detecting off-plan entry with partial strikethrough."""
+    assert is_off_plan("meeting ~~off-plan~~") is True
+
+
+def test_is_off_plan_no_strikethrough():
+    """Test normal entry without strikethrough."""
+    assert is_off_plan("regular meeting") is False
+
+
+def test_is_off_plan_none():
+    """Test None actual entry."""
+    assert is_off_plan(None) is False
+
+
+def test_is_off_plan_empty():
+    """Test empty actual entry."""
+    assert is_off_plan("") is False
+
+
+# Tests for compare_plan_vs_actual function
+
+def test_compare_plan_vs_actual_all_on_plan():
+    """Test comparison when all entries are on-plan."""
+    blocks = [
+        TimeBlockEntry(time(8, 0), "coding #dev", "coding #dev", [], [], "test.md", 1),
+        TimeBlockEntry(time(8, 15), "email #admin", "email #admin", [], [], "test.md", 2),
+        TimeBlockEntry(time(8, 30), "meeting #mtg", "meeting #mtg", [], [], "test.md", 3),
+    ]
+
+    on_plan, off_plan, untracked = compare_plan_vs_actual(blocks)
+
+    assert on_plan == 3
+    assert off_plan == 0
+    assert untracked == 0
+
+
+def test_compare_plan_vs_actual_with_off_plan():
+    """Test comparison with off-plan entries."""
+    blocks = [
+        TimeBlockEntry(time(8, 0), "coding #dev", "coding #dev", [], [], "test.md", 1),
+        TimeBlockEntry(time(8, 15), "email #admin", "~~emergency call~~ #mtg", [], [], "test.md", 2),
+        TimeBlockEntry(time(8, 30), "meeting #mtg", "different activity", [], [], "test.md", 3),
+    ]
+
+    on_plan, off_plan, untracked = compare_plan_vs_actual(blocks)
+
+    assert on_plan == 1
+    assert off_plan == 2
+    assert untracked == 0
+
+
+def test_compare_plan_vs_actual_with_untracked():
+    """Test comparison with untracked entries."""
+    blocks = [
+        TimeBlockEntry(time(8, 0), "coding #dev", "coding #dev", [], [], "test.md", 1),
+        TimeBlockEntry(time(8, 15), "email #admin", None, [], [], "test.md", 2),
+        TimeBlockEntry(time(8, 30), "meeting #mtg", "", [], [], "test.md", 3),
+    ]
+
+    on_plan, off_plan, untracked = compare_plan_vs_actual(blocks)
+
+    assert on_plan == 1
+    assert off_plan == 0
+    assert untracked == 2
+
+
+def test_compare_plan_vs_actual_ignore_tags():
+    """Test that comparison ignores tags when matching."""
+    blocks = [
+        TimeBlockEntry(time(8, 0), "coding #dev", "coding #project-x", [], [], "test.md", 1),
+        TimeBlockEntry(time(8, 15), "email", "email #admin #urgent", [], [], "test.md", 2),
+    ]
+
+    on_plan, off_plan, untracked = compare_plan_vs_actual(blocks)
+
+    # Should match because activity text matches (tags ignored)
+    assert on_plan == 2
+    assert off_plan == 0
+
+
+def test_compare_plan_vs_actual_case_insensitive():
+    """Test that comparison is case-insensitive."""
+    blocks = [
+        TimeBlockEntry(time(8, 0), "Coding #dev", "coding #dev", [], [], "test.md", 1),
+        TimeBlockEntry(time(8, 15), "EMAIL", "email", [], [], "test.md", 2),
+    ]
+
+    on_plan, off_plan, untracked = compare_plan_vs_actual(blocks)
+
+    assert on_plan == 2
+    assert off_plan == 0
+
+
+def test_compare_plan_vs_actual_skip_empty_plan():
+    """Test that blocks without plans are skipped."""
+    blocks = [
+        TimeBlockEntry(time(8, 0), None, "some activity", [], [], "test.md", 1),
+        TimeBlockEntry(time(8, 15), "", "another activity", [], [], "test.md", 2),
+        TimeBlockEntry(time(8, 30), "coding #dev", "coding #dev", [], [], "test.md", 3),
+    ]
+
+    on_plan, off_plan, untracked = compare_plan_vs_actual(blocks)
+
+    # Only the third block should be counted
+    assert on_plan == 1
+    assert off_plan == 0
+    assert untracked == 0
+
+
+# Tests for calculate_plan_adherence function
+
+def test_calculate_plan_adherence_perfect():
+    """Test plan adherence calculation with 100% on-plan."""
+    blocks = [
+        TimeBlockEntry(time(8, 0), "coding #dev", "coding #dev", [], [], "test.md", 1),
+        TimeBlockEntry(time(8, 15), "email #admin", "email #admin", [], [], "test.md", 2),
+    ]
+
+    stats = calculate_plan_adherence(blocks)
+
+    assert stats['on_plan_percent'] == 100.0
+    assert stats['off_plan_percent'] == 0.0
+    assert stats['untracked_percent'] == 0.0
+    assert stats['on_plan_count'] == 2
+    assert stats['off_plan_count'] == 0
+    assert stats['untracked_count'] == 0
+    assert stats['total_blocks'] == 2
+
+
+def test_calculate_plan_adherence_mixed():
+    """Test plan adherence calculation with mixed results."""
+    blocks = [
+        TimeBlockEntry(time(8, 0), "coding #dev", "coding #dev", [], [], "test.md", 1),
+        TimeBlockEntry(time(8, 15), "email #admin", "~~emergency~~ #mtg", [], [], "test.md", 2),
+        TimeBlockEntry(time(8, 30), "meeting #mtg", None, [], [], "test.md", 3),
+        TimeBlockEntry(time(8, 45), "review #dev", "different task", [], [], "test.md", 4),
+    ]
+
+    stats = calculate_plan_adherence(blocks)
+
+    assert stats['on_plan_count'] == 1
+    assert stats['off_plan_count'] == 2
+    assert stats['untracked_count'] == 1
+    assert stats['total_blocks'] == 4
+    assert stats['on_plan_percent'] == 25.0
+    assert stats['off_plan_percent'] == 50.0
+    assert stats['untracked_percent'] == 25.0
+
+
+def test_calculate_plan_adherence_empty():
+    """Test plan adherence calculation with no blocks."""
+    blocks = []
+
+    stats = calculate_plan_adherence(blocks)
+
+    assert stats['on_plan_percent'] == 0.0
+    assert stats['off_plan_percent'] == 0.0
+    assert stats['untracked_percent'] == 0.0
+    assert stats['total_blocks'] == 0

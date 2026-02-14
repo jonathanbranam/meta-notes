@@ -579,3 +579,116 @@ def format_duration(duration: timedelta) -> str:
         return f"{hours}h {minutes}m"
     else:
         return f"{minutes}m"
+
+
+def is_off_plan(actual_text: Optional[str]) -> bool:
+    """
+    Check if an actual entry is marked as off-plan.
+
+    Off-plan entries are marked with strikethrough: ~~text~~
+
+    Args:
+        actual_text: The actual column text.
+
+    Returns:
+        True if marked as off-plan, False otherwise.
+    """
+    if actual_text is None:
+        return False
+
+    # Check for strikethrough pattern: ~~text~~
+    return '~~' in actual_text
+
+
+def compare_plan_vs_actual(time_blocks: list[TimeBlockEntry]) -> tuple[int, int, int]:
+    """
+    Compare plan vs actual in time blocks.
+
+    Categorizes time blocks as:
+    - On-plan: actual matches plan (non-empty actual with same content)
+    - Off-plan: actual is marked with ~~strikethrough~~ or differs from plan
+    - Untracked: no actual entry
+
+    Args:
+        time_blocks: List of TimeBlockEntry objects.
+
+    Returns:
+        Tuple of (on_plan_count, off_plan_count, untracked_count).
+    """
+    on_plan = 0
+    off_plan = 0
+    untracked = 0
+
+    for block in time_blocks:
+        # Skip blocks with no plan
+        if block.plan is None or not block.plan.strip():
+            continue
+
+        # No actual entry means untracked
+        if block.actual is None or not block.actual.strip():
+            untracked += 1
+            continue
+
+        # Check if marked as off-plan
+        if is_off_plan(block.actual):
+            off_plan += 1
+            continue
+
+        # Compare plan vs actual (ignoring tags for comparison)
+        plan_clean = block.plan.strip()
+        actual_clean = block.actual.strip()
+
+        # Remove tags from both for comparison
+        import re
+        plan_no_tags = re.sub(r'#[\w-]+', '', plan_clean).strip()
+        actual_no_tags = re.sub(r'#[\w-]+', '', actual_clean).strip()
+
+        # If the main activity matches (ignoring case and extra whitespace), it's on-plan
+        if plan_no_tags.lower() == actual_no_tags.lower():
+            on_plan += 1
+        else:
+            off_plan += 1
+
+    return on_plan, off_plan, untracked
+
+
+def calculate_plan_adherence(time_blocks: list[TimeBlockEntry]) -> dict[str, float]:
+    """
+    Calculate plan adherence statistics.
+
+    Args:
+        time_blocks: List of TimeBlockEntry objects.
+
+    Returns:
+        Dictionary with keys:
+        - 'on_plan_percent': Percentage of time spent on-plan
+        - 'off_plan_percent': Percentage of time spent off-plan
+        - 'untracked_percent': Percentage of time untracked
+        - 'on_plan_count': Number of on-plan blocks
+        - 'off_plan_count': Number of off-plan blocks
+        - 'untracked_count': Number of untracked blocks
+        - 'total_blocks': Total number of blocks with plans
+    """
+    on_plan, off_plan, untracked = compare_plan_vs_actual(time_blocks)
+    total = on_plan + off_plan + untracked
+
+    if total == 0:
+        return {
+            'on_plan_percent': 0.0,
+            'off_plan_percent': 0.0,
+            'untracked_percent': 0.0,
+            'on_plan_count': 0,
+            'off_plan_count': 0,
+            'untracked_count': 0,
+            'total_blocks': 0,
+        }
+
+    return {
+        'on_plan_percent': (on_plan / total) * 100,
+        'off_plan_percent': (off_plan / total) * 100,
+        'untracked_percent': (untracked / total) * 100,
+        'on_plan_count': on_plan,
+        'off_plan_count': off_plan,
+        'untracked_count': untracked,
+        'total_blocks': total,
+    }
