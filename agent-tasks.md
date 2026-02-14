@@ -49,17 +49,26 @@ You should see output like: `bd version 0.49.6`
 
 ### Initialize Beads in Repository
 
+**Standard initialization (uses SQLite):**
 ```bash
 cd /path/to/your/project
 bd init --quiet
+```
+
+**For ephemeral/containerized environments (no SQLite):**
+```bash
+cd /path/to/your/project
+bd init --no-db --quiet
 ```
 
 This creates a `.beads/` directory with:
 - `issues.jsonl` - Task database (tracked in git)
 - `interactions.jsonl` - Session history (tracked in git)
 - `config.yaml` - Configuration (tracked in git)
-- `beads.db` - SQLite database (ignored by git)
+- `beads.db` - SQLite database (ignored by git, not created with `--no-db`)
 - `.gitignore` - Ignores ephemeral files
+
+**Note:** If you encounter SQLite WAL locking errors after initialization, see the [Troubleshooting](#troubleshooting) section to enable no-db mode.
 
 ### Setup Claude Code Integration
 
@@ -214,20 +223,86 @@ git push
 4. **Update status regularly**: Mark tasks as started/done to keep state accurate
 5. **Commit task changes**: The `.beads/` directory should be tracked in git
 6. **Let hooks work**: The SessionStart hook automatically primes context
+7. **Use no-db mode for ephemeral environments**: Enable `no-db: true` in config.yaml for containerized or web-based environments to avoid SQLite WAL issues
+
+## Claude Code on the Web
+
+Claude Code for Web provides ephemeral Linux VM sandboxes. Each session is a fresh environment, which can cause issues with SQLite's Write-Ahead Logging (WAL) mode.
+
+### Recommended Setup
+
+1. **Use no-db mode** to avoid filesystem compatibility issues:
+   ```yaml
+   # In .beads/config.yaml
+   no-db: true
+   issue-prefix: "your-project"
+   ```
+
+2. **SessionStart hook** will automatically install bd and load context
+
+3. **All state persists** via git-tracked JSONL files
+
+### Why no-db Mode for Web Sessions?
+
+- Ephemeral VMs may have filesystem restrictions that prevent WAL mode
+- JSONL-only operation is more reliable in containerized environments
+- No performance penalty in web sessions (network is the bottleneck)
+- State persists perfectly via git since JSONL files are the source of truth
 
 ## Troubleshooting
+
+### WAL (Write-Ahead Logging) Locking Issues
+
+If you encounter SQLite locking protocol errors (common in containerized environments like Claude Code on the web):
+
+**Error message:**
+```
+Error: failed to open database: failed to enable WAL mode: sqlite3: locking protocol
+```
+
+**Solution - Enable no-db mode:**
+
+1. Edit `.beads/config.yaml`:
+   ```yaml
+   # Enable no-db mode (use JSONL only, bypass SQLite)
+   no-db: true
+
+   # Set issue prefix explicitly
+   issue-prefix: "your-project-name"
+   ```
+
+2. Verify it works:
+   ```bash
+   bd list
+   bd status
+   ```
+
+**What is no-db mode?**
+- Bypasses SQLite entirely, works directly with JSONL files
+- Perfect for ephemeral environments (Docker, Claude Code web, CI/CD)
+- Slightly slower than SQLite but avoids filesystem compatibility issues
+- JSONL files remain the source of truth (git-tracked)
+
+**Alternative: Use flags instead of config**
+```bash
+bd --no-db list
+bd --no-db ready
+bd --sandbox --no-db create --title="Task name"
+```
+
+### Other Issues
 
 **Daemon issues:**
 ```bash
 bd doctor
 ```
 
-**Database locked:**
+**Database locked (SQLite mode only):**
 ```bash
 bd sync --force
 ```
 
-**Reset database from JSONL:**
+**Reset database from JSONL (SQLite mode only):**
 ```bash
 rm .beads/beads.db
 bd status  # Rebuilds from JSONL
