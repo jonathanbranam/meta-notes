@@ -79,6 +79,45 @@ Execute (Test case):
 
 See existing tests in `test/` for more examples.
 
+When writing vader tests that operate on the file system, always follow this
+pattern. First create a temporary directory and cd to it. At the end of the
+test, remove the temporary directory and cd back to the project root.
+
+At the beginning of the .vader script:
+
+```vim
+Execute (Setup - Create temporary test directory):
+  let g:test_dir = tempname()
+  call mkdir(g:test_dir, 'p')
+  " Store original directory and change to test root
+  let g:original_dir = getcwd()
+  execute 'cd' g:test_dir
+```
+
+In a test
+
+```vim
+Execute (Test that writes a file):
+  " Create a sample note file
+  call writefile(['# Sample Note', '', 'This is a test note.'],
+        \ g:test_root . '/note/path/Filename.md')
+```
+
+Cleanup at the end of the vader script:
+
+```vim
+Execute (Cleanup):
+  " Restore original directory
+  execute 'cd' g:original_dir
+
+  " Clean up test files
+  call delete(g:test_root, 'rf')
+
+  " Clean up variables
+  unlet g:test_root
+  unlet g:original_dir
+```
+
 ## Python Unit Testing
 
 Python scripts in the `scripts/` directory use pytest for unit testing.
