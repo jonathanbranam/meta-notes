@@ -4,7 +4,7 @@ Time tracking module for markdown files.
 Handles time log parsing, time block parsing, and time calculations.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, time
 from enum import Enum
 from typing import Optional
@@ -16,6 +16,39 @@ class EntryType(Enum):
     """Enum representing the type of time log entry."""
     ARRIVED = "arrived"
     ACTIVITY = "activity"
+
+
+class TagType(Enum):
+    """Enum representing the category of a tag."""
+    SPECIAL = "special"  # Tags like #mtg, #dev, #pers, #admin
+    ACTIVITY = "activity"  # User-defined activity tags
+
+
+# Define special tag categories
+SPECIAL_TAGS = {
+    '#mtg',      # Meetings
+    '#dev',      # Development work
+    '#pers',     # Personal time
+    '#admin',    # Administrative tasks
+    '#break',    # Break time
+}
+
+
+@dataclass
+class Tag:
+    """Represents a tag with its type and text.
+
+    Examples:
+        Tag('#mtg', TagType.SPECIAL)
+        Tag('#project-alpha', TagType.ACTIVITY)
+    """
+    text: str
+    tag_type: TagType
+
+    def __post_init__(self):
+        """Ensure tag text starts with #."""
+        if not self.text.startswith('#'):
+            self.text = '#' + self.text
 
 
 @dataclass
@@ -38,12 +71,7 @@ class TimeLogEntry:
     start_time: Optional[time] = None
     end_time: Optional[time] = None
     activity: Optional[str] = None
-    tags: list[str] = None
-
-    def __post_init__(self):
-        """Initialize tags list if None."""
-        if self.tags is None:
-            self.tags = []
+    tags: list[Tag] = field(default_factory=list)
 
 
 def _parse_time(time_str: str) -> Optional[time]:
@@ -86,18 +114,63 @@ def _parse_time(time_str: str) -> Optional[time]:
         return None
 
 
-def _extract_tags(text: str) -> list[str]:
+def categorize_tag(tag_text: str) -> TagType:
     """
-    Extract tags from text enclosed in parentheses.
+    Categorize a tag as special or activity.
 
-    Tags are comma-separated and start with #.
-    Example: "(#admin, #communication)" returns ["#admin", "#communication"]
+    Args:
+        tag_text: Tag text (with or without # prefix).
+
+    Returns:
+        TagType.SPECIAL if the tag is a known special tag, TagType.ACTIVITY otherwise.
+    """
+    # Normalize tag text to lowercase with # prefix
+    normalized = tag_text.lower()
+    if not normalized.startswith('#'):
+        normalized = '#' + normalized
+
+    return TagType.SPECIAL if normalized in SPECIAL_TAGS else TagType.ACTIVITY
+
+
+def parse_tags_from_text(text: str) -> list[Tag]:
+    """
+    Extract all tags from text (both in parentheses and standalone).
+
+    Tags start with # and can be:
+    - In parentheses: (#admin, #communication)
+    - Standalone: #project-alpha #urgent
 
     Args:
         text: Text to search for tags.
 
     Returns:
-        List of tags found (including the # prefix).
+        List of Tag objects found.
+    """
+    tags = []
+
+    # Pattern to match tags: # followed by word characters (letters, numbers, underscore, hyphen)
+    pattern = re.compile(r'#[\w-]+')
+    matches = pattern.findall(text)
+
+    for match in matches:
+        tag_type = categorize_tag(match)
+        tags.append(Tag(match, tag_type))
+
+    return tags
+
+
+def _extract_tags_from_parentheses(text: str) -> list[Tag]:
+    """
+    Extract tags from text enclosed in parentheses.
+
+    Tags are comma-separated and start with #.
+    Example: "(#admin, #communication)" returns [Tag('#admin'), Tag('#communication')]
+
+    Args:
+        text: Text to search for tags.
+
+    Returns:
+        List of Tag objects found in parentheses.
     """
     # Pattern: parentheses containing comma-separated tags
     pattern = re.compile(r'\(([^)]+)\)')
@@ -108,7 +181,14 @@ def _extract_tags(text: str) -> list[str]:
 
     tags_str = match.group(1)
     # Split by comma and strip whitespace
-    tags = [tag.strip() for tag in tags_str.split(',')]
+    tag_texts = [tag.strip() for tag in tags_str.split(',')]
+
+    # Create Tag objects
+    tags = []
+    for tag_text in tag_texts:
+        if tag_text:  # Skip empty strings
+            tag_type = categorize_tag(tag_text)
+            tags.append(Tag(tag_text, tag_type))
 
     return tags
 
@@ -183,8 +263,8 @@ def _parse_activity_entry(line: str, filename: str, line_no: int) -> Optional[Ti
     start_time_str = match.group(2)
     end_time_str = match.group(3)
 
-    # Extract tags from activity text
-    tags = _extract_tags(activity_text)
+    # Extract tags from activity text (use parentheses extraction for backward compatibility)
+    tags = _extract_tags_from_parentheses(activity_text)
 
     # Remove tags from activity text to get clean activity description
     activity = re.sub(r'\s*\([^)]+\)\s*', ' ', activity_text).strip()
@@ -266,3 +346,124 @@ def filter_entries_by_type(entries: list[TimeLogEntry],
         Filtered list of TimeLogEntry objects.
     """
     return [entry for entry in entries if entry.entry_type in entry_types]
+
+
+@dataclass
+class TimeBlockEntry:
+    """Represents a time block table entry found in a markdown file.
+
+    Time blocks are markdown tables with Time, Plan, and Actual columns.
+
+    Examples:
+        | Time    | Plan                | Actual              |
+        |  8:00am | email #admin        | meeting #mtg        |
+        |  8:15am | [break]             | coding #dev         |
+        |  8:30am | ~~off-plan~~        |                     |
+    """
+    time_slot: time
+    plan: Optional[str] = None
+    actual: Optional[str] = None
+    plan_tags: list[Tag] = field(default_factory=list)
+    actual_tags: list[Tag] = field(default_factory=list)
+    filename: str = ""
+    line_no: int = 0
+
+
+def _parse_time_block_row(line: str, filename: str, line_no: int) -> Optional[TimeBlockEntry]:
+    """
+    Parse a time block table row.
+
+    Format: | HH:MM am/pm | plan text | actual text |
+
+    Args:
+        line: Line of text to parse.
+        filename: Source file name.
+        line_no: Line number in source file.
+
+    Returns:
+        TimeBlockEntry if successfully parsed, None otherwise.
+    """
+    # Pattern: table row with time and two content columns
+    # Example: |  8:00am | email #admin        | meeting #mtg        |
+    pattern = re.compile(r'^\s*\|\s*(\d{1,2}:\d{2}\s*(?:am|pm))\s*\|\s*([^|]*?)\s*\|\s*([^|]*?)\s*\|', re.IGNORECASE)
+    match = pattern.match(line)
+
+    if not match:
+        return None
+
+    time_str = match.group(1).strip()
+    plan_text = match.group(2).strip()
+    actual_text = match.group(3).strip()
+
+    # Parse time
+    time_slot = _parse_time(time_str)
+    if time_slot is None:
+        return None
+
+    # Extract tags from plan and actual columns
+    plan_tags = parse_tags_from_text(plan_text) if plan_text else []
+    actual_tags = parse_tags_from_text(actual_text) if actual_text else []
+
+    return TimeBlockEntry(
+        time_slot=time_slot,
+        plan=plan_text if plan_text else None,
+        actual=actual_text if actual_text else None,
+        plan_tags=plan_tags,
+        actual_tags=actual_tags,
+        filename=filename,
+        line_no=line_no
+    )
+
+
+def find_time_block_entries(filepath: str) -> list[TimeBlockEntry]:
+    """
+    Find all time block entries in a markdown file.
+
+    Looks for entries under a '### Time Block' section in the file.
+
+    Args:
+        filepath: Path to the markdown file to search.
+
+    Returns:
+        A list of TimeBlockEntry objects found in the file.
+    """
+    entries: list[TimeBlockEntry] = []
+    in_time_block_section = False
+    in_table = False
+
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            for line_num, line in enumerate(f, 1):
+                # Check for time block section header
+                if '### Time Block' in line:
+                    in_time_block_section = True
+                    continue
+
+                # Check if we've left the time block section (new section header)
+                if in_time_block_section and line.startswith('#'):
+                    in_time_block_section = False
+                    in_table = False
+                    continue
+
+                # Skip if not in time block section
+                if not in_time_block_section:
+                    continue
+
+                # Check for table header or separator
+                if '| Time' in line or '|---' in line or '| ---' in line:
+                    in_table = True
+                    continue
+
+                # Skip if not in table yet
+                if not in_table:
+                    continue
+
+                # Try to parse as time block row
+                entry = _parse_time_block_row(line, filepath, line_num)
+                if entry is not None:
+                    entries.append(entry)
+
+    except (IOError, UnicodeDecodeError) as e:
+        print(f"Warning: Could not read {filepath}: {e}", file=sys.stderr)
+
+    return entries

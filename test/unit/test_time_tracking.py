@@ -12,12 +12,20 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../scripts'))
 
 from time_tracking import (
     TimeLogEntry,
+    TimeBlockEntry,
     EntryType,
+    Tag,
+    TagType,
+    SPECIAL_TAGS,
+    categorize_tag,
+    parse_tags_from_text,
     _parse_time,
-    _extract_tags,
+    _extract_tags_from_parentheses,
     _parse_arrived_entry,
     _parse_activity_entry,
+    _parse_time_block_row,
     find_time_log_entries,
+    find_time_block_entries,
     filter_entries_by_type
 )
 
@@ -78,30 +86,103 @@ def test_parse_time_invalid_format():
     assert result is None
 
 
-# Tests for _extract_tags function
+# Tests for categorize_tag function
 
-def test_extract_tags_single_tag():
-    """Test extracting a single tag."""
-    result = _extract_tags("activity (#admin)")
-    assert result == ["#admin"]
-
-
-def test_extract_tags_multiple_tags():
-    """Test extracting multiple tags."""
-    result = _extract_tags("activity (#admin, #communication)")
-    assert result == ["#admin", "#communication"]
+def test_categorize_tag_special_mtg():
+    """Test categorizing #mtg as special tag."""
+    result = categorize_tag("#mtg")
+    assert result == TagType.SPECIAL
 
 
-def test_extract_tags_with_extra_whitespace():
-    """Test extracting tags with extra whitespace."""
-    result = _extract_tags("activity (#admin,  #communication,#team)")
-    assert result == ["#admin", "#communication", "#team"]
+def test_categorize_tag_special_dev():
+    """Test categorizing #dev as special tag."""
+    result = categorize_tag("#dev")
+    assert result == TagType.SPECIAL
 
 
-def test_extract_tags_no_tags():
+def test_categorize_tag_activity():
+    """Test categorizing custom tag as activity tag."""
+    result = categorize_tag("#project-alpha")
+    assert result == TagType.ACTIVITY
+
+
+def test_categorize_tag_case_insensitive():
+    """Test that tag categorization is case-insensitive."""
+    result = categorize_tag("#MTG")
+    assert result == TagType.SPECIAL
+
+
+def test_categorize_tag_without_hash():
+    """Test categorizing tag without # prefix."""
+    result = categorize_tag("admin")
+    assert result == TagType.SPECIAL
+
+
+# Tests for parse_tags_from_text function
+
+def test_parse_tags_from_text_single_tag():
+    """Test extracting a single tag from text."""
+    result = parse_tags_from_text("meeting #mtg at 9am")
+    assert len(result) == 1
+    assert result[0].text == "#mtg"
+    assert result[0].tag_type == TagType.SPECIAL
+
+
+def test_parse_tags_from_text_multiple_tags():
+    """Test extracting multiple tags from text."""
+    result = parse_tags_from_text("email #admin #communication")
+    assert len(result) == 2
+    assert result[0].text == "#admin"
+    assert result[0].tag_type == TagType.SPECIAL
+    assert result[1].text == "#communication"
+    assert result[1].tag_type == TagType.ACTIVITY
+
+
+def test_parse_tags_from_text_no_tags():
     """Test extracting tags when none present."""
-    result = _extract_tags("activity without tags")
-    assert result == []
+    result = parse_tags_from_text("activity without tags")
+    assert len(result) == 0
+
+
+def test_parse_tags_from_text_with_hyphens():
+    """Test extracting tags with hyphens."""
+    result = parse_tags_from_text("work on #project-alpha and #sprint-2")
+    assert len(result) == 2
+    assert result[0].text == "#project-alpha"
+    assert result[1].text == "#sprint-2"
+
+
+# Tests for _extract_tags_from_parentheses function
+
+def test_extract_tags_from_parentheses_single_tag():
+    """Test extracting a single tag from parentheses."""
+    result = _extract_tags_from_parentheses("activity (#admin)")
+    assert len(result) == 1
+    assert result[0].text == "#admin"
+    assert result[0].tag_type == TagType.SPECIAL
+
+
+def test_extract_tags_from_parentheses_multiple_tags():
+    """Test extracting multiple tags from parentheses."""
+    result = _extract_tags_from_parentheses("activity (#admin, #communication)")
+    assert len(result) == 2
+    assert result[0].text == "#admin"
+    assert result[1].text == "#communication"
+
+
+def test_extract_tags_from_parentheses_with_extra_whitespace():
+    """Test extracting tags with extra whitespace."""
+    result = _extract_tags_from_parentheses("activity (#admin,  #dev,#team)")
+    assert len(result) == 3
+    assert result[0].text == "#admin"
+    assert result[1].text == "#dev"
+    assert result[2].text == "#team"
+
+
+def test_extract_tags_from_parentheses_no_tags():
+    """Test extracting tags when none in parentheses."""
+    result = _extract_tags_from_parentheses("activity without tags")
+    assert len(result) == 0
 
 
 # Tests for _parse_arrived_entry function
@@ -151,7 +232,9 @@ def test_parse_activity_entry_with_tags_and_times():
     assert entry is not None
     assert entry.entry_type == EntryType.ACTIVITY
     assert entry.activity == "email review"
-    assert entry.tags == ["#admin", "#communication"]
+    assert len(entry.tags) == 2
+    assert entry.tags[0].text == "#admin"
+    assert entry.tags[1].text == "#communication"
     assert entry.start_time == time(8, 15)
     assert entry.end_time == time(8, 45)
 
@@ -163,7 +246,7 @@ def test_parse_activity_entry_no_tags():
 
     assert entry is not None
     assert entry.activity == "standup meeting"
-    assert entry.tags == []
+    assert len(entry.tags) == 0
     assert entry.start_time == time(9, 0)
     assert entry.end_time == time(9, 30)
 
@@ -175,7 +258,8 @@ def test_parse_activity_entry_no_times():
 
     assert entry is not None
     assert entry.activity == "lunch break"
-    assert entry.tags == ["#pers"]
+    assert len(entry.tags) == 1
+    assert entry.tags[0].text == "#pers"
     assert entry.start_time is None
     assert entry.end_time is None
 
@@ -187,7 +271,7 @@ def test_parse_activity_entry_only_activity_text():
 
     assert entry is not None
     assert entry.activity == "working on project"
-    assert entry.tags == []
+    assert len(entry.tags) == 0
     assert entry.start_time is None
     assert entry.end_time is None
 
@@ -294,3 +378,135 @@ def test_filter_entries_by_type_activity_only():
 
     assert len(filtered) == 2
     assert all(e.entry_type == EntryType.ACTIVITY for e in filtered)
+
+
+# Tests for _parse_time_block_row function
+
+def test_parse_time_block_row_with_plan_and_actual():
+    """Test parsing time block row with both plan and actual."""
+    line = "|  8:00am | email #admin        | meeting #mtg        |"
+    entry = _parse_time_block_row(line, "test.md", 1)
+
+    assert entry is not None
+    assert entry.time_slot == time(8, 0)
+    assert entry.plan == "email #admin"
+    assert entry.actual == "meeting #mtg"
+    assert len(entry.plan_tags) == 1
+    assert entry.plan_tags[0].text == "#admin"
+    assert len(entry.actual_tags) == 1
+    assert entry.actual_tags[0].text == "#mtg"
+
+
+def test_parse_time_block_row_plan_only():
+    """Test parsing time block row with only plan."""
+    line = "|  9:00am | coding #dev         |                     |"
+    entry = _parse_time_block_row(line, "test.md", 1)
+
+    assert entry is not None
+    assert entry.time_slot == time(9, 0)
+    assert entry.plan == "coding #dev"
+    assert entry.actual is None
+    assert len(entry.plan_tags) == 1
+    assert entry.plan_tags[0].text == "#dev"
+    assert len(entry.actual_tags) == 0
+
+
+def test_parse_time_block_row_actual_only():
+    """Test parsing time block row with only actual."""
+    line = "| 10:00am |                     | break #break        |"
+    entry = _parse_time_block_row(line, "test.md", 1)
+
+    assert entry is not None
+    assert entry.time_slot == time(10, 0)
+    assert entry.plan is None
+    assert entry.actual == "break #break"
+    assert len(entry.plan_tags) == 0
+    assert len(entry.actual_tags) == 1
+    assert entry.actual_tags[0].text == "#break"
+
+
+def test_parse_time_block_row_no_tags():
+    """Test parsing time block row without tags."""
+    line = "|  2:00pm | write documentation |                     |"
+    entry = _parse_time_block_row(line, "test.md", 1)
+
+    assert entry is not None
+    assert entry.time_slot == time(14, 0)
+    assert entry.plan == "write documentation"
+    assert len(entry.plan_tags) == 0
+    assert len(entry.actual_tags) == 0
+
+
+def test_parse_time_block_row_multiple_tags():
+    """Test parsing time block row with multiple tags."""
+    line = "|  3:00pm | review #admin #urgent | coding #dev #project-x |"
+    entry = _parse_time_block_row(line, "test.md", 1)
+
+    assert entry is not None
+    assert len(entry.plan_tags) == 2
+    assert entry.plan_tags[0].text == "#admin"
+    assert entry.plan_tags[1].text == "#urgent"
+    assert len(entry.actual_tags) == 2
+    assert entry.actual_tags[0].text == "#dev"
+    assert entry.actual_tags[1].text == "#project-x"
+
+
+def test_parse_time_block_row_not_table():
+    """Test that non-table rows return None."""
+    line = "This is not a table row"
+    entry = _parse_time_block_row(line, "test.md", 1)
+    assert entry is None
+
+
+# Tests for find_time_block_entries function
+
+def test_find_time_block_entries_in_time_block_section(tmp_path):
+    """Test finding time block entries in Time Block section."""
+    test_file = tmp_path / "test.md"
+    test_file.write_text(
+        "# Daily Note\n"
+        "\n"
+        "### Time Block\n"
+        "\n"
+        "| Time    | Plan                | Actual              |\n"
+        "| ------- | -------------------- | ------------------- |\n"
+        "|  8:00am | email #admin        | meeting #mtg        |\n"
+        "|  8:15am | coding #dev         |                     |\n"
+        "\n"
+        "### Notes\n"
+    )
+
+    entries = find_time_block_entries(str(test_file))
+
+    assert len(entries) == 2
+    assert entries[0].time_slot == time(8, 0)
+    assert entries[1].time_slot == time(8, 15)
+
+
+def test_find_time_block_entries_no_section(tmp_path):
+    """Test finding time block entries when no Time Block section exists."""
+    test_file = tmp_path / "test.md"
+    test_file.write_text(
+        "# Daily Note\n"
+        "\n"
+        "|  8:00am | email #admin        |                     |\n"
+    )
+
+    entries = find_time_block_entries(str(test_file))
+    assert len(entries) == 0
+
+
+def test_find_time_block_entries_empty_table(tmp_path):
+    """Test finding time block entries in empty table."""
+    test_file = tmp_path / "test.md"
+    test_file.write_text(
+        "### Time Block\n"
+        "\n"
+        "| Time    | Plan                | Actual              |\n"
+        "| ------- | -------------------- | ------------------- |\n"
+        "\n"
+        "### Notes\n"
+    )
+
+    entries = find_time_block_entries(str(test_file))
+    assert len(entries) == 0
