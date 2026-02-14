@@ -14,7 +14,9 @@
       "Bash(git push:*)",
       "Bash(bd:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(date:*)"
     ]
   }
 }
