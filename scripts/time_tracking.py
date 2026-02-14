@@ -56,23 +56,29 @@ class Tag:
 class TimeLogEntry:
     """Represents a time log entry found in a markdown file.
 
-    Time log entries can be:
-    - Special 'arrived' entry: - arrived: HH:MM am/pm
-    - Activity entry: - activity description (tags) HH:MM am/pm - HH:MM am/pm
+    Time log entries use multi-line format:
+    - activity name #tag-1 #tag-2
+      * start: 2026-02-14 Sat 08:00
+      * end:   2026-02-14 Sat 09:00
+      * optional notes #additional-tag
 
     Examples:
-        - arrived: 8:00 am
-        - email review (#admin, #communication) 8:15 am - 8:45 am
-        - standup meeting (#mtg, #team) 9:00 am - 9:30 am
+        - email review #admin #communication
+          * start: 2026-02-14 Sat 08:00
+          * end:   2026-02-14 Sat 08:30
+        - #mtg with #sapna about #ai-dev
+          * start: 2026-02-14 Sat 09:00
+          * end:   2026-02-14 Sat 09:16
     """
     entry_type: EntryType
     text: str
     filename: str
     line_no: int
-    start_time: Optional[time] = None
-    end_time: Optional[time] = None
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
     activity: Optional[str] = None
     tags: list[Tag] = field(default_factory=list)
+    notes: Optional[str] = None
 
 
 def _parse_time(time_str: str) -> Optional[time]:
@@ -111,6 +117,37 @@ def _parse_time(time_str: str) -> Optional[time]:
 
     try:
         return time(hour=hour, minute=minute)
+    except ValueError:
+        return None
+
+
+def _parse_datetime(datetime_str: str) -> Optional[datetime]:
+    """
+    Parse a datetime string in format: YYYY-MM-DD DDD HH:MM
+
+    Args:
+        datetime_str: Datetime string to parse (e.g., '2026-02-14 Sat 08:00').
+
+    Returns:
+        A datetime object if successfully parsed, None otherwise.
+    """
+    datetime_str = datetime_str.strip()
+
+    # Pattern: YYYY-MM-DD DDD HH:MM (DDD is day abbreviation like Mon, Tue, etc.)
+    pattern = re.compile(r'^(\d{4})-(\d{2})-(\d{2})\s+\w{3}\s+(\d{2}):(\d{2})$')
+    match = pattern.match(datetime_str)
+
+    if not match:
+        return None
+
+    year = int(match.group(1))
+    month = int(match.group(2))
+    day = int(match.group(3))
+    hour = int(match.group(4))
+    minute = int(match.group(5))
+
+    try:
+        return datetime(year=year, month=month, day=day, hour=hour, minute=minute)
     except ValueError:
         return None
 
@@ -291,6 +328,11 @@ def find_time_log_entries(filepath: str) -> list[TimeLogEntry]:
     Find all time log entries in a markdown file.
 
     Looks for entries under a '### Log' section in the file.
+    New format uses multi-line entries:
+    - activity name #tag-1 #tag-2
+      * start: 2026-02-14 Sat 08:00
+      * end:   2026-02-14 Sat 09:00
+      * optional notes
 
     Args:
         filepath: Path to the markdown file to search.
@@ -300,38 +342,122 @@ def find_time_log_entries(filepath: str) -> list[TimeLogEntry]:
     """
     entries: list[TimeLogEntry] = []
     in_log_section = False
+    current_entry_data: Optional[dict] = None
 
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
-            for line_num, line in enumerate(f, 1):
-                # Check for log section header
-                if line.strip() == '### Log':
-                    in_log_section = True
-                    continue
+            lines = f.readlines()
 
-                # Check if we've left the log section (new section header)
-                if in_log_section and line.startswith('#'):
-                    in_log_section = False
-                    continue
+        for line_num, line in enumerate(lines, 1):
+            # Check for log section header
+            if line.strip() == '### Log':
+                in_log_section = True
+                continue
 
-                # Skip if not in log section
-                if not in_log_section:
-                    continue
+            # Check if we've left the log section (new section header)
+            if in_log_section and line.startswith('#'):
+                in_log_section = False
+                # Save any pending entry
+                if current_entry_data:
+                    entry = _create_time_log_entry(current_entry_data, filepath)
+                    if entry:
+                        entries.append(entry)
+                    current_entry_data = None
+                continue
 
-                # Try to parse as arrived entry first
-                entry = _parse_arrived_entry(line, filepath, line_num)
+            # Skip if not in log section
+            if not in_log_section:
+                continue
 
-                # If not an arrived entry, try as activity entry
-                if entry is None and line.strip().startswith('-'):
-                    entry = _parse_activity_entry(line, filepath, line_num)
+            # Check for activity line (starts with -)
+            if line.strip().startswith('-') and not line.strip().startswith('  '):
+                # Save previous entry if exists
+                if current_entry_data:
+                    entry = _create_time_log_entry(current_entry_data, filepath)
+                    if entry:
+                        entries.append(entry)
 
-                if entry is not None:
-                    entries.append(entry)
+                # Start new entry
+                activity_line = line.strip()[1:].strip()  # Remove leading '-'
+                tags = parse_tags_from_text(activity_line)
+
+                # Remove tags from activity text
+                activity = re.sub(r'#[\w-]+', '', activity_line).strip()
+
+                current_entry_data = {
+                    'activity': activity,
+                    'tags': tags,
+                    'start_time': None,
+                    'end_time': None,
+                    'notes': None,
+                    'line_no': line_num,
+                    'text': line.rstrip()
+                }
+
+            # Check for start/end/notes lines (indented with *)
+            elif current_entry_data and line.strip().startswith('*'):
+                detail_line = line.strip()[1:].strip()  # Remove leading '*'
+
+                # Parse start time
+                if detail_line.startswith('start:'):
+                    time_str = detail_line[6:].strip()
+                    current_entry_data['start_time'] = _parse_datetime(time_str)
+
+                # Parse end time
+                elif detail_line.startswith('end:'):
+                    time_str = detail_line[4:].strip()
+                    current_entry_data['end_time'] = _parse_datetime(time_str)
+
+                # Everything else is notes
+                else:
+                    if current_entry_data['notes'] is None:
+                        current_entry_data['notes'] = detail_line
+                    else:
+                        current_entry_data['notes'] += ' ' + detail_line
+
+        # Save final entry if exists
+        if current_entry_data:
+            entry = _create_time_log_entry(current_entry_data, filepath)
+            if entry:
+                entries.append(entry)
 
     except (IOError, UnicodeDecodeError) as e:
         print(f"Warning: Could not read {filepath}: {e}", file=sys.stderr)
 
     return entries
+
+
+def _create_time_log_entry(entry_data: dict, filepath: str) -> Optional[TimeLogEntry]:
+    """
+    Create a TimeLogEntry from parsed entry data.
+
+    Args:
+        entry_data: Dictionary with parsed entry data.
+        filepath: Source file path.
+
+    Returns:
+        TimeLogEntry if data is valid, None otherwise.
+    """
+    if not entry_data.get('activity'):
+        return None
+
+    # Extract additional tags from notes if present
+    tags = entry_data.get('tags', [])
+    if entry_data.get('notes'):
+        notes_tags = parse_tags_from_text(entry_data['notes'])
+        tags.extend(notes_tags)
+
+    return TimeLogEntry(
+        entry_type=EntryType.ACTIVITY,
+        text=entry_data.get('text', ''),
+        filename=filepath,
+        line_no=entry_data.get('line_no', 0),
+        start_time=entry_data.get('start_time'),
+        end_time=entry_data.get('end_time'),
+        activity=entry_data.get('activity'),
+        tags=tags,
+        notes=entry_data.get('notes')
+    )
 
 
 def filter_entries_by_type(entries: list[TimeLogEntry],
@@ -470,29 +596,44 @@ def find_time_block_entries(filepath: str) -> list[TimeBlockEntry]:
     return entries
 
 
-def calculate_duration(start: time, end: time) -> timedelta:
+def calculate_duration(start: datetime | time, end: datetime | time) -> timedelta:
     """
-    Calculate duration between two times.
+    Calculate duration between two times or datetimes.
 
-    Assumes times are on the same day. If end < start, assumes end is next day.
+    For time objects: Assumes times are on the same day. If end < start, assumes end is next day.
+    For datetime objects: Direct subtraction.
 
     Args:
-        start: Start time.
-        end: End time.
+        start: Start time or datetime.
+        end: End time or datetime.
 
     Returns:
         Duration as timedelta.
     """
-    # Convert times to datetime objects on the same day
+    # If already datetime objects, just subtract
+    if isinstance(start, datetime) and isinstance(end, datetime):
+        return end - start
+
+    # Convert time objects to datetime objects on the same day
+    if isinstance(start, time) and isinstance(end, time):
+        today = datetime.today().date()
+        start_dt = datetime.combine(today, start)
+        end_dt = datetime.combine(today, end)
+
+        # If end is before start, assume it's the next day
+        if end_dt < start_dt:
+            end_dt = datetime.combine(today + timedelta(days=1), end)
+
+        return end_dt - start_dt
+
+    # Mixed types - convert to datetime
     today = datetime.today().date()
-    start_dt = datetime.combine(today, start)
-    end_dt = datetime.combine(today, end)
+    if isinstance(start, time):
+        start = datetime.combine(today, start)
+    if isinstance(end, time):
+        end = datetime.combine(today, end)
 
-    # If end is before start, assume it's the next day
-    if end_dt < start_dt:
-        end_dt = datetime.combine(today + timedelta(days=1), end)
-
-    return end_dt - start_dt
+    return end - start
 
 
 def calculate_total_time_by_tag(entries: list[TimeLogEntry]) -> dict[str, timedelta]:

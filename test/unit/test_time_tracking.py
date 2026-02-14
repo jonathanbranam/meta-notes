@@ -293,8 +293,9 @@ def test_find_time_log_entries_in_log_section(tmp_path):
         "\n"
         "### Log\n"
         "\n"
-        "- arrived: 8:00 am\n"
-        "- email review (#admin) 8:15 am - 8:45 am\n"
+        "- email review #admin\n"
+        "  * start: 2026-02-14 Fri 08:15\n"
+        "  * end:   2026-02-14 Fri 08:45\n"
         "\n"
         "### Notes\n"
         "\n"
@@ -303,10 +304,11 @@ def test_find_time_log_entries_in_log_section(tmp_path):
 
     entries = find_time_log_entries(str(test_file))
 
-    assert len(entries) == 2
-    assert entries[0].entry_type == EntryType.ARRIVED
-    assert entries[1].entry_type == EntryType.ACTIVITY
-    assert entries[1].activity == "email review"
+    assert len(entries) == 1
+    assert entries[0].entry_type == EntryType.ACTIVITY
+    assert entries[0].activity == "email review"
+    assert len(entries[0].tags) == 1
+    assert entries[0].tags[0].text == "#admin"
 
 
 def test_find_time_log_entries_no_log_section(tmp_path):
@@ -344,17 +346,21 @@ def test_find_time_log_entries_multiple_entries(tmp_path):
     test_file.write_text(
         "### Log\n"
         "\n"
-        "- arrived: 8:00 am\n"
-        "- email (#admin) 8:15 am - 8:30 am\n"
-        "- standup (#mtg) 9:00 am - 9:15 am\n"
-        "- coding (#dev) 9:30 am - 11:00 am\n"
+        "- email #admin\n"
+        "  * start: 2026-02-14 Fri 08:15\n"
+        "  * end:   2026-02-14 Fri 08:30\n"
+        "- standup #mtg\n"
+        "  * start: 2026-02-14 Fri 09:00\n"
+        "  * end:   2026-02-14 Fri 09:15\n"
+        "- coding #dev\n"
+        "  * start: 2026-02-14 Fri 09:30\n"
+        "  * end:   2026-02-14 Fri 11:00\n"
     )
 
     entries = find_time_log_entries(str(test_file))
 
-    assert len(entries) == 4
-    assert entries[0].entry_type == EntryType.ARRIVED
-    assert all(e.entry_type == EntryType.ACTIVITY for e in entries[1:])
+    assert len(entries) == 3
+    assert all(e.entry_type == EntryType.ACTIVITY for e in entries)
 
 
 # Tests for filter_entries_by_type function

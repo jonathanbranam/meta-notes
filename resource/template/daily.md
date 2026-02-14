@@ -18,7 +18,9 @@ Week Plan: [[resource/plan/week/Plan {{week_start}}]]
 
 ### Log
 
-- arrived:
+- activity name #tag-1 #tag-2
+  * start: {{date:%Y-%m-%d %a}} 08:00
+  * end:   {{date:%Y-%m-%d %a}} 09:00
 
 ### Time Block
 
