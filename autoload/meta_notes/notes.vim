@@ -59,7 +59,7 @@ endfunction
 
 " Open a note from a wiki-style link [[path/to/note]]
 " If cursor is within [[...]], opens or creates the note
-" If note doesn't exist, creates a new buffer with folder template or header template
+" If note doesn't exist, creates a new buffer with template or header
 function! meta_notes#notes#Open() abort
   let path = meta_notes#notes#GetLinkUnderCursor()
 
@@ -76,25 +76,26 @@ function! meta_notes#notes#Open() abort
     " Open existing file
     execute 'edit!' fnameescape(filepath)
   else
+    " TODO: test with this removed and see if it is required
     " Create parent directory if it doesn't exist
     let folder = fnamemodify(filepath, ':h')
     if !isdirectory(folder)
       call mkdir(folder, 'p')
     endif
 
-    " Create new buffer with template
+    " Create new buffer with template or header
     execute 'edit!' fnameescape(filepath)
 
-    " Check for folder-specific template.md
-    let template_file = folder . '/template.md'
-
-    if filereadable(template_file)
-      " Use folder-specific template
-      let template_lines = readfile(template_file)
-      call setline(1, template_lines)
+    " Look for template
+    let template_path = meta_notes#template#FindTemplate(filepath)
+    if template_path != ''
+      " Process template
+      let context = meta_notes#template#CreateContext(strftime('%Y-%m-%d'), filepath)
+      let lines = meta_notes#template#ProcessTemplate(template_path, context)
+      call setline(1, lines)
       call cursor(1, 1)
     else
-      " Use simple header template
+      " Use simple header
       call setline(1, ['# ' . path, ''])
       call cursor(3, 1)
     endif
@@ -183,10 +184,22 @@ function! meta_notes#notes#OpenWeekPlan(...) abort
     " Open existing file
     execute 'edit!' fnameescape(l:filepath)
   else
-    " Create new file with header template
+    " Create new file with template or header
     execute 'edit!' fnameescape(l:filepath)
-    call setline(1, ['# Week Plan - ' . l:week_start, ''])
-    call cursor(3, 1)
+
+    " Look for template (folder-specific or standard weekly template)
+    let l:template_path = meta_notes#template#FindTemplate(l:filepath, 'weekly')
+    if l:template_path != ''
+      " Process template
+      let l:context = meta_notes#template#CreateContext(l:week_start, l:filepath)
+      let l:lines = meta_notes#template#ProcessTemplate(l:template_path, l:context)
+      call setline(1, l:lines)
+      call cursor(1, 1)
+    else
+      " Use simple header
+      call setline(1, ['# Week Plan - ' . l:week_start, ''])
+      call cursor(3, 1)
+    endif
   endif
 endfunction
 
@@ -246,10 +259,22 @@ function! meta_notes#notes#OpenDaily(...) abort
     " Open existing file
     execute 'edit!' fnameescape(l:filepath)
   else
-    " Create new file with header template
+    " Create new file with template or header
     execute 'edit!' fnameescape(l:filepath)
-    call setline(1, ['# Daily Note - ' . l:date_str . ' ' . l:day_abbr, ''])
-    call cursor(3, 1)
+
+    " Look for template (folder-specific or standard daily template)
+    let l:template_path = meta_notes#template#FindTemplate(l:filepath, 'daily')
+    if l:template_path != ''
+      " Process template
+      let l:context = meta_notes#template#CreateContext(l:date_str, l:filepath)
+      let l:lines = meta_notes#template#ProcessTemplate(l:template_path, l:context)
+      call setline(1, l:lines)
+      call cursor(1, 1)
+    else
+      " Use simple header
+      call setline(1, ['# Daily Note - ' . l:date_str . ' ' . l:day_abbr, ''])
+      call cursor(3, 1)
+    endif
   endif
 endfunction
 
@@ -284,10 +309,23 @@ function! meta_notes#notes#OpenQuarterPlan(...) abort
     " Open existing file
     execute 'edit!' fnameescape(l:filepath)
   else
-    " Create new file with header template
+    " Create new file with template or header
     execute 'edit!' fnameescape(l:filepath)
-    call setline(1, ['# Quarterly Plan - ' . l:year . ' ' . l:quarter, ''])
-    call cursor(3, 1)
+
+    " Look for template (folder-specific or standard quarterly template)
+    let l:template_path = meta_notes#template#FindTemplate(l:filepath, 'quarterly')
+    if l:template_path != ''
+      " Process template with the first day of the quarter as the date
+      let l:quarter_start = l:year . '-' . (l:quarter == 'Q1' ? '01' : (l:quarter == 'Q2' ? '04' : (l:quarter == 'Q3' ? '07' : '10'))) . '-01'
+      let l:context = meta_notes#template#CreateContext(l:quarter_start, l:filepath)
+      let l:lines = meta_notes#template#ProcessTemplate(l:template_path, l:context)
+      call setline(1, l:lines)
+      call cursor(1, 1)
+    else
+      " Use simple header
+      call setline(1, ['# Quarterly Plan - ' . l:year . ' ' . l:quarter, ''])
+      call cursor(3, 1)
+    endif
   endif
 endfunction
 
@@ -321,10 +359,23 @@ function! meta_notes#notes#OpenYearPlan(...) abort
     " Open existing file
     execute 'edit!' fnameescape(l:filepath)
   else
-    " Create new file with header template
+    " Create new file with template or header
     execute 'edit!' fnameescape(l:filepath)
-    call setline(1, ['# Year Plan - ' . l:year, ''])
-    call cursor(3, 1)
+
+    " Look for template (folder-specific or standard yearly template)
+    let l:template_path = meta_notes#template#FindTemplate(l:filepath, 'yearly')
+    if l:template_path != ''
+      " Process template with January 1st as the date
+      let l:year_start = l:year . '-01-01'
+      let l:context = meta_notes#template#CreateContext(l:year_start, l:filepath)
+      let l:lines = meta_notes#template#ProcessTemplate(l:template_path, l:context)
+      call setline(1, l:lines)
+      call cursor(1, 1)
+    else
+      " Use simple header
+      call setline(1, ['# Year Plan - ' . l:year, ''])
+      call cursor(3, 1)
+    endif
   endif
 endfunction
 

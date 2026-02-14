@@ -1,0 +1,135 @@
+" Tests for template support (folder-specific and standard templates)
+
+Execute (Setup - Create test directory structure):
+  " Clean up any existing test files
+  call system('rm -rf test_folder')
+  call mkdir('test_folder', 'p')
+
+Execute (Cleanup):
+  " Clean up test files after all tests
+  call system('rm -rf test_folder')
+
+" Test: FindTemplate function finds folder-specific template
+Execute (FindTemplate should find folder-specific template.md):
+  " Create a folder-specific template
+  call mkdir('test_folder/subfolder', 'p')
+  call writefile(['# Folder Template', ''], 'test_folder/subfolder/template.md')
+
+  " Test finding the template
+  let result = meta_notes#template#FindTemplate('test_folder/subfolder/note.md')
+  AssertEqual 'test_folder/subfolder/template.md', result
+
+" Test: FindTemplate function finds standard template when no folder template exists
+Execute (FindTemplate should find standard template when no folder template):
+  " Create a test file path in a folder without template
+  call mkdir('test_folder/no_template', 'p')
+
+  " Test finding daily template
+  let result = meta_notes#template#FindTemplate('resource/daily-notes/26-Q1/2026-02-14.md', 'daily')
+  AssertEqual 'resource/template/daily.md', result
+
+" Test: FindTemplate returns empty string when no template found
+Execute (FindTemplate should return empty string when no template found):
+  " Test with a folder that has no template and no template type
+  let result = meta_notes#template#FindTemplate('test_folder/no_template/note.md')
+  AssertEqual '', result
+
+" Test: ProcessVariables replaces simple date variables
+Execute (ProcessVariables should replace {{date}} variable):
+  let context = {'date': '2026-02-14', 'today': '2026-02-14'}
+  let result = meta_notes#template#ProcessVariables('Today is {{date}}', context)
+  AssertEqual 'Today is 2026-02-14 Sat', result
+
+" Test: ProcessVariables handles date formatting
+Execute (ProcessVariables should handle date formatting):
+  let context = {'date': '2026-02-14'}
+  let result = meta_notes#template#ProcessVariables('{{date:%A, %B %d, %Y}}', context)
+  AssertEqual 'Saturday, February 14, 2026', result
+
+" Test: ProcessVariables handles date arithmetic
+Execute (ProcessVariables should handle date arithmetic):
+  let context = {'today': '2026-02-14'}
+  let result = meta_notes#template#ProcessVariables('Tomorrow: {{today+1:%Y-%m-%d}}', context)
+  AssertEqual 'Tomorrow: 2026-02-15', result
+
+  let result2 = meta_notes#template#ProcessVariables('Yesterday: {{today-1:%Y-%m-%d}}', context)
+  AssertEqual 'Yesterday: 2026-02-13', result2
+
+" Test: ProcessVariables handles week_start and week_end
+Execute (ProcessVariables should handle week variables):
+  let context = {'week_start': '2026-02-09', 'week_end': '2026-02-15'}
+  let result = meta_notes#template#ProcessVariables('Week: {{week_start}} to {{week_end:%Y-%m-%d}}', context)
+  AssertEqual 'Week: 2026-02-09 Mon to 2026-02-15', result
+
+" Test: ProcessTemplate skips YAML frontmatter
+Execute (ProcessTemplate should skip YAML frontmatter):
+  " Create a template with frontmatter
+  call writefile([
+    \ '---',
+    \ 'filename_pattern: "test"',
+    \ '---',
+    \ '# Test Template',
+    \ 'Date: {{date}}'
+  \ ], 'test_folder/template_with_frontmatter.md')
+
+  let context = {'date': '2026-02-14'}
+  let result = meta_notes#template#ProcessTemplate('test_folder/template_with_frontmatter.md', context)
+
+  " Should not include frontmatter lines
+  AssertEqual 2, len(result)
+  AssertEqual '# Test Template', result[0]
+  AssertEqual 'Date: 2026-02-14 Sat', result[1]
+
+" Test: CreateContext creates proper context dictionary
+Execute (CreateContext should create context with all required variables):
+  let context = meta_notes#template#CreateContext('2026-02-14', 'test/note.md')
+
+  Assert has_key(context, 'date')
+  Assert has_key(context, 'today')
+  Assert has_key(context, 'week_start')
+  Assert has_key(context, 'week_end')
+
+  AssertEqual '2026-02-14', context['date']
+  AssertEqual '2026-02-09', context['week_start']
+  AssertEqual '2026-02-15', context['week_end']
+
+" Test: Opening a note in folder with template uses the template
+Execute (MetaNotesOpen should use folder-specific template):
+  " Create a folder with a template
+  call mkdir('test_folder/project', 'p')
+  call writefile([
+    \ '# Project: {{date}}',
+    \ '',
+    \ '## Description',
+    \ '',
+    \ '## Tasks'
+  \ ], 'test_folder/project/template.md')
+
+  " Create a wiki link and open it
+  call setline(1, 'See [[test_folder/project/my-project]]')
+  call cursor(1, 10)
+  MetaNotesOpen
+
+  " Check that the note was created with the template
+  let lines = getline(1, '$')
+  Assert match(lines[0], '^# Project:') >= 0
+  Assert match(lines[2], '^## Description') >= 0
+  Assert match(lines[4], '^## Tasks') >= 0
+
+  " Close and clean up
+  bwipeout!
+
+" Test: Opening a note without template uses simple header
+Execute (MetaNotesOpen should use simple header when no template):
+  " Create a wiki link and open it
+  call setline(1, 'See [[test_folder/simple-note]]')
+  call cursor(1, 10)
+  MetaNotesOpen
+
+  " Check that the note was created with simple header
+  let lines = getline(1, '$')
+  AssertEqual '# test_folder/simple-note', lines[0]
+  AssertEqual '', lines[1]
+
+  " Close and clean up
+  bwipeout!
