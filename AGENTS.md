@@ -94,11 +94,13 @@ Execute (Setup - Create temporary test directory):
   execute 'cd' g:test_dir
 ```
 
-In a test
+In a test use `g:test_root` and be sure to create all necessary folders before
+writing files.
 
 ```vim
 Execute (Test that writes a file):
   " Create a sample note file
+  call mkdir('note/path', 'p')
   call writefile(['# Sample Note', '', 'This is a test note.'],
         \ g:test_root . '/note/path/Filename.md')
 ```

@@ -1,5 +1,11 @@
 " Tests for week start/end calculation functions
 
+Execute (Setup - Create temporary test directory):
+  let g:test_dir = tempname()
+  call mkdir(g:test_dir, 'p')
+  execute 'cd' g:test_dir
+  call mkdir('resource/plan/week', 'p')
+
 Execute (Test CalculateWeekStart - Monday returns same day):
   let result = meta_notes#notes#CalculateWeekStart('2026-02-09')
   AssertEqual '2026-02-09', result
@@ -32,38 +38,28 @@ Execute (Test CalculateWeekEnd - Saturday returns next day):
   let result = meta_notes#notes#CalculateWeekEnd('2026-02-14')
   AssertEqual '2026-02-15', result
 
-" TODO: fix hanging test
-" Execute (Test OpenWeekPlan creates file with correct path):
-"   " Clean up any existing file first
-"   silent! call delete('resource/plan/week/Plan 2026-02-09.md')
-"
-"   " Open week plan for a Friday (should create Monday's plan)
-"   call meta_notes#notes#OpenWeekPlan('2026-02-13')
-"
-"   " Verify we're in the correct file
-"   AssertEqual 'resource/plan/week/Plan 2026-02-09.md', expand('%')
-"
-"   " Verify header was created
-"   let first_line = getline(1)
-"   AssertEqual '# Week Plan - 2026-02-09', first_line
-"
-"   " Clean up
-"   silent! call delete('resource/plan/week/Plan 2026-02-09.md')
+Execute (Test OpenWeekPlan creates file with correct path):
+  " Open week plan for a Friday (should create Monday's plan)
+  call meta_notes#notes#OpenWeekPlan('2026-02-13')
 
-" TODO: fix hanging test
-" Execute (Test MetaNotesWeekPlan command with date argument):
-"   " Clean up any existing file first
-"   silent! call delete('resource/plan/week/Plan 2026-02-09.md')
-"
-"   " Use the command with a date argument
-"   MetaNotesWeekPlan 2026-02-13
-"
-"   " Verify we're in the correct file
-"   AssertEqual 'resource/plan/week/Plan 2026-02-09.md', expand('%')
-"
-"   " Verify header was created
-"   let first_line = getline(1)
-"   AssertEqual '# Week Plan - 2026-02-09', first_line
-"
-"   " Clean up
-"   silent! call delete('resource/plan/week/Plan 2026-02-09.md')
+  " Verify we're in the correct file
+  AssertEqual 'resource/plan/week/Plan 2026-02-09.md', expand('%')
+
+  " Verify header was created
+  let first_line = getline(1)
+  AssertEqual '# Week Plan - 2026-02-09', first_line
+
+Execute (Test MetaNotesWeekPlan command with date argument):
+  " Use the command with a date argument
+  MetaNotesWeekPlan 2026-02-13
+
+  " Verify we're in the correct file
+  AssertEqual 'resource/plan/week/Plan 2026-02-09.md', expand('%')
+
+  " Verify header was created
+  let first_line = getline(1)
+  AssertEqual '# Week Plan - 2026-02-09', first_line
+
+Execute (Cleanup - Remove temporary test directory):
+  execute 'cd -'
+  call delete(g:test_dir, 'rf')
