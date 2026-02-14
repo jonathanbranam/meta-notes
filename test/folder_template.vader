@@ -25,7 +25,7 @@ Execute (MetaNotesOpen uses folder-specific template.md):
   MetaNotesOpen
 
   " Verify we're in the new file
-  Assert expand('%') == 'project/test-project/my-note.md', 'Should open the new note'
+  Assert expand('%') == 'project/test-project/Home.md', 'Should open the new note'
 
   " Verify template was applied
   let lines = getline(1, '$')

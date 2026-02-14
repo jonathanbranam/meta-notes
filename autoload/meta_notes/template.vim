@@ -92,6 +92,30 @@ function! meta_notes#template#ProcessVariables(line, context) abort
       let l:var_name = l:expr_part
     endif
 
+    " Handle special variables
+    if l:var_name == 'project_name'
+      " Extract project name from filepath in context
+      if has_key(a:context, 'filepath')
+        let l:filepath = a:context['filepath']
+        " Check if path starts with 'project/'
+        if match(l:filepath, '^project/') == 0
+          " Extract the project folder name (second path component)
+          let l:parts = split(l:filepath, '/')
+          if len(l:parts) >= 2
+            let l:replacement = l:parts[1]
+          else
+            let l:replacement = '<!-- Not in project folder -->'
+          endif
+        else
+          let l:replacement = '<!-- Not in project folder -->'
+        endif
+      else
+        let l:replacement = '<!-- ERROR: No filepath in context -->'
+      endif
+      let l:result = substitute(l:result, l:pattern, l:replacement, '')
+      continue
+    endif
+
     " Get the base date from context
     if !has_key(a:context, l:var_name)
       " Unknown variable, replace with HTML comment indicating error
@@ -249,6 +273,9 @@ function! meta_notes#template#CreateContext(date_str, filepath) abort
   " Calculate week_start and week_end
   let l:context['week_start'] = meta_notes#notes#CalculateWeekStart(a:date_str)
   let l:context['week_end'] = meta_notes#notes#CalculateWeekEnd(a:date_str)
+
+  " Include filepath for path-dependent variables
+  let l:context['filepath'] = a:filepath
 
   return l:context
 endfunction

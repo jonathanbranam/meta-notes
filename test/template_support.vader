@@ -68,6 +68,18 @@ Execute (ProcessVariables should replace undefined variables with error comment)
   let result = meta_notes#template#ProcessVariables('Date: {{date}}, Name: {{name}}', context)
   AssertEqual 'Date: 2026-02-14 Sat, Name: <!-- ERROR: Unknown variable "name" -->', result
 
+" Test: ProcessVariables replaces {{project_name}} when inside project folder
+Execute (ProcessVariables should replace {{project_name}} with project folder name):
+  let context = {'filepath': 'project/my-project/subfolder/Note.md'}
+  let result = meta_notes#template#ProcessVariables('Project: {{project_name}}', context)
+  AssertEqual 'Project: my-project', result
+
+" Test: ProcessVariables handles {{project_name}} when not in project folder
+Execute (ProcessVariables should handle {{project_name}} when not in project folder):
+  let context = {'filepath': 'area/health/note.md'}
+  let result = meta_notes#template#ProcessVariables('Project: {{project_name}}', context)
+  AssertEqual 'Project: <!-- Not in project folder -->', result
+
 " Test: ProcessTemplate skips YAML frontmatter
 Execute (ProcessTemplate should skip YAML frontmatter):
   " Create a template with frontmatter
@@ -91,14 +103,26 @@ Execute (ProcessTemplate should skip YAML frontmatter):
 Execute (CreateContext should create context with all required variables):
   let context = meta_notes#template#CreateContext('2026-02-14', 'test/note.md')
 
+  " Verify all expected keys exist
   Assert has_key(context, 'date')
   Assert has_key(context, 'today')
   Assert has_key(context, 'week_start')
   Assert has_key(context, 'week_end')
+  Assert has_key(context, 'filepath')
 
+  " Verify values
   AssertEqual '2026-02-14', context['date']
   AssertEqual '2026-02-09', context['week_start']
   AssertEqual '2026-02-15', context['week_end']
+  AssertEqual 'test/note.md', context['filepath']
+
+" Test: CreateContext with project filepath
+Execute (CreateContext should include filepath for project path):
+  let context = meta_notes#template#CreateContext('2026-02-14', 'project/my-project/subfolder/note.md')
+
+  " Verify filepath is included
+  Assert has_key(context, 'filepath')
+  AssertEqual 'project/my-project/subfolder/note.md', context['filepath']
 
 " Test: Opening a note in folder with template uses the template
 Execute (MetaNotesOpen should use folder-specific template):
