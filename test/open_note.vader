@@ -5,16 +5,16 @@ Execute (Load plugin):
   runtime plugin/meta_notes.vim
 
 Execute (Setup - Create temporary test directory):
-  let g:test_dir = tempname()
-  call mkdir(g:test_dir, 'p')
-  execute 'cd' g:test_dir
-
-  " Create temporary directory structure for test notes
-  call mkdir('note/path', 'p')
+  let g:test_root = tempname()
+  call mkdir(g:test_root . '/note/path', 'p')
 
   " Create a sample note file
   call writefile(['# Sample Note', '', 'This is a test note.'],
-        \ 'note/path/Filename.md')
+        \ g:test_root . '/note/path/Filename.md')
+
+  " Store original directory and change to test root
+  let g:original_dir = getcwd()
+  execute 'cd' g:test_root
 
 Given markdown (Note with wiki-style link):
   # My Notes
@@ -136,54 +136,59 @@ Execute (Error when cursor not in brackets - regular text):
   " Verify an error was reported
   Assert v:errmsg != '', 'Should set an error message'
 
-" TODO: This test hangs - needs investigation
-" Execute (Error when cursor outside brackets - before link):
-"   " Return to the original buffer
-"   execute 'edit' g:test_root . '/test.md'
-"   call setline(1, ['# My Notes', '', 'See note: [[project/example]]'])
-"
-"   " Store current buffer info
-"   let original_buffer = bufnr('%')
-"
-"   " Clear previous error message
-"   let v:errmsg = ''
-"
-"   " Position cursor before the [[ (line 3, col 8 - on the space before [[)
-"   call cursor(3, 8)
-"
-"   " Execute the MetaNotesOpen command - should error
-"   silent! MetaNotesOpen
-"
-"   " Verify we're still in the same buffer
-"   AssertEqual original_buffer, bufnr('%'), 'Should remain in same buffer when cursor outside brackets'
-"
-"   " Verify an error was reported
-"   Assert v:errmsg != '', 'Should set an error message when not in brackets'
+Execute (Error when cursor outside brackets - before link):
+  " Return to the original buffer
+  execute 'edit' g:test_root . '/test.md'
+  call setline(1, ['# My Notes', '', 'See note: [[project/example]]'])
 
-" TODO: This test hangs - needs investigation
-" Execute (Error when cursor after closing brackets):
-"   " Return to the original buffer
-"   execute 'edit' g:test_root . '/test.md'
-"   call setline(1, ['# My Notes', '', 'See note: [[project/example]] here'])
-"
-"   " Store current buffer info
-"   let original_buffer = bufnr('%')
-"
-"   " Clear previous error message
-"   let v:errmsg = ''
-"
-"   " Position cursor after the ]] (line 3, col 33 - on the space after ]])
-"   call cursor(3, 33)
-"
-"   " Execute the MetaNotesOpen command - should error
-"   silent! MetaNotesOpen
-"
-"   " Verify we're still in the same buffer
-"   AssertEqual original_buffer, bufnr('%'), 'Should remain in same buffer when cursor after brackets'
-"
-"   " Verify an error was reported
-"   Assert v:errmsg != '', 'Should set an error message when cursor after brackets'
+  " Store current buffer info
+  let original_buffer = bufnr('%')
 
-Execute (Cleanup - Remove temporary test directory):
-  execute 'cd -'
-  call delete(g:test_dir, 'rf')
+  " Clear previous error message
+  let v:errmsg = ''
+
+  " Position cursor before the [[ (line 3, col 8 - on the space before [[)
+  call cursor(3, 8)
+
+  " Execute the MetaNotesOpen command - should error
+  silent! MetaNotesOpen
+
+  " Verify we're still in the same buffer
+  AssertEqual original_buffer, bufnr('%'), 'Should remain in same buffer when cursor outside brackets'
+
+  " Verify an error was reported
+  Assert v:errmsg != '', 'Should set an error message when not in brackets'
+
+Execute (Error when cursor after closing brackets):
+  " Return to the original buffer
+  execute 'edit' g:test_root . '/test.md'
+  call setline(1, ['# My Notes', '', 'See note: [[project/example]] here'])
+
+  " Store current buffer info
+  let original_buffer = bufnr('%')
+
+  " Clear previous error message
+  let v:errmsg = ''
+
+  " Position cursor after the ]] (line 3, col 33 - on the space after ]])
+  call cursor(3, 33)
+
+  " Execute the MetaNotesOpen command - should error
+  silent! MetaNotesOpen
+
+  " Verify we're still in the same buffer
+  AssertEqual original_buffer, bufnr('%'), 'Should remain in same buffer when cursor after brackets'
+
+  " Verify an error was reported
+  Assert v:errmsg != '', 'Should set an error message when cursor after brackets'
+
+Execute (Cleanup):
+  " Restore original directory
+  execute 'cd' g:original_dir
+
+  " Clean up test files
+  call delete(g:test_root, 'rf')
+
+  " Clean up variables
+  unlet g:test_root
+  unlet g:original_dir
