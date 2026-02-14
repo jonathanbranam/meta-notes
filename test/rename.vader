@@ -1,12 +1,10 @@
 " Tests for MetaNotesRename command
 
-Before:
-  " Clean up any existing test files before each test
-  call system('rm -rf project/test-rename-* area/test-rename-*')
-
-After:
-  " Clean up test files after each test
-  call system('rm -rf project/test-rename-* area/test-rename-*')
+Execute (Setup - Create temporary test directory):
+  let g:test_dir = tempname()
+  call mkdir(g:test_dir, 'p')
+  execute 'cd' g:test_dir
+  call mkdir('project', 'p')
 
 " Test: Rename file with just filename (same directory)
 Execute (MetaNotesRename should rename file in same directory):
@@ -118,3 +116,7 @@ Execute (MetaNotesRename should fail with no file):
   endtry
 
   bwipeout!
+
+Execute (Cleanup - Remove temporary test directory):
+  execute 'cd -'
+  call delete(g:test_dir, 'rf')
