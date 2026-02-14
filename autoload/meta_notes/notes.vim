@@ -309,3 +309,140 @@ function! meta_notes#notes#OpenYearPlan(...) abort
     call cursor(3, 1)
   endif
 endfunction
+
+" Get list of all daily note files sorted by date
+" Returns:
+"   List of file paths sorted chronologically
+" Example:
+"   ['resource/daily-notes/26-Q1/2026-02-13 Fri.md', 'resource/daily-notes/26-Q1/2026-02-14 Sat.md']
+function! meta_notes#notes#GetDailyNoteFiles() abort
+  " Find all .md files in resource/daily-notes recursively
+  let l:files = glob('resource/daily-notes/**/*.md', 0, 1)
+
+  " Sort files by their full path (which includes date in YYYY-MM-DD format)
+  " This naturally sorts chronologically due to the date format
+  return sort(l:files)
+endfunction
+
+" Extract date from daily note filename
+" Args:
+"   filepath: Path to daily note file
+" Returns:
+"   Date string in YYYY-MM-DD format, or empty string if not a daily note
+" Example:
+"   For 'resource/daily-notes/26-Q1/2026-02-13 Fri.md', returns '2026-02-13'
+function! meta_notes#notes#ExtractDateFromDailyNote(filepath) abort
+  " Match pattern: YYYY-MM-DD followed by space and day abbreviation
+  let l:pattern = '\v(\d{4}-\d{2}-\d{2})\s+\w{3}\.md$'
+  let l:matches = matchlist(a:filepath, l:pattern)
+
+  if len(l:matches) > 1
+    return l:matches[1]
+  endif
+
+  return ''
+endfunction
+
+" Navigate to the previous existing daily note
+" If current buffer is not a daily note, shows error
+" If at oldest note, shows message
+function! meta_notes#notes#DailyPrev() abort
+  let l:current_file = expand('%')
+  let l:current_date = meta_notes#notes#ExtractDateFromDailyNote(l:current_file)
+
+  if l:current_date == ''
+    echoerr 'Current buffer is not a daily note'
+    return
+  endif
+
+  " Get all daily note files
+  let l:files = meta_notes#notes#GetDailyNoteFiles()
+
+  if len(l:files) == 0
+    echoerr 'No daily notes found'
+    return
+  endif
+
+  " Find the current file in the list by comparing absolute paths
+  let l:current_absolute = resolve(fnamemodify(l:current_file, ':p'))
+  let l:current_idx = -1
+  for l:idx in range(len(l:files))
+    let l:file_absolute = resolve(fnamemodify(l:files[l:idx], ':p'))
+    if l:file_absolute == l:current_absolute
+      let l:current_idx = l:idx
+      break
+    endif
+  endfor
+
+  if l:current_idx == -1
+    echoerr 'Current daily note not found in filesystem'
+    return
+  endif
+
+  " Check if we're at the oldest note
+  if l:current_idx == 0
+    echo 'Already at oldest daily note'
+    return
+  endif
+
+  " Open the previous note
+  let l:prev_file = l:files[l:current_idx - 1]
+  execute 'edit!' fnameescape(l:prev_file)
+endfunction
+
+" Navigate to the next existing daily note
+" If current buffer is not a daily note, shows error
+" If at newest note, prompts to create next day's note
+function! meta_notes#notes#DailyNext() abort
+  let l:current_file = expand('%')
+  let l:current_date = meta_notes#notes#ExtractDateFromDailyNote(l:current_file)
+
+  if l:current_date == ''
+    echoerr 'Current buffer is not a daily note'
+    return
+  endif
+
+  " Get all daily note files
+  let l:files = meta_notes#notes#GetDailyNoteFiles()
+
+  if len(l:files) == 0
+    echoerr 'No daily notes found'
+    return
+  endif
+
+  " Find the current file in the list by comparing absolute paths
+  let l:current_absolute = resolve(fnamemodify(l:current_file, ':p'))
+  let l:current_idx = -1
+  for l:idx in range(len(l:files))
+    let l:file_absolute = resolve(fnamemodify(l:files[l:idx], ':p'))
+    if l:file_absolute == l:current_absolute
+      let l:current_idx = l:idx
+      break
+    endif
+  endfor
+
+  if l:current_idx == -1
+    echoerr 'Current daily note not found in filesystem'
+    return
+  endif
+
+  " Check if we're at the newest note
+  if l:current_idx == len(l:files) - 1
+    " Prompt to create next day's note
+    let l:response = input('At newest daily note. Create next day? (y/n): ')
+    if l:response ==? 'y'
+      " Calculate next day's date
+      let l:timestamp = strptime("%Y-%m-%d", l:current_date)
+      let l:next_timestamp = l:timestamp + 86400  " Add one day
+      let l:next_date = strftime('%Y-%m-%d', l:next_timestamp)
+
+      " Open next day's note
+      call meta_notes#notes#OpenDaily(l:next_date)
+    endif
+    return
+  endif
+
+  " Open the next note
+  let l:next_file = l:files[l:current_idx + 1]
+  execute 'edit!' fnameescape(l:next_file)
+endfunction

@@ -1,0 +1,165 @@
+" Tests for daily note navigation functions
+
+Execute (Setup - Create test daily notes):
+  " Create directory structure
+  silent! call delete('resource/daily-notes/26-Q1', 'rf')
+  call mkdir('resource/daily-notes/26-Q1', 'p')
+
+  " Create three daily notes for testing
+  call writefile(['# Daily Note - 2026-02-10 Mon', '', 'Content for Feb 10'],
+        \ 'resource/daily-notes/26-Q1/2026-02-10 Mon.md')
+  call writefile(['# Daily Note - 2026-02-12 Wed', '', 'Content for Feb 12'],
+        \ 'resource/daily-notes/26-Q1/2026-02-12 Wed.md')
+  call writefile(['# Daily Note - 2026-02-14 Fri', '', 'Content for Feb 14'],
+        \ 'resource/daily-notes/26-Q1/2026-02-14 Fri.md')
+
+Execute (Test GetDailyNoteFiles returns sorted list):
+  let files = meta_notes#notes#GetDailyNoteFiles()
+
+  " Should have 3 files
+  AssertEqual 3, len(files)
+
+  " Should be sorted chronologically
+  Assert files[0] =~ '2026-02-10'
+  Assert files[1] =~ '2026-02-12'
+  Assert files[2] =~ '2026-02-14'
+
+Execute (Test ExtractDateFromDailyNote):
+  let date1 = meta_notes#notes#ExtractDateFromDailyNote('resource/daily-notes/26-Q1/2026-02-10 Mon.md')
+  AssertEqual '2026-02-10', date1
+
+  let date2 = meta_notes#notes#ExtractDateFromDailyNote('resource/daily-notes/26-Q1/2026-02-14 Fri.md')
+  AssertEqual '2026-02-14', date2
+
+  " Non-daily note should return empty string
+  let date3 = meta_notes#notes#ExtractDateFromDailyNote('resource/plan/week/Plan 2026-02-09.md')
+  AssertEqual '', date3
+
+Execute (Test DailyPrev from middle note):
+  " Open the middle note (Feb 12)
+  execute 'edit! resource/daily-notes/26-Q1/2026-02-12 Wed.md'
+
+  " Navigate to previous
+  call meta_notes#notes#DailyPrev()
+
+  " Should now be on Feb 10
+  Assert expand('%') =~ '2026-02-10 Mon.md'
+  let first_line = getline(1)
+  AssertEqual '# Daily Note - 2026-02-10 Mon', first_line
+
+Execute (Test DailyNext from middle note):
+  " Open the middle note (Feb 12)
+  execute 'edit! resource/daily-notes/26-Q1/2026-02-12 Wed.md'
+
+  " Navigate to next
+  call meta_notes#notes#DailyNext()
+
+  " Should now be on Feb 14
+  Assert expand('%') =~ '2026-02-14 Fri.md'
+  let first_line = getline(1)
+  AssertEqual '# Daily Note - 2026-02-14 Fri', first_line
+
+Execute (Test DailyPrev from oldest note shows message):
+  " Open the oldest note (Feb 10)
+  execute 'edit! resource/daily-notes/26-Q1/2026-02-10 Mon.md'
+
+  " Clear any previous messages
+  let v:statusmsg = ''
+
+  " Try to navigate to previous (should show message and stay on same file)
+  call meta_notes#notes#DailyPrev()
+
+  " Should still be on Feb 10
+  Assert expand('%') =~ '2026-02-10 Mon.md'
+
+Execute (Test DailyPrev from non-daily note shows error):
+  " Open a non-daily note buffer
+  enew
+
+  " Clear previous error
+  let v:errmsg = ''
+
+  " Try to navigate
+  silent! call meta_notes#notes#DailyPrev()
+
+  " Should have error message
+  Assert v:errmsg =~ 'not a daily note'
+
+Execute (Test DailyNext from non-daily note shows error):
+  " Open a non-daily note buffer
+  enew
+
+  " Clear previous error
+  let v:errmsg = ''
+
+  " Try to navigate
+  silent! call meta_notes#notes#DailyNext()
+
+  " Should have error message
+  Assert v:errmsg =~ 'not a daily note'
+
+Execute (Test MetaNotesDailyPrev command):
+  " Open the middle note
+  execute 'edit! resource/daily-notes/26-Q1/2026-02-12 Wed.md'
+
+  " Use the command
+  MetaNotesDailyPrev
+
+  " Should now be on Feb 10
+  Assert expand('%') =~ '2026-02-10 Mon.md'
+
+Execute (Test MetaNotesDailyNext command):
+  " Open the middle note
+  execute 'edit! resource/daily-notes/26-Q1/2026-02-12 Wed.md'
+
+  " Use the command
+  MetaNotesDailyNext
+
+  " Should now be on Feb 14
+  Assert expand('%') =~ '2026-02-14 Fri.md'
+
+Execute (Test navigation skips missing dates):
+  " We have notes on Feb 10, 12, and 14 (skipping Feb 11 and 13)
+  " Open Feb 10
+  execute 'edit! resource/daily-notes/26-Q1/2026-02-10 Mon.md'
+
+  " Navigate next should go to Feb 12 (skipping Feb 11)
+  call meta_notes#notes#DailyNext()
+  Assert expand('%') =~ '2026-02-12 Wed.md'
+
+  " Navigate next again should go to Feb 14 (skipping Feb 13)
+  call meta_notes#notes#DailyNext()
+  Assert expand('%') =~ '2026-02-14 Fri.md'
+
+  " Navigate prev should go back to Feb 12 (skipping Feb 13)
+  call meta_notes#notes#DailyPrev()
+  Assert expand('%') =~ '2026-02-12 Wed.md'
+
+  " Navigate prev again should go back to Feb 10 (skipping Feb 11)
+  call meta_notes#notes#DailyPrev()
+  Assert expand('%') =~ '2026-02-10 Mon.md'
+
+Execute (Test navigation across quarter boundaries):
+  " Create a note in Q4 of previous year
+  call mkdir('resource/daily-notes/25-Q4', 'p')
+  call writefile(['# Daily Note - 2025-12-31 Wed', '', 'Last day of 2025'],
+        \ 'resource/daily-notes/25-Q4/2025-12-31 Wed.md')
+
+  " Open the first note of Q1 2026 (Feb 10)
+  execute 'edit! resource/daily-notes/26-Q1/2026-02-10 Mon.md'
+
+  " Navigate prev should go to Dec 31, 2025
+  call meta_notes#notes#DailyPrev()
+  Assert expand('%') =~ '2025-12-31 Wed.md'
+
+  " Navigate next should come back to Feb 10, 2026
+  call meta_notes#notes#DailyNext()
+  Assert expand('%') =~ '2026-02-10 Mon.md'
+
+  " Clean up
+  silent! call delete('resource/daily-notes/25-Q4', 'rf')
+
+Execute (Cleanup - Remove test daily notes):
+  " Clean up all test files
+  silent! call delete('resource/daily-notes/26-Q1', 'rf')
+  silent! call delete('resource/daily-notes/25-Q4', 'rf')

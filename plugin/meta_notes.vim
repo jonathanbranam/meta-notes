@@ -38,6 +38,10 @@ command! -nargs=? MetaNotesWeekPlan call meta_notes#notes#OpenWeekPlan(<f-args>)
 command! -nargs=? MetaNotesQuarterPlan call meta_notes#notes#OpenQuarterPlan(<f-args>)
 command! -nargs=? MetaNotesYearPlan call meta_notes#notes#OpenYearPlan(<f-args>)
 
+" Navigation commands
+command! MetaNotesDailyPrev call meta_notes#notes#DailyPrev()
+command! MetaNotesDailyNext call meta_notes#notes#DailyNext()
+
 " Restore cpo
 let &cpo = s:save_cpo
 unlet s:save_cpo
