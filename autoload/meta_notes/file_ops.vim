@@ -124,3 +124,85 @@ function! meta_notes#file_ops#Archive(...) abort
     echo 'Archived: ' . l:path_no_ext . ' → ' . l:archive_path
   endif
 endfunction
+
+" Rename the current note
+" Args:
+"   new_name: New name for the note (optional, prompts if not provided)
+"             Can be just filename or full path
+" Behavior:
+"   - Renames current buffer's file
+"   - Preserves directory if only filename provided
+"   - Updates the current buffer to point to new location
+"   - If new_name includes path, moves file to new location
+function! meta_notes#file_ops#Rename(...) abort
+  " Get the current file path
+  let l:current_path = expand('%:p')
+
+  if l:current_path == ''
+    echoerr 'No file associated with current buffer'
+    return
+  endif
+
+  if !filereadable(l:current_path)
+    echoerr 'Current buffer file does not exist: ' . l:current_path
+    return
+  endif
+
+  " Get the new name
+  let l:new_name = ''
+  if a:0 > 0
+    let l:new_name = a:1
+  else
+    " Prompt for new name
+    let l:current_name = fnamemodify(l:current_path, ':t:r')
+    let l:new_name = input('Rename to: ', l:current_name)
+    if l:new_name == ''
+      echo 'Rename cancelled'
+      return
+    endif
+  endif
+
+  " Determine the new path
+  let l:new_path = ''
+  if l:new_name =~ '/'
+    " New name includes path - use it as-is
+    let l:new_path = l:new_name
+  else
+    " Just a filename - keep the same directory
+    let l:current_dir = fnamemodify(l:current_path, ':h')
+    let l:new_path = l:current_dir . '/' . l:new_name
+  endif
+
+  " Add .md extension if not present
+  if l:new_path !~ '\.md$'
+    let l:new_path = l:new_path . '.md'
+  endif
+
+  " Check if target already exists
+  if filereadable(l:new_path)
+    echoerr 'Target file already exists: ' . l:new_path
+    return
+  endif
+
+  " Create target directory if needed
+  let l:target_dir = fnamemodify(l:new_path, ':h')
+  if !isdirectory(l:target_dir)
+    call mkdir(l:target_dir, 'p')
+  endif
+
+  " Rename the file
+  let l:result = rename(l:current_path, l:new_path)
+
+  if l:result != 0
+    echoerr 'Failed to rename file: ' . l:current_path
+    return
+  endif
+
+  " Update the buffer to the new location
+  execute 'edit! ' . fnameescape(l:new_path)
+
+  " Delete the old buffer
+  execute 'bwipeout ' . fnameescape(l:current_path)
+
+  echo 'Renamed: ' . fnamemodify(l:current_path, ':p:.') . ' → ' . fnamemodify(l:new_path, ':p:.')
+endfunction

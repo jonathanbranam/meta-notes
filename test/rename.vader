@@ -1,0 +1,120 @@
+" Tests for MetaNotesRename command
+
+Before:
+  " Clean up any existing test files before each test
+  call system('rm -rf project/test-rename-* area/test-rename-*')
+
+After:
+  " Clean up test files after each test
+  call system('rm -rf project/test-rename-* area/test-rename-*')
+
+" Test: Rename file with just filename (same directory)
+Execute (MetaNotesRename should rename file in same directory):
+  " Create a test file and open it
+  call writefile(['# Original Name'], 'project/test-rename-original.md')
+  edit project/test-rename-original.md
+
+  " Rename to new name
+  call meta_notes#file_ops#Rename('test-rename-new')
+
+  " Verify file was renamed
+  Assert filereadable('project/test-rename-new.md')
+  Assert !filereadable('project/test-rename-original.md')
+
+  " Verify buffer updated
+  AssertEqual 'project/test-rename-new.md', expand('%:p:.')
+
+  " Close buffer
+  bwipeout!
+
+" Test: Rename with .md extension
+Execute (MetaNotesRename should handle .md extension):
+  " Create a test file
+  call writefile(['# Test'], 'project/test-rename-ext.md')
+  edit project/test-rename-ext.md
+
+  " Rename with .md extension
+  call meta_notes#file_ops#Rename('test-rename-newext.md')
+
+  " Verify renamed correctly (no double .md)
+  Assert filereadable('project/test-rename-newext.md')
+  Assert !filereadable('project/test-rename-newext.md.md')
+
+  bwipeout!
+
+" Test: Rename to different directory
+Execute (MetaNotesRename should move file to different directory):
+  " Create test directories
+  call mkdir('project/test-rename-source', 'p')
+  call mkdir('project/test-rename-dest', 'p')
+  call writefile(['# Move Me'], 'project/test-rename-source/file.md')
+
+  " Open the file
+  edit project/test-rename-source/file.md
+
+  " Rename with path
+  call meta_notes#file_ops#Rename('project/test-rename-dest/moved-file')
+
+  " Verify file moved
+  Assert filereadable('project/test-rename-dest/moved-file.md')
+  Assert !filereadable('project/test-rename-source/file.md')
+
+  " Verify buffer updated
+  AssertEqual 'project/test-rename-dest/moved-file.md', expand('%:p:.')
+
+  bwipeout!
+
+" Test: Cannot rename to existing file
+Execute (MetaNotesRename should fail if target exists):
+  " Create two files
+  call writefile(['# File 1'], 'project/test-rename-file1.md')
+  call writefile(['# File 2'], 'project/test-rename-file2.md')
+
+  " Open file1
+  edit project/test-rename-file1.md
+
+  " Try to rename to file2 (should fail)
+  try
+    call meta_notes#file_ops#Rename('test-rename-file2')
+    " If we get here, the function didn't throw an error
+    AssertEqual 1, 0, 'Expected error but function succeeded'
+  catch /Target file already exists/
+    " Expected error caught
+  endtry
+
+  " Original files should still exist
+  Assert filereadable('project/test-rename-file1.md')
+  Assert filereadable('project/test-rename-file2.md')
+
+  bwipeout!
+
+" Test: Rename creates target directory if needed
+Execute (MetaNotesRename should create target directory):
+  " Create source file
+  call writefile(['# Test'], 'project/test-rename-createdir.md')
+  edit project/test-rename-createdir.md
+
+  " Rename to path in non-existent directory
+  call meta_notes#file_ops#Rename('project/test-rename-newdir/subdir/file')
+
+  " Verify directory created and file moved
+  Assert isdirectory('project/test-rename-newdir/subdir')
+  Assert filereadable('project/test-rename-newdir/subdir/file.md')
+  Assert !filereadable('project/test-rename-createdir.md')
+
+  bwipeout!
+
+" Test: Rename with no buffer file fails
+Execute (MetaNotesRename should fail with no file):
+  " Create a new buffer with no file
+  enew
+
+  " Try to rename (should fail)
+  try
+    call meta_notes#file_ops#Rename('test')
+    AssertEqual 1, 0, 'Expected error but function succeeded'
+  catch /No file associated with current buffer/
+    " Expected error caught
+  endtry
+
+  bwipeout!

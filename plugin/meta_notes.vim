@@ -49,6 +49,7 @@ command! MetaNotesInit call meta_notes#notes#Init()
 
 " File operations
 command! -nargs=? -complete=file MetaNotesArchive call meta_notes#file_ops#Archive(<f-args>)
+command! -nargs=? MetaNotesRename call meta_notes#file_ops#Rename(<f-args>)
 
 
 " Restore cpo
