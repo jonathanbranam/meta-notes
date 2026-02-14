@@ -13,6 +13,7 @@ Task format: bullet (-, *, +) followed by [status]
 - [-] = canceled (not reported)
 """
 
+import argparse
 import os
 import sys
 from datetime import date, timedelta
@@ -32,6 +33,102 @@ def filter_incomplete_tasks(tasks: list[Task]) -> list[Task]:
         List containing only tasks with INCOMPLETE status.
     """
     return filter_tasks_by_status(tasks, [TaskStatus.INCOMPLETE])
+
+
+def filter_tasks_by_folder(tasks: list[Task], folder: str, root_dir: str) -> list[Task]:
+    """
+    Filter tasks to only include those from files in a specific folder.
+
+    Args:
+        tasks: List of Task objects to filter.
+        folder: Folder path (includes subfolders by default).
+        root_dir: Root directory being searched.
+
+    Returns:
+        List containing only tasks from files in the specified folder.
+    """
+    # Normalize folder path (remove trailing slash)
+    folder_normalized = folder.rstrip('/')
+
+    # Convert to absolute path for comparison
+    if not os.path.isabs(folder_normalized):
+        folder_abs = os.path.abspath(os.path.join(root_dir, folder_normalized))
+    else:
+        folder_abs = os.path.abspath(folder_normalized)
+
+    filtered_tasks = []
+    for task in tasks:
+        # Get absolute path of task filename
+        task_abs = os.path.abspath(task.filename)
+
+        # Check if task file is in the specified folder (or subfolder)
+        if task_abs.startswith(folder_abs + os.sep) or os.path.dirname(task_abs) == folder_abs:
+            filtered_tasks.append(task)
+
+    return filtered_tasks
+
+
+def filter_tasks_by_due_date(tasks: list[Task], due_on: date | None = None,
+                             due_by: date | None = None,
+                             due_between: tuple[date, date] | None = None) -> list[Task]:
+    """
+    Filter tasks by due date criteria.
+
+    Args:
+        tasks: List of Task objects to filter.
+        due_on: If provided, only include tasks due on this exact date.
+        due_by: If provided, only include tasks due on or before this date.
+        due_between: If provided, only include tasks due between these dates (inclusive).
+
+    Returns:
+        List containing only tasks matching the date criteria.
+    """
+    filtered_tasks = []
+
+    for task in tasks:
+        if task.due_date is None:
+            continue
+
+        if due_on is not None:
+            if task.due_date == due_on:
+                filtered_tasks.append(task)
+        elif due_by is not None:
+            if task.due_date <= due_by:
+                filtered_tasks.append(task)
+        elif due_between is not None:
+            start_date, end_date = due_between
+            if start_date <= task.due_date <= end_date:
+                filtered_tasks.append(task)
+        else:
+            # No date filtering
+            filtered_tasks.append(task)
+
+    return filtered_tasks
+
+
+def filter_tasks_by_status_arg(tasks: list[Task], status_arg: str) -> list[Task]:
+    """
+    Filter tasks by status argument.
+
+    Args:
+        tasks: List of Task objects to filter.
+        status_arg: Status string ('incomplete', 'completed', 'all', etc.).
+
+    Returns:
+        List containing only tasks matching the status.
+    """
+    if status_arg == 'all':
+        return tasks
+    elif status_arg == 'incomplete':
+        return filter_tasks_by_status(tasks, [TaskStatus.INCOMPLETE])
+    elif status_arg == 'completed':
+        return filter_tasks_by_status(tasks, [TaskStatus.COMPLETED])
+    elif status_arg == 'rescheduled':
+        return filter_tasks_by_status(tasks, [TaskStatus.RESCHEDULED])
+    elif status_arg == 'canceled':
+        return filter_tasks_by_status(tasks, [TaskStatus.CANCELED])
+    else:
+        return tasks
 
 
 def get_task_relevant_date(task: Task) -> date | None:
@@ -246,23 +343,163 @@ def generate_report(root_dir: str, today: date) -> list[str]:
     return lines
 
 
+def parse_date_arg(date_str: str) -> date:
+    """
+    Parse a date string in YYYY-MM-DD format.
+
+    Args:
+        date_str: Date string to parse.
+
+    Returns:
+        Parsed date object.
+
+    Raises:
+        ValueError: If date string is invalid.
+    """
+    try:
+        return date.fromisoformat(date_str)
+    except ValueError:
+        raise ValueError(f"Invalid date format: {date_str}. Use YYYY-MM-DD format.")
+
+
 def main() -> None:
     """
     Main entry point for the script.
     """
-    # Get the root directory from command line or use current directory
-    root_dir: str = sys.argv[1] if len(sys.argv) > 1 else '.'
+    parser = argparse.ArgumentParser(
+        description='Find and list tasks from markdown files.',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s                           # All incomplete tasks in current directory
+  %(prog)s --folder project          # Tasks from project/ folder
+  %(prog)s --due-on 2026-02-14       # Tasks due on specific date
+  %(prog)s --due-by 2026-02-20       # Tasks due by date
+  %(prog)s --status all              # All tasks regardless of status
+  %(prog)s --due-between 2026-02-01 2026-02-28  # Tasks due in date range
+        """
+    )
 
-    if not os.path.isdir(root_dir):
-        print(f"Error: {root_dir} is not a directory", file=sys.stderr)
+    parser.add_argument(
+        'root_dir',
+        nargs='?',
+        default='.',
+        help='Root directory to search (default: current directory)'
+    )
+
+    parser.add_argument(
+        '--folder',
+        help='Filter tasks from specific folder (includes subfolders)'
+    )
+
+    parser.add_argument(
+        '--due-on',
+        metavar='DATE',
+        help='Show tasks due on specific date (YYYY-MM-DD)'
+    )
+
+    parser.add_argument(
+        '--due-by',
+        metavar='DATE',
+        help='Show tasks due on or before date (YYYY-MM-DD)'
+    )
+
+    parser.add_argument(
+        '--due-between',
+        nargs=2,
+        metavar=('START', 'END'),
+        help='Show tasks due between dates (YYYY-MM-DD YYYY-MM-DD)'
+    )
+
+    parser.add_argument(
+        '--status',
+        choices=['incomplete', 'completed', 'rescheduled', 'canceled', 'all'],
+        default='incomplete',
+        help='Filter by task status (default: incomplete)'
+    )
+
+    args = parser.parse_args()
+
+    # Validate root directory
+    if not os.path.isdir(args.root_dir):
+        print(f"Error: {args.root_dir} is not a directory", file=sys.stderr)
+        sys.exit(1)
+
+    # Parse date arguments
+    due_on = None
+    due_by = None
+    due_between = None
+
+    try:
+        if args.due_on:
+            due_on = parse_date_arg(args.due_on)
+        if args.due_by:
+            due_by = parse_date_arg(args.due_by)
+        if args.due_between:
+            start = parse_date_arg(args.due_between[0])
+            end = parse_date_arg(args.due_between[1])
+            if start > end:
+                print("Error: Start date must be before or equal to end date", file=sys.stderr)
+                sys.exit(1)
+            due_between = (start, end)
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
 
     # Get current date
     today = date.today()
 
-    # Generate and print report
-    report_lines = generate_report(root_dir, today)
-    output = "\n".join(report_lines)
+    # Find all markdown files
+    markdown_files = find_all_markdown_files(args.root_dir)
+
+    if not markdown_files:
+        print("No markdown files found.")
+        return
+
+    # Collect all tasks and apply filters
+    all_tasks = []
+    for filepath in markdown_files:
+        file_tasks = find_tasks_in_file(filepath)
+        all_tasks.extend(file_tasks)
+
+    # Apply status filter
+    filtered_tasks = filter_tasks_by_status_arg(all_tasks, args.status)
+
+    # Apply folder filter if specified
+    if args.folder:
+        filtered_tasks = filter_tasks_by_folder(filtered_tasks, args.folder, args.root_dir)
+
+    # Apply date filters if specified
+    if due_on or due_by or due_between:
+        filtered_tasks = filter_tasks_by_due_date(filtered_tasks, due_on, due_by, due_between)
+
+    # Group tasks by file
+    tasks_by_file: dict[str, list[Task]] = {}
+    for task in filtered_tasks:
+        if task.filename not in tasks_by_file:
+            tasks_by_file[task.filename] = []
+        tasks_by_file[task.filename].append(task)
+
+    # Generate output
+    if not tasks_by_file:
+        print("No tasks found matching the criteria.")
+        return
+
+    lines: list[str] = []
+    for filepath in sorted(tasks_by_file.keys()):
+        tasks = tasks_by_file[filepath]
+        file_lines = format_file_tasks(filepath, tasks, args.root_dir)
+        lines.extend(file_lines)
+        lines.append("")  # Empty line between files
+
+    # Add summary
+    total_tasks = len(filtered_tasks)
+    total_files = len(tasks_by_file)
+    task_word = "task" if total_tasks == 1 else "tasks"
+    file_word = "file" if total_files == 1 else "files"
+    lines.append(f"Summary: Found {total_tasks} {task_word} in {total_files} {file_word}")
+
+    output = "\n".join(lines)
     print(output)
 
 
