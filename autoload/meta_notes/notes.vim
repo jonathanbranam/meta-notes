@@ -234,3 +234,78 @@ function! meta_notes#notes#OpenDaily(...) abort
     call cursor(3, 1)
   endif
 endfunction
+
+" Open the quarterly plan file for the current quarter or a specific date
+" Quarterly plan files are located at: resource/plan/quarter/YYYY-QQ.md
+" Args:
+"   date_str: Optional date string in YYYY-mm-dd format (defaults to today)
+" Example:
+"   For any day in Q1 2026, opens 'resource/plan/quarter/2026-Q1.md'
+function! meta_notes#notes#OpenQuarterPlan(...) abort
+  let l:date_str = a:0 > 0 ? a:1 : strftime('%Y-%m-%d')
+
+  " Convert date string to timestamp for formatting
+  let l:timestamp = strptime("%Y-%m-%d", l:date_str)
+
+  " Calculate quarter and year
+  let l:quarter = meta_notes#notes#CalculateQuarter(l:date_str)
+  let l:year = strftime('%Y', l:timestamp)
+
+  " Construct the quarterly plan file path
+  let l:dir = 'resource/plan/quarter'
+  let l:filename = l:year . '-' . l:quarter . '.md'
+  let l:filepath = l:dir . '/' . l:filename
+
+  " Create directory if it doesn't exist
+  if !isdirectory(l:dir)
+    call mkdir(l:dir, 'p')
+  endif
+
+  " Check if file exists
+  if filereadable(l:filepath)
+    " Open existing file
+    execute 'edit!' fnameescape(l:filepath)
+  else
+    " Create new file with header template
+    execute 'edit!' fnameescape(l:filepath)
+    call setline(1, ['# Quarterly Plan - ' . l:year . ' ' . l:quarter, ''])
+    call cursor(3, 1)
+  endif
+endfunction
+
+" Open the yearly plan file for the current year or a specific date
+" Yearly plan files are located at: resource/plan/year/YYYY.md
+" Args:
+"   date_str: Optional date string in YYYY-mm-dd format (defaults to today)
+" Example:
+"   For any day in 2026, opens 'resource/plan/year/2026.md'
+function! meta_notes#notes#OpenYearPlan(...) abort
+  let l:date_str = a:0 > 0 ? a:1 : strftime('%Y-%m-%d')
+
+  " Convert date string to timestamp for formatting
+  let l:timestamp = strptime("%Y-%m-%d", l:date_str)
+
+  " Get year
+  let l:year = strftime('%Y', l:timestamp)
+
+  " Construct the yearly plan file path
+  let l:dir = 'resource/plan/year'
+  let l:filename = l:year . '.md'
+  let l:filepath = l:dir . '/' . l:filename
+
+  " Create directory if it doesn't exist
+  if !isdirectory(l:dir)
+    call mkdir(l:dir, 'p')
+  endif
+
+  " Check if file exists
+  if filereadable(l:filepath)
+    " Open existing file
+    execute 'edit!' fnameescape(l:filepath)
+  else
+    " Create new file with header template
+    execute 'edit!' fnameescape(l:filepath)
+    call setline(1, ['# Year Plan - ' . l:year, ''])
+    call cursor(3, 1)
+  endif
+endfunction

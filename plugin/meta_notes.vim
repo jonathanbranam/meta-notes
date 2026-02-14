@@ -35,6 +35,8 @@ command! TestMetaNotes execute 'Vader' s:plugin_root . '/test/*.vader'
 command! MetaNotesOpen call meta_notes#notes#Open()
 command! -nargs=? MetaNotesDaily call meta_notes#notes#OpenDaily(<f-args>)
 command! -nargs=? MetaNotesWeekPlan call meta_notes#notes#OpenWeekPlan(<f-args>)
+command! -nargs=? MetaNotesQuarterPlan call meta_notes#notes#OpenQuarterPlan(<f-args>)
+command! -nargs=? MetaNotesYearPlan call meta_notes#notes#OpenYearPlan(<f-args>)
 
 " Restore cpo
 let &cpo = s:save_cpo

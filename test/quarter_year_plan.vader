@@ -1,0 +1,209 @@
+" Tests for quarterly and yearly plan functions
+
+Execute (Test OpenQuarterPlan creates file with correct path for Q1):
+  " Clean up any existing file and directory first
+  silent! call delete('resource/plan/quarter/2026-Q1.md')
+  silent! call delete('resource/plan/quarter', 'd')
+
+  " Open quarterly plan for a date in Q1 2026
+  call meta_notes#notes#OpenQuarterPlan('2026-02-13')
+
+  " Verify we're in the correct file
+  AssertEqual 'resource/plan/quarter/2026-Q1.md', expand('%')
+
+  " Verify header was created
+  let first_line = getline(1)
+  AssertEqual '# Quarterly Plan - 2026 Q1', first_line
+
+  " Clean up
+  silent! call delete('resource/plan/quarter/2026-Q1.md')
+  silent! call delete('resource/plan/quarter', 'd')
+
+Execute (Test OpenQuarterPlan creates file with correct path for Q3):
+  " Clean up any existing file and directory first
+  silent! call delete('resource/plan/quarter/2026-Q3.md')
+  silent! call delete('resource/plan/quarter', 'd')
+
+  " Open quarterly plan for a date in Q3 2026
+  call meta_notes#notes#OpenQuarterPlan('2026-07-15')
+
+  " Verify we're in the correct file
+  AssertEqual 'resource/plan/quarter/2026-Q3.md', expand('%')
+
+  " Verify header was created
+  let first_line = getline(1)
+  AssertEqual '# Quarterly Plan - 2026 Q3', first_line
+
+  " Clean up
+  silent! call delete('resource/plan/quarter/2026-Q3.md')
+  silent! call delete('resource/plan/quarter', 'd')
+
+Execute (Test OpenQuarterPlan creates directory if it doesn't exist):
+  " Clean up any existing directory first
+  silent! call delete('resource/plan/quarter', 'rf')
+
+  " Ensure directory doesn't exist
+  Assert !isdirectory('resource/plan/quarter')
+
+  " Open quarterly plan
+  call meta_notes#notes#OpenQuarterPlan('2026-02-13')
+
+  " Verify directory was created
+  Assert isdirectory('resource/plan/quarter')
+
+  " Clean up
+  silent! call delete('resource/plan/quarter/2026-Q1.md')
+  silent! call delete('resource/plan/quarter', 'd')
+
+Execute (Test MetaNotesQuarterPlan command with date argument):
+  " Clean up any existing file first
+  silent! call delete('resource/plan/quarter/2026-Q1.md')
+  silent! call delete('resource/plan/quarter', 'd')
+
+  " Use the command with a date argument
+  MetaNotesQuarterPlan 2026-02-13
+
+  " Verify we're in the correct file
+  AssertEqual 'resource/plan/quarter/2026-Q1.md', expand('%')
+
+  " Verify header was created
+  let first_line = getline(1)
+  AssertEqual '# Quarterly Plan - 2026 Q1', first_line
+
+  " Clean up
+  silent! call delete('resource/plan/quarter/2026-Q1.md')
+  silent! call delete('resource/plan/quarter', 'd')
+
+Execute (Test OpenQuarterPlan opens existing file):
+  " Clean up first
+  silent! call delete('resource/plan/quarter/2026-Q1.md')
+  silent! call delete('resource/plan/quarter', 'd')
+
+  " Create a test file by opening it, writing content, and saving
+  call mkdir('resource/plan/quarter', 'p')
+  execute 'edit! resource/plan/quarter/2026-Q1.md'
+  call setline(1, ['# Existing Quarterly Plan', '', 'This is existing content'])
+  write
+
+  " Switch to a different buffer
+  enew
+
+  " Now open the existing quarterly plan via the function
+  call meta_notes#notes#OpenQuarterPlan('2026-02-13')
+
+  " Verify we're in the correct file
+  AssertEqual 'resource/plan/quarter/2026-Q1.md', expand('%')
+
+  " Verify the existing content is preserved
+  let first_line = getline(1)
+  AssertEqual '# Existing Quarterly Plan', first_line
+  let third_line = getline(3)
+  AssertEqual 'This is existing content', third_line
+
+  " Clean up
+  silent! call delete('resource/plan/quarter/2026-Q1.md')
+  silent! call delete('resource/plan/quarter', 'd')
+
+Execute (Test OpenYearPlan creates file with correct path):
+  " Clean up any existing file and directory first
+  silent! call delete('resource/plan/year/2026.md')
+  silent! call delete('resource/plan/year', 'd')
+
+  " Open yearly plan for 2026
+  call meta_notes#notes#OpenYearPlan('2026-02-13')
+
+  " Verify we're in the correct file
+  AssertEqual 'resource/plan/year/2026.md', expand('%')
+
+  " Verify header was created
+  let first_line = getline(1)
+  AssertEqual '# Year Plan - 2026', first_line
+
+  " Clean up
+  silent! call delete('resource/plan/year/2026.md')
+  silent! call delete('resource/plan/year', 'd')
+
+Execute (Test OpenYearPlan creates file with correct path for different year):
+  " Clean up any existing file and directory first
+  silent! call delete('resource/plan/year/2025.md')
+  silent! call delete('resource/plan/year', 'd')
+
+  " Open yearly plan for 2025
+  call meta_notes#notes#OpenYearPlan('2025-06-15')
+
+  " Verify we're in the correct file
+  AssertEqual 'resource/plan/year/2025.md', expand('%')
+
+  " Verify header was created
+  let first_line = getline(1)
+  AssertEqual '# Year Plan - 2025', first_line
+
+  " Clean up
+  silent! call delete('resource/plan/year/2025.md')
+  silent! call delete('resource/plan/year', 'd')
+
+Execute (Test OpenYearPlan creates directory if it doesn't exist):
+  " Clean up any existing directory first
+  silent! call delete('resource/plan/year', 'rf')
+
+  " Ensure directory doesn't exist
+  Assert !isdirectory('resource/plan/year')
+
+  " Open yearly plan
+  call meta_notes#notes#OpenYearPlan('2026-02-13')
+
+  " Verify directory was created
+  Assert isdirectory('resource/plan/year')
+
+  " Clean up
+  silent! call delete('resource/plan/year/2026.md')
+  silent! call delete('resource/plan/year', 'd')
+
+Execute (Test MetaNotesYearPlan command with date argument):
+  " Clean up any existing file first
+  silent! call delete('resource/plan/year/2026.md')
+  silent! call delete('resource/plan/year', 'd')
+
+  " Use the command with a date argument
+  MetaNotesYearPlan 2026-02-13
+
+  " Verify we're in the correct file
+  AssertEqual 'resource/plan/year/2026.md', expand('%')
+
+  " Verify header was created
+  let first_line = getline(1)
+  AssertEqual '# Year Plan - 2026', first_line
+
+  " Clean up
+  silent! call delete('resource/plan/year/2026.md')
+  silent! call delete('resource/plan/year', 'd')
+
+Execute (Test OpenYearPlan opens existing file):
+  " Clean up first
+  silent! call delete('resource/plan/year/2026.md')
+  silent! call delete('resource/plan/year', 'd')
+
+  " Create a test file by opening it, writing content, and saving
+  call mkdir('resource/plan/year', 'p')
+  execute 'edit! resource/plan/year/2026.md'
+  call setline(1, ['# Existing Year Plan', '', 'This is existing content'])
+  write
+
+  " Switch to a different buffer
+  enew
+
+  " Now open the existing year plan via the function
+  call meta_notes#notes#OpenYearPlan('2026-02-13')
+
+  " Verify we're in the correct file
+  AssertEqual 'resource/plan/year/2026.md', expand('%')
+
+  " Verify the existing content is preserved
+  let first_line = getline(1)
+  AssertEqual '# Existing Year Plan', first_line
+  let third_line = getline(3)
+  AssertEqual 'This is existing content', third_line
+
+  " Clean up
+  silent! call delete('resource/plan/year/2026.md')
+  silent! call delete('resource/plan/year', 'd')
