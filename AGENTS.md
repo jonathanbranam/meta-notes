@@ -9,6 +9,11 @@ Scripts should generally be written in vimscript for compatibility. Larger, more
 complicated work can be written in Python and executed by the shell. Avoid using
 Python libraries.
 
+## Issue Tracking
+
+This project uses `bd` (Beads) for issue tracking. See @using-bd.md for a guide
+on how to use `bd` effectively.
+
 ## Testing
 
 The plugin uses [vader.vim](https://github.com/junegunn/vader.vim) for testing.

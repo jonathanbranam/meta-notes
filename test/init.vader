@@ -1,0 +1,115 @@
+Execute (Setup - Create temporary test directory):
+  let g:test_dir = tempname()
+  call mkdir(g:test_dir, 'p')
+  execute 'cd' g:test_dir
+
+Execute (MetaNotesInit creates all PARA directories):
+  MetaNotesInit
+
+  " Check top-level directories
+  Assert isdirectory('project'), 'project/ directory should exist'
+  Assert isdirectory('area'), 'area/ directory should exist'
+  Assert isdirectory('resource'), 'resource/ directory should exist'
+  Assert isdirectory('archive'), 'archive/ directory should exist'
+
+  " Check resource subdirectories
+  Assert isdirectory('resource/template'), 'resource/template/ directory should exist'
+  Assert isdirectory('resource/daily-notes'), 'resource/daily-notes/ directory should exist'
+  Assert isdirectory('resource/plan'), 'resource/plan/ directory should exist'
+  Assert isdirectory('resource/plan/week'), 'resource/plan/week/ directory should exist'
+  Assert isdirectory('resource/plan/quarter'), 'resource/plan/quarter/ directory should exist'
+  Assert isdirectory('resource/plan/year'), 'resource/plan/year/ directory should exist'
+
+  " Check archive subdirectories
+  Assert isdirectory('archive/project'), 'archive/project/ directory should exist'
+  Assert isdirectory('archive/area'), 'archive/area/ directory should exist'
+  Assert isdirectory('archive/resource'), 'archive/resource/ directory should exist'
+
+Execute (MetaNotesInit creates all template files):
+  MetaNotesInit
+
+  " Check template files exist
+  Assert filereadable('resource/template/daily.md'), 'daily.md template should exist'
+  Assert filereadable('resource/template/weekly.md'), 'weekly.md template should exist'
+  Assert filereadable('resource/template/quarterly.md'), 'quarterly.md template should exist'
+  Assert filereadable('resource/template/yearly.md'), 'yearly.md template should exist'
+
+Execute (MetaNotesInit creates daily template with correct content):
+  MetaNotesInit
+
+  let lines = readfile('resource/template/daily.md')
+
+  " Check for YAML frontmatter
+  Assert lines[0] == '---', 'Daily template should start with YAML frontmatter'
+  Assert lines[1] =~ 'filename_pattern:', 'Daily template should have filename_pattern'
+  Assert lines[2] == '---', 'YAML frontmatter should close'
+
+  " Check for expected sections
+  let content = join(lines, "\n")
+  Assert content =~ '# Daily Note', 'Daily template should have heading'
+  Assert content =~ 'Week Plan:', 'Daily template should have Week Plan link'
+  Assert content =~ '## Tasks Due Today', 'Daily template should have Tasks Due Today section'
+  Assert content =~ '## Overdue Tasks', 'Daily template should have Overdue Tasks section'
+  Assert content =~ '## Time Tracking', 'Daily template should have Time Tracking section'
+  Assert content =~ '### Log', 'Daily template should have Log section'
+  Assert content =~ '### Time Block', 'Daily template should have Time Block section'
+
+Execute (MetaNotesInit creates weekly template with correct content):
+  MetaNotesInit
+
+  let lines = readfile('resource/template/weekly.md')
+
+  " Check for YAML frontmatter
+  Assert lines[0] == '---', 'Weekly template should start with YAML frontmatter'
+  Assert lines[1] =~ 'filename_pattern:', 'Weekly template should have filename_pattern'
+
+  " Check for expected sections
+  let content = join(lines, "\n")
+  Assert content =~ '# Week Plan', 'Weekly template should have heading'
+  Assert content =~ 'Quarterly Plan:', 'Weekly template should have Quarterly Plan link'
+  Assert content =~ '## Goals', 'Weekly template should have Goals section'
+  Assert content =~ '## Projects', 'Weekly template should have Projects section'
+  Assert content =~ '## Areas', 'Weekly template should have Areas section'
+
+Execute (MetaNotesInit creates quarterly template with correct content):
+  MetaNotesInit
+
+  let lines = readfile('resource/template/quarterly.md')
+
+  " Check for YAML frontmatter
+  Assert lines[0] == '---', 'Quarterly template should start with YAML frontmatter'
+
+  " Check for expected sections
+  let content = join(lines, "\n")
+  Assert content =~ '# Quarterly Plan', 'Quarterly template should have heading'
+  Assert content =~ 'Yearly Plan:', 'Quarterly template should have Yearly Plan link'
+  Assert content =~ '## Quarter Goals', 'Quarterly template should have Quarter Goals section'
+  Assert content =~ '## Review & Reflection', 'Quarterly template should have Review & Reflection section'
+
+Execute (MetaNotesInit creates yearly template with correct content):
+  MetaNotesInit
+
+  let lines = readfile('resource/template/yearly.md')
+
+  " Check for YAML frontmatter
+  Assert lines[0] == '---', 'Yearly template should start with YAML frontmatter'
+
+  " Check for expected sections
+  let content = join(lines, "\n")
+  Assert content =~ '# Year Plan', 'Yearly template should have heading'
+  Assert content =~ '## Annual Goals', 'Yearly template should have Annual Goals section'
+  Assert content =~ '## Quarterly Breakdown', 'Yearly template should have Quarterly Breakdown section'
+  Assert content =~ '### Q1 (Jan-Mar)', 'Yearly template should have Q1 section'
+  Assert content =~ '### Q4 (Oct-Dec)', 'Yearly template should have Q4 section'
+
+Execute (MetaNotesInit is idempotent - running twice doesn't break):
+  MetaNotesInit
+  MetaNotesInit
+
+  " Everything should still exist
+  Assert isdirectory('project'), 'project/ directory should still exist after second init'
+  Assert filereadable('resource/template/daily.md'), 'daily.md template should still exist after second init'
+
+Execute (Cleanup - Remove temporary test directory):
+  execute 'cd -'
+  call delete(g:test_dir, 'rf')

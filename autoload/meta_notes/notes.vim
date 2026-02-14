@@ -59,7 +59,7 @@ endfunction
 
 " Open a note from a wiki-style link [[path/to/note]]
 " If cursor is within [[...]], opens or creates the note
-" If note doesn't exist, creates a new buffer with header template
+" If note doesn't exist, creates a new buffer with folder template or header template
 function! meta_notes#notes#Open() abort
   let path = meta_notes#notes#GetLinkUnderCursor()
 
@@ -76,10 +76,28 @@ function! meta_notes#notes#Open() abort
     " Open existing file
     execute 'edit!' fnameescape(filepath)
   else
-    " Create new buffer with header template
+    " Create parent directory if it doesn't exist
+    let folder = fnamemodify(filepath, ':h')
+    if !isdirectory(folder)
+      call mkdir(folder, 'p')
+    endif
+
+    " Create new buffer with template
     execute 'edit!' fnameescape(filepath)
-    call setline(1, ['# ' . path, ''])
-    call cursor(3, 1)
+
+    " Check for folder-specific template.md
+    let template_file = folder . '/template.md'
+
+    if filereadable(template_file)
+      " Use folder-specific template
+      let template_lines = readfile(template_file)
+      call setline(1, template_lines)
+      call cursor(1, 1)
+    else
+      " Use simple header template
+      call setline(1, ['# ' . path, ''])
+      call cursor(3, 1)
+    endif
   endif
 endfunction
 
@@ -460,4 +478,189 @@ function! meta_notes#notes#JumpToWeek() abort
 
   " Open the weekly plan for this date
   call meta_notes#notes#OpenWeekPlan(l:current_date)
+endfunction
+
+" Initialize PARA folder structure and default templates
+" Creates all necessary directories and template files for the meta-notes system
+function! meta_notes#notes#Init() abort
+  " Define directory structure
+  let l:directories = [
+        \ 'project',
+        \ 'area',
+        \ 'resource',
+        \ 'resource/template',
+        \ 'resource/daily-notes',
+        \ 'resource/plan',
+        \ 'resource/plan/week',
+        \ 'resource/plan/quarter',
+        \ 'resource/plan/year',
+        \ 'archive',
+        \ 'archive/project',
+        \ 'archive/area',
+        \ 'archive/resource'
+        \ ]
+
+  " Create directories
+  for l:dir in l:directories
+    if !isdirectory(l:dir)
+      call mkdir(l:dir, 'p')
+      echo 'Created directory: ' . l:dir
+    else
+      echo 'Directory already exists: ' . l:dir
+    endif
+  endfor
+
+  " Define template files with their content
+  let l:templates = {
+        \ 'resource/template/daily.md': [
+        \   '---',
+        \   'filename_pattern: "resource/daily-notes/{{date:%y}}-{{date:Q{{((date.month-1)//3)+1}}}}/{{date:%Y-%m-%d %a}}.md"',
+        \   '---',
+        \   '',
+        \   '# Daily Note - {{date:%A, %B %d, %Y}}',
+        \   '',
+        \   'Week Plan: [[resource/plan/week/Plan {{week_start}}]]',
+        \   '',
+        \   '## Tasks Due Today',
+        \   '{{% python scripts/find_tasks.py --due-on {{date}} --status incomplete %}}',
+        \   '',
+        \   '## Overdue Tasks',
+        \   '{{% python scripts/find_tasks.py --due-by {{date-1}} --status incomplete %}}',
+        \   '',
+        \   '## Notes',
+        \   '',
+        \   '## Time Tracking',
+        \   '',
+        \   '### Log',
+        \   '',
+        \   '- arrived:',
+        \   '',
+        \   '### Time Block',
+        \   '',
+        \   '| Time    | Plan                                 | Actual                      |',
+        \   '| ------- | ------------------------------------ | --------------------------- |',
+        \   '|  8:00am |                                      |                             |',
+        \   '|  8:15am |                                      |                             |',
+        \   '|  8:30am |                                      |                             |',
+        \   '|  8:45am |                                      |                             |',
+        \   '|  9:00am |                                      |                             |',
+        \   '|  9:15am |                                      |                             |',
+        \   '|  9:30am |                                      |                             |',
+        \   '|  9:45am |                                      |                             |',
+        \   '| 10:00am |                                      |                             |',
+        \   '| 10:15am |                                      |                             |',
+        \   '| 10:30am |                                      |                             |',
+        \   '| 10:45am |                                      |                             |',
+        \   '| 11:00am |                                      |                             |',
+        \   '| 11:15am |                                      |                             |',
+        \   '| 11:30am |                                      |                             |',
+        \   '| 11:45am |                                      |                             |',
+        \   '| 12:00pm |                                      |                             |',
+        \   '| 12:15pm |                                      |                             |',
+        \   '| 12:30pm |                                      |                             |',
+        \   '| 12:45pm |                                      |                             |',
+        \   '|  1:00pm |                                      |                             |',
+        \   '|  1:15pm |                                      |                             |',
+        \   '|  1:30pm |                                      |                             |',
+        \   '|  1:45pm |                                      |                             |',
+        \   '|  2:00pm |                                      |                             |',
+        \   '|  2:15pm |                                      |                             |',
+        \   '|  2:30pm |                                      |                             |',
+        \   '|  2:45pm |                                      |                             |',
+        \   '|  3:00pm |                                      |                             |',
+        \   '|  3:15pm |                                      |                             |',
+        \   '|  3:30pm |                                      |                             |',
+        \   '|  3:45pm |                                      |                             |',
+        \   '|  4:00pm |                                      |                             |',
+        \   '|  4:15pm |                                      |                             |',
+        \   '|  4:30pm |                                      |                             |',
+        \   '|  4:45pm |                                      |                             |',
+        \   '|  5:00pm |                                      |                             |',
+        \   '|  5:15pm |                                      |                             |',
+        \   '|  5:30pm |                                      |                             |',
+        \   '|  5:45pm |                                      |                             |',
+        \   '|  6:00pm |                                      |                             |'
+        \ ],
+        \ 'resource/template/weekly.md': [
+        \   '---',
+        \   'filename_pattern: "resource/plan/week/Plan {{week_start}}.md"',
+        \   '---',
+        \   '',
+        \   '# Week Plan - {{week_start}}',
+        \   '',
+        \   '**Week of {{week_start:%B %d}} - {{week_end:%B %d, %Y}}**',
+        \   '',
+        \   'Quarterly Plan: [[resource/plan/quarter/{{week_start:%Y}}-Q{{((week_start.month-1)//3)+1}}]]',
+        \   '',
+        \   '## Goals',
+        \   '',
+        \   '## Projects',
+        \   '',
+        \   '## Areas',
+        \   '',
+        \   '## Notes'
+        \ ],
+        \ 'resource/template/quarterly.md': [
+        \   '---',
+        \   'filename_pattern: "resource/plan/quarter/{{date:%Y}}-Q{{((date.month-1)//3)+1}}.md"',
+        \   '---',
+        \   '',
+        \   '# Quarterly Plan - {{date:%Y}} Q{{((date.month-1)//3)+1}}',
+        \   '',
+        \   'Yearly Plan: [[resource/plan/year/{{date:%Y}}]]',
+        \   '',
+        \   '## Quarter Goals',
+        \   '',
+        \   '## Projects',
+        \   '',
+        \   '## Areas',
+        \   '',
+        \   '## Review & Reflection',
+        \   '',
+        \   '### Last Quarter Highlights',
+        \   '',
+        \   '### This Quarter Focus',
+        \   '',
+        \   '## Notes'
+        \ ],
+        \ 'resource/template/yearly.md': [
+        \   '---',
+        \   'filename_pattern: "resource/plan/year/{{date:%Y}}.md"',
+        \   '---',
+        \   '',
+        \   '# Year Plan - {{date:%Y}}',
+        \   '',
+        \   '## Annual Goals',
+        \   '',
+        \   '## Key Projects',
+        \   '',
+        \   '## Areas of Focus',
+        \   '',
+        \   '## Quarterly Breakdown',
+        \   '',
+        \   '### Q1 (Jan-Mar)',
+        \   '',
+        \   '### Q2 (Apr-Jun)',
+        \   '',
+        \   '### Q3 (Jul-Sep)',
+        \   '',
+        \   '### Q4 (Oct-Dec)',
+        \   '',
+        \   '## Review & Reflection',
+        \   '',
+        \   '## Notes'
+        \ ]
+        \ }
+
+  " Create template files
+  for [l:filepath, l:content] in items(l:templates)
+    if !filereadable(l:filepath)
+      call writefile(l:content, l:filepath)
+      echo 'Created template: ' . l:filepath
+    else
+      echo 'Template already exists: ' . l:filepath
+    endif
+  endfor
+
+  echo 'Meta-notes initialization complete!'
 endfunction
