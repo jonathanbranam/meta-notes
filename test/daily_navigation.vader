@@ -159,7 +159,47 @@ Execute (Test navigation across quarter boundaries):
   " Clean up
   silent! call delete('resource/daily-notes/25-Q4', 'rf')
 
+Execute (Test JumpToWeek from daily note):
+  " Open a daily note (Feb 12, 2026 - which is a Wednesday)
+  execute 'edit! resource/daily-notes/26-Q1/2026-02-12 Wed.md'
+
+  " Jump to week
+  call meta_notes#notes#JumpToWeek()
+
+  " Should now be on the weekly plan for Feb 9 (Monday of that week)
+  Assert expand('%') =~ 'resource/plan/week/Plan 2026-02-09.md'
+
+  " Clean up the created weekly plan
+  silent! call delete('resource/plan/week/Plan 2026-02-09.md')
+
+Execute (Test JumpToWeek from non-daily note shows error):
+  " Open a non-daily note buffer
+  enew
+
+  " Clear previous error
+  let v:errmsg = ''
+
+  " Try to jump to week
+  silent! call meta_notes#notes#JumpToWeek()
+
+  " Should have error message
+  Assert v:errmsg =~ 'not a daily note'
+
+Execute (Test MetaNotesJumpToWeek command):
+  " Open a daily note
+  execute 'edit! resource/daily-notes/26-Q1/2026-02-14 Fri.md'
+
+  " Use the command
+  MetaNotesJumpToWeek
+
+  " Should now be on the weekly plan for Feb 9 (Monday of that week)
+  Assert expand('%') =~ 'resource/plan/week/Plan 2026-02-09.md'
+
+  " Clean up the created weekly plan
+  silent! call delete('resource/plan/week/Plan 2026-02-09.md')
+
 Execute (Cleanup - Remove test daily notes):
   " Clean up all test files
   silent! call delete('resource/daily-notes/26-Q1', 'rf')
   silent! call delete('resource/daily-notes/25-Q4', 'rf')
+  silent! call delete('resource/plan/week', 'rf')

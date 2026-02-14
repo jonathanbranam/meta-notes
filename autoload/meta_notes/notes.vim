@@ -446,3 +446,18 @@ function! meta_notes#notes#DailyNext() abort
   let l:next_file = l:files[l:current_idx + 1]
   execute 'edit!' fnameescape(l:next_file)
 endfunction
+
+" Jump from daily note to its corresponding weekly plan
+" If current buffer is not a daily note, shows error
+function! meta_notes#notes#JumpToWeek() abort
+  let l:current_file = expand('%')
+  let l:current_date = meta_notes#notes#ExtractDateFromDailyNote(l:current_file)
+
+  if l:current_date == ''
+    echoerr 'Current buffer is not a daily note'
+    return
+  endif
+
+  " Open the weekly plan for this date
+  call meta_notes#notes#OpenWeekPlan(l:current_date)
+endfunction
