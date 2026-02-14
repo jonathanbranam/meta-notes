@@ -171,3 +171,66 @@ function! meta_notes#notes#OpenWeekPlan(...) abort
     call cursor(3, 1)
   endif
 endfunction
+
+" Calculate the quarter from a date
+" Args:
+"   date_str: Date string in YYYY-mm-dd format
+" Returns:
+"   Quarter string: 'Q1', 'Q2', 'Q3', or 'Q4'
+" Example:
+"   For '2026-02-13', returns 'Q1' (February is month 2, in Q1)
+"   For '2026-07-15', returns 'Q3' (July is month 7, in Q3)
+function! meta_notes#notes#CalculateQuarter(date_str) abort
+  let l:timestamp = strptime("%Y-%m-%d", a:date_str)
+  let l:month = str2nr(strftime("%m", l:timestamp))
+
+  if l:month >= 1 && l:month <= 3
+    return 'Q1'
+  elseif l:month >= 4 && l:month <= 6
+    return 'Q2'
+  elseif l:month >= 7 && l:month <= 9
+    return 'Q3'
+  else
+    return 'Q4'
+  endif
+endfunction
+
+" Open the daily note file for today or a specific date
+" Daily note files are located at: resource/daily-notes/YY-QQQ/YYYY-mm-dd ddd.md
+" where YY is two-digit year, QQQ is quarter (Q1-Q4), and ddd is three-letter day abbreviation
+" Args:
+"   date_str: Optional date string in YYYY-mm-dd format (defaults to today)
+" Example:
+"   For 2026-02-13 (Thursday), opens 'resource/daily-notes/26-Q1/2026-02-13 Thu.md'
+function! meta_notes#notes#OpenDaily(...) abort
+  let l:date_str = a:0 > 0 ? a:1 : strftime('%Y-%m-%d')
+
+  " Convert date string to timestamp for formatting
+  let l:timestamp = strptime("%Y-%m-%d", l:date_str)
+
+  " Calculate quarter and format components
+  let l:quarter = meta_notes#notes#CalculateQuarter(l:date_str)
+  let l:year_short = strftime('%y', l:timestamp)
+  let l:day_abbr = strftime('%a', l:timestamp)
+
+  " Construct the directory and file path
+  let l:dir = 'resource/daily-notes/' . l:year_short . '-' . l:quarter
+  let l:filename = l:date_str . ' ' . l:day_abbr . '.md'
+  let l:filepath = l:dir . '/' . l:filename
+
+  " Create directory if it doesn't exist
+  if !isdirectory(l:dir)
+    call mkdir(l:dir, 'p')
+  endif
+
+  " Check if file exists
+  if filereadable(l:filepath)
+    " Open existing file
+    execute 'edit!' fnameescape(l:filepath)
+  else
+    " Create new file with header template
+    execute 'edit!' fnameescape(l:filepath)
+    call setline(1, ['# Daily Note - ' . l:date_str . ' ' . l:day_abbr, ''])
+    call cursor(3, 1)
+  endif
+endfunction

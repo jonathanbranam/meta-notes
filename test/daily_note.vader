@@ -1,0 +1,153 @@
+" Tests for daily note functions
+
+Execute (Test CalculateQuarter - January is Q1):
+  let result = meta_notes#notes#CalculateQuarter('2026-01-15')
+  AssertEqual 'Q1', result
+
+Execute (Test CalculateQuarter - February is Q1):
+  let result = meta_notes#notes#CalculateQuarter('2026-02-13')
+  AssertEqual 'Q1', result
+
+Execute (Test CalculateQuarter - March is Q1):
+  let result = meta_notes#notes#CalculateQuarter('2026-03-31')
+  AssertEqual 'Q1', result
+
+Execute (Test CalculateQuarter - April is Q2):
+  let result = meta_notes#notes#CalculateQuarter('2026-04-01')
+  AssertEqual 'Q2', result
+
+Execute (Test CalculateQuarter - May is Q2):
+  let result = meta_notes#notes#CalculateQuarter('2026-05-15')
+  AssertEqual 'Q2', result
+
+Execute (Test CalculateQuarter - June is Q2):
+  let result = meta_notes#notes#CalculateQuarter('2026-06-30')
+  AssertEqual 'Q2', result
+
+Execute (Test CalculateQuarter - July is Q3):
+  let result = meta_notes#notes#CalculateQuarter('2026-07-01')
+  AssertEqual 'Q3', result
+
+Execute (Test CalculateQuarter - August is Q3):
+  let result = meta_notes#notes#CalculateQuarter('2026-08-15')
+  AssertEqual 'Q3', result
+
+Execute (Test CalculateQuarter - September is Q3):
+  let result = meta_notes#notes#CalculateQuarter('2026-09-30')
+  AssertEqual 'Q3', result
+
+Execute (Test CalculateQuarter - October is Q4):
+  let result = meta_notes#notes#CalculateQuarter('2026-10-01')
+  AssertEqual 'Q4', result
+
+Execute (Test CalculateQuarter - November is Q4):
+  let result = meta_notes#notes#CalculateQuarter('2026-11-15')
+  AssertEqual 'Q4', result
+
+Execute (Test CalculateQuarter - December is Q4):
+  let result = meta_notes#notes#CalculateQuarter('2026-12-31')
+  AssertEqual 'Q4', result
+
+Execute (Test OpenDaily creates file with correct path for Q1):
+  " Clean up any existing file and directory first
+  silent! call delete('resource/daily-notes/26-Q1/2026-02-13 Fri.md')
+  silent! call delete('resource/daily-notes/26-Q1', 'd')
+
+  " Open daily note for Friday, Feb 13, 2026
+  call meta_notes#notes#OpenDaily('2026-02-13')
+
+  " Verify we're in the correct file
+  AssertEqual 'resource/daily-notes/26-Q1/2026-02-13 Fri.md', expand('%')
+
+  " Verify header was created
+  let first_line = getline(1)
+  AssertEqual '# Daily Note - 2026-02-13 Fri', first_line
+
+  " Clean up
+  silent! call delete('resource/daily-notes/26-Q1/2026-02-13 Fri.md')
+  silent! call delete('resource/daily-notes/26-Q1', 'd')
+
+Execute (Test OpenDaily creates file with correct path for Q3):
+  " Clean up any existing file and directory first
+  silent! call delete('resource/daily-notes/26-Q3/2026-07-15 Wed.md')
+  silent! call delete('resource/daily-notes/26-Q3', 'd')
+
+  " Open daily note for Wednesday, July 15, 2026
+  call meta_notes#notes#OpenDaily('2026-07-15')
+
+  " Verify we're in the correct file
+  AssertEqual 'resource/daily-notes/26-Q3/2026-07-15 Wed.md', expand('%')
+
+  " Verify header was created
+  let first_line = getline(1)
+  AssertEqual '# Daily Note - 2026-07-15 Wed', first_line
+
+  " Clean up
+  silent! call delete('resource/daily-notes/26-Q3/2026-07-15 Wed.md')
+  silent! call delete('resource/daily-notes/26-Q3', 'd')
+
+Execute (Test OpenDaily creates directory if it doesn't exist):
+  " Clean up any existing directory first
+  silent! call delete('resource/daily-notes/26-Q1', 'rf')
+
+  " Ensure directory doesn't exist
+  Assert !isdirectory('resource/daily-notes/26-Q1')
+
+  " Open daily note
+  call meta_notes#notes#OpenDaily('2026-02-13')
+
+  " Verify directory was created
+  Assert isdirectory('resource/daily-notes/26-Q1')
+
+  " Clean up
+  silent! call delete('resource/daily-notes/26-Q1/2026-02-13 Fri.md')
+  silent! call delete('resource/daily-notes/26-Q1', 'd')
+
+Execute (Test MetaNotesDaily command with date argument):
+  " Clean up any existing file first
+  silent! call delete('resource/daily-notes/26-Q1/2026-02-13 Fri.md')
+  silent! call delete('resource/daily-notes/26-Q1', 'd')
+
+  " Use the command with a date argument
+  MetaNotesDaily 2026-02-13
+
+  " Verify we're in the correct file
+  AssertEqual 'resource/daily-notes/26-Q1/2026-02-13 Fri.md', expand('%')
+
+  " Verify header was created
+  let first_line = getline(1)
+  AssertEqual '# Daily Note - 2026-02-13 Fri', first_line
+
+  " Clean up
+  silent! call delete('resource/daily-notes/26-Q1/2026-02-13 Fri.md')
+  silent! call delete('resource/daily-notes/26-Q1', 'd')
+
+Execute (Test OpenDaily opens existing file):
+  " Clean up first
+  silent! call delete('resource/daily-notes/26-Q1/2026-02-13 Fri.md')
+  silent! call delete('resource/daily-notes/26-Q1', 'd')
+
+  " Create a test file by opening it, writing content, and saving
+  call mkdir('resource/daily-notes/26-Q1', 'p')
+  execute 'edit! resource/daily-notes/26-Q1/2026-02-13 Fri.md'
+  call setline(1, ['# Existing Daily Note', '', 'This is existing content'])
+  write
+
+  " Switch to a different buffer
+  enew
+
+  " Now open the existing daily note via the function
+  call meta_notes#notes#OpenDaily('2026-02-13')
+
+  " Verify we're in the correct file
+  AssertEqual 'resource/daily-notes/26-Q1/2026-02-13 Fri.md', expand('%')
+
+  " Verify the existing content is preserved
+  let first_line = getline(1)
+  AssertEqual '# Existing Daily Note', first_line
+  let third_line = getline(3)
+  AssertEqual 'This is existing content', third_line
+
+  " Clean up
+  silent! call delete('resource/daily-notes/26-Q1/2026-02-13 Fri.md')
+  silent! call delete('resource/daily-notes/26-Q1', 'd')
