@@ -5,9 +5,10 @@ Handles time log parsing, time block parsing, and time calculations.
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from enum import Enum
 from typing import Optional
+from collections import defaultdict
 import re
 import sys
 
@@ -467,3 +468,114 @@ def find_time_block_entries(filepath: str) -> list[TimeBlockEntry]:
         print(f"Warning: Could not read {filepath}: {e}", file=sys.stderr)
 
     return entries
+
+
+def calculate_duration(start: time, end: time) -> timedelta:
+    """
+    Calculate duration between two times.
+
+    Assumes times are on the same day. If end < start, assumes end is next day.
+
+    Args:
+        start: Start time.
+        end: End time.
+
+    Returns:
+        Duration as timedelta.
+    """
+    # Convert times to datetime objects on the same day
+    today = datetime.today().date()
+    start_dt = datetime.combine(today, start)
+    end_dt = datetime.combine(today, end)
+
+    # If end is before start, assume it's the next day
+    if end_dt < start_dt:
+        end_dt = datetime.combine(today + timedelta(days=1), end)
+
+    return end_dt - start_dt
+
+
+def calculate_total_time_by_tag(entries: list[TimeLogEntry]) -> dict[str, timedelta]:
+    """
+    Calculate total time spent on each tag.
+
+    Args:
+        entries: List of TimeLogEntry objects with start and end times.
+
+    Returns:
+        Dictionary mapping tag text to total duration.
+    """
+    tag_durations: dict[str, timedelta] = defaultdict(timedelta)
+
+    for entry in entries:
+        # Skip entries without both start and end times
+        if entry.start_time is None or entry.end_time is None:
+            continue
+
+        duration = calculate_duration(entry.start_time, entry.end_time)
+
+        # Add duration to each tag in the entry
+        for tag in entry.tags:
+            tag_durations[tag.text] += duration
+
+    return dict(tag_durations)
+
+
+def calculate_work_vs_nonwork(entries: list[TimeLogEntry]) -> tuple[timedelta, timedelta]:
+    """
+    Calculate total work time vs non-work time.
+
+    Work time includes: #mtg, #dev, #admin
+    Non-work time includes: #pers, #break
+
+    Args:
+        entries: List of TimeLogEntry objects with start and end times.
+
+    Returns:
+        Tuple of (work_time, nonwork_time).
+    """
+    work_time = timedelta()
+    nonwork_time = timedelta()
+
+    # Define work tags and non-work tags
+    work_tags = {'#mtg', '#dev', '#admin', '#meeting', '#code', '#coding', '#administrative'}
+    nonwork_tags = {'#pers', '#break', '#personal'}
+
+    for entry in entries:
+        # Skip entries without both start and end times
+        if entry.start_time is None or entry.end_time is None:
+            continue
+
+        duration = calculate_duration(entry.start_time, entry.end_time)
+
+        # Categorize based on tags
+        has_work_tag = any(tag.text.lower() in work_tags for tag in entry.tags)
+        has_nonwork_tag = any(tag.text.lower() in nonwork_tags for tag in entry.tags)
+
+        if has_work_tag:
+            work_time += duration
+        elif has_nonwork_tag:
+            nonwork_time += duration
+        # If no categorizing tags, don't count it
+
+    return work_time, nonwork_time
+
+
+def format_duration(duration: timedelta) -> str:
+    """
+    Format a duration as a human-readable string.
+
+    Args:
+        duration: Duration to format.
+
+    Returns:
+        String like "2h 30m" or "45m".
+    """
+    total_seconds = int(duration.total_seconds())
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+
+    if hours > 0:
+        return f"{hours}h {minutes}m"
+    else:
+        return f"{minutes}m"

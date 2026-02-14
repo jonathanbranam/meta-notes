@@ -3,7 +3,7 @@ Unit tests for time_tracking module.
 """
 
 import pytest
-from datetime import time
+from datetime import time, timedelta
 import sys
 import os
 
@@ -26,7 +26,11 @@ from time_tracking import (
     _parse_time_block_row,
     find_time_log_entries,
     find_time_block_entries,
-    filter_entries_by_type
+    filter_entries_by_type,
+    calculate_duration,
+    calculate_total_time_by_tag,
+    calculate_work_vs_nonwork,
+    format_duration
 )
 
 
@@ -510,3 +514,225 @@ def test_find_time_block_entries_empty_table(tmp_path):
 
     entries = find_time_block_entries(str(test_file))
     assert len(entries) == 0
+
+
+# Tests for calculate_duration function
+
+def test_calculate_duration_simple():
+    """Test calculating duration between two times."""
+    start = time(8, 0)
+    end = time(9, 30)
+    duration = calculate_duration(start, end)
+    assert duration == timedelta(hours=1, minutes=30)
+
+
+def test_calculate_duration_same_hour():
+    """Test calculating duration within same hour."""
+    start = time(8, 15)
+    end = time(8, 45)
+    duration = calculate_duration(start, end)
+    assert duration == timedelta(minutes=30)
+
+
+def test_calculate_duration_across_noon():
+    """Test calculating duration across noon."""
+    start = time(11, 30)
+    end = time(13, 15)  # 1:15 PM
+    duration = calculate_duration(start, end)
+    assert duration == timedelta(hours=1, minutes=45)
+
+
+def test_calculate_duration_across_midnight():
+    """Test calculating duration when end is before start (assumes next day)."""
+    start = time(23, 30)
+    end = time(1, 0)
+    duration = calculate_duration(start, end)
+    assert duration == timedelta(hours=1, minutes=30)
+
+
+# Tests for calculate_total_time_by_tag function
+
+def test_calculate_total_time_by_tag_single_tag():
+    """Test calculating total time for a single tag."""
+    entries = [
+        TimeLogEntry(
+            EntryType.ACTIVITY, "- work", "test.md", 1,
+            time(8, 0), time(9, 0), "work",
+            [Tag("#dev", TagType.SPECIAL)]
+        ),
+        TimeLogEntry(
+            EntryType.ACTIVITY, "- more work", "test.md", 2,
+            time(9, 0), time(10, 30), "more work",
+            [Tag("#dev", TagType.SPECIAL)]
+        ),
+    ]
+
+    result = calculate_total_time_by_tag(entries)
+
+    assert "#dev" in result
+    assert result["#dev"] == timedelta(hours=2, minutes=30)
+
+
+def test_calculate_total_time_by_tag_multiple_tags():
+    """Test calculating total time for multiple tags."""
+    entries = [
+        TimeLogEntry(
+            EntryType.ACTIVITY, "- email", "test.md", 1,
+            time(8, 0), time(8, 30), "email",
+            [Tag("#admin", TagType.SPECIAL)]
+        ),
+        TimeLogEntry(
+            EntryType.ACTIVITY, "- meeting", "test.md", 2,
+            time(9, 0), time(10, 0), "meeting",
+            [Tag("#mtg", TagType.SPECIAL)]
+        ),
+        TimeLogEntry(
+            EntryType.ACTIVITY, "- coding", "test.md", 3,
+            time(10, 0), time(12, 0), "coding",
+            [Tag("#dev", TagType.SPECIAL)]
+        ),
+    ]
+
+    result = calculate_total_time_by_tag(entries)
+
+    assert result["#admin"] == timedelta(minutes=30)
+    assert result["#mtg"] == timedelta(hours=1)
+    assert result["#dev"] == timedelta(hours=2)
+
+
+def test_calculate_total_time_by_tag_entry_with_multiple_tags():
+    """Test entry with multiple tags counts toward all tags."""
+    entries = [
+        TimeLogEntry(
+            EntryType.ACTIVITY, "- work", "test.md", 1,
+            time(8, 0), time(9, 0), "work",
+            [Tag("#dev", TagType.SPECIAL), Tag("#project-x", TagType.ACTIVITY)]
+        ),
+    ]
+
+    result = calculate_total_time_by_tag(entries)
+
+    assert result["#dev"] == timedelta(hours=1)
+    assert result["#project-x"] == timedelta(hours=1)
+
+
+def test_calculate_total_time_by_tag_skip_entries_without_times():
+    """Test that entries without start/end times are skipped."""
+    entries = [
+        TimeLogEntry(
+            EntryType.ACTIVITY, "- work", "test.md", 1,
+            None, None, "work",
+            [Tag("#dev", TagType.SPECIAL)]
+        ),
+        TimeLogEntry(
+            EntryType.ACTIVITY, "- more work", "test.md", 2,
+            time(9, 0), time(10, 0), "more work",
+            [Tag("#dev", TagType.SPECIAL)]
+        ),
+    ]
+
+    result = calculate_total_time_by_tag(entries)
+
+    # Only the second entry should be counted
+    assert result["#dev"] == timedelta(hours=1)
+
+
+# Tests for calculate_work_vs_nonwork function
+
+def test_calculate_work_vs_nonwork_work_only():
+    """Test calculating work vs non-work with only work entries."""
+    entries = [
+        TimeLogEntry(
+            EntryType.ACTIVITY, "- coding", "test.md", 1,
+            time(8, 0), time(10, 0), "coding",
+            [Tag("#dev", TagType.SPECIAL)]
+        ),
+        TimeLogEntry(
+            EntryType.ACTIVITY, "- meeting", "test.md", 2,
+            time(10, 0), time(11, 0), "meeting",
+            [Tag("#mtg", TagType.SPECIAL)]
+        ),
+    ]
+
+    work, nonwork = calculate_work_vs_nonwork(entries)
+
+    assert work == timedelta(hours=3)
+    assert nonwork == timedelta()
+
+
+def test_calculate_work_vs_nonwork_mixed():
+    """Test calculating work vs non-work with mixed entries."""
+    entries = [
+        TimeLogEntry(
+            EntryType.ACTIVITY, "- coding", "test.md", 1,
+            time(8, 0), time(10, 0), "coding",
+            [Tag("#dev", TagType.SPECIAL)]
+        ),
+        TimeLogEntry(
+            EntryType.ACTIVITY, "- lunch", "test.md", 2,
+            time(12, 0), time(13, 0), "lunch",
+            [Tag("#break", TagType.SPECIAL)]
+        ),
+        TimeLogEntry(
+            EntryType.ACTIVITY, "- personal", "test.md", 3,
+            time(17, 0), time(18, 0), "personal",
+            [Tag("#pers", TagType.SPECIAL)]
+        ),
+    ]
+
+    work, nonwork = calculate_work_vs_nonwork(entries)
+
+    assert work == timedelta(hours=2)
+    assert nonwork == timedelta(hours=2)
+
+
+def test_calculate_work_vs_nonwork_untagged():
+    """Test that untagged or uncategorized entries don't count."""
+    entries = [
+        TimeLogEntry(
+            EntryType.ACTIVITY, "- something", "test.md", 1,
+            time(8, 0), time(9, 0), "something",
+            [Tag("#unknown", TagType.ACTIVITY)]
+        ),
+        TimeLogEntry(
+            EntryType.ACTIVITY, "- work", "test.md", 2,
+            time(9, 0), time(10, 0), "work",
+            [Tag("#dev", TagType.SPECIAL)]
+        ),
+    ]
+
+    work, nonwork = calculate_work_vs_nonwork(entries)
+
+    # Only the #dev entry should count
+    assert work == timedelta(hours=1)
+    assert nonwork == timedelta()
+
+
+# Tests for format_duration function
+
+def test_format_duration_hours_and_minutes():
+    """Test formatting duration with hours and minutes."""
+    duration = timedelta(hours=2, minutes=30)
+    result = format_duration(duration)
+    assert result == "2h 30m"
+
+
+def test_format_duration_hours_only():
+    """Test formatting duration with only hours."""
+    duration = timedelta(hours=3)
+    result = format_duration(duration)
+    assert result == "3h 0m"
+
+
+def test_format_duration_minutes_only():
+    """Test formatting duration with only minutes."""
+    duration = timedelta(minutes=45)
+    result = format_duration(duration)
+    assert result == "45m"
+
+
+def test_format_duration_zero():
+    """Test formatting zero duration."""
+    duration = timedelta()
+    result = format_duration(duration)
+    assert result == "0m"
