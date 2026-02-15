@@ -52,6 +52,38 @@ command! -bang MetaNotesInit call meta_notes#notes#Init(<bang>0)
 " File operations
 command! -nargs=? -complete=file MetaNotesArchive call meta_notes#file_ops#Archive(<f-args>)
 command! -nargs=? MetaNotesRename call meta_notes#file_ops#Rename(<f-args>)
+command! -nargs=+ -complete=file MetaNotesMoveItem call s:MetaNotesMoveItemWrapper(<f-args>)
+
+" Wrapper for MoveItem to provide user feedback
+function! s:MetaNotesMoveItemWrapper(...) abort
+  if a:0 < 2
+    echoerr 'MetaNotesMoveItem requires two arguments: source and destination'
+    echo 'Usage: MetaNotesMoveItem <source_path> <dest_path>'
+    return
+  endif
+
+  let l:source = a:1
+  let l:dest = a:2
+
+  " Call the core MoveItem function
+  let l:result = meta_notes#file_ops#MoveItem(l:source, l:dest)
+
+  if !l:result.success
+    echoerr l:result.error
+    return
+  endif
+
+  " Show summary
+  let l:move_count = len(l:result.moves)
+  if l:move_count == 0
+    echo 'No files were moved'
+  elseif l:move_count == 1
+    echo 'Moved: ' . l:source . ' → ' . l:dest
+  else
+    echo 'Moved: ' . l:source . ' → ' . l:dest . ' (' . l:move_count . ' files)'
+    echo 'Updated headers and wiki-links'
+  endif
+endfunction
 
 " Time tracking
 command! MetaNotesTimeReport call meta_notes#time_tracking#ShowReport()

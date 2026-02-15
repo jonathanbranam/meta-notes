@@ -1,6 +1,176 @@
 " file_ops.vim - File operations for meta_notes
 " Handles archiving, renaming, and link updates
 
+" Core method to move/rename a file or folder
+" Args:
+"   source_path: Source file or folder path
+"   dest_path: Destination file or folder path
+" Returns:
+"   Dictionary with move results: {
+"     'success': boolean,
+"     'moves': [[old_path, new_path], ...],
+"     'error': error message (if failed)
+"   }
+" Behavior:
+"   - Moves files or entire directory trees
+"   - Updates headers for all moved files
+"   - Updates wiki-links across all markdown files
+"   - Creates destination directories as needed
+function! meta_notes#file_ops#MoveItem(source_path, dest_path) abort
+  let l:result = {'success': 0, 'moves': [], 'error': ''}
+
+  " Normalize paths
+  let l:source = a:source_path
+  let l:dest = a:dest_path
+
+  " Check if source exists
+  let l:is_file = filereadable(l:source)
+  let l:is_dir = isdirectory(l:source)
+
+  if !l:is_file && !l:is_dir
+    let l:result.error = 'Source not found: ' . l:source
+    return l:result
+  endif
+
+  if l:is_file
+    " Moving a single file
+    " Add .md extension to dest if source has it and dest doesn't
+    if l:source =~ '\.md$' && l:dest !~ '\.md$'
+      let l:dest = l:dest . '.md'
+    endif
+
+    " Check if target already exists
+    if filereadable(l:dest)
+      let l:result.error = 'Target file already exists: ' . l:dest
+      return l:result
+    endif
+
+    " Create target directory if needed
+    let l:target_dir = fnamemodify(l:dest, ':h')
+    if !isdirectory(l:target_dir)
+      call mkdir(l:target_dir, 'p')
+    endif
+
+    " Move the file
+    let l:rename_result = rename(l:source, l:dest)
+    if l:rename_result != 0
+      let l:result.error = 'Failed to move file: ' . l:source
+      return l:result
+    endif
+
+    " Track the move
+    call add(l:result.moves, [l:source, l:dest])
+
+    " Update the header if it matches the old path
+    call s:UpdateFileHeader(l:source, l:dest)
+
+  elseif l:is_dir
+    " Moving a directory - need to handle all files recursively
+    " Find all markdown files in the source directory
+    let l:md_files = glob(l:source . '/**/*.md', 0, 1)
+
+    " Also check for markdown files in the root of the source directory
+    let l:root_files = glob(l:source . '/*.md', 0, 1)
+    let l:all_files = l:root_files + l:md_files
+
+    " Build list of moves
+    for l:file in l:all_files
+      " Calculate relative path within source directory
+      let l:rel_path = substitute(l:file, '^' . escape(l:source, '/'), '', '')
+      let l:dest_file = l:dest . l:rel_path
+      call add(l:result.moves, [l:file, l:dest_file])
+    endfor
+
+    " Create destination parent directory (but not the dest itself)
+    " mv will create the destination directory when moving
+    let l:dest_parent = fnamemodify(l:dest, ':h')
+    if !isdirectory(l:dest_parent)
+      call mkdir(l:dest_parent, 'p')
+    endif
+
+    " Use system mv command to move the directory
+    let l:cmd = 'mv ' . shellescape(l:source) . ' ' . shellescape(l:dest)
+    let l:output = system(l:cmd)
+
+    if v:shell_error != 0
+      let l:result.error = 'Failed to move directory: ' . l:source . "\n" . l:output
+      return l:result
+    endif
+
+    " Update headers for all moved files
+    for [l:old_file, l:new_file] in l:result.moves
+      call s:UpdateFileHeader(l:old_file, l:new_file)
+    endfor
+  endif
+
+  " Update all wiki-links across the repository
+  if len(l:result.moves) > 0
+    call s:UpdateAllWikiLinks(l:result.moves)
+  endif
+
+  let l:result.success = 1
+  return l:result
+endfunction
+
+" Update the header of a moved file if it matches the old path
+" Args:
+"   old_path: Old file path
+"   new_path: New file path
+function! s:UpdateFileHeader(old_path, new_path) abort
+  " Read the file content
+  if !filereadable(a:new_path)
+    return
+  endif
+
+  let l:file_lines = readfile(a:new_path)
+  if len(l:file_lines) == 0
+    return
+  endif
+
+  " Check if first line is a heading that matches the old path
+  let l:first_line = l:file_lines[0]
+
+  " Get the old and new paths without .md extension
+  let l:old_header_path = substitute(fnamemodify(a:old_path, ':p:.'), '\.md$', '', '')
+  let l:new_header_path = substitute(fnamemodify(a:new_path, ':p:.'), '\.md$', '', '')
+
+  " Check if first line is "# <old_path>"
+  let l:expected_old_header = '# ' . l:old_header_path
+  if l:first_line == l:expected_old_header
+    " Update to new path
+    let l:file_lines[0] = '# ' . l:new_header_path
+    call writefile(l:file_lines, a:new_path)
+  endif
+endfunction
+
+" Update wiki-links for all moved files
+" Args:
+"   moves: List of [old_path, new_path] pairs
+function! s:UpdateAllWikiLinks(moves) abort
+  " Get plugin root directory
+  let l:plugin_root = meta_notes#template#GetPluginRoot()
+
+  " Update links for each moved file
+  for [l:old_path, l:new_path] in a:moves
+    " Convert paths to relative paths without .md extension for link matching
+    let l:old_link_path = substitute(fnamemodify(l:old_path, ':p:.'), '\.md$', '', '')
+    let l:new_link_path = substitute(fnamemodify(l:new_path, ':p:.'), '\.md$', '', '')
+
+    " Call update_links.py script
+    let l:update_cmd = 'python3 ' . shellescape(l:plugin_root . '/scripts/update_links.py')
+          \ . ' ' . shellescape(l:old_link_path)
+          \ . ' ' . shellescape(l:new_link_path)
+
+    let l:update_output = system(l:update_cmd)
+
+    if v:shell_error != 0
+      echohl WarningMsg
+      echo 'Warning: Failed to update wiki-links for: ' . l:old_link_path
+      echohl None
+    endif
+  endfor
+endfunction
+
 " Archive a file or folder to the archive directory
 " Args:
 "   path: Path to file or folder to archive (optional, defaults to current buffer)
@@ -10,6 +180,7 @@
 "   - Moves area/item → archive/area/item
 "   - Moves resource/item → archive/resource/item
 "   - Preserves directory structure
+"   - Updates wiki-links and headers for all moved files
 "   - Updates the current buffer if archiving current file
 "   - Supports wildcards for batch archiving (e.g., project/folder/*)
 function! meta_notes#file_ops#Archive(...) abort
@@ -84,44 +255,29 @@ function! meta_notes#file_ops#Archive(...) abort
   " Build the archive destination path
   let l:archive_path = 'archive/' . l:path_no_ext
 
-  " Create the archive directory if needed
-  let l:archive_dir = fnamemodify(l:archive_path, ':h')
-  if !isdirectory(l:archive_dir)
-    call mkdir(l:archive_dir, 'p')
+  " Determine source path (file or directory)
+  let l:source_path = l:is_file ? l:path : l:path_no_ext
+
+  " Move the item using core method
+  let l:result = meta_notes#file_ops#MoveItem(l:source_path, l:archive_path)
+
+  if !l:result.success
+    echoerr l:result.error
+    return
   endif
 
-  " Move the item
-  if l:is_file
-    " Archive a file
-    let l:source_file = l:path
+  " If current buffer is a file being archived, switch to the new location
+  if l:is_file && expand('%:p') == fnamemodify(l:source_path, ':p')
     let l:dest_file = l:archive_path . '.md'
+    execute 'edit! ' . fnameescape(l:dest_file)
+  endif
 
-    " Use system rename to move the file
-    let l:result = rename(l:source_file, l:dest_file)
-
-    if l:result != 0
-      echoerr 'Failed to archive file: ' . l:source_file
-      return
-    endif
-
-    " If current buffer is the file being archived, switch to the new location
-    if expand('%:p') == fnamemodify(l:source_file, ':p')
-      execute 'edit! ' . fnameescape(l:dest_file)
-    endif
-
-    echo 'Archived: ' . l:path . ' → ' . l:archive_path . '.md'
-  elseif l:is_dir
-    " Archive a directory
-    " Use system command to move the directory
-    let l:cmd = 'mv ' . shellescape(l:path_no_ext) . ' ' . shellescape(l:archive_path)
-    let l:output = system(l:cmd)
-
-    if v:shell_error != 0
-      echoerr 'Failed to archive directory: ' . l:path_no_ext . "\n" . l:output
-      return
-    endif
-
-    echo 'Archived: ' . l:path_no_ext . ' → ' . l:archive_path
+  " Show summary
+  let l:move_count = len(l:result.moves)
+  if l:move_count > 1
+    echo 'Archived: ' . l:path_no_ext . ' → ' . l:archive_path . ' (' . l:move_count . ' files)'
+  else
+    echo 'Archived: ' . l:path . ' → ' . l:archive_path . (l:is_file ? '.md' : '')
   endif
 endfunction
 
@@ -133,6 +289,7 @@ endfunction
 "   - Renames current buffer's file
 "   - Preserves directory if only filename provided
 "   - Updates the current buffer to point to new location
+"   - Updates wiki-links and headers
 "   - If new_name includes path, moves file to new location
 function! meta_notes#file_ops#Rename(...) abort
   " Get the current file path
@@ -178,70 +335,12 @@ function! meta_notes#file_ops#Rename(...) abort
     let l:new_path = l:new_path . '.md'
   endif
 
-  " Check if target already exists
-  if filereadable(l:new_path)
-    echoerr 'Target file already exists: ' . l:new_path
+  " Move the file using core method
+  let l:result = meta_notes#file_ops#MoveItem(l:current_path, l:new_path)
+
+  if !l:result.success
+    echoerr l:result.error
     return
-  endif
-
-  " Create target directory if needed
-  let l:target_dir = fnamemodify(l:new_path, ':h')
-  if !isdirectory(l:target_dir)
-    call mkdir(l:target_dir, 'p')
-  endif
-
-  " Rename the file
-  let l:result = rename(l:current_path, l:new_path)
-
-  if l:result != 0
-    echoerr 'Failed to rename file: ' . l:current_path
-    return
-  endif
-
-  " Update the header if it matches the old path
-  " Read the file content
-  let l:file_lines = readfile(l:new_path)
-  if len(l:file_lines) > 0
-    " Check if first line is a heading that matches the old path
-    let l:first_line = l:file_lines[0]
-    " Get the old and new paths without .md extension
-    let l:old_header_path = substitute(fnamemodify(l:current_path, ':p:.'), '\.md$', '', '')
-    let l:new_header_path = substitute(fnamemodify(l:new_path, ':p:.'), '\.md$', '', '')
-
-    " Check if first line is "# <old_path>"
-    let l:expected_old_header = '# ' . l:old_header_path
-    if l:first_line == l:expected_old_header
-      " Update to new path
-      let l:file_lines[0] = '# ' . l:new_header_path
-      call writefile(l:file_lines, l:new_path)
-    endif
-  endif
-
-  " Update wiki-links across all markdown files
-  " Convert paths to relative paths without .md extension for link matching
-  let l:old_link_path = substitute(fnamemodify(l:current_path, ':p:.'), '\.md$', '', '')
-  let l:new_link_path = substitute(fnamemodify(l:new_path, ':p:.'), '\.md$', '', '')
-
-  " Get plugin root directory
-  let l:plugin_root = meta_notes#template#GetPluginRoot()
-
-  " Call update_links.py script to update all wiki-links
-  let l:update_cmd = 'python3 ' . shellescape(l:plugin_root . '/scripts/update_links.py')
-        \ . ' ' . shellescape(l:old_link_path)
-        \ . ' ' . shellescape(l:new_link_path)
-
-  let l:update_output = system(l:update_cmd)
-
-  if v:shell_error != 0
-    echohl WarningMsg
-    echo 'Warning: Failed to update wiki-links: ' . l:update_output
-    echohl None
-  else
-    " Parse output to show how many links were updated
-    let l:modified_match = matchlist(l:update_output, 'Modified \(\d\+\) files')
-    if len(l:modified_match) > 1 && str2nr(l:modified_match[1]) > 0
-      echo 'Updated ' . l:modified_match[1] . ' file(s) with wiki-links'
-    endif
   endif
 
   " Update the buffer to the new location
