@@ -117,6 +117,77 @@ Execute (MetaNotesRename should fail with no file):
 
   bwipeout!
 
+" Test: Rename updates wiki-links in other files
+Execute (MetaNotesRename should update wiki-links when renaming):
+  " Create a file that will be renamed
+  call mkdir('project/test-links', 'p')
+  call writefile(['# Target File'], 'project/test-links/target.md')
+
+  " Create files with wiki-links to the target
+  call writefile(['# File 1', '', 'See [[project/test-links/target]]'], 'project/file1.md')
+  call writefile(['# File 2', '', 'Link: [[project/test-links/target]]'], 'project/file2.md')
+  call writefile(['# File 3', '', 'No links here'], 'project/file3.md')
+
+  " Open and rename the target file
+  edit project/test-links/target.md
+  call meta_notes#file_ops#Rename('project/test-links/renamed-target')
+
+  " Verify wiki-links were updated
+  let file1_content = readfile('project/file1.md')
+  Assert match(join(file1_content, "\n"), '\[\[project/test-links/renamed-target\]\]') >= 0, 'file1 should have updated link'
+  Assert match(join(file1_content, "\n"), '\[\[project/test-links/target\]\]') == -1, 'file1 should not have old link'
+
+  let file2_content = readfile('project/file2.md')
+  Assert match(join(file2_content, "\n"), '\[\[project/test-links/renamed-target\]\]') >= 0, 'file2 should have updated link'
+
+  " File 3 should be unchanged
+  let file3_content = readfile('project/file3.md')
+  AssertEqual '# File 3', file3_content[0]
+  AssertEqual 'No links here', file3_content[2]
+
+  bwipeout!
+
+" Test: Rename updates wiki-links when moving to different directory
+Execute (MetaNotesRename should update wiki-links when moving directories):
+  " Create source and destination directories
+  call mkdir('project/source', 'p')
+  call mkdir('project/destination', 'p')
+  call writefile(['# Moving File'], 'project/source/moveme.md')
+
+  " Create file with wiki-link
+  call writefile(['# Reference', '', 'Link: [[project/source/moveme]]'], 'project/ref.md')
+
+  " Rename/move the file
+  edit project/source/moveme.md
+  call meta_notes#file_ops#Rename('project/destination/moved')
+
+  " Verify wiki-link updated
+  let ref_content = readfile('project/ref.md')
+  Assert match(join(ref_content, "\n"), '\[\[project/destination/moved\]\]') >= 0, 'Link should be updated to new path'
+  Assert match(join(ref_content, "\n"), '\[\[project/source/moveme\]\]') == -1, 'Old link should be removed'
+
+  bwipeout!
+
+" Test: Rename handles wiki-links with subpaths
+Execute (MetaNotesRename should preserve subpaths in wiki-links):
+  " Create a folder with a file
+  call mkdir('project/folder', 'p')
+  call writefile(['# Folder Index'], 'project/folder/index.md')
+
+  " Create file with link to folder and subpath
+  call writefile(['# Links', '', 'Folder: [[project/folder]]', 'Index: [[project/folder/index]]'], 'project/links.md')
+
+  " Rename the folder by renaming a file in it and moving
+  edit project/folder/index.md
+  call meta_notes#file_ops#Rename('project/renamed-folder/index')
+
+  " Verify wiki-links updated
+  let links_content = readfile('project/links.md')
+  let content_str = join(links_content, "\n")
+  Assert match(content_str, '\[\[project/renamed-folder/index\]\]') >= 0, 'Subpath link should be updated'
+
+  bwipeout!
+
 Execute (Cleanup - Remove temporary test directory):
   execute 'cd -'
   call delete(g:test_dir, 'rf')

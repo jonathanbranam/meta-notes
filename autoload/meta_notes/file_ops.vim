@@ -198,6 +198,33 @@ function! meta_notes#file_ops#Rename(...) abort
     return
   endif
 
+  " Update wiki-links across all markdown files
+  " Convert paths to relative paths without .md extension for link matching
+  let l:old_link_path = substitute(fnamemodify(l:current_path, ':p:.'), '\.md$', '', '')
+  let l:new_link_path = substitute(fnamemodify(l:new_path, ':p:.'), '\.md$', '', '')
+
+  " Get plugin root directory
+  let l:plugin_root = meta_notes#template#GetPluginRoot()
+
+  " Call update_links.py script to update all wiki-links
+  let l:update_cmd = 'python3 ' . shellescape(l:plugin_root . '/scripts/update_links.py')
+        \ . ' ' . shellescape(l:old_link_path)
+        \ . ' ' . shellescape(l:new_link_path)
+
+  let l:update_output = system(l:update_cmd)
+
+  if v:shell_error != 0
+    echohl WarningMsg
+    echo 'Warning: Failed to update wiki-links: ' . l:update_output
+    echohl None
+  else
+    " Parse output to show how many links were updated
+    let l:modified_match = matchlist(l:update_output, 'Modified \(\d\+\) files')
+    if len(l:modified_match) > 1 && str2nr(l:modified_match[1]) > 0
+      echo 'Updated ' . l:modified_match[1] . ' file(s) with wiki-links'
+    endif
+  endif
+
   " Update the buffer to the new location
   execute 'edit! ' . fnameescape(l:new_path)
 
