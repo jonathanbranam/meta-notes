@@ -45,7 +45,9 @@ command! MetaNotesJumpToWeek call meta_notes#notes#JumpToWeek()
 
 
 " Initialization command
-command! MetaNotesInit call meta_notes#notes#Init()
+" Use ! to force overwrite of existing templates
+" Example: :MetaNotesInit! to overwrite existing files
+command! -bang MetaNotesInit call meta_notes#notes#Init(<bang>0)
 
 " File operations
 command! -nargs=? -complete=file MetaNotesArchive call meta_notes#file_ops#Archive(<f-args>)

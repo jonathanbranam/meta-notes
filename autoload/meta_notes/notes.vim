@@ -532,7 +532,10 @@ endfunction
 
 " Initialize PARA folder structure and default templates
 " Creates all necessary directories and template files for the meta-notes system
-function! meta_notes#notes#Init() abort
+" Args:
+"   force: Optional boolean to force overwrite of existing template files (default: 0)
+function! meta_notes#notes#Init(...) abort
+  let l:force = a:0 > 0 ? a:1 : 0
   " Define directory structure
   let l:directories = [
         \ 'project',
@@ -705,9 +708,13 @@ function! meta_notes#notes#Init() abort
 
   " Create template files
   for [l:filepath, l:content] in items(l:templates)
-    if !filereadable(l:filepath)
+    if l:force || !filereadable(l:filepath)
       call writefile(l:content, l:filepath)
-      echo 'Created template: ' . l:filepath
+      if filereadable(l:filepath) && l:force
+        echo 'Overwrote template: ' . l:filepath
+      else
+        echo 'Created template: ' . l:filepath
+      endif
     else
       echo 'Template already exists: ' . l:filepath
     endif

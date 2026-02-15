@@ -110,6 +110,39 @@ Execute (MetaNotesInit is idempotent - running twice doesn't break):
   Assert isdirectory('project'), 'project/ directory should still exist after second init'
   Assert filereadable('resource/template/daily.md'), 'daily.md template should still exist after second init'
 
+Execute (MetaNotesInit with force overwrites existing templates):
+  " First create initial templates
+  MetaNotesInit
+
+  " Modify the daily template
+  call writefile(['# Modified Template', '', 'This was modified'], 'resource/template/daily.md')
+
+  " Verify it was modified
+  let modified_lines = readfile('resource/template/daily.md')
+  Assert modified_lines[0] == '# Modified Template', 'Template should be modified before force init'
+
+  " Force init should overwrite
+  MetaNotesInit!
+
+  " Verify it was restored to default
+  let restored_lines = readfile('resource/template/daily.md')
+  Assert restored_lines[0] == '---', 'Daily template should be restored to default after force init'
+  Assert restored_lines[3] =~ '# Daily Note', 'Daily template should have default heading after force init'
+
+Execute (MetaNotesInit without force preserves existing templates):
+  " First create initial templates
+  MetaNotesInit
+
+  " Modify the daily template
+  call writefile(['# Modified Template', '', 'This was modified'], 'resource/template/daily.md')
+
+  " Regular init should NOT overwrite
+  MetaNotesInit
+
+  " Verify it was NOT modified
+  let lines = readfile('resource/template/daily.md')
+  Assert lines[0] == '# Modified Template', 'Template should not be overwritten without force flag'
+
 Execute (Cleanup - Remove temporary test directory):
   execute 'cd -'
   call delete(g:test_dir, 'rf')

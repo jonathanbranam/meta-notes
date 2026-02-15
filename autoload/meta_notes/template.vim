@@ -20,7 +20,8 @@ endfunction
 " Search order:
 "   1. Folder-specific template.md in the same directory
 "   2. Standard template in resource/template/ (if template_type is provided)
-"   3. Empty string (no template)
+"   3. Auto-detect template type based on folder path
+"   4. Empty string (no template)
 function! meta_notes#template#FindTemplate(filepath, ...) abort
   let l:template_type = a:0 > 0 ? a:1 : ''
 
@@ -38,6 +39,27 @@ function! meta_notes#template#FindTemplate(filepath, ...) abort
     let l:standard_template = 'resource/template/' . l:template_type . '.md'
     if filereadable(l:standard_template)
       return l:standard_template
+    endif
+  endif
+
+  " Auto-detect template type based on folder path
+  if l:template_type == ''
+    if match(a:filepath, '^resource/daily-notes/') != -1
+      let l:template_type = 'daily'
+    elseif match(a:filepath, '^resource/plan/week/') != -1
+      let l:template_type = 'weekly'
+    elseif match(a:filepath, '^resource/plan/quarter/') != -1
+      let l:template_type = 'quarterly'
+    elseif match(a:filepath, '^resource/plan/year/') != -1
+      let l:template_type = 'yearly'
+    endif
+
+    " Check for auto-detected template
+    if l:template_type != ''
+      let l:standard_template = 'resource/template/' . l:template_type . '.md'
+      if filereadable(l:standard_template)
+        return l:standard_template
+      endif
     endif
   endif
 

@@ -35,6 +35,43 @@ Execute (FindTemplate should return empty string when no template found):
   let result = meta_notes#template#FindTemplate('test_folder/no_template/note.md')
   AssertEqual '', result
 
+" Test: FindTemplate auto-detects daily template from path
+Execute (FindTemplate should auto-detect daily template from daily-notes path):
+  " Create the daily template
+  call mkdir('resource/template', 'p')
+  call writefile(['# Daily Template'], 'resource/template/daily.md')
+
+  " Test auto-detection without providing template_type
+  let result = meta_notes#template#FindTemplate('resource/daily-notes/26-Q1/2026-02-14.md')
+  AssertEqual 'resource/template/daily.md', result
+
+" Test: FindTemplate auto-detects weekly template from path
+Execute (FindTemplate should auto-detect weekly template from plan/week path):
+  " Create the weekly template
+  call writefile(['# Weekly Template'], 'resource/template/weekly.md')
+
+  " Test auto-detection without providing template_type
+  let result = meta_notes#template#FindTemplate('resource/plan/week/Plan 2026-02-09.md')
+  AssertEqual 'resource/template/weekly.md', result
+
+" Test: FindTemplate auto-detects quarterly template from path
+Execute (FindTemplate should auto-detect quarterly template from plan/quarter path):
+  " Create the quarterly template
+  call writefile(['# Quarterly Template'], 'resource/template/quarterly.md')
+
+  " Test auto-detection without providing template_type
+  let result = meta_notes#template#FindTemplate('resource/plan/quarter/2026-Q1.md')
+  AssertEqual 'resource/template/quarterly.md', result
+
+" Test: FindTemplate auto-detects yearly template from path
+Execute (FindTemplate should auto-detect yearly template from plan/year path):
+  " Create the yearly template
+  call writefile(['# Yearly Template'], 'resource/template/yearly.md')
+
+  " Test auto-detection without providing template_type
+  let result = meta_notes#template#FindTemplate('resource/plan/year/2026.md')
+  AssertEqual 'resource/template/yearly.md', result
+
 " Test: ProcessVariables replaces simple date variables
 Execute (ProcessVariables should replace {{date}} variable):
   let context = {'date': '2026-02-14', 'today': '2026-02-14'}
