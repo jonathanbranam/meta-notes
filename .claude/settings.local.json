@@ -20,7 +20,8 @@
       "Bash(ls:*)",
       "Bash(cat:*)",
       "Bash(printf:*)",
-      "Bash(pipenv run python:*)"
+      "Bash(pipenv run python:*)",
+      "Bash(jq:*)"
     ]
   }
 }
