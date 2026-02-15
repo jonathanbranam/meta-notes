@@ -99,6 +99,16 @@ Execute (ProcessVariables should handle week variables):
   let result = meta_notes#template#ProcessVariables('Week: {{week_start}} to {{week_end:%Y-%m-%d}}', context)
   AssertEqual 'Week: 2026-02-09 Mon to 2026-02-15', result
 
+" Test: ProcessVariables handles quarter variable
+Execute (ProcessVariables should handle quarter variable):
+  let context = {'date': '2026-02-14', 'quarter': 'Q1'}
+  let result = meta_notes#template#ProcessVariables('Quarterly Plan: {{date:%Y}}-{{quarter}}', context)
+  AssertEqual 'Quarterly Plan: 2026-Q1', result
+
+  let context_q3 = {'date': '2026-08-15', 'quarter': 'Q3'}
+  let result_q3 = meta_notes#template#ProcessVariables('Quarter: {{quarter}}', context_q3)
+  AssertEqual 'Quarter: Q3', result_q3
+
 " Test: ProcessVariables replaces undefined variables with error comment
 Execute (ProcessVariables should replace undefined variables with error comment):
   let context = {'date': '2026-02-14'}
@@ -145,12 +155,14 @@ Execute (CreateContext should create context with all required variables):
   Assert has_key(context, 'today')
   Assert has_key(context, 'week_start')
   Assert has_key(context, 'week_end')
+  Assert has_key(context, 'quarter')
   Assert has_key(context, 'filepath')
 
   " Verify values
   AssertEqual '2026-02-14', context['date']
   AssertEqual '2026-02-09', context['week_start']
   AssertEqual '2026-02-15', context['week_end']
+  AssertEqual 'Q1', context['quarter']
   AssertEqual 'test/note.md', context['filepath']
 
 " Test: CreateContext with project filepath
@@ -160,6 +172,50 @@ Execute (CreateContext should include filepath for project path):
   " Verify filepath is included
   Assert has_key(context, 'filepath')
   AssertEqual 'project/my-project/subfolder/note.md', context['filepath']
+
+" Test: CreateContext calculates correct quarter for Q1
+Execute (CreateContext should calculate Q1 for January-March):
+  let context_jan = meta_notes#template#CreateContext('2026-01-15', 'test/note.md')
+  AssertEqual 'Q1', context_jan['quarter']
+
+  let context_feb = meta_notes#template#CreateContext('2026-02-15', 'test/note.md')
+  AssertEqual 'Q1', context_feb['quarter']
+
+  let context_mar = meta_notes#template#CreateContext('2026-03-15', 'test/note.md')
+  AssertEqual 'Q1', context_mar['quarter']
+
+" Test: CreateContext calculates correct quarter for Q2
+Execute (CreateContext should calculate Q2 for April-June):
+  let context_apr = meta_notes#template#CreateContext('2026-04-15', 'test/note.md')
+  AssertEqual 'Q2', context_apr['quarter']
+
+  let context_may = meta_notes#template#CreateContext('2026-05-15', 'test/note.md')
+  AssertEqual 'Q2', context_may['quarter']
+
+  let context_jun = meta_notes#template#CreateContext('2026-06-15', 'test/note.md')
+  AssertEqual 'Q2', context_jun['quarter']
+
+" Test: CreateContext calculates correct quarter for Q3
+Execute (CreateContext should calculate Q3 for July-September):
+  let context_jul = meta_notes#template#CreateContext('2026-07-15', 'test/note.md')
+  AssertEqual 'Q3', context_jul['quarter']
+
+  let context_aug = meta_notes#template#CreateContext('2026-08-15', 'test/note.md')
+  AssertEqual 'Q3', context_aug['quarter']
+
+  let context_sep = meta_notes#template#CreateContext('2026-09-15', 'test/note.md')
+  AssertEqual 'Q3', context_sep['quarter']
+
+" Test: CreateContext calculates correct quarter for Q4
+Execute (CreateContext should calculate Q4 for October-December):
+  let context_oct = meta_notes#template#CreateContext('2026-10-15', 'test/note.md')
+  AssertEqual 'Q4', context_oct['quarter']
+
+  let context_nov = meta_notes#template#CreateContext('2026-11-15', 'test/note.md')
+  AssertEqual 'Q4', context_nov['quarter']
+
+  let context_dec = meta_notes#template#CreateContext('2026-12-15', 'test/note.md')
+  AssertEqual 'Q4', context_dec['quarter']
 
 " Test: Opening a note in folder with template uses the template
 Execute (MetaNotesOpen should use folder-specific template):

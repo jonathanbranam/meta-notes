@@ -156,24 +156,34 @@ function! meta_notes#template#ProcessVariables(line, context) abort
       continue
     endif
 
-    let l:date_str = a:context[l:var_name]
+    let l:value = a:context[l:var_name]
 
-    " Apply arithmetic if needed
-    if l:arithmetic != 0
-      let l:timestamp = strptime("%Y-%m-%d", l:date_str)
-      let l:new_timestamp = l:timestamp + (l:arithmetic * 86400)
-      let l:date_str = strftime('%Y-%m-%d', l:new_timestamp)
-    endif
+    " Check if this is a date variable (YYYY-MM-DD format) or a string variable
+    " String variables (like 'quarter': 'Q1') are used as-is without date processing
+    if match(l:value, '^\d\{4\}-\d\{2\}-\d\{2\}$') != -1
+      " This is a date variable - process with date formatting
+      let l:date_str = l:value
 
-    " Apply format if provided, otherwise use default format
-    if l:format != ''
-      let l:timestamp = strptime("%Y-%m-%d", l:date_str)
-      let l:replacement = strftime(l:format, l:timestamp)
+      " Apply arithmetic if needed
+      if l:arithmetic != 0
+        let l:timestamp = strptime("%Y-%m-%d", l:date_str)
+        let l:new_timestamp = l:timestamp + (l:arithmetic * 86400)
+        let l:date_str = strftime('%Y-%m-%d', l:new_timestamp)
+      endif
+
+      " Apply format if provided, otherwise use default format
+      if l:format != ''
+        let l:timestamp = strptime("%Y-%m-%d", l:date_str)
+        let l:replacement = strftime(l:format, l:timestamp)
+      else
+        " Default format: YYYY-MM-DD ddd
+        let l:timestamp = strptime("%Y-%m-%d", l:date_str)
+        let l:day_abbr = strftime('%a', l:timestamp)
+        let l:replacement = l:date_str . ' ' . l:day_abbr
+      endif
     else
-      " Default format: YYYY-MM-DD ddd
-      let l:timestamp = strptime("%Y-%m-%d", l:date_str)
-      let l:day_abbr = strftime('%a', l:timestamp)
-      let l:replacement = l:date_str . ' ' . l:day_abbr
+      " This is a string variable - use as-is
+      let l:replacement = l:value
     endif
 
     " Replace the variable in the result
@@ -312,6 +322,9 @@ function! meta_notes#template#CreateContext(date_str, filepath) abort
   " Calculate week_start and week_end
   let l:context['week_start'] = meta_notes#notes#CalculateWeekStart(a:date_str)
   let l:context['week_end'] = meta_notes#notes#CalculateWeekEnd(a:date_str)
+
+  " Calculate quarter (Q1, Q2, Q3, Q4)
+  let l:context['quarter'] = meta_notes#notes#CalculateQuarter(a:date_str)
 
   " Include filepath for path-dependent variables
   let l:context['filepath'] = a:filepath
