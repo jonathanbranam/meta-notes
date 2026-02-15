@@ -198,6 +198,25 @@ function! meta_notes#file_ops#Rename(...) abort
     return
   endif
 
+  " Update the header if it matches the old path
+  " Read the file content
+  let l:file_lines = readfile(l:new_path)
+  if len(l:file_lines) > 0
+    " Check if first line is a heading that matches the old path
+    let l:first_line = l:file_lines[0]
+    " Get the old and new paths without .md extension
+    let l:old_header_path = substitute(fnamemodify(l:current_path, ':p:.'), '\.md$', '', '')
+    let l:new_header_path = substitute(fnamemodify(l:new_path, ':p:.'), '\.md$', '', '')
+
+    " Check if first line is "# <old_path>"
+    let l:expected_old_header = '# ' . l:old_header_path
+    if l:first_line == l:expected_old_header
+      " Update to new path
+      let l:file_lines[0] = '# ' . l:new_header_path
+      call writefile(l:file_lines, l:new_path)
+    endif
+  endif
+
   " Update wiki-links across all markdown files
   " Convert paths to relative paths without .md extension for link matching
   let l:old_link_path = substitute(fnamemodify(l:current_path, ':p:.'), '\.md$', '', '')

@@ -188,6 +188,71 @@ Execute (MetaNotesRename should preserve subpaths in wiki-links):
 
   bwipeout!
 
+" Test: Rename updates header when it matches old path
+Execute (MetaNotesRename should update header if it matches old path):
+  " Create a file with header matching its path
+  call mkdir('project/test-header', 'p')
+  call writefile(['# project/test-header/original', '', 'Some content'], 'project/test-header/original.md')
+
+  " Rename the file
+  edit project/test-header/original.md
+  call meta_notes#file_ops#Rename('project/test-header/renamed')
+
+  " Verify header was updated
+  let content = readfile('project/test-header/renamed.md')
+  AssertEqual '# project/test-header/renamed', content[0], 'Header should be updated to new path'
+  AssertEqual 'Some content', content[2], 'Other content should be unchanged'
+
+  bwipeout!
+
+" Test: Rename preserves header when it doesn't match old path
+Execute (MetaNotesRename should preserve custom header):
+  " Create a file with custom header
+  call mkdir('project/test-custom', 'p')
+  call writefile(['# My Custom Title', '', 'Content here'], 'project/test-custom/file.md')
+
+  " Rename the file
+  edit project/test-custom/file.md
+  call meta_notes#file_ops#Rename('project/test-custom/newname')
+
+  " Verify header was NOT changed
+  let content = readfile('project/test-custom/newname.md')
+  AssertEqual '# My Custom Title', content[0], 'Custom header should be preserved'
+
+  bwipeout!
+
+" Test: Rename updates header when moving to different directory
+Execute (MetaNotesRename should update header when moving directories):
+  " Create file with matching header
+  call mkdir('project/old-dir', 'p')
+  call mkdir('project/new-dir', 'p')
+  call writefile(['# project/old-dir/note', '', 'Content'], 'project/old-dir/note.md')
+
+  " Rename/move the file
+  edit project/old-dir/note.md
+  call meta_notes#file_ops#Rename('project/new-dir/note')
+
+  " Verify header updated to new path
+  let content = readfile('project/new-dir/note.md')
+  AssertEqual '# project/new-dir/note', content[0], 'Header should reflect new directory path'
+
+  bwipeout!
+
+" Test: Rename handles empty files gracefully
+Execute (MetaNotesRename should handle empty files):
+  " Create empty file
+  call writefile([], 'project/empty.md')
+
+  " Rename it
+  edit project/empty.md
+  call meta_notes#file_ops#Rename('project/renamed-empty')
+
+  " Should succeed without errors
+  Assert filereadable('project/renamed-empty.md'), 'File should be renamed'
+  Assert !filereadable('project/empty.md'), 'Old file should not exist'
+
+  bwipeout!
+
 Execute (Cleanup - Remove temporary test directory):
   execute 'cd -'
   call delete(g:test_dir, 'rf')
