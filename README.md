@@ -85,7 +85,7 @@ Add to your `.vimrc`:
 set runtimepath+=/Volumes/Data/work/meta-notes
 
 " Optional: Quick mapping for reloading during development
-nnoremap <leader>r :ReloadMetaNotes<CR>
+nnoremap <leader>r :MetaNotesReload<CR>
 ```
 
 ### For Production Use
@@ -102,7 +102,7 @@ This structure is compatible with vim-plug, Vundle, and Pathogen.
 ## Development Workflow
 
 1. Edit your vim or Python scripts
-2. In vim, run `:ReloadMetaNotes` (or press `<leader>r` if mapped)
+2. In vim, run `:MetaNotesReload` (or press `<leader>r` if mapped)
 3. Test immediately - no vim restart needed!
 
 For individual file changes, you can also `:source %` while editing the file.

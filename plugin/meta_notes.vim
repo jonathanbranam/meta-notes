@@ -15,8 +15,8 @@ set cpo&vim
 let s:plugin_root = expand('<sfile>:p:h:h')
 
 " Development: Reload command for fast iteration
-command! ReloadMetaNotes call s:ReloadMetaNotes()
-function! s:ReloadMetaNotes()
+command! MetaNotesReload call s:MetaNotesReload()
+function! s:MetaNotesReload()
   " Source main plugin file
   execute 'source' s:plugin_root . '/plugin/meta_notes.vim'
 
