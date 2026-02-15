@@ -197,6 +197,24 @@ Execute (ExecuteCommand should execute python commands successfully):
   " Result should contain "4" with newline
   AssertEqual "4\n", result
 
+" Test: ExecuteCommand resolves scripts/ paths relative to plugin root
+Execute (ExecuteCommand should resolve scripts/ paths relative to plugin root):
+  " Create a test script in the plugin's scripts directory
+  let plugin_root = meta_notes#template#GetPluginRoot()
+  let test_script_path = plugin_root . '/scripts/test_script.py'
+  call mkdir(plugin_root . '/scripts', 'p')
+  call writefile(['print("test_output")'], test_script_path)
+
+  " Execute the script using a relative path
+  let context = {'date': '2026-02-14'}
+  let result = meta_notes#template#ExecuteCommand('{{% python scripts/test_script.py %}}', context)
+
+  " Result should contain the script output
+  AssertEqual "test_output\n", result
+
+  " Clean up
+  call delete(test_script_path)
+
 " Test: ExecuteCommand with shell command (failure)
 Execute (ExecuteCommand should handle shell command failures):
   let context = {'date': '2026-02-14'}
@@ -224,6 +242,14 @@ Execute (ExecuteCommand should process variables before executing):
 
   " The {{date}} should be replaced before execution
   AssertEqual "2026-02-14 Sat\n", result
+
+" Test: ExecuteCommand processes formatted dates in commands
+Execute (ExecuteCommand should handle formatted dates in command arguments):
+  let context = {'date': '2026-02-14'}
+  let result = meta_notes#template#ExecuteCommand('{{% shell echo "{{date:%Y-%m-%d}}" %}}', context)
+
+  " The {{date:%Y-%m-%d}} should be replaced with just the date
+  AssertEqual "2026-02-14\n", result
 
 " Test: ExecuteCommand with unknown command type
 Execute (ExecuteCommand should handle unknown command types):

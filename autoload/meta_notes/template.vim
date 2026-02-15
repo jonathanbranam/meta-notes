@@ -1,6 +1,16 @@
 " template.vim - Template processing for meta_notes
 " Handles template discovery, variable substitution, and command execution
 
+" Store the plugin root directory at script load time
+let s:plugin_root = fnamemodify(expand('<sfile>:p:h'), ':h:h')
+
+" Get the plugin root directory
+" Returns:
+"   Absolute path to the plugin root directory
+function! meta_notes#template#GetPluginRoot() abort
+  return s:plugin_root
+endfunction
+
 " Find the appropriate template for a given file path
 " Args:
 "   filepath: Path to the file being created (e.g., 'project/my-project/note.md')
@@ -184,8 +194,15 @@ function! meta_notes#template#ExecuteCommand(command_line, context) abort
       redir END
       return l:output
     elseif l:cmd_type == 'python'
+      " Resolve script path relative to plugin root if it starts with 'scripts/'
+      let l:resolved_cmd = l:cmd
+      if match(l:cmd, '^\s*scripts/') != -1
+        let l:plugin_root = meta_notes#template#GetPluginRoot()
+        let l:resolved_cmd = substitute(l:cmd, '^\s*scripts/', l:plugin_root . '/scripts/', '')
+      endif
+
       " Execute python command
-      let l:output = system('python3 ' . l:cmd)
+      let l:output = system('python3 ' . l:resolved_cmd)
       if v:shell_error != 0
         return '<!-- Command failed: ' . a:command_line . "\n" . 'Error: ' . l:output . ' -->'
       endif
