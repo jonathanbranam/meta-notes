@@ -679,7 +679,6 @@ function! meta_notes#notes#Init(...) abort
         \   '---',
         \   'filename_pattern: "resource/plan/year/{{date:%Y}}.md"',
         \   '---',
-        \   '',
         \   '# Year Plan - {{date:%Y}}',
         \   '',
         \   '## Annual Goals',
