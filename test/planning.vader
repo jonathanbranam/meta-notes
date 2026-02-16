@@ -85,6 +85,8 @@ Execute (Test OpenDaily opens existing file):
   AssertEqual 'plan/daily/26-Q1/2026-02-13 Fri.md', expand('%')
   AssertEqual '# Existing Daily Note', getline(1)
   AssertEqual 'This is existing content', getline(3)
+  " TODO: delete the Friday note after the test
+  silent! call delete('plan/daily/26-Q1/2026-02-13 Fri.md')
 
 " ============================================================================
 " Weekly Plans
@@ -175,12 +177,12 @@ Execute (Test OpenYearPlan opens existing file):
 " ============================================================================
 
 Execute (Setup navigation - Create test daily notes):
-  call writefile(['# Daily Note - 2026-02-10 Mon', '', 'Content for Feb 10'],
-        \ 'plan/daily/26-Q1/2026-02-10 Mon.md')
-  call writefile(['# Daily Note - 2026-02-12 Wed', '', 'Content for Feb 12'],
-        \ 'plan/daily/26-Q1/2026-02-12 Wed.md')
-  call writefile(['# Daily Note - 2026-02-14 Fri', '', 'Content for Feb 14'],
-        \ 'plan/daily/26-Q1/2026-02-14 Fri.md')
+  call writefile(['# Daily Note - 2026-02-10 Tue', '', 'Content for Feb 10'],
+        \ 'plan/daily/26-Q1/2026-02-10 Tue.md')
+  call writefile(['# Daily Note - 2026-02-12 Thr', '', 'Content for Feb 12'],
+        \ 'plan/daily/26-Q1/2026-02-12 Thr.md')
+  call writefile(['# Daily Note - 2026-02-14 Sat', '', 'Content for Feb 14'],
+        \ 'plan/daily/26-Q1/2026-02-14 Sat.md')
 
 Execute (Test GetDailyNoteFiles returns sorted list):
   let files = meta_notes#notes#GetDailyNoteFiles()
@@ -192,24 +194,25 @@ Execute (Test GetDailyNoteFiles returns sorted list):
   Assert daily_files[2] =~ '2026-02-14'
 
 Execute (Test ExtractDateFromDailyNote):
-  AssertEqual '2026-02-10', meta_notes#notes#ExtractDateFromDailyNote('plan/daily/26-Q1/2026-02-10 Mon.md')
-  AssertEqual '2026-02-14', meta_notes#notes#ExtractDateFromDailyNote('plan/daily/26-Q1/2026-02-14 Fri.md')
+  AssertEqual '2026-02-10', meta_notes#notes#ExtractDateFromDailyNote('plan/daily/26-Q1/2026-02-10 Tue.md')
+  AssertEqual '2026-02-14', meta_notes#notes#ExtractDateFromDailyNote('plan/daily/26-Q1/2026-02-14 Sat.md')
   AssertEqual '', meta_notes#notes#ExtractDateFromDailyNote('plan/week/26-Q1/2026-02-09.md')
 
 Execute (Test DailyPrev from middle note):
-  execute 'edit! plan/daily/26-Q1/2026-02-12 Wed.md'
+  execute 'edit! plan/daily/26-Q1/2026-02-12 Thr.md'
   call meta_notes#notes#DailyPrev()
-  Assert expand('%') =~ '2026-02-10 Mon.md'
+  Assert expand('%') =~ '2026-02-10 Tue.md'
   bwipeout!
 
+" TODO: Investigate failing test
 Execute (Test DailyNext from middle note):
-  execute 'edit! plan/daily/26-Q1/2026-02-12 Wed.md'
+  execute 'edit! plan/daily/26-Q1/2026-02-12 Thr.md'
   call meta_notes#notes#DailyNext()
-  Assert expand('%') =~ '2026-02-14 Fri.md'
+  Assert expand('%') =~ '2026-02-14 Sat.md'
   bwipeout!
 
 Execute (Test DailyPrev from oldest note prompts and creates):
-  execute 'edit! plan/daily/26-Q1/2026-02-10 Mon.md'
+  execute 'edit! plan/daily/26-Q1/2026-02-10 Tue.md'
   call feedkeys("y\<CR>", 't')
   call meta_notes#notes#DailyPrev()
   Assert expand('%') =~ '2026-02-09'
@@ -230,32 +233,32 @@ Execute (Test DailyNext from non-daily note shows error):
   bwipeout!
 
 Execute (Test MetaNotesDailyPrev command):
-  execute 'edit! plan/daily/26-Q1/2026-02-12 Wed.md'
+  execute 'edit! plan/daily/26-Q1/2026-02-12 Thr.md'
   MetaNotesDailyPrev
-  Assert expand('%') =~ '2026-02-10 Mon.md'
+  Assert expand('%') =~ '2026-02-10 Tue.md'
   bwipeout!
 
 Execute (Test MetaNotesDailyNext command):
-  execute 'edit! plan/daily/26-Q1/2026-02-12 Wed.md'
+  execute 'edit! plan/daily/26-Q1/2026-02-12 Thr.md'
   MetaNotesDailyNext
-  Assert expand('%') =~ '2026-02-14 Fri.md'
+  Assert expand('%') =~ '2026-02-14 Sat.md'
   bwipeout!
 
 Execute (Test navigation skips missing dates):
   " Clean slate - remove the 2026-02-09 file created earlier
-  silent! call delete('plan/daily/26-Q1/2026-02-09 Sun.md')
-  execute 'edit! plan/daily/26-Q1/2026-02-10 Mon.md'
+  silent! call delete('plan/daily/26-Q1/2026-02-09 Mon.md')
+  execute 'edit! plan/daily/26-Q1/2026-02-10 Tue.md'
   call meta_notes#notes#DailyNext()
-  Assert expand('%') =~ '2026-02-12 Wed.md'
+  Assert expand('%') =~ '2026-02-12 Thr.md'
   call meta_notes#notes#DailyNext()
-  Assert expand('%') =~ '2026-02-14 Fri.md'
+  Assert expand('%') =~ '2026-02-14 Sat.md'
   call meta_notes#notes#DailyPrev()
-  Assert expand('%') =~ '2026-02-12 Wed.md'
+  Assert expand('%') =~ '2026-02-12 Thr.md'
   call meta_notes#notes#DailyPrev()
-  Assert expand('%') =~ '2026-02-10 Mon.md'
+  Assert expand('%') =~ '2026-02-10 Tue.md'
 
 Execute (Test JumpToWeek from daily note):
-  execute 'edit! plan/daily/26-Q1/2026-02-12 Wed.md'
+  execute 'edit! plan/daily/26-Q1/2026-02-12 Thr.md'
   call meta_notes#notes#JumpToWeek()
   Assert expand('%') =~ 'plan/week/26-Q1/2026-02-09.md'
 
@@ -266,7 +269,7 @@ Execute (Test JumpToWeek from non-daily note shows error):
   Assert v:errmsg =~ 'not a daily note'
 
 Execute (Test MetaNotesJumpToWeek command):
-  execute 'edit! plan/daily/26-Q1/2026-02-14 Fri.md'
+  execute 'edit! plan/daily/26-Q1/2026-02-14 Sat.md'
   MetaNotesJumpToWeek
   Assert expand('%') =~ 'plan/week/26-Q1/2026-02-09.md'
 
