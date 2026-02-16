@@ -147,9 +147,6 @@ endfunction
 " Args:
 "   moves: List of [old_path, new_path] pairs
 function! s:UpdateAllWikiLinks(moves) abort
-  " Get plugin root directory
-  let l:plugin_root = meta_notes#template#GetPluginRoot()
-
   " Update links for each moved file
   for [l:old_path, l:new_path] in a:moves
     " Convert paths to relative paths without .md extension for link matching
@@ -157,15 +154,14 @@ function! s:UpdateAllWikiLinks(moves) abort
     let l:new_link_path = substitute(fnamemodify(l:new_path, ':p:.'), '\.md$', '', '')
 
     " Call update_links.py script
-    let l:update_cmd = 'python3 ' . shellescape(l:plugin_root . '/scripts/update_links.py')
-          \ . ' ' . shellescape(l:old_link_path)
-          \ . ' ' . shellescape(l:new_link_path)
+    let l:result = meta_notes#template#ExecutePythonScript('update_links.py', [l:old_link_path, l:new_link_path])
 
-    let l:update_output = system(l:update_cmd)
-
-    if v:shell_error != 0
+    if !l:result.success
       echohl WarningMsg
       echo 'Warning: Failed to update wiki-links for: ' . l:old_link_path
+      if !empty(l:result.error)
+        echo 'Error: ' . l:result.error
+      endif
       echohl None
     endif
   endfor

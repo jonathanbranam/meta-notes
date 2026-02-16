@@ -27,24 +27,19 @@ function! meta_notes#time_tracking#ShowReport() abort
     return
   endif
 
-  " Find the Python script
-  let l:script_dir = fnamemodify(resolve(expand('<sfile>:p')), ':h:h:h') . '/scripts'
-  let l:script_path = l:script_dir . '/time_report.py'
-
-  if !filereadable(l:script_path)
-    echoerr 'Time report script not found: ' . l:script_path
-    return
-  endif
-
   " Execute the Python script
-  let l:cmd = 'python3 ' . shellescape(l:script_path) . ' ' . shellescape(l:filepath)
-  let l:output = system(l:cmd)
+  let l:result = meta_notes#template#ExecutePythonScript('time_report.py', [l:filepath])
 
   " Check for errors
-  if v:shell_error != 0
-    echoerr 'Error generating time report: ' . l:output
+  if !l:result.success
+    echoerr 'Error generating time report: ' . l:result.error
+    if !empty(l:result.output)
+      echoerr l:result.output
+    endif
     return
   endif
+
+  let l:output = l:result.output
 
   " Create a new split window for the report
   " Check if a time report buffer already exists
