@@ -63,18 +63,35 @@ Execute (Test DailyNext from middle note):
   let first_line = getline(1)
   AssertEqual '# Daily Note - 2026-02-14 Fri', first_line
 
-Execute (Test DailyPrev from oldest note shows message):
+Execute (Test DailyPrev from oldest note prompts and declines):
   " Open the oldest note (Feb 10)
   execute 'edit! plan/daily/26-Q1/2026-02-10 Mon.md'
 
   " Clear any previous messages
   let v:statusmsg = ''
 
-  " Try to navigate to previous (should show message and stay on same file)
+  " Feed 'n' and enter to the input prompt
+  call feedkeys("n\<CR>", 't')
+
+  " Try to navigate to previous (should prompt and user says no)
   call meta_notes#notes#DailyPrev()
 
-  " Should still be on Feb 10
+  " Should still be on Feb 10 (user declined to create previous day)
   Assert expand('%') =~ '2026-02-10 Mon.md'
+
+Execute (Test DailyPrev from oldest note creates previous day):
+  " Open the oldest note (Feb 10)
+  execute 'edit! plan/daily/26-Q1/2026-02-10 Mon.md'
+
+  " Feed 'y' and enter to the input prompt
+  call feedkeys("y\<CR>", 't')
+
+  " Try to navigate to previous (should prompt and user says yes)
+  call meta_notes#notes#DailyPrev()
+
+  " Should now be on Feb 9 (previous day was created)
+  Assert expand('%') =~ '2026-02-09'
+  Assert expand('%') =~ 'plan/daily'
 
 Execute (Test DailyPrev from non-daily note shows error):
   " Open a non-daily note buffer

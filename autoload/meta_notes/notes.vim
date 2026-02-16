@@ -511,7 +511,17 @@ function! meta_notes#notes#DailyPrev() abort
 
   " Check if we're at the oldest note
   if l:current_idx == 0
-    echo 'Already at oldest daily note'
+    " Prompt to create previous day's note
+    let l:response = input('At oldest daily note. Create previous day? (y/n): ')
+    if l:response ==? 'y'
+      " Calculate previous day's date
+      let l:timestamp = strptime("%Y-%m-%d", l:current_date)
+      let l:prev_timestamp = l:timestamp - 86400  " Subtract one day
+      let l:prev_date = strftime('%Y-%m-%d', l:prev_timestamp)
+
+      " Open previous day's note
+      call meta_notes#notes#OpenDaily(l:prev_date)
+    endif
     return
   endif
 
