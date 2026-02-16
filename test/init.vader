@@ -106,6 +106,12 @@ Execute (MetaNotesInit creates yearly template with correct content):
   Assert content =~ '### Q1 (Jan-Mar)', 'Yearly template should have Q1 section'
   Assert content =~ '### Q4 (Oct-Dec)', 'Yearly template should have Q4 section'
 
+  " Check for links to quarterly plans
+  Assert content =~ '\[\[resource/plan/quarter/{{date:%Y}}-Q1\]\]', 'Yearly template should link to Q1 plan'
+  Assert content =~ '\[\[resource/plan/quarter/{{date:%Y}}-Q2\]\]', 'Yearly template should link to Q2 plan'
+  Assert content =~ '\[\[resource/plan/quarter/{{date:%Y}}-Q3\]\]', 'Yearly template should link to Q3 plan'
+  Assert content =~ '\[\[resource/plan/quarter/{{date:%Y}}-Q4\]\]', 'Yearly template should link to Q4 plan'
+
 Execute (MetaNotesInit is idempotent - running twice doesn't break):
   MetaNotesInit
   MetaNotesInit
