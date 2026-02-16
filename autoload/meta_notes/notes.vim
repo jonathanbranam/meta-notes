@@ -57,6 +57,56 @@ function! meta_notes#notes#GetLinkUnderCursor() abort
   return meta_notes#notes#GetTextWithinDelimiters('[[', ']]')
 endfunction
 
+" Extract the appropriate date for template context from a filepath
+" Args:
+"   filepath: Path to the note file
+" Returns:
+"   Date string in YYYY-MM-DD format appropriate for the note type
+" Examples:
+"   For 'plan/daily/26-Q1/2026-02-13 Fri.md', returns '2026-02-13'
+"   For 'plan/week/26-Q1/2026-02-09.md', returns '2026-02-09' (Monday)
+"   For 'plan/quarter/2026-Q1.md', returns '2026-01-01' (first day of quarter)
+"   For 'plan/year/2026.md', returns '2026-01-01' (January 1st)
+"   For other notes, returns today's date
+function! meta_notes#notes#ExtractDateForTemplate(filepath) abort
+  " Check for daily note: plan/daily/YY-Q#/YYYY-MM-DD ddd.md
+  let l:daily_pattern = '\vplan/daily/\d{2}-Q\d/(\d{4}-\d{2}-\d{2})\s+\w{3}\.md$'
+  let l:daily_matches = matchlist(a:filepath, l:daily_pattern)
+  if len(l:daily_matches) > 1
+    return l:daily_matches[1]
+  endif
+
+  " Check for weekly note: plan/week/YY-Q#/YYYY-MM-DD.md
+  let l:weekly_pattern = '\vplan/week/\d{2}-Q\d/(\d{4}-\d{2}-\d{2})\.md$'
+  let l:weekly_matches = matchlist(a:filepath, l:weekly_pattern)
+  if len(l:weekly_matches) > 1
+    return l:weekly_matches[1]
+  endif
+
+  " Check for quarterly note: plan/quarter/YYYY-Q#.md
+  let l:quarterly_pattern = '\vplan/quarter/(\d{4})-(Q\d)\.md$'
+  let l:quarterly_matches = matchlist(a:filepath, l:quarterly_pattern)
+  if len(l:quarterly_matches) > 2
+    let l:year = l:quarterly_matches[1]
+    let l:quarter = l:quarterly_matches[2]
+    " Return first day of the quarter
+    let l:month = l:quarter == 'Q1' ? '01' : (l:quarter == 'Q2' ? '04' : (l:quarter == 'Q3' ? '07' : '10'))
+    return l:year . '-' . l:month . '-01'
+  endif
+
+  " Check for yearly note: plan/year/YYYY.md
+  let l:yearly_pattern = '\vplan/year/(\d{4})\.md$'
+  let l:yearly_matches = matchlist(a:filepath, l:yearly_pattern)
+  if len(l:yearly_matches) > 1
+    let l:year = l:yearly_matches[1]
+    " Return January 1st
+    return l:year . '-01-01'
+  endif
+
+  " Default to today's date for non-plan notes
+  return strftime('%Y-%m-%d')
+endfunction
+
 " Open a note from a wiki-style link [[path/to/note]]
 " If cursor is within [[...]], opens or creates the note
 " If note doesn't exist, creates a new buffer with template or header
@@ -88,8 +138,9 @@ function! meta_notes#notes#Open() abort
     " Look for template
     let template_path = meta_notes#template#FindTemplate(filepath)
     if template_path != ''
-      " Process template
-      let context = meta_notes#template#CreateContext(strftime('%Y-%m-%d'), filepath)
+      " Process template with appropriate date for note type
+      let date_str = meta_notes#notes#ExtractDateForTemplate(filepath)
+      let context = meta_notes#template#CreateContext(date_str, filepath)
       let lines = meta_notes#template#ProcessTemplate(template_path, context)
       call setline(1, lines)
       call cursor(1, 1)
@@ -585,9 +636,11 @@ function! meta_notes#notes#Init(...) abort
         \   'Week Plan: [[plan/week/{{week_start:%y}}-{{quarter}}/{{week_start}}]]',
         \   '',
         \   '## Tasks Due Today',
+        \   '',
         \   '{{% python scripts/find_tasks.py --due-on {{date:%Y-%m-%d}} --status incomplete --condensed %}}',
         \   '',
         \   '## Overdue Tasks',
+        \   '',
         \   '{{% python scripts/find_tasks.py --due-by {{date-1:%Y-%m-%d}} --status incomplete --condensed %}}',
         \   '',
         \   '## Notes',
