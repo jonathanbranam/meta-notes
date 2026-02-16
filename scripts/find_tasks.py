@@ -170,7 +170,7 @@ def categorize_task_by_date(task: Task, today: date, week_end: date) -> str:
 
 def format_file_tasks(filepath: str, tasks: list[Task], root_dir: str) -> list[str]:
     """
-    Format tasks from a single file as output lines.
+    Format tasks from a single file as output lines (standard format).
 
     Args:
         filepath: Path to the file containing tasks.
@@ -190,6 +190,38 @@ def format_file_tasks(filepath: str, tasks: list[Task], root_dir: str) -> list[s
 
     for task in tasks:
         lines.append(task.text)
+
+    return lines
+
+
+def format_file_tasks_condensed(filepath: str, tasks: list[Task], root_dir: str) -> list[str]:
+    """
+    Format tasks from a single file in condensed format.
+
+    Condensed format shows the source note as a list item with tasks indented below:
+    - [[path/to/note]]
+      - [ ] task 1
+      - [ ] task 2
+
+    Args:
+        filepath: Path to the file containing tasks.
+        tasks: List of Task objects from the file.
+        root_dir: Root directory for generating wiki links.
+
+    Returns:
+        List of formatted output lines (empty if no tasks).
+    """
+    if not tasks:
+        return []
+
+    lines: list[str] = []
+    wiki_link = get_wiki_link(filepath, root_dir)
+    lines.append(f"- {wiki_link}")
+
+    for task in tasks:
+        # Add one level of indentation (2 spaces) to each task line
+        indented_task = "  " + task.text
+        lines.append(indented_task)
 
     return lines
 
@@ -249,7 +281,8 @@ def format_section(
     category: str,
     header: str,
     file_tasks: list[tuple[str, list[Task]]],
-    root_dir: str
+    root_dir: str,
+    condensed: bool = False
 ) -> list[str]:
     """
     Format a single section of the report.
@@ -259,6 +292,7 @@ def format_section(
         header: Markdown header for the section.
         file_tasks: List of (filepath, tasks) tuples for this section.
         root_dir: Root directory for generating wiki links.
+        condensed: If True, use condensed format.
 
     Returns:
         List of formatted output lines for the section.
@@ -273,15 +307,17 @@ def format_section(
     lines.append("")
 
     # Format each file's tasks in this category
+    formatter = format_file_tasks_condensed if condensed else format_file_tasks
     for filepath, tasks in file_tasks:
-        file_lines = format_file_tasks(filepath, tasks, root_dir)
+        file_lines = formatter(filepath, tasks, root_dir)
         lines.extend(file_lines)
-        lines.append("")  # Empty line between files
+        if not condensed:
+            lines.append("")  # Empty line between files (standard format only)
 
     return lines
 
 
-def generate_report(root_dir: str, today: date) -> list[str]:
+def generate_report(root_dir: str, today: date, condensed: bool = False) -> list[str]:
     """
     Generate a complete report of incomplete tasks in all markdown files.
 
@@ -293,6 +329,7 @@ def generate_report(root_dir: str, today: date) -> list[str]:
     Args:
         root_dir: Directory to search for markdown files.
         today: Reference date to use for categorization.
+        condensed: If True, use condensed format.
 
     Returns:
         List of output lines for the complete report.
@@ -329,7 +366,8 @@ def generate_report(root_dir: str, today: date) -> list[str]:
             category,
             header,
             categorized_files[category],
-            root_dir
+            root_dir,
+            condensed
         )
         lines.extend(section_lines)
 
@@ -377,6 +415,8 @@ Examples:
   %(prog)s --due-by 2026-02-20       # Tasks due by date
   %(prog)s --status all              # All tasks regardless of status
   %(prog)s --due-between 2026-02-01 2026-02-28  # Tasks due in date range
+  %(prog)s --condensed               # Condensed format output
+  %(prog)s --format=condensed        # Same as --condensed
         """
     )
 
@@ -418,7 +458,23 @@ Examples:
         help='Filter by task status (default: incomplete)'
     )
 
+    parser.add_argument(
+        '--format',
+        choices=['standard', 'condensed'],
+        default='standard',
+        help='Output format (default: standard)'
+    )
+
+    parser.add_argument(
+        '--condensed',
+        action='store_true',
+        help='Use condensed output format (synonym for --format=condensed)'
+    )
+
     args = parser.parse_args()
+
+    # Determine output format (--condensed flag overrides --format)
+    use_condensed = args.condensed or args.format == 'condensed'
 
     # Validate root directory
     if not os.path.isdir(args.root_dir):
@@ -454,7 +510,7 @@ Examples:
 
     if not using_filters:
         # Use categorized report (for backward compatibility with templates)
-        lines = generate_report(args.root_dir, today)
+        lines = generate_report(args.root_dir, today, use_condensed)
         output = "\n".join(lines)
         print(output)
         return
@@ -497,17 +553,20 @@ Examples:
         return
 
     lines: list[str] = []
+    formatter = format_file_tasks_condensed if use_condensed else format_file_tasks
     for filepath in sorted(tasks_by_file.keys()):
         tasks = tasks_by_file[filepath]
-        file_lines = format_file_tasks(filepath, tasks, args.root_dir)
+        file_lines = formatter(filepath, tasks, args.root_dir)
         lines.extend(file_lines)
-        lines.append("")  # Empty line between files
+        if not use_condensed:
+            lines.append("")  # Empty line between files (standard format only)
 
     # Add summary
     total_tasks = len(filtered_tasks)
     total_files = len(tasks_by_file)
     task_word = "task" if total_tasks == 1 else "tasks"
     file_word = "file" if total_files == 1 else "files"
+    lines.append("")
     lines.append(f"Summary: Found {total_tasks} {task_word} in {total_files} {file_word}")
 
     output = "\n".join(lines)

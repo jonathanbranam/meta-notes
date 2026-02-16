@@ -559,3 +559,212 @@ def test_main_default_directory(capsys, monkeypatch, tmp_path):
         assert "Test task" in captured.out
     finally:
         os.chdir(original_dir)
+
+
+# Tests for format_file_tasks_condensed function
+
+def test_format_file_tasks_condensed_with_tasks(tmp_path):
+    """Test condensed format with tasks."""
+    filepath = str(tmp_path / "test.md")
+    tasks = [
+        Task("- [ ] Task 1", TaskStatus.INCOMPLETE, filepath, 1),
+        Task("  * [ ] Subtask 1.1", TaskStatus.INCOMPLETE, filepath, 2),
+        Task("- [ ] Task 2", TaskStatus.INCOMPLETE, filepath, 3),
+    ]
+
+    lines = find_tasks.format_file_tasks_condensed(filepath, tasks, str(tmp_path))
+
+    assert len(lines) == 4  # wiki-link line + 3 task lines
+    assert lines[0] == "- [[test]]"
+    assert lines[1] == "  - [ ] Task 1"
+    assert lines[2] == "    * [ ] Subtask 1.1"
+    assert lines[3] == "  - [ ] Task 2"
+
+
+def test_format_file_tasks_condensed_empty_list(tmp_path):
+    """Test condensed format with no tasks."""
+    filepath = str(tmp_path / "test.md")
+
+    lines = find_tasks.format_file_tasks_condensed(filepath, [], str(tmp_path))
+
+    assert len(lines) == 0
+
+
+def test_format_file_tasks_condensed_nested_file(tmp_path):
+    """Test condensed format with nested file path."""
+    subdir = tmp_path / "project" / "notes"
+    filepath = str(subdir / "tasks.md")
+    tasks = [
+        Task("- [ ] Task", TaskStatus.INCOMPLETE, filepath, 1),
+    ]
+
+    lines = find_tasks.format_file_tasks_condensed(filepath, tasks, str(tmp_path))
+
+    assert lines[0] == "- [[project/notes/tasks]]"
+    assert lines[1] == "  - [ ] Task"
+
+
+# Tests for format_section with condensed format
+
+def test_format_section_condensed_with_tasks(tmp_path):
+    """Test formatting a section in condensed format."""
+    filepath = str(tmp_path / "test.md")
+    tasks = [
+        Task("- [ ] Task 1", TaskStatus.INCOMPLETE, filepath, 1),
+        Task("- [ ] Task 2", TaskStatus.INCOMPLETE, filepath, 2),
+    ]
+    file_tasks = [(filepath, tasks)]
+
+    lines = find_tasks.format_section('no_date', '# No Date', file_tasks, str(tmp_path), condensed=True)
+
+    assert "# No Date" in lines
+    assert "- [[test]]" in lines
+    assert "  - [ ] Task 1" in lines
+    assert "  - [ ] Task 2" in lines
+    # Should not have extra blank lines between file sections in condensed mode
+    assert lines.count("") == 1  # Only after the header
+
+
+def test_format_section_condensed_multiple_files(tmp_path):
+    """Test formatting condensed section with multiple files."""
+    file1 = str(tmp_path / "test1.md")
+    file2 = str(tmp_path / "test2.md")
+    tasks1 = [Task("- [ ] Task 1", TaskStatus.INCOMPLETE, file1, 1)]
+    tasks2 = [Task("- [ ] Task 2", TaskStatus.INCOMPLETE, file2, 1)]
+    file_tasks = [(file1, tasks1), (file2, tasks2)]
+
+    lines = find_tasks.format_section('no_date', '# No Date', file_tasks, str(tmp_path), condensed=True)
+
+    output = "\n".join(lines)
+    assert "# No Date" in output
+    assert "- [[test1]]" in output
+    assert "- [[test2]]" in output
+    assert "  - [ ] Task 1" in output
+    assert "  - [ ] Task 2" in output
+
+
+# Tests for generate_report with condensed format
+
+def test_generate_report_condensed_format(tmp_path):
+    """Test generating report in condensed format."""
+    today = date(2026, 2, 13)
+    file1 = tmp_path / "tasks.md"
+    file1.write_text("""# Tasks
+- [ ] Incomplete task 1
+- [ ] Incomplete task 2
+""")
+
+    file2 = tmp_path / "notes.md"
+    file2.write_text("""# Notes
+- [ ] Note task
+""")
+
+    lines = find_tasks.generate_report(str(tmp_path), today, condensed=True)
+
+    output = "\n".join(lines)
+    assert "# No Date" in output
+    assert "- [[tasks]]" in output
+    assert "- [[notes]]" in output
+    assert "  - [ ] Incomplete task 1" in output
+    assert "  - [ ] Incomplete task 2" in output
+    assert "  - [ ] Note task" in output
+    assert "## [[" not in output  # Standard format headers should not appear
+
+
+# Tests for main function with condensed format
+
+def test_main_with_condensed_flag(tmp_path, capsys, monkeypatch):
+    """Test main function with --condensed flag."""
+    file1 = tmp_path / "tasks.md"
+    file1.write_text("""# Tasks
+- [ ] Task 1
+- [ ] Task 2
+""")
+
+    monkeypatch.setattr(sys, "argv", ["find_tasks.py", str(tmp_path), "--condensed"])
+
+    find_tasks.main()
+
+    captured = capsys.readouterr()
+    assert "# No Date" in captured.out
+    assert "- [[tasks]]" in captured.out
+    assert "  - [ ] Task 1" in captured.out
+    assert "  - [ ] Task 2" in captured.out
+    assert "## [[" not in captured.out  # Standard format should not appear
+
+
+def test_main_with_format_condensed(tmp_path, capsys, monkeypatch):
+    """Test main function with --format=condensed."""
+    file1 = tmp_path / "tasks.md"
+    file1.write_text("""# Tasks
+- [ ] Task 1
+- [ ] Task 2
+""")
+
+    monkeypatch.setattr(sys, "argv", ["find_tasks.py", str(tmp_path), "--format=condensed"])
+
+    find_tasks.main()
+
+    captured = capsys.readouterr()
+    assert "# No Date" in captured.out
+    assert "- [[tasks]]" in captured.out
+    assert "  - [ ] Task 1" in captured.out
+    assert "  - [ ] Task 2" in captured.out
+
+
+def test_main_with_format_standard(tmp_path, capsys, monkeypatch):
+    """Test main function with --format=standard (explicit)."""
+    file1 = tmp_path / "tasks.md"
+    file1.write_text("""# Tasks
+- [ ] Task 1
+""")
+
+    monkeypatch.setattr(sys, "argv", ["find_tasks.py", str(tmp_path), "--format=standard"])
+
+    find_tasks.main()
+
+    captured = capsys.readouterr()
+    assert "## [[tasks]]" in captured.out  # Standard format
+    assert "- [[" not in captured.out  # Condensed format should not appear
+
+
+def test_main_condensed_flag_overrides_format(tmp_path, capsys, monkeypatch):
+    """Test that --condensed flag overrides --format=standard."""
+    file1 = tmp_path / "tasks.md"
+    file1.write_text("""# Tasks
+- [ ] Task 1
+""")
+
+    monkeypatch.setattr(sys, "argv", ["find_tasks.py", str(tmp_path), "--format=standard", "--condensed"])
+
+    find_tasks.main()
+
+    captured = capsys.readouterr()
+    assert "- [[tasks]]" in captured.out  # Condensed format
+    assert "## [[" not in captured.out  # Standard format should not appear
+
+
+def test_main_condensed_with_filtered_mode(tmp_path, capsys, monkeypatch):
+    """Test condensed format works with filtered mode (--folder)."""
+    subdir = tmp_path / "project"
+    subdir.mkdir()
+    file1 = subdir / "tasks.md"
+    file1.write_text("""# Tasks
+- [ ] Project task
+""")
+
+    other_file = tmp_path / "other.md"
+    other_file.write_text("""# Other
+- [ ] Other task
+""")
+
+    monkeypatch.setattr(sys, "argv", [
+        "find_tasks.py", str(tmp_path), "--folder", "project", "--condensed"
+    ])
+
+    find_tasks.main()
+
+    captured = capsys.readouterr()
+    assert "- [[project/tasks]]" in captured.out
+    assert "  - [ ] Project task" in captured.out
+    assert "Other task" not in captured.out  # Filtered out
