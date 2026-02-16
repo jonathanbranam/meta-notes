@@ -359,7 +359,7 @@ class TimeBlockEntry:
         | Time    | Plan                | Actual              |
         |  8:00am | email #admin        | meeting #mtg        |
         |  8:15am | [break]             | coding #dev         |
-        |  8:30am | ~~off-plan~~        |                     |
+        |  8:30am | ~off-plan~          |                     |
     """
     time_slot: time
     plan: Optional[str] = None
@@ -600,7 +600,7 @@ def is_off_plan(actual_text: Optional[str]) -> bool:
     """
     Check if an actual entry is marked as off-plan.
 
-    Off-plan entries are marked with strikethrough: ~~text~~
+    Off-plan entries are marked with strikethrough: ~text~
 
     Args:
         actual_text: The actual column text.
@@ -611,8 +611,8 @@ def is_off_plan(actual_text: Optional[str]) -> bool:
     if actual_text is None:
         return False
 
-    # Check for strikethrough pattern: ~~text~~
-    return '~~' in actual_text
+    # Check for strikethrough pattern: ~text~
+    return '~' in actual_text
 
 
 def compare_plan_vs_actual(time_blocks: list[TimeBlockEntry]) -> tuple[int, int, int]:
@@ -621,7 +621,7 @@ def compare_plan_vs_actual(time_blocks: list[TimeBlockEntry]) -> tuple[int, int,
 
     Categorizes time blocks as:
     - On-plan: actual matches plan (non-empty actual with same content)
-    - Off-plan: actual is marked with ~~strikethrough~~ or differs from plan
+    - Off-plan: actual is marked with ~strikethrough~ or differs from plan
     - Untracked: no actual entry
 
     Args:

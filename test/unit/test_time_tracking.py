@@ -626,12 +626,12 @@ def test_format_duration_zero():
 
 def test_is_off_plan_with_strikethrough():
     """Test detecting off-plan entry with strikethrough."""
-    assert is_off_plan("~~emergency meeting~~") is True
+    assert is_off_plan("~emergency meeting~") is True
 
 
 def test_is_off_plan_partial_strikethrough():
     """Test detecting off-plan entry with partial strikethrough."""
-    assert is_off_plan("meeting ~~off-plan~~") is True
+    assert is_off_plan("meeting ~off-plan~") is True
 
 
 def test_is_off_plan_no_strikethrough():
@@ -670,7 +670,7 @@ def test_compare_plan_vs_actual_with_off_plan():
     """Test comparison with off-plan entries."""
     blocks = [
         TimeBlockEntry(time(8, 0), "coding #dev", "coding #dev", [], [], "test.md", 1),
-        TimeBlockEntry(time(8, 15), "email #admin", "~~emergency call~~ #mtg", [], [], "test.md", 2),
+        TimeBlockEntry(time(8, 15), "email #admin", "~emergency call~ #mtg", [], [], "test.md", 2),
         TimeBlockEntry(time(8, 30), "meeting #mtg", "different activity", [], [], "test.md", 3),
     ]
 
@@ -763,7 +763,7 @@ def test_calculate_plan_adherence_mixed():
     """Test plan adherence calculation with mixed results."""
     blocks = [
         TimeBlockEntry(time(8, 0), "coding #dev", "coding #dev", [], [], "test.md", 1),
-        TimeBlockEntry(time(8, 15), "email #admin", "~~emergency~~ #mtg", [], [], "test.md", 2),
+        TimeBlockEntry(time(8, 15), "email #admin", "~emergency~ #mtg", [], [], "test.md", 2),
         TimeBlockEntry(time(8, 30), "meeting #mtg", None, [], [], "test.md", 3),
         TimeBlockEntry(time(8, 45), "review #dev", "different task", [], [], "test.md", 4),
     ]

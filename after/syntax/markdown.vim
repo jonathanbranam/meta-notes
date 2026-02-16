@@ -36,8 +36,8 @@ syntax match metaNotesBreak /\[break\]/
 syntax match metaNotesBreak /\[lunch\]/
 syntax match metaNotesBreak /\[[^\]]*break[^\]]*\]/
 
-" Off-plan entries with strikethrough: ~~text~~
-syntax region metaNotesOffPlan start=/\~\~/ end=/\~\~/
+" Off-plan entries with strikethrough: ~text~
+syntax region metaNotesOffPlan start=/\~/ end=/\~/
 
 " Time entries in time log: HH:MM am/pm
 syntax match metaNotesTime /\d\{1,2}:\d\{2}\s*\(am\|pm\)/
