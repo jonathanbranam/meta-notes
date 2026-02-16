@@ -20,9 +20,6 @@ from time_tracking import (
     categorize_tag,
     parse_tags_from_text,
     _parse_time,
-    _extract_tags_from_parentheses,
-    _parse_arrived_entry,
-    _parse_activity_entry,
     _parse_time_block_row,
     find_time_log_entries,
     find_time_block_entries,
@@ -160,128 +157,6 @@ def test_parse_tags_from_text_with_hyphens():
 
 
 # Tests for _extract_tags_from_parentheses function
-
-def test_extract_tags_from_parentheses_single_tag():
-    """Test extracting a single tag from parentheses."""
-    result = _extract_tags_from_parentheses("activity (#admin)")
-    assert len(result) == 1
-    assert result[0].text == "#admin"
-    assert result[0].tag_type == TagType.SPECIAL
-
-
-def test_extract_tags_from_parentheses_multiple_tags():
-    """Test extracting multiple tags from parentheses."""
-    result = _extract_tags_from_parentheses("activity (#admin, #communication)")
-    assert len(result) == 2
-    assert result[0].text == "#admin"
-    assert result[1].text == "#communication"
-
-
-def test_extract_tags_from_parentheses_with_extra_whitespace():
-    """Test extracting tags with extra whitespace."""
-    result = _extract_tags_from_parentheses("activity (#admin,  #dev,#team)")
-    assert len(result) == 3
-    assert result[0].text == "#admin"
-    assert result[1].text == "#dev"
-    assert result[2].text == "#team"
-
-
-def test_extract_tags_from_parentheses_no_tags():
-    """Test extracting tags when none in parentheses."""
-    result = _extract_tags_from_parentheses("activity without tags")
-    assert len(result) == 0
-
-
-# Tests for _parse_arrived_entry function
-
-def test_parse_arrived_entry_with_time():
-    """Test parsing arrived entry with time."""
-    entry = _parse_arrived_entry("- arrived: 8:00 am", "test.md", 1)
-
-    assert entry is not None
-    assert entry.entry_type == EntryType.ARRIVED
-    assert entry.start_time == time(8, 0)
-    assert entry.filename == "test.md"
-    assert entry.line_no == 1
-
-
-def test_parse_arrived_entry_without_time():
-    """Test parsing arrived entry without time."""
-    entry = _parse_arrived_entry("- arrived:", "test.md", 1)
-
-    assert entry is not None
-    assert entry.entry_type == EntryType.ARRIVED
-    assert entry.start_time is None
-
-
-def test_parse_arrived_entry_with_whitespace():
-    """Test parsing arrived entry with extra whitespace."""
-    entry = _parse_arrived_entry("  - arrived:  8:30 am  ", "test.md", 1)
-
-    assert entry is not None
-    assert entry.entry_type == EntryType.ARRIVED
-    assert entry.start_time == time(8, 30)
-
-
-def test_parse_arrived_entry_not_arrived():
-    """Test that non-arrived entries return None."""
-    entry = _parse_arrived_entry("- regular task", "test.md", 1)
-    assert entry is None
-
-
-# Tests for _parse_activity_entry function
-
-def test_parse_activity_entry_with_tags_and_times():
-    """Test parsing activity entry with tags and time range."""
-    line = "- email review (#admin, #communication) 8:15 am - 8:45 am"
-    entry = _parse_activity_entry(line, "test.md", 1)
-
-    assert entry is not None
-    assert entry.entry_type == EntryType.ACTIVITY
-    assert entry.activity == "email review"
-    assert len(entry.tags) == 2
-    assert entry.tags[0].text == "#admin"
-    assert entry.tags[1].text == "#communication"
-    assert entry.start_time == time(8, 15)
-    assert entry.end_time == time(8, 45)
-
-
-def test_parse_activity_entry_no_tags():
-    """Test parsing activity entry without tags."""
-    line = "- standup meeting 9:00 am - 9:30 am"
-    entry = _parse_activity_entry(line, "test.md", 1)
-
-    assert entry is not None
-    assert entry.activity == "standup meeting"
-    assert len(entry.tags) == 0
-    assert entry.start_time == time(9, 0)
-    assert entry.end_time == time(9, 30)
-
-
-def test_parse_activity_entry_no_times():
-    """Test parsing activity entry without times."""
-    line = "- lunch break (#pers)"
-    entry = _parse_activity_entry(line, "test.md", 1)
-
-    assert entry is not None
-    assert entry.activity == "lunch break"
-    assert len(entry.tags) == 1
-    assert entry.tags[0].text == "#pers"
-    assert entry.start_time is None
-    assert entry.end_time is None
-
-
-def test_parse_activity_entry_only_activity_text():
-    """Test parsing activity entry with only activity text."""
-    line = "- working on project"
-    entry = _parse_activity_entry(line, "test.md", 1)
-
-    assert entry is not None
-    assert entry.activity == "working on project"
-    assert len(entry.tags) == 0
-    assert entry.start_time is None
-    assert entry.end_time is None
-
 
 # Tests for find_time_log_entries function
 
