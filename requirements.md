@@ -230,15 +230,15 @@ All date formatting uses Python strftime format specifiers.
 ### Example Template
 
 ```markdown
-# Daily Note - {{date:%A, %B %d, %Y}}
+# Daily Note - {{date}}
 
 Week Plan: [[resource/plan/week/Plan {{week_start}}]]
 
 ## Tasks Due Today
-{{% python scripts/find_tasks.py --due-on {{date}} --status incomplete %}}
+{{% python scripts/find_tasks.py --due-on {{date:%Y-%m-%d}} --status incomplete --condensed %}}
 
 ## Overdue Tasks
-{{% python scripts/find_tasks.py --due-by {{date-1}} --status incomplete %}}
+{{% python scripts/find_tasks.py --due-by {{date-1:%Y-%m-%d}} --status incomplete --condensed %}}
 
 ## Notes
 
