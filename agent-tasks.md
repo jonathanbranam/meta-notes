@@ -45,6 +45,21 @@ bd version
 
 You should see output like: `bd version 0.49.6`
 
+## 🚨 SESSION CLOSE PROTOCOL 🚨
+
+**CRITICAL**: Before saying "done" or "complete", you MUST run this checklist:
+
+```
+[ ] 1. git status              (check what changed)
+[ ] 2. git add <files>         (stage code changes)
+[ ] 3. bd sync                 (commit beads changes)
+[ ] 4. git commit -m "..."     (commit code)
+[ ] 5. bd sync                 (commit any new beads changes)
+[ ] 6. git push                (push to remote)
+```
+
+**NEVER skip this.** Work is not done until pushed.
+
 ## Project Setup
 
 ### Initialize Beads in Repository
@@ -103,9 +118,14 @@ bd prime
 
 ### Viewing Tasks
 
-**List all tasks:**
+**List all open tasks:**
 ```bash
-bd list
+bd list --status=open
+```
+
+**List tasks in progress:**
+```bash
+bd list --status=in_progress
 ```
 
 **List ready tasks (unblocked):**
@@ -113,9 +133,9 @@ bd list
 bd ready
 ```
 
-**Search tasks:**
+**Show blocked issues:**
 ```bash
-bd q "search term"
+bd blocked
 ```
 
 **View specific task:**
@@ -127,30 +147,56 @@ bd show <task-id>
 
 **Create a single task:**
 ```bash
-bd add "Task description"
+bd create --title="Task description" --type=task --priority=2
 ```
 
-**Create task with metadata:**
+**Create task with other types:**
 ```bash
-bd add "Task description" --priority P2 --type task --epic epic-id
+bd create --title="Fix bug" --type=bug --priority=0
+bd create --title="New feature" --type=feature --priority=2
 ```
+
+**Note on priority:** Use 0-4 or P0-P4 (0=critical, 2=medium, 4=backlog). NOT "high"/"medium"/"low".
 
 ### Updating Tasks
 
-**Mark task as started:**
+**Mark task as in-progress:**
 ```bash
-bd start <task-id>
+bd update <task-id> --status=in_progress
+```
+
+**Assign task:**
+```bash
+bd update <task-id> --assignee=username
+```
+
+**Update task fields:**
+```bash
+bd update <task-id> --title="New title"
+bd update <task-id> --description="New description"
 ```
 
 **Mark task as done:**
 ```bash
-bd done <task-id>
+bd close <task-id>
+```
+
+**Close multiple tasks at once (more efficient):**
+```bash
+bd close <task-id1> <task-id2> <task-id3>
+```
+
+**Close with reason:**
+```bash
+bd close <task-id> --reason="explanation"
 ```
 
 **Add dependencies:**
 ```bash
-bd block <blocker-id> <blocked-id>
+bd dep add <issue-id> <depends-on-id>
 ```
+
+Note: This means `<issue-id>` depends on `<depends-on-id>` (i.e., `<depends-on-id>` blocks `<issue-id>`)
 
 ### Syncing Changes
 
@@ -163,6 +209,11 @@ This command:
 1. Exports the SQLite database to JSONL files
 2. Ensures all changes are persisted to git-tracked files
 3. Resolves any conflicts between database and JSONL
+
+**Check sync status without syncing:**
+```bash
+bd sync --status
+```
 
 ## Workflow Integration
 
@@ -177,17 +228,20 @@ bd prime
 # View what to work on
 bd ready
 
-# Start a task
-bd start <task-id>
+# Review issue details
+bd show <issue-id>
+
+# Claim a task
+bd update <issue-id> --status=in_progress
 
 # Create new tasks as needed
-bd add "New task discovered during work"
+bd create --title="New task discovered during work" --type=task --priority=2
 ```
 
 ### 3. Session End
 ```bash
-# Mark completed tasks
-bd done <task-id>
+# Mark completed tasks (can close multiple at once)
+bd close <issue-id1> <issue-id2> <issue-id3>
 
 # Sync before committing
 bd sync
@@ -198,32 +252,52 @@ git commit -m "Update beads - completed X tasks"
 git push
 ```
 
+### Creating Dependent Work
+```bash
+# Create parent feature
+bd create --title="Implement feature X" --type=feature --priority=2
+
+# Create dependent task
+bd create --title="Write tests for X" --type=task --priority=2
+
+# Add dependency (tests depend on feature)
+bd dep add <test-task-id> <feature-id>
+```
+
 ## Common Commands Reference
 
 | Command | Description |
 |---------|-------------|
-| `bd list` | List all tasks |
+| `bd list --status=open` | List all open tasks |
+| `bd list --status=in_progress` | List tasks in progress |
 | `bd ready` | List unblocked tasks ready to work on |
-| `bd q <query>` | Search tasks by keyword |
-| `bd show <id>` | Show task details |
-| `bd add <desc>` | Create new task |
-| `bd start <id>` | Mark task as in-progress |
-| `bd done <id>` | Mark task as completed |
-| `bd block <blocker> <blocked>` | Add dependency |
+| `bd blocked` | Show all blocked issues |
+| `bd show <id>` | Show task details with dependencies |
+| `bd create --title="..." --type=task --priority=2` | Create new task |
+| `bd update <id> --status=in_progress` | Mark task as in-progress |
+| `bd update <id> --assignee=username` | Assign task to someone |
+| `bd close <id>` | Mark task as completed |
+| `bd close <id1> <id2> ...` | Close multiple tasks at once |
+| `bd dep add <issue> <depends-on>` | Add dependency (issue depends on depends-on) |
 | `bd sync` | Sync database to JSONL files |
 | `bd prime` | Load context for AI session |
-| `bd status` | Show repository status |
-| `bd help` | Show all available commands |
+| `bd stats` | Project statistics (open/closed/blocked counts) |
+| `bd doctor` | Check for issues (sync problems, missing hooks) |
 
 ## Best Practices
 
-1. **Always sync before pushing**: Run `bd sync` before committing changes
-2. **Use meaningful descriptions**: Make task descriptions clear and actionable
-3. **Track dependencies**: Use `bd block` to model task relationships
-4. **Update status regularly**: Mark tasks as started/done to keep state accurate
-5. **Commit task changes**: The `.beads/` directory should be tracked in git
-6. **Let hooks work**: The SessionStart hook automatically primes context
-7. **Use no-db mode for ephemeral environments**: Enable `no-db: true` in config.yaml for containerized or web-based environments to avoid SQLite WAL issues
+1. **Use beads for ALL task tracking**: Use `bd create`, `bd ready`, `bd close` - do NOT use TodoWrite, TaskCreate, or markdown files for task tracking
+2. **Create beads issue BEFORE writing code**: Mark in-progress when starting with `bd update <id> --status=in_progress`
+3. **Always sync before pushing**: Run `bd sync` before committing changes
+4. **Use meaningful descriptions**: Make task descriptions clear and actionable
+5. **Track dependencies**: Use `bd dep add` to model task relationships
+6. **Update status regularly**: Mark tasks as in-progress/closed to keep state accurate
+7. **Close multiple tasks efficiently**: Use `bd close <id1> <id2> ...` to close multiple issues at once
+8. **Commit task changes**: The `.beads/` directory should be tracked in git
+9. **Let hooks work**: The SessionStart hook automatically primes context
+10. **Use no-db mode for ephemeral environments**: Enable `no-db: true` in config.yaml for containerized or web-based environments to avoid SQLite WAL issues
+11. **Do NOT use `bd edit`**: It opens $EDITOR (vim/nano) which blocks agents - use `bd update` with inline flags instead
+12. **Use correct priority format**: 0-4 or P0-P4 (0=critical, 2=medium, 4=backlog), NOT "high"/"medium"/"low"
 
 ## Claude Code on the Web
 
