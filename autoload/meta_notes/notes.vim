@@ -76,8 +76,8 @@ function! meta_notes#notes#ExtractDateForTemplate(filepath) abort
     return l:daily_matches[1]
   endif
 
-  " Check for weekly note: plan/week/YY-Q#/YYYY-MM-DD.md
-  let l:weekly_pattern = '\vplan/week/\d{2}-Q\d/(\d{4}-\d{2}-\d{2})\.md$'
+  " Check for weekly note: plan/week/YY-Q#/YYYY-MM-DD.md or YYYY-MM-DD ddd.md
+  let l:weekly_pattern = '\vplan/week/\d{2}-Q\d/(\d{4}-\d{2}-\d{2})(\s+\w{3})?\.md$'
   let l:weekly_matches = matchlist(a:filepath, l:weekly_pattern)
   if len(l:weekly_matches) > 1
     return l:weekly_matches[1]

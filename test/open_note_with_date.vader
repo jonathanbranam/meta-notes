@@ -62,6 +62,10 @@ Execute (Test ExtractDateForTemplate - weekly note):
   let result = meta_notes#notes#ExtractDateForTemplate('plan/week/26-Q1/2026-02-09.md')
   AssertEqual '2026-02-09', result
 
+Execute (Test ExtractDateForTemplate - weekly note with day abbreviation):
+  let result = meta_notes#notes#ExtractDateForTemplate('plan/week/26-Q1/2026-02-09 Mon.md')
+  AssertEqual '2026-02-09', result
+
 Execute (Test ExtractDateForTemplate - quarterly note Q1):
   let result = meta_notes#notes#ExtractDateForTemplate('plan/quarter/2026-Q1.md')
   AssertEqual '2026-01-01', result
@@ -124,6 +128,27 @@ Execute (Test Open weekly note from link uses correct date):
   let content = join(getline(1, '$'), "\n")
   Assert match(content, '# Week Plan - 2026-02-09 Mon') >= 0
   Assert match(content, 'Week: 2026-02-09') >= 0
+
+Execute (Test Open weekly note with day abbreviation uses correct date):
+  " Create a link to a weekly note with day abbreviation (like in bug report)
+  enew
+  call setline(1, 'Link: [[plan/week/26-Q1/2026-02-02 Mon]]')
+  call cursor(1, 10)
+
+  " Open the note
+  MetaNotesOpen
+
+  " Verify we're in the correct file
+  Assert expand('%') =~ 'plan/week/26-Q1/2026-02-02 Mon.md'
+
+  " Verify the template used the correct date (2026-02-02), not today
+  let content = join(getline(1, '$'), "\n")
+  Assert match(content, '2026-02-02') >= 0
+  " Make sure it's not using today's date
+  let today = strftime('%Y-%m-%d')
+  if today != '2026-02-02'
+    Assert match(content, today) == -1
+  endif
 
 Execute (Test Open quarterly note from link uses correct date):
   " Create a link to a quarterly note
