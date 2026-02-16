@@ -143,6 +143,11 @@ bd blocked
 bd show <task-id>
 ```
 
+**List children of an epic:**
+```bash
+bd children <epic-id>
+```
+
 ### Creating Tasks
 
 **Create a single task:**
@@ -157,6 +162,28 @@ bd create --title="New feature" --type=feature --priority=2
 ```
 
 **Note on priority:** Use 0-4 or P0-P4 (0=critical, 2=medium, 4=backlog). NOT "high"/"medium"/"low".
+
+### Creating Epics and Child Issues
+
+**Create a parent epic:**
+```bash
+bd create --title="Epic name" --type=epic -d "Long description" --priority=2
+```
+
+**Create child issues of the epic:**
+```bash
+bd create --title="Child task" --type=task -d "Long description" --parent=<epic-id> --priority=2
+bd create --title="Child feature" --type=feature -d "Long description" --parent=<epic-id> --priority=2
+bd create --title="Child bug fix" --type=bug -d "Long description" --parent=<epic-id> --priority=1
+```
+
+**View epic and its children:**
+```bash
+bd show <epic-id>           # Shows the epic and all child issues
+bd children <epic-id>       # Lists all child issues
+```
+
+**Note:** Use epics and child issues for organizing related work instead of `bd dep add` for simple parent-child relationships.
 
 ### Updating Tasks
 
@@ -252,17 +279,21 @@ git commit -m "Update beads - completed X tasks"
 git push
 ```
 
-### Creating Dependent Work
+### Organizing Related Work with Epics
 ```bash
-# Create parent feature
-bd create --title="Implement feature X" --type=feature --priority=2
+# Create parent epic
+bd create --title="Feature X Implementation" --type=epic -d "Complete implementation of feature X with tests and documentation" --priority=2
 
-# Create dependent task
-bd create --title="Write tests for X" --type=task --priority=2
+# Create child tasks under the epic
+bd create --title="Implement feature X core" --type=feature -d "Core implementation" --parent=<epic-id> --priority=2
+bd create --title="Write tests for feature X" --type=task -d "Unit and integration tests" --parent=<epic-id> --priority=2
+bd create --title="Document feature X" --type=task -d "User documentation" --parent=<epic-id> --priority=2
 
-# Add dependency (tests depend on feature)
-bd dep add <test-task-id> <feature-id>
+# View all children of the epic
+bd children <epic-id>
 ```
+
+**Note:** For complex dependencies between unrelated tasks, use `bd dep add <issue> <depends-on>`.
 
 ## Common Commands Reference
 
@@ -272,13 +303,16 @@ bd dep add <test-task-id> <feature-id>
 | `bd list --status=in_progress` | List tasks in progress |
 | `bd ready` | List unblocked tasks ready to work on |
 | `bd blocked` | Show all blocked issues |
-| `bd show <id>` | Show task details with dependencies |
+| `bd show <id>` | Show task details with dependencies and children |
 | `bd create --title="..." --type=task --priority=2` | Create new task |
+| `bd create --title="..." --type=epic -d "..." --priority=2` | Create new epic |
+| `bd create --title="..." --type=task --parent=<epic-id>` | Create child task under epic |
+| `bd children <epic-id>` | List all child issues of an epic |
 | `bd update <id> --status=in_progress` | Mark task as in-progress |
 | `bd update <id> --assignee=username` | Assign task to someone |
 | `bd close <id>` | Mark task as completed |
 | `bd close <id1> <id2> ...` | Close multiple tasks at once |
-| `bd dep add <issue> <depends-on>` | Add dependency (issue depends on depends-on) |
+| `bd dep add <issue> <depends-on>` | Add dependency for complex cross-epic dependencies |
 | `bd sync` | Sync database to JSONL files |
 | `bd prime` | Load context for AI session |
 | `bd stats` | Project statistics (open/closed/blocked counts) |
@@ -289,15 +323,16 @@ bd dep add <test-task-id> <feature-id>
 1. **Use beads for ALL task tracking**: Use `bd create`, `bd ready`, `bd close` - do NOT use TodoWrite, TaskCreate, or markdown files for task tracking
 2. **Create beads issue BEFORE writing code**: Mark in-progress when starting with `bd update <id> --status=in_progress`
 3. **Always sync before pushing**: Run `bd sync` before committing changes
-4. **Use meaningful descriptions**: Make task descriptions clear and actionable
-5. **Track dependencies**: Use `bd dep add` to model task relationships
-6. **Update status regularly**: Mark tasks as in-progress/closed to keep state accurate
-7. **Close multiple tasks efficiently**: Use `bd close <id1> <id2> ...` to close multiple issues at once
-8. **Commit task changes**: The `.beads/` directory should be tracked in git
-9. **Let hooks work**: The SessionStart hook automatically primes context
-10. **Use no-db mode for ephemeral environments**: Enable `no-db: true` in config.yaml for containerized or web-based environments to avoid SQLite WAL issues
-11. **Do NOT use `bd edit`**: It opens $EDITOR (vim/nano) which blocks agents - use `bd update` with inline flags instead
-12. **Use correct priority format**: 0-4 or P0-P4 (0=critical, 2=medium, 4=backlog), NOT "high"/"medium"/"low"
+4. **Use meaningful descriptions**: Make task descriptions clear and actionable with `-d "Long description"`
+5. **Organize with epics**: Use `--type=epic` for parent issues and `--parent=<epic-id>` for child tasks - simpler than `bd dep add` for related work
+6. **Track complex dependencies**: Use `bd dep add` only for complex cross-epic dependencies, prefer epics for simple parent-child relationships
+7. **Update status regularly**: Mark tasks as in-progress/closed to keep state accurate
+8. **Close multiple tasks efficiently**: Use `bd close <id1> <id2> ...` to close multiple issues at once
+9. **Commit task changes**: The `.beads/` directory should be tracked in git
+10. **Let hooks work**: The SessionStart hook automatically primes context
+11. **Use no-db mode for ephemeral environments**: Enable `no-db: true` in config.yaml for containerized or web-based environments to avoid SQLite WAL issues
+12. **Do NOT use `bd edit`**: It opens $EDITOR (vim/nano) which blocks agents - use `bd update` with inline flags instead
+13. **Use correct priority format**: 0-4 or P0-P4 (0=critical, 2=medium, 4=backlog), NOT "high"/"medium"/"low"
 
 ## Claude Code on the Web
 
