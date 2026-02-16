@@ -28,6 +28,9 @@ bd list --priority P2
 # Show issue details
 bd show <issue-id>
 
+# Show child issues
+bd children <parent-issue-id>
+
 # Close an issue with a message
 bd close <issue-id> -m "Description of what was done"
 
