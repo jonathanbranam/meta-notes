@@ -44,13 +44,13 @@ function! meta_notes#template#FindTemplate(filepath, ...) abort
 
   " Auto-detect template type based on folder path
   if l:template_type == ''
-    if match(a:filepath, '^resource/daily-notes/') != -1
+    if match(a:filepath, '^plan/daily/') != -1
       let l:template_type = 'daily'
-    elseif match(a:filepath, '^resource/plan/week/') != -1
+    elseif match(a:filepath, '^plan/week/') != -1
       let l:template_type = 'weekly'
-    elseif match(a:filepath, '^resource/plan/quarter/') != -1
+    elseif match(a:filepath, '^plan/quarter/') != -1
       let l:template_type = 'quarterly'
-    elseif match(a:filepath, '^resource/plan/year/') != -1
+    elseif match(a:filepath, '^plan/year/') != -1
       let l:template_type = 'yearly'
     endif
 

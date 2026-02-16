@@ -14,7 +14,7 @@ Execute (MetaNotesInit creates all PARA directories):
 
   " Check resource subdirectories
   Assert isdirectory('resource/template'), 'resource/template/ directory should exist'
-  Assert isdirectory('resource/daily-notes'), 'resource/daily-notes/ directory should exist'
+  Assert isdirectory('resource/plan/daily'), 'resource/plan/daily/ directory should exist'
   Assert isdirectory('resource/plan'), 'resource/plan/ directory should exist'
   Assert isdirectory('resource/plan/week'), 'resource/plan/week/ directory should exist'
   Assert isdirectory('resource/plan/quarter'), 'resource/plan/quarter/ directory should exist'

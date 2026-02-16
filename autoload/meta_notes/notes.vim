@@ -165,18 +165,29 @@ function! meta_notes#notes#CalculateWeekEnd(...) abort
 endfunction
 
 " Open the week plan file for the current week
-" Week plan files are located at: resource/plan/week/Plan YYYY-mm-dd
+" Week plan files are located at: plan/week/YY-QQ/YYYY-mm-dd
 " where the date is the Monday of the current week
 " Args:
 "   date_str: Optional date string in YYYY-mm-dd format (defaults to today)
 " Example:
-"   For any day in the week of Feb 9-15, 2026, opens 'resource/plan/week/Plan 2026-02-09.md'
+"   For any day in the week of Feb 9-15, 2026, opens 'plan/week/26-Q1/2026-02-09.md'
 function! meta_notes#notes#OpenWeekPlan(...) abort
   let l:date_str = a:0 > 0 ? a:1 : strftime('%Y-%m-%d')
   let l:week_start = meta_notes#notes#CalculateWeekStart(l:date_str)
 
+  " Calculate quarter and year components for the folder path
+  let l:timestamp = strptime("%Y-%m-%d", l:week_start)
+  let l:quarter = meta_notes#notes#CalculateQuarter(l:week_start)
+  let l:year_short = strftime('%y', l:timestamp)
+  let l:folder = 'plan/week/' . l:year_short . '-' . l:quarter
+
+  " Create directory if it doesn't exist
+  if !isdirectory(l:folder)
+    call mkdir(l:folder, 'p')
+  endif
+
   " Construct the week plan file path
-  let l:filepath = 'resource/plan/week/Plan ' . l:week_start . '.md'
+  let l:filepath = l:folder . '/' . l:week_start . '.md'
 
   " Check if file exists
   if filereadable(l:filepath)
@@ -226,12 +237,12 @@ function! meta_notes#notes#CalculateQuarter(date_str) abort
 endfunction
 
 " Open the daily note file for today or a specific date
-" Daily note files are located at: resource/daily-notes/YY-QQQ/YYYY-mm-dd ddd.md
+" Daily note files are located at: plan/daily/YY-QQQ/YYYY-mm-dd ddd.md
 " where YY is two-digit year, QQQ is quarter (Q1-Q4), and ddd is three-letter day abbreviation
 " Args:
 "   date_str: Optional date string in YYYY-mm-dd format (defaults to today)
 " Example:
-"   For 2026-02-13 (Thursday), opens 'resource/daily-notes/26-Q1/2026-02-13 Thu.md'
+"   For 2026-02-13 (Thursday), opens 'plan/daily/26-Q1/2026-02-13 Thu.md'
 function! meta_notes#notes#OpenDaily(...) abort
   let l:date_str = a:0 > 0 ? a:1 : strftime('%Y-%m-%d')
 
@@ -244,7 +255,7 @@ function! meta_notes#notes#OpenDaily(...) abort
   let l:day_abbr = strftime('%a', l:timestamp)
 
   " Construct the directory and file path
-  let l:dir = 'resource/daily-notes/' . l:year_short . '-' . l:quarter
+  let l:dir = 'plan/daily/' . l:year_short . '-' . l:quarter
   let l:filename = l:date_str . ' ' . l:day_abbr . '.md'
   let l:filepath = l:dir . '/' . l:filename
 
@@ -278,11 +289,11 @@ function! meta_notes#notes#OpenDaily(...) abort
 endfunction
 
 " Open the quarterly plan file for the current quarter or a specific date
-" Quarterly plan files are located at: resource/plan/quarter/YYYY-QQ.md
+" Quarterly plan files are located at: plan/quarter/YYYY-QQ.md
 " Args:
 "   date_str: Optional date string in YYYY-mm-dd format (defaults to today)
 " Example:
-"   For any day in Q1 2026, opens 'resource/plan/quarter/2026-Q1.md'
+"   For any day in Q1 2026, opens 'plan/quarter/2026-Q1.md'
 function! meta_notes#notes#OpenQuarterPlan(...) abort
   let l:date_str = a:0 > 0 ? a:1 : strftime('%Y-%m-%d')
 
@@ -294,7 +305,7 @@ function! meta_notes#notes#OpenQuarterPlan(...) abort
   let l:year = strftime('%Y', l:timestamp)
 
   " Construct the quarterly plan file path
-  let l:dir = 'resource/plan/quarter'
+  let l:dir = 'plan/quarter'
   let l:filename = l:year . '-' . l:quarter . '.md'
   let l:filepath = l:dir . '/' . l:filename
 
@@ -329,11 +340,11 @@ function! meta_notes#notes#OpenQuarterPlan(...) abort
 endfunction
 
 " Open the yearly plan file for the current year or a specific date
-" Yearly plan files are located at: resource/plan/year/YYYY.md
+" Yearly plan files are located at: plan/year/YYYY.md
 " Args:
 "   date_str: Optional date string in YYYY-mm-dd format (defaults to today)
 " Example:
-"   For any day in 2026, opens 'resource/plan/year/2026.md'
+"   For any day in 2026, opens 'plan/year/2026.md'
 function! meta_notes#notes#OpenYearPlan(...) abort
   let l:date_str = a:0 > 0 ? a:1 : strftime('%Y-%m-%d')
 
@@ -344,7 +355,7 @@ function! meta_notes#notes#OpenYearPlan(...) abort
   let l:year = strftime('%Y', l:timestamp)
 
   " Construct the yearly plan file path
-  let l:dir = 'resource/plan/year'
+  let l:dir = 'plan/year'
   let l:filename = l:year . '.md'
   let l:filepath = l:dir . '/' . l:filename
 
@@ -382,10 +393,10 @@ endfunction
 " Returns:
 "   List of file paths sorted chronologically
 " Example:
-"   ['resource/daily-notes/26-Q1/2026-02-13 Fri.md', 'resource/daily-notes/26-Q1/2026-02-14 Sat.md']
+"   ['plan/daily/26-Q1/2026-02-13 Fri.md', 'plan/daily/26-Q1/2026-02-14 Sat.md']
 function! meta_notes#notes#GetDailyNoteFiles() abort
-  " Find all .md files in resource/daily-notes recursively
-  let l:files = glob('resource/daily-notes/**/*.md', 0, 1)
+  " Find all .md files in plan/daily recursively
+  let l:files = glob('plan/daily/**/*.md', 0, 1)
 
   " Sort files by their full path (which includes date in YYYY-MM-DD format)
   " This naturally sorts chronologically due to the date format
@@ -398,7 +409,7 @@ endfunction
 " Returns:
 "   Date string in YYYY-MM-DD format, or empty string if not a daily note
 " Example:
-"   For 'resource/daily-notes/26-Q1/2026-02-13 Fri.md', returns '2026-02-13'
+"   For 'plan/daily/26-Q1/2026-02-13 Fri.md', returns '2026-02-13'
 function! meta_notes#notes#ExtractDateFromDailyNote(filepath) abort
   " Match pattern: YYYY-MM-DD followed by space and day abbreviation
   let l:pattern = '\v(\d{4}-\d{2}-\d{2})\s+\w{3}\.md$'
@@ -542,11 +553,11 @@ function! meta_notes#notes#Init(...) abort
         \ 'area',
         \ 'resource',
         \ 'resource/template',
-        \ 'resource/daily-notes',
+        \ 'plan/daily',
         \ 'resource/plan',
-        \ 'resource/plan/week',
-        \ 'resource/plan/quarter',
-        \ 'resource/plan/year',
+        \ 'plan/week',
+        \ 'plan/quarter',
+        \ 'plan/year',
         \ 'archive',
         \ 'archive/project',
         \ 'archive/area',
@@ -567,11 +578,11 @@ function! meta_notes#notes#Init(...) abort
   let l:templates = {
         \ 'resource/template/daily.md': [
         \   '---',
-        \   'filename_pattern: "resource/daily-notes/{{date:%y}}-{{date:Q{{((date.month-1)//3)+1}}}}/{{date:%Y-%m-%d %a}}.md"',
+        \   'filename_pattern: "plan/daily/{{date:%y}}-{{date:Q{{((date.month-1)//3)+1}}}}/{{date:%Y-%m-%d %a}}.md"',
         \   '---',
         \   '# Daily Note - {{date}}',
         \   '',
-        \   'Week Plan: [[resource/plan/week/Plan {{week_start}}]]',
+        \   'Week Plan: [[plan/week/{{week_start:%y}}-{{quarter}}/{{week_start}}]]',
         \   '',
         \   '## Tasks Due Today',
         \   '{{% python scripts/find_tasks.py --due-on {{date:%Y-%m-%d}} --status incomplete --condensed %}}',
@@ -637,13 +648,13 @@ function! meta_notes#notes#Init(...) abort
         \ ],
         \ 'resource/template/weekly.md': [
         \   '---',
-        \   'filename_pattern: "resource/plan/week/Plan {{week_start}}.md"',
+        \   'filename_pattern: "plan/week/{{week_start:%y}}-{{quarter}}/{{week_start}}.md"',
         \   '---',
         \   '# Week Plan - {{week_start}}',
         \   '',
         \   '**Week of {{week_start:%B %d}} - {{week_end:%B %d, %Y}}**',
         \   '',
-        \   'Quarterly Plan: [[resource/plan/quarter/{{date:%Y}}-{{quarter}}]]',
+        \   'Quarterly Plan: [[plan/quarter/{{date:%Y}}-{{quarter}}]]',
         \   '',
         \   '## Goals',
         \   '',
@@ -655,11 +666,11 @@ function! meta_notes#notes#Init(...) abort
         \ ],
         \ 'resource/template/quarterly.md': [
         \   '---',
-        \   'filename_pattern: "resource/plan/quarter/{{date:%Y}}-{{quarter}}.md"',
+        \   'filename_pattern: "plan/quarter/{{date:%Y}}-{{quarter}}.md"',
         \   '---',
         \   '# Quarterly Plan - {{date:%Y}} {{quarter}}',
         \   '',
-        \   'Yearly Plan: [[resource/plan/year/{{date:%Y}}]]',
+        \   'Yearly Plan: [[plan/year/{{date:%Y}}]]',
         \   '',
         \   '## Quarter Goals',
         \   '',
@@ -677,7 +688,7 @@ function! meta_notes#notes#Init(...) abort
         \ ],
         \ 'resource/template/yearly.md': [
         \   '---',
-        \   'filename_pattern: "resource/plan/year/{{date:%Y}}.md"',
+        \   'filename_pattern: "plan/year/{{date:%Y}}.md"',
         \   '---',
         \   '# Year Plan - {{date:%Y}}',
         \   '',
@@ -691,19 +702,19 @@ function! meta_notes#notes#Init(...) abort
         \   '',
         \   '### Q1 (Jan-Mar)',
         \   '',
-        \   '[[resource/plan/quarter/{{date:%Y}}-Q1]]',
+        \   '[[plan/quarter/{{date:%Y}}-Q1]]',
         \   '',
         \   '### Q2 (Apr-Jun)',
         \   '',
-        \   '[[resource/plan/quarter/{{date:%Y}}-Q2]]',
+        \   '[[plan/quarter/{{date:%Y}}-Q2]]',
         \   '',
         \   '### Q3 (Jul-Sep)',
         \   '',
-        \   '[[resource/plan/quarter/{{date:%Y}}-Q3]]',
+        \   '[[plan/quarter/{{date:%Y}}-Q3]]',
         \   '',
         \   '### Q4 (Oct-Dec)',
         \   '',
-        \   '[[resource/plan/quarter/{{date:%Y}}-Q4]]',
+        \   '[[plan/quarter/{{date:%Y}}-Q4]]',
         \   '',
         \   '## Review & Reflection',
         \   '',

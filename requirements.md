@@ -39,17 +39,19 @@ Any folder can contain a visible `template.md` file that will be used when creat
 ### File Locations
 
 **Daily Notes:**
-- Path: `resource/daily-notes/YY-QQQ/YYYY-mm-dd ddd.md`
-- Example: `resource/daily-notes/26-Q1/2026-02-13 Thu.md`
+- Path: `resource/plan/daily/YY-QQQ/YYYY-mm-dd ddd.md`
+- Example: `resource/plan/daily/26-Q1/2026-02-13 Thu.md`
 - YY = two-digit year
 - QQQ = quarter (Q1, Q2, Q3, Q4)
 - YYYY-mm-dd = full date
 - ddd = three-letter day abbreviation
 
 **Weekly Plans:**
-- Path: `resource/plan/week/Plan YYYY-mm-dd.md`
+- Path: `resource/plan/week/YY-QQ/YYYY-mm-dd.md`
 - Date is the Monday of the week
-- Example: `resource/plan/week/Plan 2026-02-09.md`
+- YY = two-digit year
+- QQ = quarter (Q1, Q2, Q3, Q4)
+- Example: `resource/plan/week/26-Q1/2026-02-09.md`
 
 **Quarterly Plans:**
 - Path: `resource/plan/quarter/YYYY-QQ.md`
