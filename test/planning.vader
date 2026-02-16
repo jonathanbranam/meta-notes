@@ -1,0 +1,275 @@
+" Tests for planning note functions (daily, weekly, quarterly, yearly)
+
+Execute (Setup - Create temporary test directory):
+  let g:test_dir = tempname()
+  call mkdir(g:test_dir, 'p')
+  execute 'cd' g:test_dir
+  call mkdir('plan/daily/26-Q1', 'p')
+  call mkdir('plan/daily/26-Q3', 'p')
+  call mkdir('plan/week/26-Q1', 'p')
+  call mkdir('plan/quarter', 'p')
+  call mkdir('plan/year', 'p')
+
+" ============================================================================
+" Quarter Calculations
+" ============================================================================
+
+Execute (Test CalculateQuarter - Q1):
+  AssertEqual 'Q1', meta_notes#notes#CalculateQuarter('2026-01-15')
+  AssertEqual 'Q1', meta_notes#notes#CalculateQuarter('2026-02-13')
+  AssertEqual 'Q1', meta_notes#notes#CalculateQuarter('2026-03-31')
+
+Execute (Test CalculateQuarter - Q2):
+  AssertEqual 'Q2', meta_notes#notes#CalculateQuarter('2026-04-01')
+  AssertEqual 'Q2', meta_notes#notes#CalculateQuarter('2026-05-15')
+  AssertEqual 'Q2', meta_notes#notes#CalculateQuarter('2026-06-30')
+
+Execute (Test CalculateQuarter - Q3):
+  AssertEqual 'Q3', meta_notes#notes#CalculateQuarter('2026-07-01')
+  AssertEqual 'Q3', meta_notes#notes#CalculateQuarter('2026-08-15')
+  AssertEqual 'Q3', meta_notes#notes#CalculateQuarter('2026-09-30')
+
+Execute (Test CalculateQuarter - Q4):
+  AssertEqual 'Q4', meta_notes#notes#CalculateQuarter('2026-10-01')
+  AssertEqual 'Q4', meta_notes#notes#CalculateQuarter('2026-11-15')
+  AssertEqual 'Q4', meta_notes#notes#CalculateQuarter('2026-12-31')
+
+" ============================================================================
+" Week Calculations
+" ============================================================================
+
+Execute (Test CalculateWeekStart):
+  AssertEqual '2026-02-09', meta_notes#notes#CalculateWeekStart('2026-02-09')
+  AssertEqual '2026-02-09', meta_notes#notes#CalculateWeekStart('2026-02-10')
+  AssertEqual '2026-02-09', meta_notes#notes#CalculateWeekStart('2026-02-13')
+  AssertEqual '2026-02-09', meta_notes#notes#CalculateWeekStart('2026-02-15')
+
+Execute (Test CalculateWeekEnd):
+  AssertEqual '2026-02-15', meta_notes#notes#CalculateWeekEnd('2026-02-15')
+  AssertEqual '2026-02-15', meta_notes#notes#CalculateWeekEnd('2026-02-09')
+  AssertEqual '2026-02-15', meta_notes#notes#CalculateWeekEnd('2026-02-13')
+  AssertEqual '2026-02-15', meta_notes#notes#CalculateWeekEnd('2026-02-14')
+
+" ============================================================================
+" Daily Notes
+" ============================================================================
+
+Execute (Test OpenDaily creates file with correct path for Q1):
+  call meta_notes#notes#OpenDaily('2026-02-13')
+  AssertEqual 'plan/daily/26-Q1/2026-02-13 Fri.md', expand('%')
+  AssertEqual '# Daily Note - 2026-02-13 Fri', getline(1)
+
+Execute (Test OpenDaily creates file with correct path for Q3):
+  call meta_notes#notes#OpenDaily('2026-07-15')
+  AssertEqual 'plan/daily/26-Q3/2026-07-15 Wed.md', expand('%')
+  AssertEqual '# Daily Note - 2026-07-15 Wed', getline(1)
+
+Execute (Test OpenDaily creates directory if it doesn't exist):
+  call delete('plan/daily/26-Q1', 'rf')
+  Assert !isdirectory('plan/daily/26-Q1')
+  call meta_notes#notes#OpenDaily('2026-02-13')
+  Assert isdirectory('plan/daily/26-Q1')
+
+Execute (Test MetaNotesDaily command with date argument):
+  silent! call delete('plan/daily/26-Q1/2026-02-13 Fri.md')
+  MetaNotesDaily 2026-02-13
+  AssertEqual 'plan/daily/26-Q1/2026-02-13 Fri.md', expand('%')
+  AssertEqual '# Daily Note - 2026-02-13 Fri', getline(1)
+
+Execute (Test OpenDaily opens existing file):
+  execute 'edit! plan/daily/26-Q1/2026-02-13 Fri.md'
+  call setline(1, ['# Existing Daily Note', '', 'This is existing content'])
+  write
+  enew
+  call meta_notes#notes#OpenDaily('2026-02-13')
+  AssertEqual 'plan/daily/26-Q1/2026-02-13 Fri.md', expand('%')
+  AssertEqual '# Existing Daily Note', getline(1)
+  AssertEqual 'This is existing content', getline(3)
+
+" ============================================================================
+" Weekly Plans
+" ============================================================================
+
+Execute (Test OpenWeekPlan creates file with correct path):
+  call meta_notes#notes#OpenWeekPlan('2026-02-13')
+  AssertEqual 'plan/week/26-Q1/2026-02-09.md', expand('%')
+  AssertEqual '# Week Plan - 2026-02-09', getline(1)
+
+Execute (Test MetaNotesWeekPlan command with date argument):
+  MetaNotesWeekPlan 2026-02-13
+  AssertEqual 'plan/week/26-Q1/2026-02-09.md', expand('%')
+  AssertEqual '# Week Plan - 2026-02-09', getline(1)
+
+" ============================================================================
+" Quarterly Plans
+" ============================================================================
+
+Execute (Test OpenQuarterPlan creates file for Q1):
+  call meta_notes#notes#OpenQuarterPlan('2026-02-13')
+  AssertEqual 'plan/quarter/2026-Q1.md', expand('%')
+  AssertEqual '# Quarterly Plan - 2026 Q1', getline(1)
+
+Execute (Test OpenQuarterPlan creates file for Q3):
+  call meta_notes#notes#OpenQuarterPlan('2026-07-15')
+  AssertEqual 'plan/quarter/2026-Q3.md', expand('%')
+  AssertEqual '# Quarterly Plan - 2026 Q3', getline(1)
+
+Execute (Test OpenQuarterPlan creates directory if needed):
+  call delete('plan/quarter', 'rf')
+  Assert !isdirectory('plan/quarter')
+  call meta_notes#notes#OpenQuarterPlan('2026-02-13')
+  Assert isdirectory('plan/quarter')
+
+Execute (Test MetaNotesQuarterPlan command):
+  MetaNotesQuarterPlan 2026-02-13
+  AssertEqual 'plan/quarter/2026-Q1.md', expand('%')
+  AssertEqual '# Quarterly Plan - 2026 Q1', getline(1)
+
+Execute (Test OpenQuarterPlan opens existing file):
+  execute 'edit! plan/quarter/2026-Q1.md'
+  call setline(1, ['# Existing Quarterly Plan', '', 'This is existing content'])
+  write
+  enew
+  call meta_notes#notes#OpenQuarterPlan('2026-02-13')
+  AssertEqual 'plan/quarter/2026-Q1.md', expand('%')
+  AssertEqual '# Existing Quarterly Plan', getline(1)
+  AssertEqual 'This is existing content', getline(3)
+
+" ============================================================================
+" Yearly Plans
+" ============================================================================
+
+Execute (Test OpenYearPlan creates file for 2026):
+  call meta_notes#notes#OpenYearPlan('2026-02-13')
+  AssertEqual 'plan/year/2026.md', expand('%')
+  AssertEqual '# Year Plan - 2026', getline(1)
+
+Execute (Test OpenYearPlan creates file for 2025):
+  call meta_notes#notes#OpenYearPlan('2025-06-15')
+  AssertEqual 'plan/year/2025.md', expand('%')
+  AssertEqual '# Year Plan - 2025', getline(1)
+
+Execute (Test OpenYearPlan creates directory if needed):
+  call delete('plan/year', 'rf')
+  Assert !isdirectory('plan/year')
+  call meta_notes#notes#OpenYearPlan('2026-02-13')
+  Assert isdirectory('plan/year')
+
+Execute (Test MetaNotesYearPlan command):
+  MetaNotesYearPlan 2026-02-13
+  AssertEqual 'plan/year/2026.md', expand('%')
+  AssertEqual '# Year Plan - 2026', getline(1)
+
+Execute (Test OpenYearPlan opens existing file):
+  execute 'edit! plan/year/2026.md'
+  call setline(1, ['# Existing Year Plan', '', 'This is existing content'])
+  write
+  enew
+  call meta_notes#notes#OpenYearPlan('2026-02-13')
+  AssertEqual 'plan/year/2026.md', expand('%')
+  AssertEqual '# Existing Year Plan', getline(1)
+  AssertEqual 'This is existing content', getline(3)
+
+" ============================================================================
+" Daily Note Navigation
+" ============================================================================
+
+Execute (Setup navigation - Create test daily notes):
+  call writefile(['# Daily Note - 2026-02-10 Mon', '', 'Content for Feb 10'],
+        \ 'plan/daily/26-Q1/2026-02-10 Mon.md')
+  call writefile(['# Daily Note - 2026-02-12 Wed', '', 'Content for Feb 12'],
+        \ 'plan/daily/26-Q1/2026-02-12 Wed.md')
+  call writefile(['# Daily Note - 2026-02-14 Fri', '', 'Content for Feb 14'],
+        \ 'plan/daily/26-Q1/2026-02-14 Fri.md')
+
+Execute (Test GetDailyNoteFiles returns sorted list):
+  let files = meta_notes#notes#GetDailyNoteFiles()
+  Assert len(files) >= 3
+  " Should be sorted chronologically
+  let daily_files = filter(copy(files), 'v:val =~ "2026-02-1[024]"')
+  Assert daily_files[0] =~ '2026-02-10'
+  Assert daily_files[1] =~ '2026-02-12'
+  Assert daily_files[2] =~ '2026-02-14'
+
+Execute (Test ExtractDateFromDailyNote):
+  AssertEqual '2026-02-10', meta_notes#notes#ExtractDateFromDailyNote('plan/daily/26-Q1/2026-02-10 Mon.md')
+  AssertEqual '2026-02-14', meta_notes#notes#ExtractDateFromDailyNote('plan/daily/26-Q1/2026-02-14 Fri.md')
+  AssertEqual '', meta_notes#notes#ExtractDateFromDailyNote('plan/week/26-Q1/2026-02-09.md')
+
+Execute (Test DailyPrev from middle note):
+  execute 'edit! plan/daily/26-Q1/2026-02-12 Wed.md'
+  call meta_notes#notes#DailyPrev()
+  Assert expand('%') =~ '2026-02-10 Mon.md'
+  bwipeout!
+
+Execute (Test DailyNext from middle note):
+  execute 'edit! plan/daily/26-Q1/2026-02-12 Wed.md'
+  call meta_notes#notes#DailyNext()
+  Assert expand('%') =~ '2026-02-14 Fri.md'
+  bwipeout!
+
+Execute (Test DailyPrev from oldest note prompts and creates):
+  execute 'edit! plan/daily/26-Q1/2026-02-10 Mon.md'
+  call feedkeys("y\<CR>", 't')
+  call meta_notes#notes#DailyPrev()
+  Assert expand('%') =~ '2026-02-09'
+  bwipeout!
+
+Execute (Test DailyPrev from non-daily note shows error):
+  enew
+  let v:errmsg = ''
+  silent! call meta_notes#notes#DailyPrev()
+  Assert v:errmsg =~ 'not a daily note'
+  bwipeout!
+
+Execute (Test DailyNext from non-daily note shows error):
+  enew
+  let v:errmsg = ''
+  silent! call meta_notes#notes#DailyNext()
+  Assert v:errmsg =~ 'not a daily note'
+  bwipeout!
+
+Execute (Test MetaNotesDailyPrev command):
+  execute 'edit! plan/daily/26-Q1/2026-02-12 Wed.md'
+  MetaNotesDailyPrev
+  Assert expand('%') =~ '2026-02-10 Mon.md'
+  bwipeout!
+
+Execute (Test MetaNotesDailyNext command):
+  execute 'edit! plan/daily/26-Q1/2026-02-12 Wed.md'
+  MetaNotesDailyNext
+  Assert expand('%') =~ '2026-02-14 Fri.md'
+  bwipeout!
+
+Execute (Test navigation skips missing dates):
+  " Clean slate - remove the 2026-02-09 file created earlier
+  silent! call delete('plan/daily/26-Q1/2026-02-09 Sun.md')
+  execute 'edit! plan/daily/26-Q1/2026-02-10 Mon.md'
+  call meta_notes#notes#DailyNext()
+  Assert expand('%') =~ '2026-02-12 Wed.md'
+  call meta_notes#notes#DailyNext()
+  Assert expand('%') =~ '2026-02-14 Fri.md'
+  call meta_notes#notes#DailyPrev()
+  Assert expand('%') =~ '2026-02-12 Wed.md'
+  call meta_notes#notes#DailyPrev()
+  Assert expand('%') =~ '2026-02-10 Mon.md'
+
+Execute (Test JumpToWeek from daily note):
+  execute 'edit! plan/daily/26-Q1/2026-02-12 Wed.md'
+  call meta_notes#notes#JumpToWeek()
+  Assert expand('%') =~ 'plan/week/26-Q1/2026-02-09.md'
+
+Execute (Test JumpToWeek from non-daily note shows error):
+  enew
+  let v:errmsg = ''
+  silent! call meta_notes#notes#JumpToWeek()
+  Assert v:errmsg =~ 'not a daily note'
+
+Execute (Test MetaNotesJumpToWeek command):
+  execute 'edit! plan/daily/26-Q1/2026-02-14 Fri.md'
+  MetaNotesJumpToWeek
+  Assert expand('%') =~ 'plan/week/26-Q1/2026-02-09.md'
+
+Execute (Cleanup - Remove temporary test directory):
+  execute 'cd -'
+  call delete(g:test_dir, 'rf')

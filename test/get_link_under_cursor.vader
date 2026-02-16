@@ -1,128 +1,65 @@
 " Tests for meta_notes#notes#GetLinkUnderCursor function
-" Tests link detection independent of file opening
 
 Execute (Load plugin):
-  " Ensure plugin is loaded
   runtime plugin/meta_notes.vim
 
-Given markdown (Single link with trailing text):
+Given markdown (Single link):
   See related: [[note/path/Filename]] here
 
-Execute (Detect link with cursor inside filename):
-  " Position cursor inside the filename (col 20)
+Execute (Cursor positions - inside, on delimiters, outside):
+  " Inside link
   call cursor(1, 20)
-
-  let result = meta_notes#notes#GetLinkUnderCursor()
-  AssertEqual 'note/path/Filename', result, 'Should extract filename from link'
-
-Execute (Detect link with cursor on opening brackets):
-  " Position cursor on the opening [[ (col 15)
+  AssertEqual 'note/path/Filename', meta_notes#notes#GetLinkUnderCursor()
+  " On opening brackets
   call cursor(1, 15)
-
-  let result = meta_notes#notes#GetLinkUnderCursor()
-  AssertEqual 'note/path/Filename', result, 'Should extract filename when cursor on [['
-
-Execute (Detect link with cursor on last closing bracket):
-  " Position cursor on last ] (col 35)
+  AssertEqual 'note/path/Filename', meta_notes#notes#GetLinkUnderCursor()
+  " On closing brackets
   call cursor(1, 35)
-
-  let result = meta_notes#notes#GetLinkUnderCursor()
-  AssertEqual 'note/path/Filename', result, 'Should extract filename when cursor on last ]'
-
-Execute (No link when cursor before opening brackets):
-  " Position cursor before [[ (col 10, on the space)
+  AssertEqual 'note/path/Filename', meta_notes#notes#GetLinkUnderCursor()
+  " Before opening
   call cursor(1, 10)
-
-  let result = meta_notes#notes#GetLinkUnderCursor()
-  AssertEqual '', result, 'Should return empty string when cursor before [['
-
-Execute (No link when cursor after closing brackets):
-  " Position cursor after ]] (col 36, on the space after ]])
+  AssertEqual '', meta_notes#notes#GetLinkUnderCursor()
+  " After closing
   call cursor(1, 36)
+  AssertEqual '', meta_notes#notes#GetLinkUnderCursor()
 
-  let result = meta_notes#notes#GetLinkUnderCursor()
-  AssertEqual '', result, 'Should return empty string when cursor after ]]'
-
-Given markdown (Multiple links on same line):
+Given markdown (Multiple links):
   Links: [[first/link]] and [[second/link]] here
 
-Execute (Detect first link when cursor in first):
-  " Position cursor in first link (col 12)
+Execute (Multiple links on same line):
   call cursor(1, 12)
-
-  let result = meta_notes#notes#GetLinkUnderCursor()
-  AssertEqual 'first/link', result, 'Should extract first link'
-
-Execute (Detect second link when cursor in second):
-  " Position cursor in second link (col 32)
+  AssertEqual 'first/link', meta_notes#notes#GetLinkUnderCursor()
   call cursor(1, 32)
-
-  let result = meta_notes#notes#GetLinkUnderCursor()
-  AssertEqual 'second/link', result, 'Should extract second link'
-
-Execute (No link when cursor between two links):
-  " Position cursor in the " and " text between links (col 25)
+  AssertEqual 'second/link', meta_notes#notes#GetLinkUnderCursor()
   call cursor(1, 25)
+  AssertEqual '', meta_notes#notes#GetLinkUnderCursor()
 
-  let result = meta_notes#notes#GetLinkUnderCursor()
-  AssertEqual '', result, 'Should return empty string when cursor between links'
-
-Given markdown (Line without any links):
+Given markdown (No links):
   This is just regular text without any links.
 
-Execute (No link on line without brackets):
-  " Position cursor anywhere on the line (col 10)
+Execute (No link returns empty):
   call cursor(1, 10)
+  AssertEqual '', meta_notes#notes#GetLinkUnderCursor()
 
-  let result = meta_notes#notes#GetLinkUnderCursor()
-  AssertEqual '', result, 'Should return empty string when no links on line'
+Given markdown (Edge cases):
+  [[at-start]] and [[x]] and End [[at-end]]
 
-Given markdown (Link with special characters):
-  See: [[project/feature_v2.1-beta]]
-
-Execute (Detect link with special characters):
-  " Position cursor inside link (col 20)
-  call cursor(1, 20)
-
-  let result = meta_notes#notes#GetLinkUnderCursor()
-  AssertEqual 'project/feature_v2.1-beta', result, 'Should extract link with special chars'
-
-Given markdown (Nested path link):
-  Deep link: [[area/health/fitness/workout-plan]]
-
-Execute (Detect deeply nested path):
-  " Position cursor inside link (col 25)
-  call cursor(1, 25)
-
-  let result = meta_notes#notes#GetLinkUnderCursor()
-  AssertEqual 'area/health/fitness/workout-plan', result, 'Should extract deep nested path'
-
-Given markdown (Link at start of line):
-  [[note-at-start]] of the line
-
-Execute (Detect link at start of line):
-  " Position cursor at start (col 3)
+Execute (Edge cases - position and length):
+  " Link at start
   call cursor(1, 3)
+  AssertEqual 'at-start', meta_notes#notes#GetLinkUnderCursor()
+  " Single character
+  call cursor(1, 20)
+  AssertEqual 'x', meta_notes#notes#GetLinkUnderCursor()
+  " Link at end
+  call cursor(1, 40)
+  AssertEqual 'at-end', meta_notes#notes#GetLinkUnderCursor()
 
-  let result = meta_notes#notes#GetLinkUnderCursor()
-  AssertEqual 'note-at-start', result, 'Should extract link at start of line'
+Given markdown (Special characters and paths):
+  See: [[project/feature_v2.1-beta]] and [[area/health/fitness/workout-plan]]
 
-Given markdown (Link at end of line):
-  End with [[note-at-end]]
-
-Execute (Detect link at end of line):
-  " Position cursor in link (col 15)
-  call cursor(1, 15)
-
-  let result = meta_notes#notes#GetLinkUnderCursor()
-  AssertEqual 'note-at-end', result, 'Should extract link at end of line'
-
-Given markdown (Single character link):
-  Quick: [[x]]
-
-Execute (Detect single character link):
-  " Position cursor in link (col 10)
-  call cursor(1, 10)
-
-  let result = meta_notes#notes#GetLinkUnderCursor()
-  AssertEqual 'x', result, 'Should extract single character link'
+Execute (Special characters and nested paths):
+  call cursor(1, 20)
+  AssertEqual 'project/feature_v2.1-beta', meta_notes#notes#GetLinkUnderCursor()
+  call cursor(1, 55)
+  AssertEqual 'area/health/fitness/workout-plan', meta_notes#notes#GetLinkUnderCursor()

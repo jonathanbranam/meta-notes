@@ -1,0 +1,330 @@
+" Tests for template support (folder-specific, standard templates, and date extraction)
+
+Execute (Setup - Create temporary test directory):
+  let g:test_dir = tempname()
+  call mkdir(g:test_dir, 'p')
+  execute 'cd' g:test_dir
+  call mkdir('project/test-project', 'p')
+  call mkdir('test_folder', 'p')
+  call mkdir('plan/daily/26-Q1', 'p')
+  call mkdir('plan/week/26-Q1', 'p')
+  call mkdir('plan/quarter', 'p')
+  call mkdir('plan/year', 'p')
+  call mkdir('resource/template', 'p')
+
+" ============================================================================
+" FindTemplate Function
+" ============================================================================
+
+Execute (FindTemplate should find folder-specific template.md):
+  call mkdir('test_folder/subfolder', 'p')
+  call writefile(['# Folder Template', ''], 'test_folder/subfolder/template.md')
+  let result = meta_notes#template#FindTemplate('test_folder/subfolder/note.md')
+  AssertEqual 'test_folder/subfolder/template.md', result
+
+Execute (FindTemplate should find standard template when no folder template):
+  call writefile(['# Daily Template'], 'resource/template/daily.md')
+  let result = meta_notes#template#FindTemplate('plan/daily/26-Q1/2026-02-14.md', 'daily')
+  AssertEqual 'resource/template/daily.md', result
+
+Execute (FindTemplate should return empty string when no template found):
+  call mkdir('test_folder/no_template', 'p')
+  let result = meta_notes#template#FindTemplate('test_folder/no_template/note.md')
+  AssertEqual '', result
+
+Execute (FindTemplate should auto-detect daily template from path):
+  let result = meta_notes#template#FindTemplate('plan/daily/26-Q1/2026-02-14.md')
+  AssertEqual 'resource/template/daily.md', result
+
+Execute (FindTemplate should auto-detect weekly template from path):
+  call writefile(['# Weekly Template'], 'resource/template/weekly.md')
+  let result = meta_notes#template#FindTemplate('plan/week/26-Q1/2026-02-09.md')
+  AssertEqual 'resource/template/weekly.md', result
+
+Execute (FindTemplate should auto-detect quarterly template from path):
+  call writefile(['# Quarterly Template'], 'resource/template/quarterly.md')
+  let result = meta_notes#template#FindTemplate('plan/quarter/2026-Q1.md')
+  AssertEqual 'resource/template/quarterly.md', result
+
+Execute (FindTemplate should auto-detect yearly template from path):
+  call writefile(['# Yearly Template'], 'resource/template/yearly.md')
+  let result = meta_notes#template#FindTemplate('plan/year/2026.md')
+  AssertEqual 'resource/template/yearly.md', result
+
+" ============================================================================
+" ProcessVariables Function
+" ============================================================================
+
+Execute (ProcessVariables should replace {{date}} variable):
+  let context = {'date': '2026-02-14', 'today': '2026-02-14'}
+  let result = meta_notes#template#ProcessVariables('Today is {{date}}', context)
+  AssertEqual 'Today is 2026-02-14 Sat', result
+
+Execute (ProcessVariables should handle date formatting):
+  let context = {'date': '2026-02-14'}
+  let result = meta_notes#template#ProcessVariables('{{date:%A, %B %d, %Y}}', context)
+  AssertEqual 'Saturday, February 14, 2026', result
+
+Execute (ProcessVariables should handle date arithmetic):
+  let context = {'today': '2026-02-14'}
+  let result = meta_notes#template#ProcessVariables('Tomorrow: {{today+1:%Y-%m-%d}}', context)
+  AssertEqual 'Tomorrow: 2026-02-15', result
+  let result2 = meta_notes#template#ProcessVariables('Yesterday: {{today-1:%Y-%m-%d}}', context)
+  AssertEqual 'Yesterday: 2026-02-13', result2
+
+Execute (ProcessVariables should handle week variables):
+  let context = {'week_start': '2026-02-09', 'week_end': '2026-02-15'}
+  let result = meta_notes#template#ProcessVariables('Week: {{week_start}} to {{week_end:%Y-%m-%d}}', context)
+  AssertEqual 'Week: 2026-02-09 Mon to 2026-02-15', result
+
+Execute (ProcessVariables should handle quarter variable):
+  let context = {'date': '2026-02-14', 'quarter': 'Q1'}
+  let result = meta_notes#template#ProcessVariables('Quarterly Plan: {{date:%Y}}-{{quarter}}', context)
+  AssertEqual 'Quarterly Plan: 2026-Q1', result
+
+Execute (ProcessVariables should replace undefined variables with error comment):
+  let context = {'date': '2026-02-14'}
+  let result = meta_notes#template#ProcessVariables('Date: {{date}}, Name: {{name}}', context)
+  AssertEqual 'Date: 2026-02-14 Sat, Name: <!-- ERROR: Unknown variable "name" -->', result
+
+Execute (ProcessVariables should replace {{project_name}}):
+  let context = {'filepath': 'project/my-project/subfolder/Note.md'}
+  let result = meta_notes#template#ProcessVariables('Project: {{project_name}}', context)
+  AssertEqual 'Project: my-project', result
+
+Execute (ProcessVariables should handle {{project_name}} when not in project):
+  let context = {'filepath': 'area/health/note.md'}
+  let result = meta_notes#template#ProcessVariables('Project: {{project_name}}', context)
+  AssertEqual 'Project: <!-- Not in project folder -->', result
+
+" ============================================================================
+" ProcessTemplate Function
+" ============================================================================
+
+Execute (ProcessTemplate should skip YAML frontmatter):
+  call writefile([
+    \ '---',
+    \ 'filename_pattern: "test"',
+    \ '---',
+    \ '# Test Template',
+    \ 'Date: {{date}}'
+  \ ], 'test_folder/template_with_frontmatter.md')
+  let context = {'date': '2026-02-14'}
+  let result = meta_notes#template#ProcessTemplate('test_folder/template_with_frontmatter.md', context)
+  AssertEqual 2, len(result)
+  AssertEqual '# Test Template', result[0]
+  AssertEqual 'Date: 2026-02-14 Sat', result[1]
+
+" ============================================================================
+" CreateContext Function
+" ============================================================================
+
+Execute (CreateContext should create context with all required variables):
+  let context = meta_notes#template#CreateContext('2026-02-14', 'test/note.md')
+  Assert has_key(context, 'date')
+  Assert has_key(context, 'today')
+  Assert has_key(context, 'week_start')
+  Assert has_key(context, 'week_end')
+  Assert has_key(context, 'quarter')
+  Assert has_key(context, 'filepath')
+  AssertEqual '2026-02-14', context['date']
+  AssertEqual '2026-02-09', context['week_start']
+  AssertEqual '2026-02-15', context['week_end']
+  AssertEqual 'Q1', context['quarter']
+  AssertEqual 'test/note.md', context['filepath']
+
+Execute (CreateContext should calculate correct quarters):
+  AssertEqual 'Q1', meta_notes#template#CreateContext('2026-01-15', 'test.md')['quarter']
+  AssertEqual 'Q2', meta_notes#template#CreateContext('2026-04-15', 'test.md')['quarter']
+  AssertEqual 'Q3', meta_notes#template#CreateContext('2026-07-15', 'test.md')['quarter']
+  AssertEqual 'Q4', meta_notes#template#CreateContext('2026-10-15', 'test.md')['quarter']
+
+" ============================================================================
+" ExecuteCommand Function
+" ============================================================================
+
+Execute (ExecuteCommand should execute shell commands successfully):
+  let context = {'date': '2026-02-14'}
+  let result = meta_notes#template#ExecuteCommand('{{% shell echo "Hello from shell" %}}', context)
+  AssertEqual "Hello from shell\n", result
+
+Execute (ExecuteCommand should execute python commands successfully):
+  let context = {'date': '2026-02-14'}
+  let result = meta_notes#template#ExecuteCommand('{{% python -c "print(2 + 2)" %}}', context)
+  AssertEqual "4\n", result
+
+Execute (ExecuteCommand should handle shell command failures):
+  let context = {'date': '2026-02-14'}
+  let result = meta_notes#template#ExecuteCommand('{{% shell exit 1 %}}', context)
+  Assert match(result, '^<!-- Command failed:') >= 0
+
+Execute (ExecuteCommand should process variables before executing):
+  let context = {'date': '2026-02-14'}
+  let result = meta_notes#template#ExecuteCommand('{{% shell echo "{{date}}" %}}', context)
+  AssertEqual "2026-02-14 Sat\n", result
+
+Execute (ExecuteCommand should handle unknown command types):
+  let context = {'date': '2026-02-14'}
+  let result = meta_notes#template#ExecuteCommand('{{% unknown some command %}}', context)
+  Assert match(result, 'Unknown command type') >= 0
+
+Execute (ProcessTemplate should execute shell commands end-to-end):
+  call writefile([
+    \ '# Tasks for {{date}}',
+    \ '',
+    \ '{{% shell echo "- Task from shell" %}}',
+    \ '',
+    \ 'End'
+  \ ], 'test_folder/template_with_shell_cmd.md')
+  let context = {'date': '2026-02-14'}
+  let result = meta_notes#template#ProcessTemplate('test_folder/template_with_shell_cmd.md', context)
+  AssertEqual '# Tasks for 2026-02-14 Sat', result[0]
+  AssertEqual '- Task from shell', result[2]
+  AssertEqual 'End', result[5]
+
+" ============================================================================
+" MetaNotesOpen with Folder Templates
+" ============================================================================
+
+Execute (MetaNotesOpen uses folder-specific template.md):
+  call writefile([
+    \ '# Project: {{project_name}}',
+    \ '',
+    \ '## Goal',
+    \ '',
+    \ '## Tasks'
+  \ ], 'project/test-project/template.md')
+  edit test.md
+  call setline(1, 'See [[project/test-project/Home]]')
+  call cursor(1, 10)
+  MetaNotesOpen
+  Assert expand('%') == 'project/test-project/Home.md'
+  Assert getline(1) == '# Project: test-project'
+  Assert getline(3) == '## Goal'
+
+Execute (MetaNotesOpen uses simple header when no template.md exists):
+  edit test.md
+  call setline(1, 'See [[project/another-note]]')
+  call cursor(1, 10)
+  MetaNotesOpen
+  Assert expand('%') == 'project/another-note.md'
+  AssertEqual '# project/another-note', getline(1)
+
+Execute (MetaNotesOpen opens existing file without applying template):
+  call writefile(['# Existing Note', '', 'Some content'], 'project/existing-note.md')
+  edit test.md
+  call setline(1, 'See [[project/existing-note]]')
+  call cursor(1, 10)
+  MetaNotesOpen
+  Assert expand('%') == 'project/existing-note.md'
+  AssertEqual '# Existing Note', getline(1)
+  AssertEqual 'Some content', getline(3)
+
+Execute (MetaNotesOpen uses template from immediate parent directory):
+  call mkdir('project/big-project/submodule', 'p')
+  call writefile(['# Submodule Note', '', '## Details'], 'project/big-project/submodule/template.md')
+  call writefile(['# Project Note', '', '## Overview'], 'project/big-project/template.md')
+  edit test.md
+  call setline(1, 'See [[project/big-project/submodule/feature-x]]')
+  call cursor(1, 10)
+  MetaNotesOpen
+  Assert expand('%') == 'project/big-project/submodule/feature-x.md'
+  AssertEqual '# Submodule Note', getline(1)
+  AssertEqual '## Details', getline(3)
+
+" ============================================================================
+" Date Extraction for Templates
+" ============================================================================
+
+Execute (Setup templates for date extraction tests):
+  call writefile([
+    \ '---',
+    \ 'filename_pattern: "plan/daily/{{date:%y}}-Q{{((date.month-1)//3)+1}}/{{date:%Y-%m-%d %a}}.md"',
+    \ '---',
+    \ '# Daily Note - {{date}}',
+    \ '',
+    \ 'Date: {{date:%Y-%m-%d}}',
+    \ 'Week Start: {{week_start}}',
+    \ 'Quarter: {{quarter}}'
+  \ ], 'resource/template/daily.md')
+  call writefile([
+    \ '---',
+    \ 'filename_pattern: "plan/week/{{week_start:%y}}-{{quarter}}/{{week_start}}.md"',
+    \ '---',
+    \ '# Week Plan - {{week_start}}',
+    \ '',
+    \ 'Week: {{week_start}} to {{week_end}}'
+  \ ], 'resource/template/weekly.md')
+  call writefile([
+    \ '---',
+    \ 'filename_pattern: "plan/quarter/{{date:%Y}}-{{quarter}}.md"',
+    \ '---',
+    \ '# Quarterly Plan - {{date:%Y}} {{quarter}}'
+  \ ], 'resource/template/quarterly.md')
+  call writefile([
+    \ '---',
+    \ 'filename_pattern: "plan/year/{{date:%Y}}.md"',
+    \ '---',
+    \ '# Year Plan - {{date:%Y}}'
+  \ ], 'resource/template/yearly.md')
+
+Execute (Test ExtractDateForTemplate - daily note):
+  AssertEqual '2026-02-13', meta_notes#notes#ExtractDateForTemplate('plan/daily/26-Q1/2026-02-13 Thu.md')
+
+Execute (Test ExtractDateForTemplate - weekly note):
+  AssertEqual '2026-02-09', meta_notes#notes#ExtractDateForTemplate('plan/week/26-Q1/2026-02-09.md')
+
+Execute (Test ExtractDateForTemplate - weekly note with day abbreviation):
+  AssertEqual '2026-02-09', meta_notes#notes#ExtractDateForTemplate('plan/week/26-Q1/2026-02-09 Mon.md')
+
+Execute (Test ExtractDateForTemplate - quarterly notes):
+  AssertEqual '2026-01-01', meta_notes#notes#ExtractDateForTemplate('plan/quarter/2026-Q1.md')
+  AssertEqual '2026-04-01', meta_notes#notes#ExtractDateForTemplate('plan/quarter/2026-Q2.md')
+  AssertEqual '2026-07-01', meta_notes#notes#ExtractDateForTemplate('plan/quarter/2026-Q3.md')
+  AssertEqual '2026-10-01', meta_notes#notes#ExtractDateForTemplate('plan/quarter/2026-Q4.md')
+
+Execute (Test ExtractDateForTemplate - yearly note):
+  AssertEqual '2026-01-01', meta_notes#notes#ExtractDateForTemplate('plan/year/2026.md')
+
+Execute (Test ExtractDateForTemplate - regular note uses today):
+  let result = meta_notes#notes#ExtractDateForTemplate('project/my-project/note.md')
+  AssertEqual strftime('%Y-%m-%d'), result
+
+Execute (Test Open daily note from link uses correct date):
+  call setline(1, 'Link: [[plan/daily/26-Q1/2026-02-13 Thu]]')
+  call cursor(1, 10)
+  MetaNotesOpen
+  Assert expand('%') =~ 'plan/daily/26-Q1/2026-02-13 Thu.md'
+  let content = join(getline(1, '$'), "\n")
+  Assert match(content, '2026-02-13') >= 0
+
+Execute (Test Open weekly note with day abbreviation uses correct date):
+  enew
+  call setline(1, 'Link: [[plan/week/26-Q1/2026-02-02 Mon]]')
+  call cursor(1, 10)
+  MetaNotesOpen
+  Assert expand('%') =~ 'plan/week/26-Q1/2026-02-02 Mon.md'
+  let content = join(getline(1, '$'), "\n")
+  Assert match(content, '2026-02-02') >= 0
+
+Execute (Test Open quarterly note from link uses correct date):
+  enew
+  call setline(1, 'Link: [[plan/quarter/2026-Q1]]')
+  call cursor(1, 10)
+  MetaNotesOpen
+  Assert expand('%') =~ 'plan/quarter/2026-Q1.md'
+  let content = join(getline(1, '$'), "\n")
+  Assert match(content, '# Quarterly Plan - 2026 Q1') >= 0
+
+Execute (Test Open yearly note from link uses correct date):
+  enew
+  call setline(1, 'Link: [[plan/year/2026]]')
+  call cursor(1, 10)
+  MetaNotesOpen
+  Assert expand('%') =~ 'plan/year/2026.md'
+  let content = join(getline(1, '$'), "\n")
+  Assert match(content, '# Year Plan - 2026') >= 0
+
+Execute (Cleanup - Remove temporary test directory):
+  execute 'cd -'
+  call delete(g:test_dir, 'rf')
