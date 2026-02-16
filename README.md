@@ -7,20 +7,33 @@ operates as a notes, tasks, planning, and organization for my life. It is based
 on the ideas of Tiago Forte's second brain and the PARA folder structure. Some
 of the concepts are borrowed from wikis and Obsidian.
 
-## PARA Folder Structure
+## PPARA Folder Structure
 
-The top level has exactly four folders:
+The system maintains five top-level folders:
 
-- project: holds currently active projects
-- area: holds areas of responsibility
-- resource: holds resources about various topics
-- archive: contains an archive of projects, areas, and resources that are no
-  longer currently relevant
-  * project
-  * area
-  * resource
+- `plan/` - Planning notes (daily, weekly, quarterly, yearly)
+  - `daily/`
+  - `week/`
+  - `quarter/`
+  - `year/`
+- `project/` - Active projects with specific goals and end dates
+- `area/` - Areas of ongoing responsibility
+- `resource/` - Resources and reference materials on various topics
+- `archive/` - Archived items from projects, areas, and resources
+  - `project/`
+  - `area/`
+  - `resource/`
 
-NOTE: The folder names are singular.
+Note: Folder names are singular.
+
+### Plans
+
+This folder contains planning notes for Cal Newport's multi-scale planning.
+Notes are organized into folder by the timescale they are planning for. Daily
+notes contain a daily time block and time log as well as a list of tasks to
+complete for the day. Daily and weekly notes further contain a YY-QQ folder with
+the two digit year and quarter to keep the folders from becoming excessively
+large.
 
 ### Projects
 
@@ -50,27 +63,35 @@ This plugin follows standard vim plugin conventions:
 
 ```
 meta-notes/
-├── plugin/           # Main vim plugin files (auto-loaded by vim)
+├── plugin/              # Main vim plugin files (auto-loaded by vim)
 │   └── meta_notes.vim
-├── autoload/         # Functions loaded on-demand
+├── autoload/            # Functions loaded on-demand
 │   └── meta_notes/
-│       ├── para.vim      # PARA folder operations
-│       ├── notes.vim     # Note management
-│       └── tasks.vim     # Task management
-├── ftplugin/         # Filetype-specific settings
-│   └── markdown.vim
-├── syntax/           # Custom syntax highlighting
-├── scripts/          # Python helper scripts
-│   ├── link_parser.py
-│   ├── task_processor.py
-│   └── para_tools.py
-├── test/             # Vader.vim tests
-│   ├── para.vader
-│   ├── notes.vader
-│   ├── tasks.vader
-│   └── fixtures/     # Test data/files
-├── doc/              # Vim documentation
-│   └── meta-notes.txt
+│       ├── file_ops.vim     # File operations (archive, rename)
+│       ├── notes.vim        # Note management and navigation
+│       ├── template.vim     # Template processing
+│       └── time_tracking.vim # Time tracking functionality
+├── after/               # After-directory for syntax highlighting
+│   └── syntax/
+│       └── markdown.vim
+├── scripts/             # Python helper scripts
+│   ├── find_tasks.py        # Task discovery and filtering
+│   ├── notes.py             # Note utilities
+│   ├── tasks.py             # Task parsing and processing
+│   ├── time_report.py       # Time tracking reports
+│   ├── time_tracking.py     # Time log parsing
+│   └── update_links.py      # Wiki-link updating
+├── test/                # Tests
+│   ├── *.vader              # Vimscript integration tests
+│   ├── unit/                # Python unit tests
+│   │   ├── test_find_tasks.py
+│   │   ├── test_notes.py
+│   │   ├── test_tasks.py
+│   │   ├── test_time_tracking.py
+│   │   └── test_update_links.py
+│   └── fixtures/            # Test data/files
+├── doc/                 # Vim documentation (future)
+├── run_tests.sh         # Test runner script
 └── README.md
 ```
 

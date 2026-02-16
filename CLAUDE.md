@@ -1,4 +1,4 @@
 # Claude
 
-Read @README.me and @AGENTS.md
+Read @README.md and @AGENTS.md
 
