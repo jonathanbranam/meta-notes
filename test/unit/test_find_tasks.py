@@ -669,6 +669,7 @@ def test_generate_report_condensed_format(tmp_path):
     assert "  - [ ] Incomplete task 2" in output
     assert "  - [ ] Note task" in output
     assert "## [[" not in output  # Standard format headers should not appear
+    assert "Summary:" not in output  # Condensed format should not have summary
 
 
 # Tests for main function with condensed format
@@ -691,6 +692,7 @@ def test_main_with_condensed_flag(tmp_path, capsys, monkeypatch):
     assert "  - [ ] Task 1" in captured.out
     assert "  - [ ] Task 2" in captured.out
     assert "## [[" not in captured.out  # Standard format should not appear
+    assert "Summary:" not in captured.out  # Condensed format should not have summary
 
 
 def test_main_with_format_condensed(tmp_path, capsys, monkeypatch):
@@ -710,6 +712,7 @@ def test_main_with_format_condensed(tmp_path, capsys, monkeypatch):
     assert "- [[tasks]]" in captured.out
     assert "  - [ ] Task 1" in captured.out
     assert "  - [ ] Task 2" in captured.out
+    assert "Summary:" not in captured.out  # Condensed format should not have summary
 
 
 def test_main_with_format_standard(tmp_path, capsys, monkeypatch):
@@ -768,3 +771,4 @@ def test_main_condensed_with_filtered_mode(tmp_path, capsys, monkeypatch):
     assert "- [[project/tasks]]" in captured.out
     assert "  - [ ] Project task" in captured.out
     assert "Other task" not in captured.out  # Filtered out
+    assert "Summary:" not in captured.out  # Condensed format should not have summary

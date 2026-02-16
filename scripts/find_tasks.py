@@ -371,12 +371,13 @@ def generate_report(root_dir: str, today: date, condensed: bool = False) -> list
         )
         lines.extend(section_lines)
 
-    # Add summary
-    total_files = sum(len(file_tasks) for file_tasks in categorized_files.values())
-    task_word = "task" if total_tasks == 1 else "tasks"
-    section_word = "file section" if total_files == 1 else "file sections"
-    lines.append("")
-    lines.append(f"Summary: Found {total_tasks} incomplete {task_word} in {total_files} {section_word}")
+    # Add summary (not in condensed format)
+    if not condensed:
+        total_files = sum(len(file_tasks) for file_tasks in categorized_files.values())
+        task_word = "task" if total_tasks == 1 else "tasks"
+        section_word = "file section" if total_files == 1 else "file sections"
+        lines.append("")
+        lines.append(f"Summary: Found {total_tasks} incomplete {task_word} in {total_files} {section_word}")
 
     return lines
 
@@ -561,13 +562,14 @@ Examples:
         if not use_condensed:
             lines.append("")  # Empty line between files (standard format only)
 
-    # Add summary
-    total_tasks = len(filtered_tasks)
-    total_files = len(tasks_by_file)
-    task_word = "task" if total_tasks == 1 else "tasks"
-    file_word = "file" if total_files == 1 else "files"
-    lines.append("")
-    lines.append(f"Summary: Found {total_tasks} {task_word} in {total_files} {file_word}")
+    # Add summary (not in condensed format)
+    if not use_condensed:
+        total_tasks = len(filtered_tasks)
+        total_files = len(tasks_by_file)
+        task_word = "task" if total_tasks == 1 else "tasks"
+        file_word = "file" if total_files == 1 else "files"
+        lines.append("")
+        lines.append(f"Summary: Found {total_tasks} {task_word} in {total_files} {file_word}")
 
     output = "\n".join(lines)
     print(output)
