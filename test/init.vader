@@ -54,6 +54,10 @@ Execute (MetaNotesInit creates daily template with correct content):
   Assert content =~ '### Log', 'Daily template should have Log section'
   Assert content =~ '### Time Block', 'Daily template should have Time Block section'
 
+  " Check for condensed format in task commands
+  Assert content =~ 'find_tasks.py --due-on.*--condensed', 'Tasks Due Today should use condensed format'
+  Assert content =~ 'find_tasks.py --due-by.*--condensed', 'Overdue Tasks should use condensed format'
+
 Execute (MetaNotesInit creates weekly template with correct content):
   MetaNotesInit
 
