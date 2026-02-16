@@ -2,12 +2,17 @@
 
 ## Overview
 
-A life management system for vim/neovim based on the PARA methodology (Projects, Areas, Resources, Archive). Uses plain text markdown files with wiki-style [[links]] for navigation and organization.
+A life management system for vim/neovim based on an extended PARA methodology (Plans, Projects, Areas, Resources, Archive). Uses plain text markdown files with wiki-style [[links]] for navigation and organization.
 
-## PARA Folder Structure
+## PPARA Folder Structure
 
-The system maintains four top-level folders:
+The system maintains five top-level folders:
 
+- `plan/` - Planning notes (daily, weekly, quarterly, yearly)
+  - `plan/daily/`
+  - `plan/week/`
+  - `plan/quarter/`
+  - `plan/year/`
 - `project/` - Active projects with specific goals and end dates
 - `area/` - Areas of ongoing responsibility
 - `resource/` - Resources and reference materials on various topics
@@ -39,27 +44,27 @@ Any folder can contain a visible `template.md` file that will be used when creat
 ### File Locations
 
 **Daily Notes:**
-- Path: `resource/plan/daily/YY-QQQ/YYYY-mm-dd ddd.md`
-- Example: `resource/plan/daily/26-Q1/2026-02-13 Thu.md`
+- Path: `plan/daily/YY-QQQ/YYYY-mm-dd ddd.md`
+- Example: `plan/daily/26-Q1/2026-02-13 Thu.md`
 - YY = two-digit year
 - QQQ = quarter (Q1, Q2, Q3, Q4)
 - YYYY-mm-dd = full date
 - ddd = three-letter day abbreviation
 
 **Weekly Plans:**
-- Path: `resource/plan/week/YY-QQ/YYYY-mm-dd.md`
+- Path: `plan/week/YY-QQ/YYYY-mm-dd.md`
 - Date is the Monday of the week
 - YY = two-digit year
 - QQ = quarter (Q1, Q2, Q3, Q4)
-- Example: `resource/plan/week/26-Q1/2026-02-09.md`
+- Example: `plan/week/26-Q1/2026-02-09.md`
 
 **Quarterly Plans:**
-- Path: `resource/plan/quarter/YYYY-QQ.md`
-- Example: `resource/plan/quarter/2026-Q1.md`
+- Path: `plan/quarter/YYYY-QQ.md`
+- Example: `plan/quarter/2026-Q1.md`
 
 **Yearly Plans:**
-- Path: `resource/plan/year/YYYY.md`
-- Example: `resource/plan/year/2026.md`
+- Path: `plan/year/YYYY.md`
+- Example: `plan/year/2026.md`
 
 ### Linking Hierarchy
 
@@ -234,7 +239,7 @@ All date formatting uses Python strftime format specifiers.
 ```markdown
 # Daily Note - {{date}}
 
-Week Plan: [[resource/plan/week/Plan {{week_start}}]]
+Week Plan: [[plan/week/Plan {{week_start}}]]
 
 ## Tasks Due Today
 {{% python scripts/find_tasks.py --due-on {{date:%Y-%m-%d}} --status incomplete --condensed %}}

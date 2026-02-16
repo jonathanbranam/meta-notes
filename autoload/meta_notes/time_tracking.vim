@@ -5,8 +5,8 @@
 " Returns 1 if in daily note, 0 otherwise
 function! meta_notes#time_tracking#IsInDailyNote() abort
   let l:filepath = expand('%:p')
-  " Daily notes are in resource/plan/daily/ directory
-  return l:filepath =~# 'resource/plan/daily/.*\.md$'
+  " Daily notes are in plan/daily/ directory
+  return l:filepath =~# 'plan/daily/.*\.md$'
 endfunction
 
 " Generate and display time tracking report

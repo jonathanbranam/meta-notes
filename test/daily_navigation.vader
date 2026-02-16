@@ -2,16 +2,16 @@
 
 Execute (Setup - Create temporary test directory):
   let g:test_root = tempname()
-  call mkdir(g:test_root . '/resource/plan/daily/26-Q1', 'p')
-  call mkdir(g:test_root . '/resource/plan/week/26-Q1', 'p')
+  call mkdir(g:test_root . '/plan/daily/26-Q1', 'p')
+  call mkdir(g:test_root . '/plan/week/26-Q1', 'p')
 
   " Create three daily notes for testing
   call writefile(['# Daily Note - 2026-02-10 Mon', '', 'Content for Feb 10'],
-        \ g:test_root . '/resource/plan/daily/26-Q1/2026-02-10 Mon.md')
+        \ g:test_root . '/plan/daily/26-Q1/2026-02-10 Mon.md')
   call writefile(['# Daily Note - 2026-02-12 Wed', '', 'Content for Feb 12'],
-        \ g:test_root . '/resource/plan/daily/26-Q1/2026-02-12 Wed.md')
+        \ g:test_root . '/plan/daily/26-Q1/2026-02-12 Wed.md')
   call writefile(['# Daily Note - 2026-02-14 Fri', '', 'Content for Feb 14'],
-        \ g:test_root . '/resource/plan/daily/26-Q1/2026-02-14 Fri.md')
+        \ g:test_root . '/plan/daily/26-Q1/2026-02-14 Fri.md')
 
   " Store original directory and change to test root
   let g:original_dir = getcwd()
@@ -29,19 +29,19 @@ Execute (Test GetDailyNoteFiles returns sorted list):
   Assert files[2] =~ '2026-02-14'
 
 Execute (Test ExtractDateFromDailyNote):
-  let date1 = meta_notes#notes#ExtractDateFromDailyNote('resource/plan/daily/26-Q1/2026-02-10 Mon.md')
+  let date1 = meta_notes#notes#ExtractDateFromDailyNote('plan/daily/26-Q1/2026-02-10 Mon.md')
   AssertEqual '2026-02-10', date1
 
-  let date2 = meta_notes#notes#ExtractDateFromDailyNote('resource/plan/daily/26-Q1/2026-02-14 Fri.md')
+  let date2 = meta_notes#notes#ExtractDateFromDailyNote('plan/daily/26-Q1/2026-02-14 Fri.md')
   AssertEqual '2026-02-14', date2
 
   " Non-daily note should return empty string
-  let date3 = meta_notes#notes#ExtractDateFromDailyNote('resource/plan/week/26-Q1/2026-02-09.md')
+  let date3 = meta_notes#notes#ExtractDateFromDailyNote('plan/week/26-Q1/2026-02-09.md')
   AssertEqual '', date3
 
 Execute (Test DailyPrev from middle note):
   " Open the middle note (Feb 12)
-  execute 'edit! resource/plan/daily/26-Q1/2026-02-12 Wed.md'
+  execute 'edit! plan/daily/26-Q1/2026-02-12 Wed.md'
 
   " Navigate to previous
   call meta_notes#notes#DailyPrev()
@@ -53,7 +53,7 @@ Execute (Test DailyPrev from middle note):
 
 Execute (Test DailyNext from middle note):
   " Open the middle note (Feb 12)
-  execute 'edit! resource/plan/daily/26-Q1/2026-02-12 Wed.md'
+  execute 'edit! plan/daily/26-Q1/2026-02-12 Wed.md'
 
   " Navigate to next
   call meta_notes#notes#DailyNext()
@@ -65,7 +65,7 @@ Execute (Test DailyNext from middle note):
 
 Execute (Test DailyPrev from oldest note shows message):
   " Open the oldest note (Feb 10)
-  execute 'edit! resource/plan/daily/26-Q1/2026-02-10 Mon.md'
+  execute 'edit! plan/daily/26-Q1/2026-02-10 Mon.md'
 
   " Clear any previous messages
   let v:statusmsg = ''
@@ -104,7 +104,7 @@ Execute (Test DailyNext from non-daily note shows error):
 
 Execute (Test MetaNotesDailyPrev command):
   " Open the middle note
-  execute 'edit! resource/plan/daily/26-Q1/2026-02-12 Wed.md'
+  execute 'edit! plan/daily/26-Q1/2026-02-12 Wed.md'
 
   " Use the command
   MetaNotesDailyPrev
@@ -114,7 +114,7 @@ Execute (Test MetaNotesDailyPrev command):
 
 Execute (Test MetaNotesDailyNext command):
   " Open the middle note
-  execute 'edit! resource/plan/daily/26-Q1/2026-02-12 Wed.md'
+  execute 'edit! plan/daily/26-Q1/2026-02-12 Wed.md'
 
   " Use the command
   MetaNotesDailyNext
@@ -125,7 +125,7 @@ Execute (Test MetaNotesDailyNext command):
 Execute (Test navigation skips missing dates):
   " We have notes on Feb 10, 12, and 14 (skipping Feb 11 and 13)
   " Open Feb 10
-  execute 'edit! resource/plan/daily/26-Q1/2026-02-10 Mon.md'
+  execute 'edit! plan/daily/26-Q1/2026-02-10 Mon.md'
 
   " Navigate next should go to Feb 12 (skipping Feb 11)
   call meta_notes#notes#DailyNext()
@@ -145,12 +145,12 @@ Execute (Test navigation skips missing dates):
 
 Execute (Test navigation across quarter boundaries):
   " Create a note in Q4 of previous year
-  call mkdir('resource/plan/daily/25-Q4', 'p')
+  call mkdir('plan/daily/25-Q4', 'p')
   call writefile(['# Daily Note - 2025-12-31 Wed', '', 'Last day of 2025'],
-        \ 'resource/plan/daily/25-Q4/2025-12-31 Wed.md')
+        \ 'plan/daily/25-Q4/2025-12-31 Wed.md')
 
   " Open the first note of Q1 2026 (Feb 10)
-  execute 'edit! resource/plan/daily/26-Q1/2026-02-10 Mon.md'
+  execute 'edit! plan/daily/26-Q1/2026-02-10 Mon.md'
 
   " Navigate prev should go to Dec 31, 2025
   call meta_notes#notes#DailyPrev()
@@ -161,17 +161,17 @@ Execute (Test navigation across quarter boundaries):
   Assert expand('%') =~ '2026-02-10 Mon.md'
 
   " Clean up
-  silent! call delete('resource/plan/daily/25-Q4', 'rf')
+  silent! call delete('plan/daily/25-Q4', 'rf')
 
 Execute (Test JumpToWeek from daily note):
   " Open a daily note (Feb 12, 2026 - which is a Wednesday)
-  execute 'edit! resource/plan/daily/26-Q1/2026-02-12 Wed.md'
+  execute 'edit! plan/daily/26-Q1/2026-02-12 Wed.md'
 
   " Jump to week
   call meta_notes#notes#JumpToWeek()
 
   " Should now be on the weekly plan for Feb 9 (Monday of that week)
-  Assert expand('%') =~ 'resource/plan/week/26-Q1/2026-02-09.md'
+  Assert expand('%') =~ 'plan/week/26-Q1/2026-02-09.md'
 
 
 Execute (Test JumpToWeek from non-daily note shows error):
@@ -189,13 +189,13 @@ Execute (Test JumpToWeek from non-daily note shows error):
 
 Execute (Test MetaNotesJumpToWeek command):
   " Open a daily note
-  execute 'edit! resource/plan/daily/26-Q1/2026-02-14 Fri.md'
+  execute 'edit! plan/daily/26-Q1/2026-02-14 Fri.md'
 
   " Use the command
   MetaNotesJumpToWeek
 
   " Should now be on the weekly plan for Feb 9 (Monday of that week)
-  Assert expand('%') =~ 'resource/plan/week/26-Q1/2026-02-09.md'
+  Assert expand('%') =~ 'plan/week/26-Q1/2026-02-09.md'
 
 
 Execute (Cleanup):

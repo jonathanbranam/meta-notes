@@ -14,11 +14,11 @@ Execute (MetaNotesInit creates all PARA directories):
 
   " Check resource subdirectories
   Assert isdirectory('resource/template'), 'resource/template/ directory should exist'
-  Assert isdirectory('resource/plan/daily'), 'resource/plan/daily/ directory should exist'
-  Assert isdirectory('resource/plan'), 'resource/plan/ directory should exist'
-  Assert isdirectory('resource/plan/week'), 'resource/plan/week/ directory should exist'
-  Assert isdirectory('resource/plan/quarter'), 'resource/plan/quarter/ directory should exist'
-  Assert isdirectory('resource/plan/year'), 'resource/plan/year/ directory should exist'
+  Assert isdirectory('plan'), 'plan/ directory should exist'
+  Assert isdirectory('plan/daily'), 'plan/daily/ directory should exist'
+  Assert isdirectory('plan/week'), 'plan/week/ directory should exist'
+  Assert isdirectory('plan/quarter'), 'plan/quarter/ directory should exist'
+  Assert isdirectory('plan/year'), 'plan/year/ directory should exist'
 
   " Check archive subdirectories
   Assert isdirectory('archive/project'), 'archive/project/ directory should exist'
@@ -107,10 +107,10 @@ Execute (MetaNotesInit creates yearly template with correct content):
   Assert content =~ '### Q4 (Oct-Dec)', 'Yearly template should have Q4 section'
 
   " Check for links to quarterly plans
-  Assert content =~ '\[\[resource/plan/quarter/{{date:%Y}}-Q1\]\]', 'Yearly template should link to Q1 plan'
-  Assert content =~ '\[\[resource/plan/quarter/{{date:%Y}}-Q2\]\]', 'Yearly template should link to Q2 plan'
-  Assert content =~ '\[\[resource/plan/quarter/{{date:%Y}}-Q3\]\]', 'Yearly template should link to Q3 plan'
-  Assert content =~ '\[\[resource/plan/quarter/{{date:%Y}}-Q4\]\]', 'Yearly template should link to Q4 plan'
+  Assert content =~ '\[\[plan/quarter/{{date:%Y}}-Q1\]\]', 'Yearly template should link to Q1 plan'
+  Assert content =~ '\[\[plan/quarter/{{date:%Y}}-Q2\]\]', 'Yearly template should link to Q2 plan'
+  Assert content =~ '\[\[plan/quarter/{{date:%Y}}-Q3\]\]', 'Yearly template should link to Q3 plan'
+  Assert content =~ '\[\[plan/quarter/{{date:%Y}}-Q4\]\]', 'Yearly template should link to Q4 plan'
 
 Execute (MetaNotesInit is idempotent - running twice doesn't break):
   MetaNotesInit

@@ -23,7 +23,7 @@ Execute (FindTemplate should find standard template when no folder template):
   call writefile(['# Daily Template'], 'resource/template/daily.md')
 
   " Test finding daily template
-  let result = meta_notes#template#FindTemplate('resource/plan/daily/26-Q1/2026-02-14.md', 'daily')
+  let result = meta_notes#template#FindTemplate('plan/daily/26-Q1/2026-02-14.md', 'daily')
   AssertEqual 'resource/template/daily.md', result
 
 " Test: FindTemplate returns empty string when no template found
@@ -42,7 +42,7 @@ Execute (FindTemplate should auto-detect daily template from plan/daily path):
   call writefile(['# Daily Template'], 'resource/template/daily.md')
 
   " Test auto-detection without providing template_type
-  let result = meta_notes#template#FindTemplate('resource/plan/daily/26-Q1/2026-02-14.md')
+  let result = meta_notes#template#FindTemplate('plan/daily/26-Q1/2026-02-14.md')
   AssertEqual 'resource/template/daily.md', result
 
 " Test: FindTemplate auto-detects weekly template from path
@@ -51,7 +51,7 @@ Execute (FindTemplate should auto-detect weekly template from plan/week path):
   call writefile(['# Weekly Template'], 'resource/template/weekly.md')
 
   " Test auto-detection without providing template_type
-  let result = meta_notes#template#FindTemplate('resource/plan/week/26-Q1/2026-02-09.md')
+  let result = meta_notes#template#FindTemplate('plan/week/26-Q1/2026-02-09.md')
   AssertEqual 'resource/template/weekly.md', result
 
 " Test: FindTemplate auto-detects quarterly template from path
@@ -60,7 +60,7 @@ Execute (FindTemplate should auto-detect quarterly template from plan/quarter pa
   call writefile(['# Quarterly Template'], 'resource/template/quarterly.md')
 
   " Test auto-detection without providing template_type
-  let result = meta_notes#template#FindTemplate('resource/plan/quarter/2026-Q1.md')
+  let result = meta_notes#template#FindTemplate('plan/quarter/2026-Q1.md')
   AssertEqual 'resource/template/quarterly.md', result
 
 " Test: FindTemplate auto-detects yearly template from path
@@ -69,7 +69,7 @@ Execute (FindTemplate should auto-detect yearly template from plan/year path):
   call writefile(['# Yearly Template'], 'resource/template/yearly.md')
 
   " Test auto-detection without providing template_type
-  let result = meta_notes#template#FindTemplate('resource/plan/year/2026.md')
+  let result = meta_notes#template#FindTemplate('plan/year/2026.md')
   AssertEqual 'resource/template/yearly.md', result
 
 " Test: ProcessVariables replaces simple date variables

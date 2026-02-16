@@ -4,8 +4,8 @@ Execute (Setup - Create temporary test directory):
   let g:test_dir = tempname()
   call mkdir(g:test_dir, 'p')
   execute 'cd' g:test_dir
-  call mkdir('resource/plan/daily/26-Q1', 'p')
-  call mkdir('resource/plan/daily/26-Q3', 'p')
+  call mkdir('plan/daily/26-Q1', 'p')
+  call mkdir('plan/daily/26-Q3', 'p')
 
 Execute (Test CalculateQuarter - January is Q1):
   let result = meta_notes#notes#CalculateQuarter('2026-01-15')
@@ -60,7 +60,7 @@ Execute (Test OpenDaily creates file with correct path for Q1):
   call meta_notes#notes#OpenDaily('2026-02-13')
 
   " Verify we're in the correct file
-  AssertEqual 'resource/plan/daily/26-Q1/2026-02-13 Fri.md', expand('%')
+  AssertEqual 'plan/daily/26-Q1/2026-02-13 Fri.md', expand('%')
 
   " Verify header was created
   let first_line = getline(1)
@@ -72,7 +72,7 @@ Execute (Test OpenDaily creates file with correct path for Q3):
   call meta_notes#notes#OpenDaily('2026-07-15')
 
   " Verify we're in the correct file
-  AssertEqual 'resource/plan/daily/26-Q3/2026-07-15 Wed.md', expand('%')
+  AssertEqual 'plan/daily/26-Q3/2026-07-15 Wed.md', expand('%')
 
   " Verify header was created
   let first_line = getline(1)
@@ -80,28 +80,28 @@ Execute (Test OpenDaily creates file with correct path for Q3):
 
 Execute (Test OpenDaily creates directory if it doesn't exist):
   " Remove the directory to test creation
-  call delete('resource/plan/daily/26-Q1', 'rf')
+  call delete('plan/daily/26-Q1', 'rf')
 
   " Ensure directory doesn't exist
-  Assert !isdirectory('resource/plan/daily/26-Q1')
+  Assert !isdirectory('plan/daily/26-Q1')
 
   " Open daily note
   call meta_notes#notes#OpenDaily('2026-02-13')
 
   " Verify directory was created
-  Assert isdirectory('resource/plan/daily/26-Q1')
+  Assert isdirectory('plan/daily/26-Q1')
 
 
 Execute (Test MetaNotesDaily command with date argument):
   " Clean up any existing file first
-  silent! call delete('resource/plan/daily/26-Q1/2026-02-13 Fri.md')
-  silent! call delete('resource/plan/daily/26-Q1', 'd')
+  silent! call delete('plan/daily/26-Q1/2026-02-13 Fri.md')
+  silent! call delete('plan/daily/26-Q1', 'd')
 
   " Use the command with a date argument
   MetaNotesDaily 2026-02-13
 
   " Verify we're in the correct file
-  AssertEqual 'resource/plan/daily/26-Q1/2026-02-13 Fri.md', expand('%')
+  AssertEqual 'plan/daily/26-Q1/2026-02-13 Fri.md', expand('%')
 
   " Verify header was created
   let first_line = getline(1)
@@ -110,7 +110,7 @@ Execute (Test MetaNotesDaily command with date argument):
 
 Execute (Test OpenDaily opens existing file):
   " Create a test file by opening it, writing content, and saving
-  execute 'edit! resource/plan/daily/26-Q1/2026-02-13 Fri.md'
+  execute 'edit! plan/daily/26-Q1/2026-02-13 Fri.md'
   call setline(1, ['# Existing Daily Note', '', 'This is existing content'])
   write
 
@@ -121,7 +121,7 @@ Execute (Test OpenDaily opens existing file):
   call meta_notes#notes#OpenDaily('2026-02-13')
 
   " Verify we're in the correct file
-  AssertEqual 'resource/plan/daily/26-Q1/2026-02-13 Fri.md', expand('%')
+  AssertEqual 'plan/daily/26-Q1/2026-02-13 Fri.md', expand('%')
 
   " Verify the existing content is preserved
   let first_line = getline(1)

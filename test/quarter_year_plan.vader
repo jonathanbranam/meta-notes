@@ -4,15 +4,15 @@ Execute (Setup - Create temporary test directory):
   let g:test_dir = tempname()
   call mkdir(g:test_dir, 'p')
   execute 'cd' g:test_dir
-  call mkdir('resource/plan/quarter', 'p')
-  call mkdir('resource/plan/year', 'p')
+  call mkdir('plan/quarter', 'p')
+  call mkdir('plan/year', 'p')
 
 Execute (Test OpenQuarterPlan creates file with correct path for Q1):
   " Open quarterly plan for a date in Q1 2026
   call meta_notes#notes#OpenQuarterPlan('2026-02-13')
 
   " Verify we're in the correct file
-  AssertEqual 'resource/plan/quarter/2026-Q1.md', expand('%')
+  AssertEqual 'plan/quarter/2026-Q1.md', expand('%')
 
   " Verify header was created
   let first_line = getline(1)
@@ -24,7 +24,7 @@ Execute (Test OpenQuarterPlan creates file with correct path for Q3):
   call meta_notes#notes#OpenQuarterPlan('2026-07-15')
 
   " Verify we're in the correct file
-  AssertEqual 'resource/plan/quarter/2026-Q3.md', expand('%')
+  AssertEqual 'plan/quarter/2026-Q3.md', expand('%')
 
   " Verify header was created
   let first_line = getline(1)
@@ -32,16 +32,16 @@ Execute (Test OpenQuarterPlan creates file with correct path for Q3):
 
 Execute (Test OpenQuarterPlan creates directory if it doesn't exist):
   " Remove the directory to test creation
-  call delete('resource/plan/quarter', 'rf')
+  call delete('plan/quarter', 'rf')
 
   " Ensure directory doesn't exist
-  Assert !isdirectory('resource/plan/quarter')
+  Assert !isdirectory('plan/quarter')
 
   " Open quarterly plan
   call meta_notes#notes#OpenQuarterPlan('2026-02-13')
 
   " Verify directory was created
-  Assert isdirectory('resource/plan/quarter')
+  Assert isdirectory('plan/quarter')
 
 
 Execute (Test MetaNotesQuarterPlan command with date argument):
@@ -49,7 +49,7 @@ Execute (Test MetaNotesQuarterPlan command with date argument):
   MetaNotesQuarterPlan 2026-02-13
 
   " Verify we're in the correct file
-  AssertEqual 'resource/plan/quarter/2026-Q1.md', expand('%')
+  AssertEqual 'plan/quarter/2026-Q1.md', expand('%')
 
   " Verify header was created
   let first_line = getline(1)
@@ -58,7 +58,7 @@ Execute (Test MetaNotesQuarterPlan command with date argument):
 
 Execute (Test OpenQuarterPlan opens existing file):
   " Create a test file by opening it, writing content, and saving
-  execute 'edit! resource/plan/quarter/2026-Q1.md'
+  execute 'edit! plan/quarter/2026-Q1.md'
   call setline(1, ['# Existing Quarterly Plan', '', 'This is existing content'])
   write
 
@@ -69,7 +69,7 @@ Execute (Test OpenQuarterPlan opens existing file):
   call meta_notes#notes#OpenQuarterPlan('2026-02-13')
 
   " Verify we're in the correct file
-  AssertEqual 'resource/plan/quarter/2026-Q1.md', expand('%')
+  AssertEqual 'plan/quarter/2026-Q1.md', expand('%')
 
   " Verify the existing content is preserved
   let first_line = getline(1)
@@ -83,7 +83,7 @@ Execute (Test OpenYearPlan creates file with correct path):
   call meta_notes#notes#OpenYearPlan('2026-02-13')
 
   " Verify we're in the correct file
-  AssertEqual 'resource/plan/year/2026.md', expand('%')
+  AssertEqual 'plan/year/2026.md', expand('%')
 
   " Verify header was created
   let first_line = getline(1)
@@ -95,7 +95,7 @@ Execute (Test OpenYearPlan creates file with correct path for different year):
   call meta_notes#notes#OpenYearPlan('2025-06-15')
 
   " Verify we're in the correct file
-  AssertEqual 'resource/plan/year/2025.md', expand('%')
+  AssertEqual 'plan/year/2025.md', expand('%')
 
   " Verify header was created
   let first_line = getline(1)
@@ -104,16 +104,16 @@ Execute (Test OpenYearPlan creates file with correct path for different year):
 
 Execute (Test OpenYearPlan creates directory if it doesn't exist):
   " Remove the directory to test creation
-  call delete('resource/plan/year', 'rf')
+  call delete('plan/year', 'rf')
 
   " Ensure directory doesn't exist
-  Assert !isdirectory('resource/plan/year')
+  Assert !isdirectory('plan/year')
 
   " Open yearly plan
   call meta_notes#notes#OpenYearPlan('2026-02-13')
 
   " Verify directory was created
-  Assert isdirectory('resource/plan/year')
+  Assert isdirectory('plan/year')
 
 
 Execute (Test MetaNotesYearPlan command with date argument):
@@ -121,7 +121,7 @@ Execute (Test MetaNotesYearPlan command with date argument):
   MetaNotesYearPlan 2026-02-13
 
   " Verify we're in the correct file
-  AssertEqual 'resource/plan/year/2026.md', expand('%')
+  AssertEqual 'plan/year/2026.md', expand('%')
 
   " Verify header was created
   let first_line = getline(1)
@@ -130,7 +130,7 @@ Execute (Test MetaNotesYearPlan command with date argument):
 
 Execute (Test OpenYearPlan opens existing file):
   " Create a test file by opening it, writing content, and saving
-  execute 'edit! resource/plan/year/2026.md'
+  execute 'edit! plan/year/2026.md'
   call setline(1, ['# Existing Year Plan', '', 'This is existing content'])
   write
 
@@ -141,7 +141,7 @@ Execute (Test OpenYearPlan opens existing file):
   call meta_notes#notes#OpenYearPlan('2026-02-13')
 
   " Verify we're in the correct file
-  AssertEqual 'resource/plan/year/2026.md', expand('%')
+  AssertEqual 'plan/year/2026.md', expand('%')
 
   " Verify the existing content is preserved
   let first_line = getline(1)
