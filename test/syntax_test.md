@@ -6,13 +6,20 @@ This file demonstrates the syntax highlighting for time tracking features.
 
 ### Log
 
-- arrived: 8:00 am
-- email review (#admin, #communication) 8:15 am - 8:45 am
-- standup meeting (#mtg, #team) 9:00 am - 9:30 am
-- coding session (#dev, #project-alpha) 9:30 am - 11:00 am
-- [lunch break] 12:00 pm - 1:00 pm
-- ~~off-plan: emergency meeting~~ (#mtg) 1:00 pm - 2:00 pm
-- personal time (#pers) 5:00 pm - 6:00 pm
+- arrived:
+  * end:   2026-02-15 Sun 08:00
+- check #email
+  * start: 2026-02-15 Sun 08:00
+  * end:   2026-02-15 Sun 08:45
+- #standup #mtg
+  * start: 2026-02-15 Sun 08:45
+  * end:   2026-02-15 Sun 09:12
+- coding on #feat #dev
+  * start: 2026-02-15 Sun 09:12
+  * end:   2026-02-15 Sun 10:06
+- lunch #break
+  * start: 2026-02-15 Sun 10:06
+  * end:   2026-02-15 Sun 10:44
 
 ## Time Block
 
