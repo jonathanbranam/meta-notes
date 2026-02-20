@@ -387,7 +387,7 @@ Located under `### Time Block` within the `## Time Tracking` section of daily no
 | ------- | ------------------------------------ | --------------------------- |
 | 8:00am  | plan: review day                     | plan: review day            |
 | 8:15am  | dev: feature work                    | [coffee break]              |
-| 8:30am  | dev: feature work                    | ~~email: inbox~~            |
+| 8:30am  | dev: feature work                    | email: inbox #off-plan      |
 | 9:00am  | mtg: standup                         | mtg: standup                |
 | 9:15am  | mtg: standup                         | mtg: standup                |
 | 9:30am  | dev: feature store                   |                             |
@@ -405,12 +405,19 @@ Located under `### Time Block` within the `## Time Tracking` section of daily no
 **Entry format:**
 - `name: details` - Standard entry (e.g., "mtg: Feature Store", "pers: pickup kids", "dev: feature work")
 - `[entry]` - Break or non-productive period
-- `~~entry~~` - Time not spent on-plan (off-plan)
+- `~entry~` - Off-plan entry in the Plan column (wrapped in single tildes)
 - Empty cells allowed (not yet executed or recorded)
+
+**Plan vs Actual comparison:**
+- A block is **off-plan** if:
+  - The Plan cell is wrapped in single tildes: `~plan text~`
+  - The Actual cell contains `#off-plan`
+- A block is **unplanned** if the Plan cell is empty
+- A block is **on-plan** otherwise (the content of Actual is not compared to Plan)
 
 **Vim syntax highlighting:**
 - Different highlighting for different entry types (mtg, dev, pers, etc.)
-- Visual distinction for `[breaks]` and `~~off-plan~~` entries
+- Visual distinction for `[breaks]` and `~off-plan~` entries
 
 ### Tags
 
@@ -419,52 +426,77 @@ Tags use `#tag` syntax and can appear in:
 - Time block entries
 - Task items
 
-**Tag categories:**
+**Tag groups:**
 
-**Special meaning tags (non-work time):**
-- `#break` - Break time
-- `#personal` - Personal time
-- `#off-task` - Off-task time
-- `#off-plan` - Time block not according to plan (also use `~~...~~` marker)
+Some tags share meaning and are combined into named groups for reporting. All tags from the same group are merged into a single total in the group summary.
 
-**Activity tags:**
-- `#meeting` - All meetings
-- `#recruiting` - Interviews and recruiting activities
-- `#setup` - Setup activities
-- `#plan` - Planning activities
-- `#slack` - Slack communication
-- `#email` - Email communication
+| Group | Tags | Meaning |
+|-------|------|---------|
+| Meeting | `#mtg`, `#meeting` | Time in meetings |
+| Personal | `#per`, `#personal`, `#off-task` | Time not at work |
+| Break | `#break` | Short recharge break during the work day |
 
-**Project tags:**
-- Each large project gets a tag (e.g., `#feature-store`, `#kitchen-remodel`)
-- Free-form based on active projects
+**Work day boundary rules:**
 
-Tags are free-form with the above special cases having specific meanings for time calculations.
+The work day window is the span from the first non-personal entry to the last non-personal entry:
+- **Personal** (`#per`, `#personal`): Stripped from the start and end of the day. An early-morning or end-of-day personal block does not count as "at work."
+- **Break** (`#break`): Not stripped. A break at the start of the day means work began at that time. Break time is inside the work window but does not count toward hours worked.
+- **Off-task** (`#off-task`): Not stripped. Off-task time is inside the work window but does not count toward hours worked.
+
+**Off-plan marker:**
+- `#off-plan` in the Actual column of a time block marks that block as off-plan
+
+**Free-form tags:**
+- Any other `#tag` is valid and tracked individually in the flat tag report
+- Examples: `#meeting`, `#recruiting`, `#setup`, `#plan`, `#slack`, `#email`, `#feature-store`
 
 ### Time Report
 
 **Command:**
-- Opens readonly buffer with time calculations
+- `:TimeReport` — opens a readonly buffer with time calculations
 - Only available when inside a daily note
-- Analyzes time log entries
+- Analyzes both time log entries and time block entries
 
-**Calculations (general requirements):**
-- Total time by tag
-- Work vs non-work breakdown (based on special meaning tags)
-- Plan vs actual comparison
-- Time blocks on-plan vs off-plan percentage
+**Report sections:**
+
+1. **Tag group summary** — combined time for each named group (Meeting, Personal, Break), shown only if nonzero:
+   ```
+   Meeting:  2h 30m
+   Personal: 1h 15m
+   Break:    45m
+   ```
+
+2. **Flat tag list** — all tags with individual cumulative time, sorted by duration:
+   ```
+   #meeting:  1h 30m
+   #mtg:      1h
+   #personal: 45m
+   ```
+
+3. **Plan adherence** — on-plan / off-plan / unplanned counts and percentages across all time block entries that have a plan
+
+4. **Week summary** — day-by-day Monday through Friday table appended at the end:
+   ```
+   - 2026-02-16 Mon
+     * time tracked:   08:20 - 17:00
+     * hours worked:   7 hr 46 min
+     * total time:     8 hr 40 min
+   - 2026-02-17 Tue
+     * (no data)
+   ...
+   Weekly total worked: 7 hr 46 min
+   ```
+   - **time tracked**: start and end of the work window (after stripping personal time from boundaries)
+   - **hours worked**: total of entries that are not Personal, Break, or Off-task
+   - **total time**: wall-clock span of the work window (end − start)
+   - Days with no log entries show `(no data)` and are excluded from the weekly total
 
 **Implementation:**
-- Written in Python due to complexity
-- Parses time log entries
+- Written in Python (`scripts/time_report.py`, `scripts/time_tracking.py`)
+- Parses time log entries from `### Log` section
+- Parses time block entries from `### Time Block` section
 - Calculates durations from start/end timestamps
-- Aggregates by tags
-- Displays in readable format in readonly buffer
-
-**Further details to be defined:**
-- Specific output format
-- Additional breakdowns and metrics
-- Filtering options
+- Derives the week from the daily note filename; reads Mon–Fri sibling files for the week summary
 
 ## Areas for Further Definition
 
@@ -473,4 +505,3 @@ The following areas need additional requirements definition:
 - Content structure for weekly/quarterly/yearly plan templates
 - Additional search and filtering features
 - Integration with external tools (calendar, etc.)
-- Time report detailed output format and metrics
