@@ -169,8 +169,6 @@ def test_parse_tags_from_text_with_hyphens():
     assert result[1].text == "#sprint-2"
 
 
-# Tests for _extract_tags_from_parentheses function
-
 # Tests for _parse_time_log_lines function
 
 def test_parse_time_log_lines_in_log_section():

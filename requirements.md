@@ -372,7 +372,7 @@ Located under `### Log` within the `## Time Tracking` section of daily notes.
 **Structure:**
 - Top-level bullet: Activity description (can include tags anywhere)
 - Sub-bullets: `start:` and `end:` timestamps
-- Timestamp format: `YYYY-MM-DD ddd HH:MM`
+- Timestamp formats: `YYYY-MM-DD ddd HH:MM`, `HH:MM`
 - Special case: `arrived:` entry only has `end:` timestamp
 
 ### Time Block Table
@@ -385,11 +385,11 @@ Located under `### Time Block` within the `## Time Tracking` section of daily no
 
 | Time    | Plan                                 | Actual                      |
 | ------- | ------------------------------------ | --------------------------- |
-| 8:00am  | plan: review day                     | plan: review day            |
-| 8:15am  | dev: feature work                    | [coffee break]              |
-| 8:30am  | dev: feature work                    | email: inbox #off-plan      |
-| 9:00am  | mtg: standup                         | mtg: standup                |
-| 9:15am  | mtg: standup                         | mtg: standup                |
+| 8:00am  | plan: review day                     | #on-plan                    |
+| 8:15am  | ~dev: feature work~                  | [coffee break]              |
+| 8:30am  | ~dev: feature work~                  | email: inbox #off-plan      |
+| 9:00am  | mtg: standup                         | also email                  |
+| 9:15am  | mtg: standup                         |                             |
 | 9:30am  | dev: feature store                   |                             |
 | 9:45am  | pers: appointment                    |                             |
 | 10:00am | mtg: with Bob                        |                             |
