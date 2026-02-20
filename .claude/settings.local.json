@@ -6,6 +6,7 @@
       "Bash(./run_tests.sh:*)",
       "Bash(pipenv run pytest:*)",
       "Bash(br :*)",
+      "Bash(br:*)",
       "Bash(git pull:*)",
       "Bash(git push:*)",
       "Bash(git add:*)",
@@ -17,7 +18,8 @@
       "Bash(printf:*)",
       "Bash(pipenv run python:*)",
       "Bash(jq:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(br ready:*)"
     ]
   }
 }
