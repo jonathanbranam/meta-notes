@@ -940,8 +940,8 @@ def test_is_off_plan_actual_has_off_plan_tag():
 
 
 def test_is_off_plan_on_plan():
-    """Test that a normal planned block is not off-plan."""
-    block = TimeBlockEntry(time(8, 0), "coding #dev", "coding #dev", [], [], "test.md", 1)
+    """Test that a normal planned block is not off-plan (even when actual differs)."""
+    block = TimeBlockEntry(time(8, 0), "coding #dev", "something completely different", [], [], "test.md", 1)
     assert is_off_plan(block) is False
 
 
@@ -980,9 +980,9 @@ def test_compare_plan_vs_actual_all_on_plan():
 
 
 def test_compare_plan_vs_actual_plan_with_tildes():
-    """Test that plan wrapped in tildes is off-plan."""
+    """Test that plan wrapped in tildes is off-plan (actual content doesn't matter)."""
     blocks = [
-        TimeBlockEntry(time(8, 0), "coding #dev", "coding #dev", [], [], "test.md", 1),
+        TimeBlockEntry(time(8, 0), "coding #dev", "wrote some tests", [], [], "test.md", 1),
         TimeBlockEntry(time(8, 15), "~email #admin~", "emergency call", [], [], "test.md", 2),
     ]
 
@@ -994,9 +994,9 @@ def test_compare_plan_vs_actual_plan_with_tildes():
 
 
 def test_compare_plan_vs_actual_off_plan_tag_in_actual():
-    """Test that #off-plan tag in actual marks block as off-plan."""
+    """Test that #off-plan tag in actual marks block as off-plan (on-plan block can have different actual)."""
     blocks = [
-        TimeBlockEntry(time(8, 0), "coding #dev", "coding #dev", [], [], "test.md", 1),
+        TimeBlockEntry(time(8, 0), "coding #dev", "fixed a bug instead", [], [], "test.md", 1),
         TimeBlockEntry(time(8, 15), "email #admin", "browsing internet #off-plan", [], [], "test.md", 2),
     ]
 
@@ -1038,10 +1038,10 @@ def test_compare_plan_vs_actual_actual_content_ignored():
 # Tests for calculate_plan_adherence function
 
 def test_calculate_plan_adherence_perfect():
-    """Test plan adherence calculation with 100% on-plan."""
+    """Test plan adherence calculation with 100% on-plan (actual content is irrelevant)."""
     blocks = [
-        TimeBlockEntry(time(8, 0), "coding #dev", "coding #dev", [], [], "test.md", 1),
-        TimeBlockEntry(time(8, 15), "email #admin", "email #admin", [], [], "test.md", 2),
+        TimeBlockEntry(time(8, 0), "coding #dev", "wrote tests instead", [], [], "test.md", 1),
+        TimeBlockEntry(time(8, 15), "email #admin", "slack messages", [], [], "test.md", 2),
     ]
 
     stats = calculate_plan_adherence(blocks)
@@ -1058,7 +1058,7 @@ def test_calculate_plan_adherence_perfect():
 def test_calculate_plan_adherence_mixed():
     """Test plan adherence calculation with mixed results."""
     blocks = [
-        TimeBlockEntry(time(8, 0), "coding #dev", "coding #dev", [], [], "test.md", 1),
+        TimeBlockEntry(time(8, 0), "coding #dev", "refactored tests", [], [], "test.md", 1),
         TimeBlockEntry(time(8, 15), "~email #admin~", "emergency meeting", [], [], "test.md", 2),
         TimeBlockEntry(time(8, 30), "meeting #mtg", "distracted #off-plan", [], [], "test.md", 3),
         TimeBlockEntry(time(8, 45), None, "random thing", [], [], "test.md", 4),
