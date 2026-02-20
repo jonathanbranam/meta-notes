@@ -5,7 +5,7 @@ Handles time log parsing, time block parsing, and time calculations.
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from enum import Enum
 from typing import Optional
 from collections import defaultdict
@@ -19,32 +19,30 @@ class EntryType(Enum):
     ACTIVITY = "activity"
 
 
-class TagType(Enum):
-    """Enum representing the category of a tag."""
-    SPECIAL = "special"  # Tags like #mtg, #dev, #pers, #admin
-    ACTIVITY = "activity"  # User-defined activity tags
+# Tag groups: tags that share meaning and should be reported together.
+TAG_GROUPS: dict[str, set[str]] = {
+    'Meeting': {'#mtg', '#meeting'},
+    'Personal': {'#per', '#personal', '#off-task'},
+    'Break': {'#break'},
+}
 
-
-# Define special tag categories
-SPECIAL_TAGS = {
-    '#mtg',      # Meetings
-    '#dev',      # Development work
-    '#pers',     # Personal time
-    '#admin',    # Administrative tasks
-    '#break',    # Break time
+# Reverse lookup: normalized tag text → group name
+TAG_TO_GROUP: dict[str, str] = {
+    tag: group
+    for group, tags in TAG_GROUPS.items()
+    for tag in tags
 }
 
 
 @dataclass
 class Tag:
-    """Represents a tag with its type and text.
+    """Represents a tag extracted from text.
 
     Examples:
-        Tag('#mtg', TagType.SPECIAL)
-        Tag('#project-alpha', TagType.ACTIVITY)
+        Tag('#mtg')
+        Tag('#project-alpha')
     """
     text: str
-    tag_type: TagType
 
     def __post_init__(self):
         """Ensure tag text starts with #."""
@@ -152,31 +150,27 @@ def _parse_datetime(datetime_str: str) -> Optional[datetime]:
         return None
 
 
-def categorize_tag(tag_text: str) -> TagType:
+def get_tag_group(tag_text: str) -> Optional[str]:
     """
-    Categorize a tag as special or activity.
+    Return the group name for a tag, or None if not in any group.
 
     Args:
         tag_text: Tag text (with or without # prefix).
 
     Returns:
-        TagType.SPECIAL if the tag is a known special tag, TagType.ACTIVITY otherwise.
+        Group name string, or None.
     """
-    # Normalize tag text to lowercase with # prefix
     normalized = tag_text.lower()
     if not normalized.startswith('#'):
         normalized = '#' + normalized
-
-    return TagType.SPECIAL if normalized in SPECIAL_TAGS else TagType.ACTIVITY
+    return TAG_TO_GROUP.get(normalized)
 
 
 def parse_tags_from_text(text: str) -> list[Tag]:
     """
-    Extract all tags from text (both in parentheses and standalone).
+    Extract all tags from text.
 
-    Tags start with # and can be:
-    - In parentheses: (#admin, #communication)
-    - Standalone: #project-alpha #urgent
+    Tags start with # followed by word characters (letters, numbers, hyphens).
 
     Args:
         text: Text to search for tags.
@@ -184,24 +178,47 @@ def parse_tags_from_text(text: str) -> list[Tag]:
     Returns:
         List of Tag objects found.
     """
-    tags = []
-
-    # Pattern to match tags: # followed by word characters (letters, numbers, underscore, hyphen)
     pattern = re.compile(r'#[\w-]+')
-    matches = pattern.findall(text)
-
-    for match in matches:
-        tag_type = categorize_tag(match)
-        tags.append(Tag(match, tag_type))
-
-    return tags
+    return [Tag(match) for match in pattern.findall(text)]
 
 
-def find_time_log_entries(filepath: str) -> list[TimeLogEntry]:
+def calculate_time_by_group(entries: list[TimeLogEntry]) -> dict[str, timedelta]:
     """
-    Find all time log entries in a markdown file.
+    Calculate total time spent per tag group.
 
-    Looks for entries under a '### Log' section in the file.
+    For each entry, all tags are checked for group membership. If an entry
+    has multiple tags belonging to the same group, that group is only counted
+    once for that entry.
+
+    Args:
+        entries: List of TimeLogEntry objects with start and end times.
+
+    Returns:
+        Dictionary mapping group name to total duration.
+    """
+    group_durations: dict[str, timedelta] = defaultdict(timedelta)
+
+    for entry in entries:
+        if entry.start_time is None or entry.end_time is None:
+            continue
+
+        duration = calculate_duration(entry.start_time, entry.end_time)
+
+        seen_groups: set[str] = set()
+        for tag in entry.tags:
+            group = get_tag_group(tag.text)
+            if group and group not in seen_groups:
+                group_durations[group] += duration
+                seen_groups.add(group)
+
+    return dict(group_durations)
+
+
+def _parse_time_log_lines(lines: list[str], filepath: str) -> list[TimeLogEntry]:
+    """
+    Parse time log entries from a list of lines.
+
+    Looks for entries under a '### Log' section.
     New format uses multi-line entries:
     - activity name #tag-1 #tag-2
       * start: 2026-02-14 Sat 08:00
@@ -209,96 +226,109 @@ def find_time_log_entries(filepath: str) -> list[TimeLogEntry]:
       * optional notes
 
     Args:
-        filepath: Path to the markdown file to search.
+        lines: Lines of text to parse.
+        filepath: Source file path (used for TimeLogEntry metadata).
 
     Returns:
-        A list of TimeLogEntry objects found in the file.
+        A list of TimeLogEntry objects found in the lines.
     """
     entries: list[TimeLogEntry] = []
     in_log_section = False
     current_entry_data: Optional[dict] = None
 
+    for line_num, line in enumerate(lines, 1):
+        # Check for log section header
+        if line.strip() == '### Log':
+            in_log_section = True
+            continue
+
+        # Check if we've left the log section (new section header)
+        if in_log_section and line.startswith('#'):
+            in_log_section = False
+            # Save any pending entry
+            if current_entry_data:
+                entry = _create_time_log_entry(current_entry_data, filepath)
+                if entry:
+                    entries.append(entry)
+                current_entry_data = None
+            continue
+
+        # Skip if not in log section
+        if not in_log_section:
+            continue
+
+        # Check for activity line (starts with -)
+        if line.strip().startswith('-') and not line.strip().startswith('  '):
+            # Save previous entry if exists
+            if current_entry_data:
+                entry = _create_time_log_entry(current_entry_data, filepath)
+                if entry:
+                    entries.append(entry)
+
+            # Start new entry
+            activity_line = line.strip()[1:].strip()  # Remove leading '-'
+            tags = parse_tags_from_text(activity_line)
+
+            # Remove tags from activity text
+            activity = re.sub(r'#[\w-]+', '', activity_line).strip()
+
+            current_entry_data = {
+                'activity': activity,
+                'tags': tags,
+                'start_time': None,
+                'end_time': None,
+                'notes': None,
+                'line_no': line_num,
+                'text': line.rstrip()
+            }
+
+        # Check for start/end/notes lines (indented with *)
+        elif current_entry_data and line.strip().startswith('*'):
+            detail_line = line.strip()[1:].strip()  # Remove leading '*'
+
+            # Parse start time
+            if detail_line.startswith('start:'):
+                time_str = detail_line[6:].strip()
+                current_entry_data['start_time'] = _parse_datetime(time_str)
+
+            # Parse end time
+            elif detail_line.startswith('end:'):
+                time_str = detail_line[4:].strip()
+                current_entry_data['end_time'] = _parse_datetime(time_str)
+
+            # Everything else is notes
+            else:
+                if current_entry_data['notes'] is None:
+                    current_entry_data['notes'] = detail_line
+                else:
+                    current_entry_data['notes'] += ' ' + detail_line
+
+    # Save final entry if exists
+    if current_entry_data:
+        entry = _create_time_log_entry(current_entry_data, filepath)
+        if entry:
+            entries.append(entry)
+
+    return entries
+
+
+def find_time_log_entries(filepath: str) -> list[TimeLogEntry]:
+    """
+    Find all time log entries in a markdown file.
+
+    Args:
+        filepath: Path to the markdown file to search.
+
+    Returns:
+        A list of TimeLogEntry objects found in the file.
+    """
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             lines = f.readlines()
-
-        for line_num, line in enumerate(lines, 1):
-            # Check for log section header
-            if line.strip() == '### Log':
-                in_log_section = True
-                continue
-
-            # Check if we've left the log section (new section header)
-            if in_log_section and line.startswith('#'):
-                in_log_section = False
-                # Save any pending entry
-                if current_entry_data:
-                    entry = _create_time_log_entry(current_entry_data, filepath)
-                    if entry:
-                        entries.append(entry)
-                    current_entry_data = None
-                continue
-
-            # Skip if not in log section
-            if not in_log_section:
-                continue
-
-            # Check for activity line (starts with -)
-            if line.strip().startswith('-') and not line.strip().startswith('  '):
-                # Save previous entry if exists
-                if current_entry_data:
-                    entry = _create_time_log_entry(current_entry_data, filepath)
-                    if entry:
-                        entries.append(entry)
-
-                # Start new entry
-                activity_line = line.strip()[1:].strip()  # Remove leading '-'
-                tags = parse_tags_from_text(activity_line)
-
-                # Remove tags from activity text
-                activity = re.sub(r'#[\w-]+', '', activity_line).strip()
-
-                current_entry_data = {
-                    'activity': activity,
-                    'tags': tags,
-                    'start_time': None,
-                    'end_time': None,
-                    'notes': None,
-                    'line_no': line_num,
-                    'text': line.rstrip()
-                }
-
-            # Check for start/end/notes lines (indented with *)
-            elif current_entry_data and line.strip().startswith('*'):
-                detail_line = line.strip()[1:].strip()  # Remove leading '*'
-
-                # Parse start time
-                if detail_line.startswith('start:'):
-                    time_str = detail_line[6:].strip()
-                    current_entry_data['start_time'] = _parse_datetime(time_str)
-
-                # Parse end time
-                elif detail_line.startswith('end:'):
-                    time_str = detail_line[4:].strip()
-                    current_entry_data['end_time'] = _parse_datetime(time_str)
-
-                # Everything else is notes
-                else:
-                    if current_entry_data['notes'] is None:
-                        current_entry_data['notes'] = detail_line
-                    else:
-                        current_entry_data['notes'] += ' ' + detail_line
-
-        # Save final entry if exists
-        if current_entry_data:
-            entry = _create_time_log_entry(current_entry_data, filepath)
-            if entry:
-                entries.append(entry)
-
+        return _parse_time_log_lines(lines, filepath)
     except (IOError, UnicodeDecodeError) as e:
         print(f"Warning: Could not read {filepath}: {e}", file=sys.stderr)
-
-    return entries
+        return []
 
 
 def _create_time_log_entry(entry_data: dict, filepath: str) -> Optional[TimeLogEntry]:
@@ -596,23 +626,153 @@ def format_duration(duration: timedelta) -> str:
         return f"{minutes}m"
 
 
-def is_off_plan(actual_text: Optional[str]) -> bool:
-    """
-    Check if an actual entry is marked as off-plan.
+# Tags that mark the start/end boundary of the personal/work transition.
+# Entries tagged with these are stripped from the beginning and end of the day.
+PERSONAL_BOUNDARY_TAGS: frozenset[str] = frozenset({'#per', '#personal'})
 
-    Off-plan entries are marked with strikethrough: ~text~
+# Tags whose time does not count toward "hours worked".
+NON_WORK_TAGS: frozenset[str] = frozenset({'#per', '#personal', '#off-task', '#break'})
+
+_DAY_ABBREVS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+
+def _has_any_tag(entry: TimeLogEntry, tag_set: frozenset) -> bool:
+    """Return True if the entry has any tag from the given set."""
+    return any(tag.text.lower() in tag_set for tag in entry.tags)
+
+
+def format_duration_long(duration: timedelta) -> str:
+    """
+    Format a duration in long form: "7 hr 46 min" or "30 min".
 
     Args:
-        actual_text: The actual column text.
+        duration: Duration to format.
 
     Returns:
-        True if marked as off-plan, False otherwise.
+        String like "7 hr 46 min" or "30 min".
     """
-    if actual_text is None:
+    total_seconds = int(duration.total_seconds())
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+
+    if hours > 0:
+        return f"{hours} hr {minutes} min"
+    return f"{minutes} min"
+
+
+def analyze_work_day(entries: list[TimeLogEntry]) -> Optional[dict]:
+    """
+    Compute work day statistics from a day's time log entries.
+
+    The work window starts at the first entry not tagged with a personal
+    boundary tag (#per, #personal) and ends at the last such entry.
+    Entries tagged #off-task or #break are included in the window but
+    do not count toward hours worked.
+
+    Args:
+        entries: Time log entries for a single day.
+
+    Returns:
+        Dict with keys 'start', 'end', 'total_time', 'hours_worked',
+        or None if there are no timed entries outside personal time.
+    """
+    timed = [e for e in entries if e.start_time is not None and e.end_time is not None]
+    if not timed:
+        return None
+
+    timed.sort(key=lambda e: e.start_time)
+
+    # Strip personal entries from the beginning
+    start_idx = 0
+    while start_idx < len(timed) and _has_any_tag(timed[start_idx], PERSONAL_BOUNDARY_TAGS):
+        start_idx += 1
+
+    # Strip personal entries from the end
+    end_idx = len(timed) - 1
+    while end_idx >= start_idx and _has_any_tag(timed[end_idx], PERSONAL_BOUNDARY_TAGS):
+        end_idx -= 1
+
+    if start_idx > end_idx:
+        return None
+
+    work_window = timed[start_idx:end_idx + 1]
+    work_start = work_window[0].start_time
+    work_end = work_window[-1].end_time
+    total_time = calculate_duration(work_start, work_end)
+
+    hours_worked = timedelta()
+    for entry in work_window:
+        if not _has_any_tag(entry, NON_WORK_TAGS):
+            hours_worked += calculate_duration(entry.start_time, entry.end_time)
+
+    return {
+        'start': work_start,
+        'end': work_end,
+        'total_time': total_time,
+        'hours_worked': hours_worked,
+    }
+
+
+def format_week_summary(days: list[tuple[date, Optional[dict]]]) -> str:
+    """
+    Format a Mon-Fri week summary as a markdown indented list.
+
+    Args:
+        days: List of (date, analysis_or_None) for each day of the week.
+
+    Returns:
+        Formatted markdown string.
+    """
+    lines = []
+    total_worked = timedelta()
+
+    for d, analysis in days:
+        day_abbrev = _DAY_ABBREVS[d.weekday()]
+        lines.append(f"- {d.strftime('%Y-%m-%d')} {day_abbrev}")
+
+        if analysis is None:
+            lines.append("  * (no data)")
+        else:
+            start_str = analysis['start'].strftime('%H:%M')
+            end_str = analysis['end'].strftime('%H:%M')
+            lines.append(f"  * time tracked:   {start_str} - {end_str}")
+            lines.append(f"  * hours worked:   {format_duration_long(analysis['hours_worked'])}")
+            lines.append(f"  * total time:     {format_duration_long(analysis['total_time'])}")
+            total_worked += analysis['hours_worked']
+
+    lines.append("")
+    lines.append(f"Weekly total worked: {format_duration_long(total_worked)}")
+
+    return "\n".join(lines)
+
+
+def is_off_plan(block: 'TimeBlockEntry') -> bool:
+    """
+    Check if a time block entry is off-plan.
+
+    A block is off-plan if:
+    - The plan text is wrapped in single tildes: ~plan text~
+    - The actual text contains the #off-plan tag
+
+    Args:
+        block: The TimeBlockEntry to check.
+
+    Returns:
+        True if the block is off-plan, False otherwise.
+    """
+    if block is None:
         return False
 
-    # Check for strikethrough pattern: ~text~
-    return '~' in actual_text
+    plan = block.plan or ""
+    plan_stripped = plan.strip()
+    if plan_stripped.startswith('~') and plan_stripped.endswith('~') and len(plan_stripped) > 1:
+        return True
+
+    actual = block.actual or ""
+    if '#off-plan' in actual:
+        return True
+
+    return False
 
 
 def compare_plan_vs_actual(time_blocks: list[TimeBlockEntry]) -> tuple[int, int, int]:
@@ -620,51 +780,29 @@ def compare_plan_vs_actual(time_blocks: list[TimeBlockEntry]) -> tuple[int, int,
     Compare plan vs actual in time blocks.
 
     Categorizes time blocks as:
-    - On-plan: actual matches plan (non-empty actual with same content)
-    - Off-plan: actual is marked with ~strikethrough~ or differs from plan
-    - Untracked: no actual entry
+    - On-plan: has a plan not marked off-plan, and actual does not contain #off-plan
+    - Off-plan: plan is wrapped in ~tildes~, or actual contains #off-plan
+    - Unplanned: no plan entry
 
     Args:
         time_blocks: List of TimeBlockEntry objects.
 
     Returns:
-        Tuple of (on_plan_count, off_plan_count, untracked_count).
+        Tuple of (on_plan_count, off_plan_count, unplanned_count).
     """
     on_plan = 0
     off_plan = 0
-    untracked = 0
+    unplanned = 0
 
     for block in time_blocks:
-        # Skip blocks with no plan
-        if block.plan is None or not block.plan.strip():
-            continue
-
-        # No actual entry means untracked
-        if block.actual is None or not block.actual.strip():
-            untracked += 1
-            continue
-
-        # Check if marked as off-plan
-        if is_off_plan(block.actual):
+        if not block.plan or not block.plan.strip():
+            unplanned += 1
+        elif is_off_plan(block):
             off_plan += 1
-            continue
-
-        # Compare plan vs actual (ignoring tags for comparison)
-        plan_clean = block.plan.strip()
-        actual_clean = block.actual.strip()
-
-        # Remove tags from both for comparison
-        import re
-        plan_no_tags = re.sub(r'#[\w-]+', '', plan_clean).strip()
-        actual_no_tags = re.sub(r'#[\w-]+', '', actual_clean).strip()
-
-        # If the main activity matches (ignoring case and extra whitespace), it's on-plan
-        if plan_no_tags.lower() == actual_no_tags.lower():
-            on_plan += 1
         else:
-            off_plan += 1
+            on_plan += 1
 
-    return on_plan, off_plan, untracked
+    return on_plan, off_plan, unplanned
 
 
 def calculate_plan_adherence(time_blocks: list[TimeBlockEntry]) -> dict[str, float]:
@@ -678,32 +816,32 @@ def calculate_plan_adherence(time_blocks: list[TimeBlockEntry]) -> dict[str, flo
         Dictionary with keys:
         - 'on_plan_percent': Percentage of time spent on-plan
         - 'off_plan_percent': Percentage of time spent off-plan
-        - 'untracked_percent': Percentage of time untracked
+        - 'unplanned_percent': Percentage of time unplanned (no plan entry)
         - 'on_plan_count': Number of on-plan blocks
         - 'off_plan_count': Number of off-plan blocks
-        - 'untracked_count': Number of untracked blocks
-        - 'total_blocks': Total number of blocks with plans
+        - 'unplanned_count': Number of unplanned blocks
+        - 'total_blocks': Total number of blocks
     """
-    on_plan, off_plan, untracked = compare_plan_vs_actual(time_blocks)
-    total = on_plan + off_plan + untracked
+    on_plan, off_plan, unplanned = compare_plan_vs_actual(time_blocks)
+    total = on_plan + off_plan + unplanned
 
     if total == 0:
         return {
             'on_plan_percent': 0.0,
             'off_plan_percent': 0.0,
-            'untracked_percent': 0.0,
+            'unplanned_percent': 0.0,
             'on_plan_count': 0,
             'off_plan_count': 0,
-            'untracked_count': 0,
+            'unplanned_count': 0,
             'total_blocks': 0,
         }
 
     return {
         'on_plan_percent': (on_plan / total) * 100,
         'off_plan_percent': (off_plan / total) * 100,
-        'untracked_percent': (untracked / total) * 100,
+        'unplanned_percent': (unplanned / total) * 100,
         'on_plan_count': on_plan,
         'off_plan_count': off_plan,
-        'untracked_count': untracked,
+        'unplanned_count': unplanned,
         'total_blocks': total,
     }
