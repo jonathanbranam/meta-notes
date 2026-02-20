@@ -6,17 +6,10 @@ Handles time log parsing, time block parsing, and time calculations.
 
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
-from enum import Enum
 from typing import Optional
 from collections import defaultdict
 import re
 import sys
-
-
-class EntryType(Enum):
-    """Enum representing the type of time log entry."""
-    ARRIVED = "arrived"
-    ACTIVITY = "activity"
 
 
 # Tag groups: tags that share meaning and should be reported together.
@@ -68,7 +61,6 @@ class TimeLogEntry:
           * start: 2026-02-14 Sat 09:00
           * end:   2026-02-14 Sat 09:16
     """
-    entry_type: EntryType
     text: str
     filename: str
     line_no: int
@@ -77,6 +69,88 @@ class TimeLogEntry:
     activity: Optional[str] = None
     tags: list[Tag] = field(default_factory=list)
     notes: Optional[str] = None
+
+
+def _extract_date_from_filepath(filepath: str) -> Optional[date]:
+    """
+    Extract a date from a filepath by looking for YYYY-MM-DD pattern in the filename.
+
+    Args:
+        filepath: File path (e.g., 'plan/daily/26-Q1/2026-02-14 Sat.md').
+
+    Returns:
+        A date object if found, None otherwise.
+    """
+    import os
+    filename = os.path.basename(filepath)
+    match = re.search(r'(\d{4})-(\d{2})-(\d{2})', filename)
+    if not match:
+        return None
+    try:
+        return date(int(match.group(1)), int(match.group(2)), int(match.group(3)))
+    except ValueError:
+        return None
+
+
+def _parse_bare_time_24h(time_str: str) -> Optional[time]:
+    """
+    Parse a bare 24-hour time string (e.g., '09:10', '15:20').
+
+    Args:
+        time_str: Time string to parse.
+
+    Returns:
+        A time object if successfully parsed, None otherwise.
+    """
+    time_str = time_str.strip()
+    match = re.compile(r'^(\d{1,2}):(\d{2})$').match(time_str)
+    if not match:
+        return None
+    hour = int(match.group(1))
+    minute = int(match.group(2))
+    if hour < 0 or hour > 23 or minute < 0 or minute > 59:
+        return None
+    try:
+        return time(hour=hour, minute=minute)
+    except ValueError:
+        return None
+
+
+def _parse_entry_time(time_str: str, file_date: Optional[date]) -> Optional[datetime]:
+    """
+    Parse a time string for a log entry, supporting multiple formats.
+
+    Tries in order:
+    1. Full datetime: '2026-02-14 Sat 08:00'
+    2. Bare 24-hour time: '09:10' (combined with file_date)
+    3. Bare 12-hour time: '3:20pm' (combined with file_date)
+
+    Args:
+        time_str: Time string to parse.
+        file_date: Date from the source file, used for bare time formats.
+
+    Returns:
+        A datetime object if successfully parsed, None otherwise.
+    """
+    # Try full datetime format first
+    result = _parse_datetime(time_str)
+    if result is not None:
+        return result
+
+    if file_date is None:
+        return None
+
+    # Try bare 24-hour time
+    t = _parse_bare_time_24h(time_str)
+    if t is not None:
+        return datetime(file_date.year, file_date.month, file_date.day, t.hour, t.minute)
+
+    # Try bare 12-hour time
+    t = _parse_time(time_str)
+    if t is not None:
+        return datetime(file_date.year, file_date.month, file_date.day, t.hour, t.minute)
+
+    return None
 
 
 def _parse_time(time_str: str) -> Optional[time]:
@@ -214,7 +288,8 @@ def calculate_time_by_group(entries: list[TimeLogEntry]) -> dict[str, timedelta]
     return dict(group_durations)
 
 
-def _parse_time_log_lines(lines: list[str], filepath: str) -> list[TimeLogEntry]:
+def _parse_time_log_lines(lines: list[str], filepath: str,
+                          file_date: Optional[date] = None) -> list[TimeLogEntry]:
     """
     Parse time log entries from a list of lines.
 
@@ -225,9 +300,14 @@ def _parse_time_log_lines(lines: list[str], filepath: str) -> list[TimeLogEntry]
       * end:   2026-02-14 Sat 09:00
       * optional notes
 
+    Start/end times also support bare time formats when file_date is provided:
+      * start: 09:10    (24-hour)
+      * start: 9:10am   (12-hour)
+
     Args:
         lines: Lines of text to parse.
         filepath: Source file path (used for TimeLogEntry metadata).
+        file_date: Date of the file, used to resolve bare time strings.
 
     Returns:
         A list of TimeLogEntry objects found in the lines.
@@ -289,12 +369,12 @@ def _parse_time_log_lines(lines: list[str], filepath: str) -> list[TimeLogEntry]
             # Parse start time
             if detail_line.startswith('start:'):
                 time_str = detail_line[6:].strip()
-                current_entry_data['start_time'] = _parse_datetime(time_str)
+                current_entry_data['start_time'] = _parse_entry_time(time_str, file_date)
 
             # Parse end time
             elif detail_line.startswith('end:'):
                 time_str = detail_line[4:].strip()
-                current_entry_data['end_time'] = _parse_datetime(time_str)
+                current_entry_data['end_time'] = _parse_entry_time(time_str, file_date)
 
             # Everything else is notes
             else:
@@ -325,7 +405,8 @@ def find_time_log_entries(filepath: str) -> list[TimeLogEntry]:
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             lines = f.readlines()
-        return _parse_time_log_lines(lines, filepath)
+        file_date = _extract_date_from_filepath(filepath)
+        return _parse_time_log_lines(lines, filepath, file_date)
     except (IOError, UnicodeDecodeError) as e:
         print(f"Warning: Could not read {filepath}: {e}", file=sys.stderr)
         return []
@@ -352,7 +433,6 @@ def _create_time_log_entry(entry_data: dict, filepath: str) -> Optional[TimeLogE
         tags.extend(notes_tags)
 
     return TimeLogEntry(
-        entry_type=EntryType.ACTIVITY,
         text=entry_data.get('text', ''),
         filename=filepath,
         line_no=entry_data.get('line_no', 0),
@@ -362,21 +442,6 @@ def _create_time_log_entry(entry_data: dict, filepath: str) -> Optional[TimeLogE
         tags=tags,
         notes=entry_data.get('notes')
     )
-
-
-def filter_entries_by_type(entries: list[TimeLogEntry],
-                           entry_types: list[EntryType]) -> list[TimeLogEntry]:
-    """
-    Filter time log entries by type.
-
-    Args:
-        entries: List of TimeLogEntry objects to filter.
-        entry_types: List of EntryType values to include.
-
-    Returns:
-        Filtered list of TimeLogEntry objects.
-    """
-    return [entry for entry in entries if entry.entry_type in entry_types]
 
 
 @dataclass

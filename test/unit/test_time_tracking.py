@@ -15,18 +15,19 @@ from datetime import date
 from time_tracking import (
     TimeLogEntry,
     TimeBlockEntry,
-    EntryType,
     Tag,
     TAG_GROUPS,
     TAG_TO_GROUP,
     get_tag_group,
     parse_tags_from_text,
     _parse_time,
+    _parse_bare_time_24h,
+    _parse_entry_time,
+    _extract_date_from_filepath,
     _parse_time_block_row,
     _parse_time_log_lines,
     find_time_log_entries,
     find_time_block_entries,
-    filter_entries_by_type,
     calculate_duration,
     calculate_total_time_by_tag,
     calculate_time_by_group,
@@ -94,6 +95,85 @@ def test_parse_time_invalid_minute():
 def test_parse_time_invalid_format():
     """Test parsing time with invalid format."""
     result = _parse_time("not a time")
+    assert result is None
+
+
+# Tests for _parse_bare_time_24h function
+
+def test_parse_bare_time_24h_morning():
+    """Test parsing 24-hour time in the morning."""
+    result = _parse_bare_time_24h("09:10")
+    assert result == time(9, 10)
+
+
+def test_parse_bare_time_24h_afternoon():
+    """Test parsing 24-hour time in the afternoon."""
+    result = _parse_bare_time_24h("15:20")
+    assert result == time(15, 20)
+
+
+def test_parse_bare_time_24h_midnight():
+    """Test parsing 24-hour time at midnight."""
+    result = _parse_bare_time_24h("00:00")
+    assert result == time(0, 0)
+
+
+def test_parse_bare_time_24h_rejects_ampm():
+    """Test that 12-hour format with am/pm is rejected."""
+    result = _parse_bare_time_24h("9:10am")
+    assert result is None
+
+
+def test_parse_bare_time_24h_invalid():
+    """Test that invalid strings return None."""
+    assert _parse_bare_time_24h("not a time") is None
+    assert _parse_bare_time_24h("25:00") is None
+    assert _parse_bare_time_24h("12:60") is None
+
+
+# Tests for _parse_entry_time function
+
+def test_parse_entry_time_full_datetime():
+    """Test parsing full datetime format."""
+    from datetime import datetime
+    result = _parse_entry_time("2026-02-14 Sat 08:00", None)
+    assert result == datetime(2026, 2, 14, 8, 0)
+
+
+def test_parse_entry_time_bare_24h_with_date():
+    """Test parsing bare 24-hour time with file date."""
+    from datetime import datetime, date
+    file_date = date(2026, 2, 14)
+    result = _parse_entry_time("09:10", file_date)
+    assert result == datetime(2026, 2, 14, 9, 10)
+
+
+def test_parse_entry_time_bare_12h_with_date():
+    """Test parsing bare 12-hour time with file date."""
+    from datetime import datetime, date
+    file_date = date(2026, 2, 14)
+    result = _parse_entry_time("3:20pm", file_date)
+    assert result == datetime(2026, 2, 14, 15, 20)
+
+
+def test_parse_entry_time_bare_without_date():
+    """Test that bare time without file date returns None."""
+    result = _parse_entry_time("09:10", None)
+    assert result is None
+
+
+# Tests for _extract_date_from_filepath function
+
+def test_extract_date_from_filepath_daily_note():
+    """Test extracting date from a daily note path."""
+    result = _extract_date_from_filepath("plan/daily/26-Q1/2026-02-14 Sat.md")
+    from datetime import date
+    assert result == date(2026, 2, 14)
+
+
+def test_extract_date_from_filepath_no_date():
+    """Test that filepath without date returns None."""
+    result = _extract_date_from_filepath("area/work/notes.md")
     assert result is None
 
 
@@ -190,7 +270,6 @@ def test_parse_time_log_lines_in_log_section():
     entries = _parse_time_log_lines(lines, "test.md")
 
     assert len(entries) == 1
-    assert entries[0].entry_type == EntryType.ACTIVITY
     assert entries[0].activity == "email review"
     assert len(entries[0].tags) == 1
     assert entries[0].tags[0].text == "#admin"
@@ -201,8 +280,9 @@ def test_parse_time_log_lines_no_log_section():
     lines = [
         "# Daily Note\n",
         "\n",
-        "- arrived: 8:00 am\n",
-        "- some task\n",
+        "- email review #admin\n",
+        "  * start: 2026-02-14 Sat 08:00\n",
+        "  * end:   2026-02-14 Sat 09:00\n",
     ]
 
     entries = _parse_time_log_lines(lines, "test.md")
@@ -242,7 +322,63 @@ def test_parse_time_log_lines_multiple_entries():
     entries = _parse_time_log_lines(lines, "test.md")
 
     assert len(entries) == 3
-    assert all(e.entry_type == EntryType.ACTIVITY for e in entries)
+
+
+def test_parse_time_log_lines_bare_24h_times():
+    """Test parsing time log entries with bare 24-hour times."""
+    from datetime import datetime, date
+    lines = [
+        "### Log\n",
+        "\n",
+        "- email #admin\n",
+        "  * start: 09:10\n",
+        "  * end:   10:00\n",
+    ]
+    file_date = date(2026, 2, 14)
+
+    entries = _parse_time_log_lines(lines, "test.md", file_date)
+
+    assert len(entries) == 1
+    assert entries[0].start_time == datetime(2026, 2, 14, 9, 10)
+    assert entries[0].end_time == datetime(2026, 2, 14, 10, 0)
+
+
+def test_parse_time_log_lines_bare_12h_times():
+    """Test parsing time log entries with bare 12-hour times."""
+    from datetime import datetime, date
+    lines = [
+        "### Log\n",
+        "\n",
+        "- meeting #mtg\n",
+        "  * start: 3:20pm\n",
+        "  * end:   4:00pm\n",
+    ]
+    file_date = date(2026, 2, 14)
+
+    entries = _parse_time_log_lines(lines, "test.md", file_date)
+
+    assert len(entries) == 1
+    assert entries[0].start_time == datetime(2026, 2, 14, 15, 20)
+    assert entries[0].end_time == datetime(2026, 2, 14, 16, 0)
+
+
+def test_find_time_log_entries_bare_times_from_filename(tmp_path):
+    """Test that find_time_log_entries resolves bare times using filename date."""
+    from datetime import datetime
+    test_file = tmp_path / "2026-02-14 Sat.md"
+    test_file.write_text(
+        "### Log\n"
+        "\n"
+        "- email review #admin\n"
+        "  * start: 08:15\n"
+        "  * end:   09:00\n"
+    )
+
+    entries = find_time_log_entries(str(test_file))
+
+    assert len(entries) == 1
+    assert entries[0].start_time == datetime(2026, 2, 14, 8, 15)
+    assert entries[0].end_time == datetime(2026, 2, 14, 9, 0)
 
 
 # Tests for find_time_log_entries function
@@ -268,36 +404,6 @@ def test_find_time_log_entries_missing_file():
     """Test that find_time_log_entries returns empty list for missing file."""
     entries = find_time_log_entries("/nonexistent/path/test.md")
     assert entries == []
-
-
-# Tests for filter_entries_by_type function
-
-def test_filter_entries_by_type_arrived_only():
-    """Test filtering to show only ARRIVED entries."""
-    entries = [
-        TimeLogEntry(EntryType.ARRIVED, "- arrived: 8:00 am", "test.md", 1, time(8, 0)),
-        TimeLogEntry(EntryType.ACTIVITY, "- work", "test.md", 2, time(8, 15), time(9, 0)),
-        TimeLogEntry(EntryType.ACTIVITY, "- meeting", "test.md", 3, time(9, 0), time(10, 0)),
-    ]
-
-    filtered = filter_entries_by_type(entries, [EntryType.ARRIVED])
-
-    assert len(filtered) == 1
-    assert filtered[0].entry_type == EntryType.ARRIVED
-
-
-def test_filter_entries_by_type_activity_only():
-    """Test filtering to show only ACTIVITY entries."""
-    entries = [
-        TimeLogEntry(EntryType.ARRIVED, "- arrived: 8:00 am", "test.md", 1, time(8, 0)),
-        TimeLogEntry(EntryType.ACTIVITY, "- work", "test.md", 2, time(8, 15), time(9, 0)),
-        TimeLogEntry(EntryType.ACTIVITY, "- meeting", "test.md", 3, time(9, 0), time(10, 0)),
-    ]
-
-    filtered = filter_entries_by_type(entries, [EntryType.ACTIVITY])
-
-    assert len(filtered) == 2
-    assert all(e.entry_type == EntryType.ACTIVITY for e in filtered)
 
 
 # Tests for _parse_time_block_row function
@@ -472,12 +578,12 @@ def test_calculate_total_time_by_tag_single_tag():
     """Test calculating total time for a single tag."""
     entries = [
         TimeLogEntry(
-            EntryType.ACTIVITY, "- work", "test.md", 1,
+"- work", "test.md", 1,
             time(8, 0), time(9, 0), "work",
             [Tag("#dev")]
         ),
         TimeLogEntry(
-            EntryType.ACTIVITY, "- more work", "test.md", 2,
+"- more work", "test.md", 2,
             time(9, 0), time(10, 30), "more work",
             [Tag("#dev")]
         ),
@@ -493,17 +599,17 @@ def test_calculate_total_time_by_tag_multiple_tags():
     """Test calculating total time for multiple tags."""
     entries = [
         TimeLogEntry(
-            EntryType.ACTIVITY, "- email", "test.md", 1,
+"- email", "test.md", 1,
             time(8, 0), time(8, 30), "email",
             [Tag("#admin")]
         ),
         TimeLogEntry(
-            EntryType.ACTIVITY, "- meeting", "test.md", 2,
+"- meeting", "test.md", 2,
             time(9, 0), time(10, 0), "meeting",
             [Tag("#mtg")]
         ),
         TimeLogEntry(
-            EntryType.ACTIVITY, "- coding", "test.md", 3,
+"- coding", "test.md", 3,
             time(10, 0), time(12, 0), "coding",
             [Tag("#dev")]
         ),
@@ -520,7 +626,7 @@ def test_calculate_total_time_by_tag_entry_with_multiple_tags():
     """Test entry with multiple tags counts toward all tags."""
     entries = [
         TimeLogEntry(
-            EntryType.ACTIVITY, "- work", "test.md", 1,
+"- work", "test.md", 1,
             time(8, 0), time(9, 0), "work",
             [Tag("#dev"), Tag("#project-x")]
         ),
@@ -536,12 +642,12 @@ def test_calculate_total_time_by_tag_skip_entries_without_times():
     """Test that entries without start/end times are skipped."""
     entries = [
         TimeLogEntry(
-            EntryType.ACTIVITY, "- work", "test.md", 1,
+"- work", "test.md", 1,
             None, None, "work",
             [Tag("#dev")]
         ),
         TimeLogEntry(
-            EntryType.ACTIVITY, "- more work", "test.md", 2,
+"- more work", "test.md", 2,
             time(9, 0), time(10, 0), "more work",
             [Tag("#dev")]
         ),
@@ -559,12 +665,12 @@ def test_calculate_time_by_group_merges_aliases():
     """Test that alias tags (#mtg and #meeting) merge into one group total."""
     entries = [
         TimeLogEntry(
-            EntryType.ACTIVITY, "- standup", "test.md", 1,
+"- standup", "test.md", 1,
             time(9, 0), time(9, 30), "standup",
             [Tag("#mtg")]
         ),
         TimeLogEntry(
-            EntryType.ACTIVITY, "- team sync", "test.md", 2,
+"- team sync", "test.md", 2,
             time(10, 0), time(11, 0), "team sync",
             [Tag("#meeting")]
         ),
@@ -581,7 +687,7 @@ def test_calculate_time_by_group_no_double_count():
     """Test that an entry with both #mtg and #meeting counts Meeting only once."""
     entries = [
         TimeLogEntry(
-            EntryType.ACTIVITY, "- meeting", "test.md", 1,
+"- meeting", "test.md", 1,
             time(9, 0), time(10, 0), "meeting",
             [Tag("#mtg"), Tag("#meeting")]
         ),
@@ -596,17 +702,17 @@ def test_calculate_time_by_group_multiple_groups():
     """Test entries belonging to different groups."""
     entries = [
         TimeLogEntry(
-            EntryType.ACTIVITY, "- standup", "test.md", 1,
+"- standup", "test.md", 1,
             time(9, 0), time(9, 30), "standup",
             [Tag("#mtg")]
         ),
         TimeLogEntry(
-            EntryType.ACTIVITY, "- lunch break", "test.md", 2,
+"- lunch break", "test.md", 2,
             time(12, 0), time(12, 30), "lunch break",
             [Tag("#break")]
         ),
         TimeLogEntry(
-            EntryType.ACTIVITY, "- personal errand", "test.md", 3,
+"- personal errand", "test.md", 3,
             time(17, 0), time(17, 30), "personal errand",
             [Tag("#personal")]
         ),
@@ -623,7 +729,7 @@ def test_calculate_time_by_group_ungrouped_tags_ignored():
     """Test that tags not in any group don't appear in the result."""
     entries = [
         TimeLogEntry(
-            EntryType.ACTIVITY, "- coding", "test.md", 1,
+"- coding", "test.md", 1,
             time(9, 0), time(11, 0), "coding",
             [Tag("#dev"), Tag("#project-x")]
         ),
@@ -638,12 +744,12 @@ def test_calculate_time_by_group_skips_entries_without_times():
     """Test that entries without start/end times are skipped."""
     entries = [
         TimeLogEntry(
-            EntryType.ACTIVITY, "- meeting", "test.md", 1,
+"- meeting", "test.md", 1,
             None, None, "meeting",
             [Tag("#mtg")]
         ),
         TimeLogEntry(
-            EntryType.ACTIVITY, "- standup", "test.md", 2,
+"- standup", "test.md", 2,
             time(9, 0), time(9, 30), "standup",
             [Tag("#mtg")]
         ),
@@ -660,12 +766,12 @@ def test_calculate_work_vs_nonwork_work_only():
     """Test calculating work vs non-work with only work entries."""
     entries = [
         TimeLogEntry(
-            EntryType.ACTIVITY, "- coding", "test.md", 1,
+"- coding", "test.md", 1,
             time(8, 0), time(10, 0), "coding",
             [Tag("#dev")]
         ),
         TimeLogEntry(
-            EntryType.ACTIVITY, "- meeting", "test.md", 2,
+"- meeting", "test.md", 2,
             time(10, 0), time(11, 0), "meeting",
             [Tag("#mtg")]
         ),
@@ -681,17 +787,17 @@ def test_calculate_work_vs_nonwork_mixed():
     """Test calculating work vs non-work with mixed entries."""
     entries = [
         TimeLogEntry(
-            EntryType.ACTIVITY, "- coding", "test.md", 1,
+"- coding", "test.md", 1,
             time(8, 0), time(10, 0), "coding",
             [Tag("#dev")]
         ),
         TimeLogEntry(
-            EntryType.ACTIVITY, "- lunch", "test.md", 2,
+"- lunch", "test.md", 2,
             time(12, 0), time(13, 0), "lunch",
             [Tag("#break")]
         ),
         TimeLogEntry(
-            EntryType.ACTIVITY, "- personal", "test.md", 3,
+"- personal", "test.md", 3,
             time(17, 0), time(18, 0), "personal",
             [Tag("#pers")]
         ),
@@ -707,12 +813,12 @@ def test_calculate_work_vs_nonwork_untagged():
     """Test that untagged or uncategorized entries don't count."""
     entries = [
         TimeLogEntry(
-            EntryType.ACTIVITY, "- something", "test.md", 1,
+"- something", "test.md", 1,
             time(8, 0), time(9, 0), "something",
             [Tag("#unknown")]
         ),
         TimeLogEntry(
-            EntryType.ACTIVITY, "- work", "test.md", 2,
+"- work", "test.md", 2,
             time(9, 0), time(10, 0), "work",
             [Tag("#dev")]
         ),
@@ -942,7 +1048,7 @@ def _make_entry(start_h, start_m, end_h, end_m, tags, d=date(2026, 2, 16)):
     start_dt = datetime(d.year, d.month, d.day, start_h, start_m)
     end_dt = datetime(d.year, d.month, d.day, end_h, end_m)
     return TimeLogEntry(
-        EntryType.ACTIVITY, "- entry", "test.md", 1,
+        "- entry", "test.md", 1,
         start_dt, end_dt, "entry",
         [Tag(t) for t in tags]
     )
