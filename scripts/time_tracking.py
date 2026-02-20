@@ -12,11 +12,24 @@ import re
 import sys
 
 
+# Tag aliases: abbreviations expanded to their canonical (full) tag text.
+# When a tag is parsed, its text is normalized using this mapping.
+# Note: #off-task is NOT aliased to #personal because it has different
+# boundary semantics (non-work time within the work window, not a boundary marker).
+TAG_ALIASES: dict[str, str] = {
+    '#mtg': '#meeting',
+    '#pers': '#personal',
+    '#per': '#personal',
+}
+
 # Tag groups: tags that share meaning and should be reported together.
+# Tags listed here should use canonical (non-alias) forms.
 TAG_GROUPS: dict[str, set[str]] = {
-    'Meeting': {'#mtg', '#meeting'},
-    'Personal': {'#per', '#personal', '#off-task'},
+    'Meeting': {'#meeting'},
+    'Personal': {'#personal', '#off-task'},
     'Break': {'#break'},
+    'Slack': {'#slack'},
+    'Email': {'#email'},
 }
 
 # Reverse lookup: normalized tag text → group name
@@ -38,9 +51,12 @@ class Tag:
     text: str
 
     def __post_init__(self):
-        """Ensure tag text starts with #."""
+        """Ensure tag text starts with # and expand any known abbreviations."""
         if not self.text.startswith('#'):
             self.text = '#' + self.text
+        canonical = TAG_ALIASES.get(self.text.lower())
+        if canonical:
+            self.text = canonical
 
 
 @dataclass
@@ -237,7 +253,8 @@ def get_tag_group(tag_text: str) -> Optional[str]:
     normalized = tag_text.lower()
     if not normalized.startswith('#'):
         normalized = '#' + normalized
-    return TAG_TO_GROUP.get(normalized)
+    canonical = TAG_ALIASES.get(normalized, normalized)
+    return TAG_TO_GROUP.get(canonical)
 
 
 def parse_tags_from_text(text: str) -> list[Tag]:
@@ -693,10 +710,12 @@ def format_duration(duration: timedelta) -> str:
 
 # Tags that mark the start/end boundary of the personal/work transition.
 # Entries tagged with these are stripped from the beginning and end of the day.
-PERSONAL_BOUNDARY_TAGS: frozenset[str] = frozenset({'#per', '#personal'})
+# Uses canonical tag forms (#per/#pers normalize to #personal via TAG_ALIASES).
+PERSONAL_BOUNDARY_TAGS: frozenset[str] = frozenset({'#personal'})
 
 # Tags whose time does not count toward "hours worked".
-NON_WORK_TAGS: frozenset[str] = frozenset({'#per', '#personal', '#off-task', '#break'})
+# Uses canonical forms; #off-task is distinct from #personal (non-boundary, non-work).
+NON_WORK_TAGS: frozenset[str] = frozenset({'#personal', '#off-task', '#break'})
 
 _DAY_ABBREVS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 

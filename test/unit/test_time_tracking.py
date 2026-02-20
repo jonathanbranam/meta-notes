@@ -18,6 +18,7 @@ from time_tracking import (
     Tag,
     TAG_GROUPS,
     TAG_TO_GROUP,
+    TAG_ALIASES,
     get_tag_group,
     parse_tags_from_text,
     _parse_time,
@@ -177,6 +178,34 @@ def test_extract_date_from_filepath_no_date():
     assert result is None
 
 
+# Tests for Tag alias expansion
+
+def test_tag_alias_mtg_expands_to_meeting():
+    """Test that #mtg tag is expanded to #meeting."""
+    tag = Tag("#mtg")
+    assert tag.text == "#meeting"
+
+
+def test_tag_alias_per_expands_to_personal():
+    """Test that #per tag is expanded to #personal."""
+    tag = Tag("#per")
+    assert tag.text == "#personal"
+
+
+def test_tag_alias_pers_expands_to_personal():
+    """Test that #pers tag is expanded to #personal."""
+    tag = Tag("#pers")
+    assert tag.text == "#personal"
+
+
+def test_tag_canonical_not_changed():
+    """Test that canonical tags (not aliases) are not changed."""
+    assert Tag("#meeting").text == "#meeting"
+    assert Tag("#personal").text == "#personal"
+    assert Tag("#off-task").text == "#off-task"
+    assert Tag("#slack").text == "#slack"
+
+
 # Tests for get_tag_group function
 
 def test_get_tag_group_mtg():
@@ -199,6 +228,21 @@ def test_get_tag_group_personal_aliases():
 def test_get_tag_group_break():
     """Test that #break maps to Break group."""
     assert get_tag_group("#break") == "Break"
+
+
+def test_get_tag_group_slack():
+    """Test that #slack maps to Slack group."""
+    assert get_tag_group("#slack") == "Slack"
+
+
+def test_get_tag_group_email():
+    """Test that #email maps to Email group."""
+    assert get_tag_group("#email") == "Email"
+
+
+def test_get_tag_group_pers_alias():
+    """Test that #pers abbreviation maps to Personal group."""
+    assert get_tag_group("#pers") == "Personal"
 
 
 def test_get_tag_group_unknown():
@@ -224,7 +268,7 @@ def test_parse_tags_from_text_single_tag():
     """Test extracting a single tag from text."""
     result = parse_tags_from_text("meeting #mtg at 9am")
     assert len(result) == 1
-    assert result[0].text == "#mtg"
+    assert result[0].text == "#meeting"
 
 
 def test_parse_tags_from_text_multiple_tags():
@@ -324,6 +368,26 @@ def test_parse_time_log_lines_multiple_entries():
     assert len(entries) == 3
 
 
+def test_parse_time_log_lines_tags_in_body():
+    """Test that tags in body (notes) lines are collected for the entry."""
+    lines = [
+        "### Log\n",
+        "\n",
+        "- activity name #tag-1 #tag-2\n",
+        "  * start: 2026-02-14 Sat 08:00\n",
+        "  * end:   2026-02-14 Sat 09:00\n",
+        "  * optional notes #tag-3\n",
+    ]
+
+    entries = _parse_time_log_lines(lines, "test.md")
+
+    assert len(entries) == 1
+    tag_texts = [t.text for t in entries[0].tags]
+    assert "#tag-1" in tag_texts
+    assert "#tag-2" in tag_texts
+    assert "#tag-3" in tag_texts
+
+
 def test_parse_time_log_lines_bare_24h_times():
     """Test parsing time log entries with bare 24-hour times."""
     from datetime import datetime, date
@@ -420,7 +484,7 @@ def test_parse_time_block_row_with_plan_and_actual():
     assert len(entry.plan_tags) == 1
     assert entry.plan_tags[0].text == "#admin"
     assert len(entry.actual_tags) == 1
-    assert entry.actual_tags[0].text == "#mtg"
+    assert entry.actual_tags[0].text == "#meeting"
 
 
 def test_parse_time_block_row_plan_only():
@@ -618,7 +682,7 @@ def test_calculate_total_time_by_tag_multiple_tags():
     result = calculate_total_time_by_tag(entries)
 
     assert result["#admin"] == timedelta(minutes=30)
-    assert result["#mtg"] == timedelta(hours=1)
+    assert result["#meeting"] == timedelta(hours=1)
     assert result["#dev"] == timedelta(hours=2)
 
 
