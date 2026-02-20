@@ -11,8 +11,8 @@ Python libraries.
 
 ## Issue Tracking
 
-This project uses `bd` (Beads) for issue tracking. See @using-bd.md for a guide
-on how to use `bd` effectively.
+This project uses `br` (Beads) for issue tracking. See @br-guide.md for a guide
+on how to use `br` effectively.
 
 ## Testing
 
@@ -203,39 +203,30 @@ pipenv run pytest test/unit/test_tasks.py::test_find_tasks_in_file_simple_uncomp
 
 ## Beads Task Management Workflow
 
-This project uses [Beads](https://github.com/steveyegge/beads) (`bd`) for persistent task tracking across AI sessions. See @agent-tasks.md for complete installation and usage instructions.
+This project uses [Beads](https://github.com/steveyegge/beads) (`br`) for persistent task tracking across AI sessions. See @agent-tasks.md for complete installation and usage instructions.
 
 ### Session Start
-
-The `SessionStart` hook automatically runs `bd prime` to load relevant task context. You don't need to do anything manually.
 
 ### During Development
 
 **View available tasks:**
 ```bash
-bd ready          # Show unblocked tasks ready to work on
-bd list           # Show all tasks
-bd q "keyword"    # Search for specific tasks
+br ready           # Show unblocked tasks ready to work on
+br list            # Show all tasks
+br search "river"  # full-text search
 ```
 
-**Update task status:**
-```bash
-bd start <task-id>    # Mark task as in-progress
-bd done <task-id>     # Mark task as completed
-bd add "New task"     # Create new task discovered during work
+### Essential Workflow
+
+```
+1. br show <id>              # read the task
+2. br update <id> --claim    # mark in_progress + assign to self
+3. ... do the work ...
+4. br close <id> -r "reason" # mark closed with a reason
+5. br sync --flush-only      # export DB → JSONL (commit JSONL with your code changes)
 ```
 
-### Before Committing
-
-**ALWAYS sync the database before committing:**
-```bash
-bd sync
-git add .beads/
-git commit -m "Update beads - description of changes"
-```
-
-The `.beads/` directory contains git-tracked JSONL files that persist task state across sessions.
-
+**Always close with `-r` / `--reason`** — a one-sentence summary of what was done.
 
 ## Landing the Plane (Session Completion)
 
@@ -249,7 +240,7 @@ The `.beads/` directory contains git-tracked JSONL files that persist task state
 4. **PUSH TO REMOTE** - This is MANDATORY:
    ```bash
    git pull --rebase
-   bd sync
+   br sync
    git push
    git status  # MUST show "up to date with origin"
    ```
