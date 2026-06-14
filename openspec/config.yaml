@@ -1,20 +1,21 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Domain: Personal life-management vim plugin using plain-text markdown notes (PPARA structure: plan/, project/, area/, resource/, archive/).
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  Languages:
+  - Vimscript — all plugin logic (plugin/meta_notes.vim, autoload/meta_notes/*.vim, after/syntax/markdown.vim)
+  - Python (stdlib only, no third-party libs) — helper scripts invoked by the plugin via shell (scripts/*.py)
+  - Pipenv manages the Python environment (Pipfile)
+
+  Architecture:
+  - plugin/       auto-loaded vim entry point; defines commands and <localleader> mappings (buffer-local via autocmd FileType, never after/ftplugin/)
+  - autoload/     on-demand vimscript modules: file_ops, notes, template, time_tracking
+  - scripts/      Python CLIs called from vim: find_tasks, notes, tasks, time_report, time_tracking, update_links
+  - after/syntax/ markdown syntax extensions
+
+  Testing:
+  - Vimscript: vader.vim tests in test/*.vader — run with ./run_tests.sh
+  - Python: pytest bare functions in test/unit/test_*.py — run with pipenv run pytest test/unit/
+  - Vader tests use a temp dir pattern: create tmp dir, cd into it, clean up at end
+  - Python tests use tmp_path fixture; no test classes; names follow test_<module>_<function>_<scenario>
