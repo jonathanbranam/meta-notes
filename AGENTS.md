@@ -11,8 +11,7 @@ Python libraries.
 
 ## Issue Tracking
 
-This project uses `br` (Beads) for issue tracking. See @br-guide.md for a guide
-on how to use `br` effectively.
+This project previously used Beads (`br`) for issue tracking. Beads has been replaced by openspec.
 
 ## Testing
 
@@ -201,32 +200,9 @@ pipenv run pytest test/unit/test_tasks.py::test_find_tasks_in_file_simple_uncomp
 - **Focus** - Tests are organized by file, not by class hierarchy
 
 
-## Beads Task Management Workflow
+## Task Management Workflow
 
-This project uses [Beads](https://github.com/steveyegge/beads) (`br`) for persistent task tracking across AI sessions. See @agent-tasks.md for complete installation and usage instructions.
-
-### Session Start
-
-### During Development
-
-**View available tasks:**
-```bash
-br ready           # Show unblocked tasks ready to work on
-br list            # Show all tasks
-br search "river"  # full-text search
-```
-
-### Essential Workflow
-
-```
-1. br show <id>              # read the task
-2. br update <id> --claim    # mark in_progress + assign to self
-3. ... do the work ...
-4. br close <id> -r "reason" # mark closed with a reason
-5. br sync --flush-only      # export DB → JSONL (commit JSONL with your code changes)
-```
-
-**Always close with `-r` / `--reason`** — a one-sentence summary of what was done.
+This project previously used Beads (`br`) for task tracking. Beads has been replaced by openspec.
 
 ## Landing the Plane (Session Completion)
 
@@ -240,7 +216,6 @@ br search "river"  # full-text search
 4. **PUSH TO REMOTE** - This is MANDATORY:
    ```bash
    git pull --rebase
-   br sync
    git push
    git status  # MUST show "up to date with origin"
    ```
