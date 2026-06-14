@@ -120,6 +120,27 @@ ln -s /Volumes/Data/work/meta-notes ~/.vim/pack/meta-notes/start/meta-notes
 
 This structure is compatible with vim-plug, Vundle, and Pathogen.
 
+## Key Mappings
+
+All plugin mappings are defined in the plugin (not in the user's `.vimrc`) and
+use `<localleader>` so they don't conflict with global mappings. Filetype-specific
+mappings live in `after/ftplugin/<filetype>.vim` and are buffer-local.
+
+### Global mappings
+
+| Key | Command | Description |
+|-----|---------|-------------|
+| `<localleader>mr` | `:MetaNotesReload` | Reload plugin (development) |
+
+### Markdown mappings
+
+| Key | Command | Description |
+|-----|---------|-------------|
+| `<localleader>l` | `:MetaNotesOpen` | Follow wiki link under cursor |
+| `<localleader>n` | `:MetaNotesDaily` | Open today's daily note |
+| `<localleader>np` | `:MetaNotesDailyPrev` | Navigate to previous daily note |
+| `<localleader>nn` | `:MetaNotesDailyNext` | Navigate to next daily note |
+
 ## Development Workflow
 
 1. Edit your vim or Python scripts

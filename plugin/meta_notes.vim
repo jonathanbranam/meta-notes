@@ -88,6 +88,17 @@ endfunction
 " Time tracking
 command! MetaNotesTimeReport call meta_notes#time_tracking#ShowReport()
 
+" Mappings — global
+nnoremap <localleader>mr :MetaNotesReload<CR>
+
+" Mappings — markdown buffers
+augroup meta_notes_mappings
+  autocmd!
+  autocmd FileType markdown nnoremap <buffer> <localleader>l  :MetaNotesOpen<CR>
+  autocmd FileType markdown nnoremap <buffer> <localleader>n  :MetaNotesDaily<CR>
+  autocmd FileType markdown nnoremap <buffer> <localleader>np :MetaNotesDailyPrev<CR>
+  autocmd FileType markdown nnoremap <buffer> <localleader>nn :MetaNotesDailyNext<CR>
+augroup END
 
 " Restore cpo
 let &cpo = s:save_cpo
