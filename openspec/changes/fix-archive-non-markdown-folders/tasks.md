@@ -20,6 +20,11 @@
 - [x] 4.2 Guard `Archive` against empty-string argument passed by `<q-args>` when no arg given: `(a:0 > 0 && a:1 !=# '') ? a:1 : expand('%:p:.')` (`autoload/meta_notes/file_ops.vim`)
 - [x] 4.3 Add vader test: archiving a file whose name contains spaces works without backslash escaping (`test/archive.vader`)
 
+## 6. Missing tests — uncovered spec scenarios
+
+- [x] 6.1 Add vader test: `:MetaNotesArchive project/nonexistent` (no-ext path that resolves to neither a file nor a `project/nonexistent.md`) reports "Path not found" and makes no changes (`test/archive.vader`, spec scenario at spec.md line 39–42)
+- [x] 6.2 Add vader test: archiving `project/root` rewrites a deeply-nested link `[[project/root/a/b/c]]` to `[[archive/project/root/a/b/c]]` (`test/archive.vader`, spec scenario at spec.md line 28–31)
+
 ## 5. Verification
 
-- [x] 5.1 Run full archive test suite (`./run_tests.sh test/archive.vader`) — 18/18 pass
+- [x] 5.1 Run full archive test suite (`./run_tests.sh test/archive.vader`) — 20/20 pass

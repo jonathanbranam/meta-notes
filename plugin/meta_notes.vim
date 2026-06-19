@@ -50,7 +50,7 @@ command! MetaNotesJumpToWeek call meta_notes#notes#JumpToWeek()
 command! -bang MetaNotesInit call meta_notes#notes#Init(<bang>0)
 
 " File operations
-command! -nargs=? -complete=file MetaNotesArchive call meta_notes#file_ops#Archive(<f-args>)
+command! -nargs=* -complete=file MetaNotesArchive call meta_notes#file_ops#Archive(<q-args>)
 command! -nargs=? MetaNotesRename call meta_notes#file_ops#Rename(<f-args>)
 command! -nargs=+ -complete=file MetaNotesMoveItem call s:MetaNotesMoveItemWrapper(<f-args>)
 

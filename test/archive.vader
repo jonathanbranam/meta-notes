@@ -162,6 +162,119 @@ Execute (MetaNotesArchive should archive all items in folder):
   Assert isdirectory('archive/project/test-batch-mixed/subfolder')
   Assert filereadable('archive/project/test-batch-mixed/subfolder/subfile.md')
 
+" Test: Archive a folder with only non-markdown files (e.g., JPGs)
+Execute (MetaNotesArchive should move folder containing only non-markdown files):
+  " Create a folder with only JPG files (no .md files)
+  call mkdir('project/test-image-folder', 'p')
+  call writefile(['FAKEJPG'], 'project/test-image-folder/photo1.jpg')
+  call writefile(['FAKEJPG'], 'project/test-image-folder/photo2.jpg')
+
+  " Verify folder and files exist before archiving
+  Assert isdirectory('project/test-image-folder')
+  Assert filereadable('project/test-image-folder/photo1.jpg')
+  Assert filereadable('project/test-image-folder/photo2.jpg')
+
+  " Archive the folder
+  call meta_notes#file_ops#Archive('project/test-image-folder')
+
+  " Verify folder and files moved to archive
+  Assert isdirectory('archive/project/test-image-folder'), 'archive folder should exist'
+  Assert filereadable('archive/project/test-image-folder/photo1.jpg'), 'photo1.jpg should be in archive'
+  Assert filereadable('archive/project/test-image-folder/photo2.jpg'), 'photo2.jpg should be in archive'
+  Assert !isdirectory('project/test-image-folder'), 'source folder should no longer exist'
+
+" Test: Wiki-links to a non-markdown folder are updated when it is archived
+Execute (MetaNotesArchive should update wiki-links pointing to a non-markdown folder):
+  " Create a note that links to the folder
+  call mkdir('resource', 'p')
+  call writefile(['# Index', '', 'See [[project/test-link-folder]]'], 'resource/index.md')
+
+  " Create a folder with only JPG files (no .md files)
+  call mkdir('project/test-link-folder', 'p')
+  call writefile(['FAKEJPG'], 'project/test-link-folder/photo.jpg')
+
+  " Archive the folder
+  call meta_notes#file_ops#Archive('project/test-link-folder')
+
+  " Verify folder moved
+  Assert isdirectory('archive/project/test-link-folder'), 'folder should be in archive'
+
+  " Verify wiki-link in resource/index.md was updated
+  let g:test_index_lines = readfile('resource/index.md')
+  Assert index(g:test_index_lines, 'See [[archive/project/test-link-folder]]') >= 0, 'link should point to archive'
+  Assert index(g:test_index_lines, 'See [[project/test-link-folder]]') < 0, 'old link should be gone'
+  unlet g:test_index_lines
+
+" Test: Wiki-links to a markdown-containing folder are updated when it is archived
+Execute (MetaNotesArchive should update wiki-links pointing to a markdown folder):
+  " Create a note that links to the folder (not to a specific file inside it)
+  call mkdir('resource', 'p')
+  call writefile(['# Index', '', 'See [[project/test-md-link-folder]]'], 'resource/index2.md')
+
+  " Create a folder with a markdown file
+  call mkdir('project/test-md-link-folder', 'p')
+  call writefile(['# Note'], 'project/test-md-link-folder/note.md')
+
+  " Archive the folder
+  call meta_notes#file_ops#Archive('project/test-md-link-folder')
+
+  " Verify folder moved
+  Assert isdirectory('archive/project/test-md-link-folder'), 'folder should be in archive'
+
+  " Verify wiki-link in resource/index2.md was updated
+  let g:test_index2_lines = readfile('resource/index2.md')
+  Assert index(g:test_index2_lines, 'See [[archive/project/test-md-link-folder]]') >= 0, 'folder link should point to archive'
+  Assert index(g:test_index2_lines, 'See [[project/test-md-link-folder]]') < 0, 'old folder link should be gone'
+  unlet g:test_index2_lines
+
+" Test: Wiki-links to a subfolder of an archived folder are updated
+Execute (MetaNotesArchive should update wiki-links pointing to a subfolder of the archived folder):
+  " Create a note that links to a subfolder of the folder being archived
+  call mkdir('resource', 'p')
+  call writefile(['# Index', '', 'See [[project/test-root/subfolder]]'], 'resource/subfolder-index.md')
+
+  " Create nested folder structure
+  call mkdir('project/test-root/subfolder', 'p')
+  call writefile(['FAKEJPG'], 'project/test-root/subfolder/photo.jpg')
+
+  " Archive the root folder
+  call meta_notes#file_ops#Archive('project/test-root')
+
+  " Verify both folders moved
+  Assert isdirectory('archive/project/test-root'), 'root folder should be in archive'
+  Assert isdirectory('archive/project/test-root/subfolder'), 'subfolder should be in archive'
+
+  " Verify wiki-link to subfolder was updated
+  let g:test_subfolder_lines = readfile('resource/subfolder-index.md')
+  Assert index(g:test_subfolder_lines, 'See [[archive/project/test-root/subfolder]]') >= 0, 'subfolder link should point to archive'
+  Assert index(g:test_subfolder_lines, 'See [[project/test-root/subfolder]]') < 0, 'old subfolder link should be gone'
+  unlet g:test_subfolder_lines
+
+" Test: Archive a single file without .md extension (should infer the extension)
+Execute (MetaNotesArchive should accept path without .md extension for single files):
+  " Create test file with .md extension
+  call writefile(['# No Ext Test'], 'project/test-no-ext-file.md')
+
+  " Archive without .md extension — should still work
+  call meta_notes#file_ops#Archive('project/test-no-ext-file')
+
+  " File should be in archive
+  Assert filereadable('archive/project/test-no-ext-file.md'), 'archived file should exist'
+  Assert !filereadable('project/test-no-ext-file.md'), 'source file should be gone'
+
+" Test: Archive a single file whose name contains spaces
+Execute (MetaNotesArchive should archive files with spaces in the name):
+  " Create test file with a space in the name
+  call mkdir('project', 'p')
+  call writefile(['# Spaced Note'], 'project/my spaced note.md')
+
+  " Archive it (spaces are handled transparently when calling the function directly)
+  call meta_notes#file_ops#Archive('project/my spaced note.md')
+
+  " File should be in archive
+  Assert filereadable('archive/project/my spaced note.md'), 'archived file should exist'
+  Assert !filereadable('project/my spaced note.md'), 'source file should be gone'
+
 " Test: Wildcard with no matches
 Execute (MetaNotesArchive should fail gracefully when wildcard matches nothing):
   " Try to archive with a wildcard that matches nothing
@@ -172,6 +285,48 @@ Execute (MetaNotesArchive should fail gracefully when wildcard matches nothing):
   catch /No items match wildcard pattern/
     " Expected error caught
   endtry
+
+" Test: No-extension path that resolves to nothing reports an error and makes no changes
+Execute (MetaNotesArchive should error when no-ext path does not resolve to a file or directory):
+  " Ensure neither project/nonexistent nor project/nonexistent.md exists
+  Assert !filereadable('project/nonexistent'), 'precondition: file must not exist'
+  Assert !filereadable('project/nonexistent.md'), 'precondition: .md file must not exist'
+  Assert !isdirectory('project/nonexistent'), 'precondition: directory must not exist'
+
+  try
+    call meta_notes#file_ops#Archive('project/nonexistent')
+    AssertEqual 1, 0, 'Expected error but function succeeded'
+  catch /Path not found/
+    " Expected error caught
+  endtry
+
+  " Nothing should have been created in archive
+  Assert !filereadable('archive/project/nonexistent'), 'no file should appear in archive'
+  Assert !filereadable('archive/project/nonexistent.md'), 'no .md file should appear in archive'
+
+" Test: Archiving a folder rewrites deeply-nested links (e.g. [[project/root/a/b/c]])
+Execute (MetaNotesArchive should update deeply-nested wiki-links when a folder is archived):
+  " Create a note referencing a 3-level-deep path inside the folder being archived
+  call mkdir('resource', 'p')
+  call writefile(['# Deep Index', '', 'See [[project/deep-root/a/b/c]]'], 'resource/deep-index.md')
+
+  " Create the nested directory structure (no .md files — tests regex alone)
+  call mkdir('project/deep-root/a/b/c', 'p')
+  call writefile(['FAKEFILE'], 'project/deep-root/a/b/c/data.txt')
+
+  " Archive the root folder
+  call meta_notes#file_ops#Archive('project/deep-root')
+
+  " Verify the root and nested folders moved
+  Assert isdirectory('archive/project/deep-root'), 'archived root should exist'
+  Assert isdirectory('archive/project/deep-root/a/b/c'), 'archived nested dir should exist'
+  Assert !isdirectory('project/deep-root'), 'source root should be gone'
+
+  " Verify the deeply-nested link was rewritten
+  let g:test_deep_lines = readfile('resource/deep-index.md')
+  Assert index(g:test_deep_lines, 'See [[archive/project/deep-root/a/b/c]]') >= 0, 'deep link should point to archive'
+  Assert index(g:test_deep_lines, 'See [[project/deep-root/a/b/c]]') < 0, 'old deep link should be gone'
+  unlet g:test_deep_lines
 
 Execute (Cleanup - Remove temporary test directory):
   execute 'cd -'

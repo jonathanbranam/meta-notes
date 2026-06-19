@@ -81,6 +81,10 @@ function! meta_notes#file_ops#MoveItem(source_path, dest_path) abort
       call add(l:result.moves, [l:file, l:dest_file])
     endfor
 
+    " Always add the directory itself so that wiki-links pointing at the folder
+    " (e.g. [[project/folder]]) are updated regardless of its contents.
+    call add(l:result.moves, [l:source, l:dest])
+
     " Create destination parent directory (but not the dest itself)
     " mv will create the destination directory when moving
     let l:dest_parent = fnamemodify(l:dest, ':h')
@@ -181,7 +185,7 @@ endfunction
 "   - Supports wildcards for batch archiving (e.g., project/folder/*)
 function! meta_notes#file_ops#Archive(...) abort
   " Get the path to archive
-  let l:path = a:0 > 0 ? a:1 : expand('%:p:.')
+  let l:path = (a:0 > 0 && a:1 !=# '') ? a:1 : expand('%:p:.')
 
   " Check if path contains wildcards
   if l:path =~ '[*?]'
@@ -220,9 +224,15 @@ function! meta_notes#file_ops#Archive(...) abort
   let l:is_file = filereadable(l:path)
   let l:is_dir = isdirectory(l:path_no_ext)
 
+  " If not found as-is, try inferring the .md extension
   if !l:is_file && !l:is_dir
-    echoerr 'Path not found: ' . l:path
-    return
+    if filereadable(l:path_no_ext . '.md')
+      let l:path = l:path_no_ext . '.md'
+      let l:is_file = 1
+    else
+      echoerr 'Path not found: ' . l:path
+      return
+    endif
   endif
 
   " Determine the archive destination
