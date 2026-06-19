@@ -16,7 +16,8 @@
       "Bash(printf:*)",
       "Bash(pipenv run python:*)",
       "Bash(jq:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(openspec *)"
     ]
   }
 }
