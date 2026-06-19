@@ -1,0 +1,265 @@
+*meta-notes.txt*    Personal note-taking and life management system
+
+                                                *meta-notes*
+META-NOTES HELP ~
+
+A vim plugin for personal organization using plain-text markdown files,
+following the PARA (Projects, Areas, Resources, Archives) folder structure.
+
+==============================================================================
+CONTENTS                                        *meta-notes-contents*
+
+  1. Introduction .............. |meta-notes-intro|
+  2. Setup ..................... |meta-notes-setup|
+  3. Folder Structure .......... |meta-notes-folders|
+  4. Commands .................. |meta-notes-commands|
+  5. Key Mappings .............. |meta-notes-mappings|
+  6. Templates ................. |meta-notes-templates|
+  7. Time Tracking ............. |meta-notes-time-tracking|
+  8. Wiki Links ................ |meta-notes-wiki-links|
+
+==============================================================================
+1. INTRODUCTION                                 *meta-notes-intro*
+
+meta-notes is a life management solution that stores all notes as plain-text
+markdown files. It is inspired by Tiago Forte's "Building a Second Brain" and
+Cal Newport's multi-scale planning.
+
+The system organizes notes into five top-level folders: plan, project, area,
+resource, and archive. See |meta-notes-folders|.
+
+==============================================================================
+2. SETUP                                        *meta-notes-setup*
+
+Add to your `.vimrc`: >
+    set runtimepath+=/path/to/meta-notes
+<
+Then initialize the folder structure in your notes root directory: >
+    :MetaNotesInit
+<
+To force re-creation of template files: >
+    :MetaNotesInit!
+<
+Set your local leader if not already set: >
+    let maplocalleader = ","
+<
+
+==============================================================================
+3. FOLDER STRUCTURE                             *meta-notes-folders*
+
+The PARA structure uses five top-level folders:
+
+    plan/           Planning notes (daily, weekly, quarterly, yearly)
+      daily/        Daily notes with time blocks and task lists
+      week/         Weekly planning notes
+      quarter/      Quarterly planning notes
+      year/         Yearly planning notes
+
+    project/        Active projects with specific goals and end dates
+    area/           Areas of ongoing responsibility
+    resource/       Reference materials on topics of interest
+    archive/        Archived items
+      project/
+      area/
+      resource/
+
+Daily notes are organized into quarter subfolders to limit folder size: >
+    plan/daily/26-Q1/2026-02-13 Thu.md
+    plan/week/26-Q1/2026-02-09.md
+    plan/quarter/2026-Q1.md
+    plan/year/2026.md
+<
+
+==============================================================================
+4. COMMANDS                                     *meta-notes-commands*
+
+------------------------------------------------------------------------------
+INITIALIZATION ~
+
+                                                *:MetaNotesInit*
+:MetaNotesInit[!]
+    Initialize the PARA folder structure and default templates. Creates all
+    necessary directories and template files. With [!], overwrites existing
+    template files.
+
+------------------------------------------------------------------------------
+NAVIGATION ~
+
+                                                *:MetaNotesOpen*
+:MetaNotesOpen
+    Follow the wiki-style link under the cursor. Opens or creates the note
+    referenced by `[[path/to/note]]`. If the note does not exist, creates a
+    new buffer with a template or default header.
+    See |meta-notes-wiki-links|.
+
+                                                *:MetaNotesDaily*
+:MetaNotesDaily [{date}]
+    Open today's daily note, or the daily note for {date} (YYYY-MM-DD format).
+    Daily notes are stored at: `plan/daily/YY-QN/YYYY-MM-DD ddd.md`
+
+    Example: >
+        :MetaNotesDaily
+        :MetaNotesDaily 2026-01-15
+<
+                                                *:MetaNotesDailyPrev*
+:MetaNotesDailyPrev
+    Navigate to the previous existing daily note. Must be in a daily note
+    buffer. Shows a message if already at the oldest note.
+
+                                                *:MetaNotesDailyNext*
+:MetaNotesDailyNext
+    Navigate to the next existing daily note. Must be in a daily note buffer.
+    If at the newest note, prompts to create the next day's note.
+
+                                                *:MetaNotesJumpToWeek*
+:MetaNotesJumpToWeek
+    Jump from the current daily note to its corresponding weekly plan note.
+    Must be in a daily note buffer.
+
+                                                *:MetaNotesWeekPlan*
+:MetaNotesWeekPlan [{date}]
+    Open the weekly plan note for the current week, or the week containing
+    {date} (YYYY-MM-DD format). The file path uses the Monday of that week.
+    Stored at: `plan/week/YY-QN/YYYY-MM-DD.md`
+
+    Example: >
+        :MetaNotesWeekPlan
+        :MetaNotesWeekPlan 2026-02-09
+<
+                                                *:MetaNotesQuarterPlan*
+:MetaNotesQuarterPlan [{date}]
+    Open the quarterly plan note for the current quarter, or the quarter
+    containing {date} (YYYY-MM-DD format).
+    Stored at: `plan/quarter/YYYY-QN.md`
+
+                                                *:MetaNotesYearPlan*
+:MetaNotesYearPlan [{date}]
+    Open the yearly plan note for the current year, or the year containing
+    {date} (YYYY-MM-DD format).
+    Stored at: `plan/year/YYYY.md`
+
+------------------------------------------------------------------------------
+FILE OPERATIONS ~
+
+                                                *:MetaNotesArchive*
+:MetaNotesArchive [{path}]
+    Archive a file or folder. Without {path}, archives the current buffer's
+    file. {path} can include wildcards (`*`, `?`) for batch archiving.
+
+    Moves items preserving their subfolder structure:
+        `project/item`  →  `archive/project/item`
+        `area/item`     →  `archive/area/item`
+        `resource/item` →  `archive/resource/item`
+
+    Also updates all wiki-links and file headers across the notes directory.
+    If the current buffer is the archived file, switches to the new location.
+
+    Only works on items in `project/`, `area/`, or `resource/`.
+
+    Examples: >
+        :MetaNotesArchive
+        :MetaNotesArchive project/old-project
+        :MetaNotesArchive project/2024-*
+<
+                                                *:MetaNotesRename*
+:MetaNotesRename [{new-name}]
+    Rename the current note. Without {new-name}, prompts for the new name.
+    {new-name} can be just a filename (preserves current directory) or a full
+    path (moves the file to a new location).
+
+    Updates wiki-links and headers automatically.
+
+    Examples: >
+        :MetaNotesRename
+        :MetaNotesRename new-filename
+        :MetaNotesRename project/new-location/filename
+<
+                                                *:MetaNotesMoveItem*
+:MetaNotesMoveItem {source} {destination}
+    Move a file or folder from {source} to {destination}. Updates all
+    wiki-links and headers across the notes directory.
+
+    Example: >
+        :MetaNotesMoveItem project/foo area/foo
+<
+------------------------------------------------------------------------------
+TIME TRACKING ~
+
+                                                *:MetaNotesTimeReport*
+:MetaNotesTimeReport
+    Generate and display a time tracking report for the current daily note.
+    Must be run from within a daily note buffer.
+    See |meta-notes-time-tracking|.
+
+------------------------------------------------------------------------------
+DEVELOPMENT ~
+
+                                                *:MetaNotesReload*
+:MetaNotesReload
+    Reload all plugin scripts without restarting vim. Useful during plugin
+    development.
+
+                                                *:TestMetaNotes*
+:TestMetaNotes
+    Run the full plugin test suite using vader.vim. Requires vader.vim to be
+    installed. See |meta-notes-setup|.
+
+==============================================================================
+5. KEY MAPPINGS                                 *meta-notes-mappings*
+
+All mappings use `<localleader>`. Set it with: >
+    let maplocalleader = ","
+<
+Global mappings (all file types): ~
+
+    <localleader>mr     Reload the plugin (|:MetaNotesReload|)
+
+Markdown mappings (buffer-local): ~
+
+    <localleader>l      Follow wiki link under cursor (|:MetaNotesOpen|)
+    <localleader>n      Open today's daily note (|:MetaNotesDaily|)
+    <localleader>np     Navigate to previous daily note (|:MetaNotesDailyPrev|)
+    <localleader>nn     Navigate to next daily note (|:MetaNotesDailyNext|)
+
+==============================================================================
+6. TEMPLATES                                    *meta-notes-templates*
+
+When opening a note that does not exist, meta-notes creates the file with a
+template if one is defined for that note type, or a plain `# Title` header
+otherwise. Templates are populated with the note's date and other contextual
+information automatically.
+
+Templates are created by |:MetaNotesInit| and stored in the notes root.
+
+==============================================================================
+7. TIME TRACKING                                *meta-notes-time-tracking*
+
+Daily notes support a time log format for tracking how time is spent. Use
+|:MetaNotesTimeReport| to generate a report from the current daily note's
+time log entries.
+
+The report is only available when editing a daily note
+(`plan/daily/YY-QN/YYYY-MM-DD ddd.md`).
+
+==============================================================================
+8. WIKI LINKS                                   *meta-notes-wiki-links*
+
+Notes can link to each other using Obsidian-style wiki links: >
+    [[path/to/note]]
+<
+Place the cursor anywhere within the brackets and press `<localleader>l` (or
+run |:MetaNotesOpen|) to open or create the linked note.
+
+Paths are relative to the notes root directory and should not include the
+`.md` extension.
+
+Examples: >
+    [[project/kitchen-remodel/Tasks]]
+    [[area/health]]
+    [[resource/vim-tips]]
+<
+When a note is moved, renamed, or archived, all wiki-links pointing to it are
+updated automatically across the entire notes directory.
+
+==============================================================================
+vim:ft=help:tw=78:ts=4:et:
