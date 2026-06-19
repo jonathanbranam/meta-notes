@@ -130,10 +130,11 @@ endfunction
 "   context: Dictionary with template context (date, today, week_start, week_end, etc.)
 " Returns:
 "   Processed line with variables replaced
-" Supported variables:
+" Date variables (support arithmetic and format specifiers):
 "   {{date}}, {{today}}, {{week_start}}, {{week_end}}
-"   With optional arithmetic: {{today+1}}, {{date-7}}
-"   With optional format: {{today:%Y-%m-%d}}, {{date:%A}}
+"   Arithmetic: {{today+1}}, {{date-7}}; Format: {{today:%Y-%m-%d}}, {{date:%A}}
+" String variables (substituted as-is, no arithmetic):
+"   {{quarter}}, {{project_name}}, {{note_path}}, {{note_name}}, {{filepath}}, {{filename}}
 function! meta_notes#template#ProcessVariables(line, context) abort
   let l:result = a:line
 
@@ -181,44 +182,17 @@ function! meta_notes#template#ProcessVariables(line, context) abort
       let l:var_name = l:expr_part
     endif
 
-    " Handle special variables
-    if l:var_name == 'project_name'
-      " Extract project name from filepath in context
-      if has_key(a:context, 'filepath')
-        let l:filepath = a:context['filepath']
-        " Check if path starts with 'project/'
-        if match(l:filepath, '^project/') == 0
-          " Extract the project folder name (second path component)
-          let l:parts = split(l:filepath, '/')
-          if len(l:parts) >= 2
-            let l:replacement = l:parts[1]
-          else
-            let l:replacement = '<!-- Not in project folder -->'
-          endif
-        else
-          let l:replacement = '<!-- Not in project folder -->'
-        endif
-      else
-        let l:replacement = '<!-- ERROR: No filepath in context -->'
-      endif
-      let l:result = substitute(l:result, l:pattern, l:replacement, '')
-      continue
-    endif
-
-    " Get the base date from context
+    " Look up variable in context
     if !has_key(a:context, l:var_name)
-      " Unknown variable, replace with HTML comment indicating error
       let l:replacement = '<!-- ERROR: Unknown variable "' . l:var_name . '" -->'
-      let l:result = substitute(l:result, l:pattern, l:replacement, '')
+      let l:result = substitute(l:result, l:pattern, escape(l:replacement, '&\'), '')
       continue
     endif
 
     let l:value = a:context[l:var_name]
 
-    " Check if this is a date variable (YYYY-MM-DD format) or a string variable
-    " String variables (like 'quarter': 'Q1') are used as-is without date processing
-    if match(l:value, '^\d\{4\}-\d\{2\}-\d\{2\}$') != -1
-      " This is a date variable - process with date formatting
+    " Apply date arithmetic and formatting only for known date variables
+    if index(['date', 'today', 'week_start', 'week_end'], l:var_name) >= 0
       let l:date_str = l:value
 
       " Apply arithmetic if needed
@@ -239,12 +213,11 @@ function! meta_notes#template#ProcessVariables(line, context) abort
         let l:replacement = l:date_str . ' ' . l:day_abbr
       endif
     else
-      " This is a string variable - use as-is
+      " String variable — use value as-is
       let l:replacement = l:value
     endif
 
-    " Replace the variable in the result
-    let l:result = substitute(l:result, l:pattern, l:replacement, '')
+    let l:result = substitute(l:result, l:pattern, escape(l:replacement, '&\'), '')
   endwhile
 
   return l:result
@@ -383,8 +356,19 @@ function! meta_notes#template#CreateContext(date_str, filepath) abort
   " Calculate quarter (Q1, Q2, Q3, Q4)
   let l:context['quarter'] = meta_notes#notes#CalculateQuarter(a:date_str)
 
-  " Include filepath for path-dependent variables
+  " Path-derived variables
   let l:context['filepath'] = a:filepath
+  let l:context['note_path'] = fnamemodify(a:filepath, ':r')
+  let l:context['note_name'] = fnamemodify(a:filepath, ':t:r')
+  let l:context['filename'] = fnamemodify(a:filepath, ':t')
+
+  " project_name: second path component when under project/
+  let l:fp_parts = split(a:filepath, '/')
+  if match(a:filepath, '^project/') == 0 && len(l:fp_parts) >= 2
+    let l:context['project_name'] = l:fp_parts[1]
+  else
+    let l:context['project_name'] = ''
+  endif
 
   return l:context
 endfunction

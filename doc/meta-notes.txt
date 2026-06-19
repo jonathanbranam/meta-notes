@@ -231,6 +231,97 @@ information automatically.
 
 Templates are created by |:MetaNotesInit| and stored in the notes root.
 
+------------------------------------------------------------------------------
+TEMPLATE RESOLUTION ~                       *meta-notes-template-resolution*
+
+When a note is opened, the template is chosen in this priority order:
+
+1. Folder-specific template: a file named `template.md` in the same
+   directory as the note being created. Takes priority over all others.
+   Example: `project/kitchen-remodel/template.md` is used for every new
+   note inside that folder.
+
+2. Named standard template: `resource/template/{type}.md` where {type} is
+   passed by the opening command (`daily`, `weekly`, `quarterly`, `yearly`).
+
+3. Auto-detected standard template: same `resource/template/` lookup, but
+   the type is inferred from the note's path: >
+       plan/daily/   → resource/template/daily.md
+       plan/week/    → resource/template/weekly.md
+       plan/quarter/ → resource/template/quarterly.md
+       plan/year/    → resource/template/yearly.md
+<
+If no template is found, the new note starts with a plain `# Title` header.
+
+YAML frontmatter (lines between `---` delimiters at the start of the
+template file) is stripped and does not appear in the created note.
+
+------------------------------------------------------------------------------
+TEMPLATE VARIABLES ~                        *meta-notes-template-variables*
+
+Variables are written as `{{name}}` inside the template and are replaced
+with their values when the note is created.
+
+Date variables ~                            *meta-notes-template-date-vars*
+
+Date variables support optional day-offset arithmetic and strftime format
+specifiers. Without a format specifier the default output is `YYYY-MM-DD ddd`
+(e.g. `2026-06-19 Fri`).
+
+    date            The note's canonical date (YYYY-MM-DD)
+    today           Today's actual date (YYYY-MM-DD)
+    week_start      Monday of the note's week (YYYY-MM-DD)
+    week_end        Sunday of the note's week (YYYY-MM-DD)
+
+Arithmetic — add or subtract whole days: >
+    {{date+7}}          seven days after the note date
+    {{week_end-2}}      two days before the end of the week
+<
+Format specifiers — any strftime conversion: >
+    {{today:%A}}            full weekday name, e.g. Friday
+    {{date:%B %-d, %Y}}     e.g. June 19, 2026
+    {{date+7:%Y-%m-%d}}     arithmetic combined with a custom format
+<
+Path variables ~                            *meta-notes-template-path-vars*
+
+Path variables are plain strings derived from the path of the note being
+created. Arithmetic and format specifiers do not apply to them.
+
+    note_path       Relative path without extension
+                    e.g. `project/lunch/Lunch Ideas`
+    note_name       Filename stem (no path, no extension)
+                    e.g. `Lunch Ideas`
+    filepath        Relative path with extension
+                    e.g. `project/lunch/Lunch Ideas.md`
+    filename        Filename with extension, no path
+                    e.g. `Lunch Ideas.md`
+
+Other variables ~
+
+    quarter         Quarter string derived from the note date, e.g. `Q2`
+    project_name    Second path component for notes under `project/`,
+                    e.g. `lunch` for `project/lunch/note.md`.
+                    Empty string for notes outside `project/`.
+
+Unknown variables produce an HTML comment: >
+    <!-- ERROR: Unknown variable "name" -->
+<
+------------------------------------------------------------------------------
+COMMAND BLOCKS ~                            *meta-notes-template-commands*
+
+A template line of the form `{{% type command %}}` is replaced by the
+output of that command when the note is created. Template variables are
+substituted in the command string before execution.
+
+    {{% vim :Command %}}        run a vim command; capture its output
+    {{% python script.py %}}    run a script from the plugin's scripts/ dir
+    {{% shell command %}}       run any shell command
+
+Example — insert an open-task list for the current week: >
+    {{% python scripts/find_tasks.py --week {{week_start}} %}}
+<
+Failed commands are replaced with an HTML comment that includes the error.
+
 ==============================================================================
 7. TIME TRACKING                                *meta-notes-time-tracking*
 

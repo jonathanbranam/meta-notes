@@ -88,14 +88,14 @@ Execute (ProcessVariables should replace undefined variables with error comment)
   AssertEqual 'Date: 2026-02-14 Sat, Name: <!-- ERROR: Unknown variable "name" -->', result
 
 Execute (ProcessVariables should replace {{project_name}}):
-  let context = {'filepath': 'project/my-project/subfolder/Note.md'}
+  let context = meta_notes#template#CreateContext('2026-06-19', 'project/my-project/subfolder/Note.md')
   let result = meta_notes#template#ProcessVariables('Project: {{project_name}}', context)
   AssertEqual 'Project: my-project', result
 
 Execute (ProcessVariables should handle {{project_name}} when not in project):
-  let context = {'filepath': 'area/health/note.md'}
+  let context = meta_notes#template#CreateContext('2026-06-19', 'area/health/note.md')
   let result = meta_notes#template#ProcessVariables('Project: {{project_name}}', context)
-  AssertEqual 'Project: <!-- Not in project folder -->', result
+  AssertEqual 'Project: ', result
 
 " ============================================================================
 " ProcessTemplate Function

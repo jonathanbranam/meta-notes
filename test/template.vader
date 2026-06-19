@@ -1,0 +1,68 @@
+" Tests for meta_notes#template#ProcessVariables and CreateContext
+
+Execute (Setup - Create temporary test directory):
+  let g:test_dir = tempname()
+  call mkdir(g:test_dir, 'p')
+  let g:original_dir = getcwd()
+  execute 'cd' g:test_dir
+
+" Test: project_name still resolves after moving to CreateContext
+Execute (project_name resolves to project folder name after CreateContext refactor):
+  let g:ctx = meta_notes#template#CreateContext('2026-06-19', 'project/lunch/Lunch Ideas.md')
+  let g:result = meta_notes#template#ProcessVariables('{{project_name}}', g:ctx)
+  AssertEqual 'lunch', g:result
+  unlet g:ctx g:result
+
+" Test: project_name is empty string outside project/
+Execute (project_name is empty for notes outside project folder):
+  let g:ctx = meta_notes#template#CreateContext('2026-06-19', 'area/health/Goals.md')
+  let g:result = meta_notes#template#ProcessVariables('{{project_name}}', g:ctx)
+  AssertEqual '', g:result
+  unlet g:ctx g:result
+
+" Test: date arithmetic still works after allowlist change
+Execute (date+7 applies arithmetic correctly after allowlist refactor):
+  let g:ctx = meta_notes#template#CreateContext('2026-06-19', 'project/foo/note.md')
+  let g:result = meta_notes#template#ProcessVariables('{{date+7}}', g:ctx)
+  AssertEqual '2026-06-26 Fri', g:result
+  unlet g:ctx g:result
+
+" Test: date-named note_name returns stem unchanged (not formatted as date)
+Execute (note_name for a date-named file resolves to stem, not formatted date):
+  let g:ctx = meta_notes#template#CreateContext('2026-06-19', 'plan/daily/26-Q2/2026-06-19.md')
+  let g:result = meta_notes#template#ProcessVariables('{{note_name}}', g:ctx)
+  AssertEqual '2026-06-19', g:result
+  unlet g:ctx g:result
+
+" Test: note_path resolves to relative path without extension
+Execute (note_path resolves to relative path without extension):
+  let g:ctx = meta_notes#template#CreateContext('2026-06-19', 'project/lunch/Lunch Ideas.md')
+  let g:result = meta_notes#template#ProcessVariables('{{note_path}}', g:ctx)
+  AssertEqual 'project/lunch/Lunch Ideas', g:result
+  unlet g:ctx g:result
+
+" Test: note_name resolves to filename stem
+Execute (note_name resolves to filename stem without path or extension):
+  let g:ctx = meta_notes#template#CreateContext('2026-06-19', 'project/lunch/Lunch Ideas.md')
+  let g:result = meta_notes#template#ProcessVariables('{{note_name}}', g:ctx)
+  AssertEqual 'Lunch Ideas', g:result
+  unlet g:ctx g:result
+
+" Test: filepath resolves to full relative path with extension
+Execute (filepath resolves to full relative path including extension):
+  let g:ctx = meta_notes#template#CreateContext('2026-06-19', 'project/lunch/Lunch Ideas.md')
+  let g:result = meta_notes#template#ProcessVariables('{{filepath}}', g:ctx)
+  AssertEqual 'project/lunch/Lunch Ideas.md', g:result
+  unlet g:ctx g:result
+
+" Test: filename resolves to filename with extension
+Execute (filename resolves to filename with extension and no path):
+  let g:ctx = meta_notes#template#CreateContext('2026-06-19', 'project/lunch/Lunch Ideas.md')
+  let g:result = meta_notes#template#ProcessVariables('{{filename}}', g:ctx)
+  AssertEqual 'Lunch Ideas.md', g:result
+  unlet g:ctx g:result
+
+Execute (Cleanup - Remove temporary test directory):
+  execute 'cd' g:original_dir
+  call delete(g:test_dir, 'rf')
+  unlet g:test_dir g:original_dir
