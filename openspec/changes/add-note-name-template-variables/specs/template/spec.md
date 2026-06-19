@@ -53,13 +53,13 @@ The template system SHALL support date arithmetic (`{{variable+N}}`, `{{variable
 The plugin SHALL include a `doc/templates.md` reference file covering folder template resolution priority, all supported variables with their options, and the `{{% type command %}}` syntax.
 
 #### Scenario: Documentation covers all supported variables
-- **WHEN** a user reads `doc/templates.md`
-- **THEN** the file SHALL document `date`, `today`, `week_start`, `week_end`, `quarter`, `project_name`, `note_path`, `note_name`, `filepath`, and `filename` with descriptions and examples
+- **WHEN** a user runs `:help meta-notes-templates`
+- **THEN** the section SHALL document `date`, `today`, `week_start`, `week_end`, `quarter`, `project_name`, `note_path`, `note_name`, `filepath`, and `filename` with descriptions and examples
 
 #### Scenario: Documentation covers template resolution order
-- **WHEN** a user reads `doc/templates.md`
-- **THEN** the file SHALL describe the three-step resolution order: folder-specific `template.md`, named standard template, auto-detected standard template
+- **WHEN** a user runs `:help meta-notes-templates`
+- **THEN** the section SHALL describe the three-step resolution order: folder-specific `template.md`, named standard template, auto-detected standard template
 
 #### Scenario: Documentation covers command syntax
-- **WHEN** a user reads `doc/templates.md`
-- **THEN** the file SHALL document the `{{% vim %}}`, `{{% python %}}`, and `{{% shell %}}` command forms with examples
+- **WHEN** a user runs `:help meta-notes-templates`
+- **THEN** the section SHALL document the `{{% vim %}}`, `{{% python %}}`, and `{{% shell %}}` command forms with examples

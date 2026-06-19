@@ -27,7 +27,7 @@
 
 ## 6. Documentation
 
-- [ ] 6.1 Create `doc/templates.md` covering: folder template resolution priority (3-step order), all supported variables with descriptions and examples, arithmetic and format specifier syntax, and the `{{% vim/python/shell %}}` command forms
+- [ ] 6.1 Expand section 6 of `doc/meta-notes.txt` (`*meta-notes-templates*`) from its current two-sentence stub into a full reference: folder template resolution priority (3-step order), all supported variables with descriptions and examples, arithmetic and format specifier syntax, and the `{{% vim/python/shell %}}` command forms (vim help format, `:help meta-notes-templates`)
 
 ## 7. Verification
 

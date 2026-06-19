@@ -56,9 +56,9 @@ Compute `note_path`, `note_name`, `filename`, and `project_name` in `CreateConte
 
 It already resolves correctly via the generic path (the value contains slashes and an extension, never matching the date regex — and with the allowlist it is unambiguously a string). Documentation only.
 
-### 4. Documentation as `doc/templates.md` (plain markdown)
+### 4. Documentation in `doc/meta-notes.txt`, section 6 (`*meta-notes-templates*`)
 
-A single reference file covering: folder template resolution priority, all variables with their options (arithmetic, format specifiers), and the `{{% type command %}}` syntax. Plain markdown rather than vim `:help` format — this is a personal plugin and the file is more useful as something readable in a browser or editor than something navigated with `:help`.
+Section 6 currently contains only two sentences. Expand it in-place into a full reference covering: folder template resolution priority, all supported variables with options (arithmetic, format specifiers), and the `{{% vim/python/shell %}}` command syntax. The help tags (`*meta-notes-templates*`) and the entry in the Contents table are already present — no structural changes to the file needed, only content expansion within section 6.
 
 ## Risks / Trade-offs
 
