@@ -17,6 +17,8 @@ for each ceremony and adds the scripts they depend on.
   edit those files, and the new skills are installed through that mechanism.
 - **`find-tasks-enhancements`**: the task model, selection modes (`--ready`,
   `--due`, `--overdue`), `#later`, and tag filters.
+- **`time-report-enhancements`**: `meta-notes time --date START..END` for
+  time-log totals in the weekly review.
 - **`task-age`**: `last_edited` and `--untouched-days`. Task cleanup and
   daily planning both rank tasks by age.
 - **`task-update`**: skills edit task lines through `meta-notes task update`,
@@ -67,18 +69,20 @@ the CLI support lands.
 
 ### Scripts and CLI
 
-- **`meta-notes ceremony status [<date>]`**: reports which ceremony markers
+- **`meta-notes ceremony status [--date DATE]`**: reports which ceremony markers
   are checked for a day and its week (shutdown, plan, weekly review, weekly
   plan). Skills use it to find skipped steps. Reminders and the dashboard
   will use it later.
-- **`meta-notes time-report --from <date> --to <date>`**: totals time logs
-  across the daily notes in a range, by tag and by day, and lists days with
-  no log. `time_report.py` keeps working on a single file.
-- **`meta-notes changes --since <date>`**: summarizes notes changed since a
-  date from git history (committed and uncommitted), per file, with
+- **`meta-notes changes --date START..END`**: summarizes notes changed in a
+  period from git history (committed and uncommitted), per file, with
   rename-only changes marked so they can be ignored.
-- **`meta-notes tasks --completed-between <start> <end>`**: tasks whose ✅
-  date falls in the range.
+- Every date or range option uses the shared `--date` syntax from
+  `find-tasks-enhancements` (`date-period`).
+- Provided by other changes: time-log totals across a range are
+  `meta-notes time --date START..END` (`time-report-enhancements`), and
+  tasks completed in a range are `meta-notes tasks --status completed --due
+  --date START..END` (`find-tasks-enhancements`, which uses the ✅ date when
+  present and the due date otherwise).
 - **`meta-notes projects`**: one line per project with status, `reviewed:`,
   last touched, and warnings (no open `#next`, untouched, review overdue).
 
@@ -97,12 +101,10 @@ the CLI support lands.
 - `ceremony-skills`: the six shipped skills, with each skill's inputs,
   outputs, handoffs, time budget, and stop-early behavior
 - `ceremony-status`: ceremony markers in notes and how their status is read
-- `time-report`: time-log totals across a date range
-- `change-summary`: meaningful file changes since a date
+- `change-summary`: meaningful file changes in a period
 - `project-list`: the project overview with warnings
 
 ### Modified Capabilities
-- `task-query`: adds `--completed-between`
 - `template`: the daily and weekly templates gain ceremony sections and
   markers
 
@@ -121,9 +123,8 @@ the CLI support lands.
 ## Impact
 
 - `skills/`: five new skills, and `project-review` revised
-- `scripts/meta_notes/`: new `ceremony`, `time-report`, `changes`,
-  and `projects` subcommands; `tasks` gains `--completed-between`
-- `scripts/time_tracking.py`: reused for range totals
+- `scripts/meta_notes/`: new `ceremony`, `changes`, and `projects`
+  subcommands
 - Plugin template files (from `cli-init`): `daily.md` and `weekly.md` updated
 - `test/unit/`: pytest coverage for each new command
 - `docs/planning-system.md`, `README.md`: ceremonies and skills documented

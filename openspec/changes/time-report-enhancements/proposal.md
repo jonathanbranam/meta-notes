@@ -18,16 +18,23 @@ task half of that document is in `find-tasks-enhancements`.
   capability (entry syntax and timestamp formats). Nothing blocks.
 - **`cli-core`** (archived) provides the CLI package, root resolution, and
   `--json` conventions that `meta-notes time` follows.
+- **`find-tasks-enhancements`** adds the shared `--date` parser
+  (`scripts/period.py`, `date-period` capability) and the shared tag parser
+  and aliases (`scripts/tags.py`). Start after it is archived.
 
 ## What Changes
 
-- **`meta-notes time [--date YYYY-MM-DD] [--json]`.** New CLI command that
-  prints the time report for the daily note of the given date (default
-  today). `--json` returns the day's entries, gaps and overlaps, totals, and
-  the week summary as structured data.
-- **`--date` on `time_report.py`.** Accepts a date instead of a file path and
-  finds the daily note with the existing `_daily_note_path` helper. The
-  positional file argument keeps working.
+- **`meta-notes time [--date DATE] [--json]`.** New CLI command. `--date`
+  uses the shared `date-period` syntax (default today). For a single day it
+  prints that day's report. For a period (`START..END`, `YYYY-MM`,
+  `YYYY-Qn`, `YYYY`) it totals the time logs across the period's daily
+  notes, by tag and by day, and lists days with no log. This replaces the
+  `meta-notes time-report --from --to` command proposed in
+  `planning-skills`. `--json` returns the entries, gaps and overlaps,
+  totals, and summaries as structured data.
+- **`--date` on `time_report.py`.** Same syntax. The script finds daily
+  notes with the existing `_daily_note_path` helper. The positional file
+  argument keeps working.
 - **Day log listing.** The report lists the day's log entries in order. Each
   shows its original activity line, then the parsed `start`, `end`, computed
   `time` (`H hr M min` / `M min`), and `tags`. A missing start or end prints
