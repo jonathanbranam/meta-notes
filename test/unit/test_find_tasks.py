@@ -540,6 +540,16 @@ def test_main_modes_date_tag_and_folder(tmp_path, capsys, monkeypatch):
     assert out == "- [[project/a]]\n  - [ ] #mtg prep 📅 2026-10-01\n"
 
 
+def test_main_tag_waiting_alias(tmp_path, capsys, monkeypatch):
+    (tmp_path / "a.md").write_text(
+        "- [ ] #waiting legal sign-off 📅 2026-10-15\n- [ ] other 📅 2026-10-15\n")
+
+    for tag in ("wait", "waiting"):
+        out = run_main(monkeypatch, capsys, str(tmp_path), "--due", "--date",
+                       "2026-10", "--tag", tag, "--condensed")
+        assert out == "- [[a]]\n  - [ ] #waiting legal sign-off 📅 2026-10-15\n"
+
+
 def test_main_all_and_later(tmp_path, capsys, monkeypatch):
     (tmp_path / "a.md").write_text("- [ ] #later someday 📅\n- [ ] now 📅\n")
 

@@ -80,10 +80,15 @@ meta-notes/
 ├── scripts/             # Python helper scripts
 │   ├── meta_notes/          # meta-notes CLI package
 │   │   ├── __main__.py          # Entry point (Python version check)
+│   │   ├── ceremony.py          # Ceremony status
 │   │   ├── cli.py               # Subcommands, root resolution, output
+│   │   ├── conventions.md       # Conventions text for skills
+│   │   ├── conventions.py       # Conventions, generated parts filled in
 │   │   ├── init.py              # Notes root setup
 │   │   ├── note.py              # Note paths and creation
 │   │   ├── ops.py               # Move, rename, archive
+│   │   ├── project.py           # Project home notes and fields
+│   │   ├── projects.py          # Project list and warnings
 │   │   ├── query.py             # Task query
 │   │   ├── time.py              # Time report
 │   │   ├── root.py              # Sentinel search for the notes root
@@ -100,12 +105,16 @@ meta-notes/
 ├── test/                # Tests
 │   ├── *.vader              # Vimscript integration tests
 │   ├── unit/                # Python unit tests
+│   │   ├── test_ceremony.py
 │   │   ├── test_cli.py
+│   │   ├── test_conventions.py
 │   │   ├── test_find_tasks.py
 │   │   ├── test_init.py
 │   │   ├── test_note.py
 │   │   ├── test_notes.py
 │   │   ├── test_period.py
+│   │   ├── test_project.py
+│   │   ├── test_projects.py
 │   │   ├── test_ops.py
 │   │   ├── test_query.py
 │   │   ├── test_root.py
@@ -154,7 +163,9 @@ This structure is compatible with vim-plug, Vundle, and Pathogen.
 
 `bin/meta-notes` performs the plugin's setup (`init`), note creation from
 templates (`note`), file operations (`move`, `rename`, `archive`), task
-query (`tasks`), task edits (`task update`), and time reports (`time`) outside Vim, for shells, agents, and other tools. The Vim
+query (`tasks`), task edits (`task update`), time reports (`time`), the
+project list (`projects`), ceremony status (`ceremony status`), and the
+skills' shared conventions (`conventions`) outside Vim, for shells, agents, and other tools. The Vim
 commands call it. Every command accepts `--json`. It needs Python 3.10 or newer as `python3`. See
 `:help meta-notes-cli`.
 
@@ -187,6 +198,9 @@ meta-notes tasks --scheduled --date 2026-11 --group-by tag
 meta-notes task update project/foo.md:3 --expect '- [ ] call Sam 📅 2026-09-22' --status x
 meta-notes time                           # today's time report
 meta-notes time --date 2026-09 --json     # a month's time summary
+meta-notes projects --warnings            # stalled or unreviewed projects
+meta-notes ceremony status --date 2026-09-25
+meta-notes conventions                    # syntax and rules the skills follow
 ```
 
 Other commands find the notes root by walking up from the current directory
@@ -194,6 +208,26 @@ to the nearest `.meta-notes`, stopping after `$HOME`. Notes roots created
 before the sentinel existed need `meta-notes init` run once (and the new
 `.meta-notes` committed); until then, pass `--root` or set
 `META_NOTES_ROOT`.
+
+## Planning Skills
+
+The Claude Code skills in `skills/` run the planning ceremonies in
+`docs/planning-system.md`. `meta-notes init` links them into a notes root;
+re-run it after updating the plugin to link new ones. Each starts from
+`meta-notes conventions` and edits notes only through the CLI.
+
+| Skill | When |
+|-------|------|
+| `daily-shutdown` | End of each workday; offers `daily-plan` |
+| `daily-plan` | After shutdown, or the next morning |
+| `weekly-review` | Friday morning; summary for your manager |
+| `weekly-plan` | Friday afternoon; next week's priorities |
+| `task-cleanup` | Anytime, 5–10 minutes of stale tasks |
+| `project-review` | One project at a time |
+
+Daily notes carry `- [ ] plan complete` and `- [ ] shutdown complete`,
+weekly notes `- [ ] review complete` and `- [ ] plan complete`. The skills
+check them, and `meta-notes ceremony status` reports them.
 
 ## Key Mappings
 

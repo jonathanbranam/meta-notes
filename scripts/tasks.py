@@ -17,6 +17,19 @@ from tags import parse_tags
 # undated task.
 DUE_EMOJIS = ('📅', '📆', '🗓')
 
+# Status characters that task updates write, and their meanings. Any other
+# character reads as incomplete (see char_to_status).
+STATUS_CHARS = {
+    ' ': 'open',
+    'x': 'done',
+    'X': 'done',
+    '>': 'rescheduled (carried forward to another note)',
+    '-': 'canceled',
+    '.': 'partial (open)',
+    'o': 'partial (open)',
+    'O': 'partial (open)',
+}
+
 # A due emoji (optionally with an emoji variation selector) and a date
 _DUE_DATE_PATTERN = re.compile(
     '(?:' + '|'.join(DUE_EMOJIS) + r')\ufe0f?\s*(\d{4}-\d{2}-\d{2})')
@@ -132,7 +145,7 @@ def is_task(text: str) -> bool:
     return _has_due_emoji(text) or _extract_date(text, '🛫') is not None
 
 
-def _char_to_status(status_char: str) -> TaskStatus:
+def char_to_status(status_char: str) -> TaskStatus:
     """
     Convert a status character to a TaskStatus enum.
 
@@ -181,7 +194,7 @@ def find_tasks_in_file(filepath: str) -> list[Task]:
                 has_due_emoji = _has_due_emoji(text)
                 tasks.append(Task(
                     text=text,
-                    status=_char_to_status(match.group(1)),
+                    status=char_to_status(match.group(1)),
                     filename=filepath,
                     line_no=line_num,
                     start_date=start_date,
@@ -206,7 +219,7 @@ def categorize_status(status: str) -> str:
     Returns:
         String representation of the status category.
     """
-    return _char_to_status(status).value
+    return char_to_status(status).value
 
 
 def filter_tasks_by_status(tasks: list[Task], statuses: list[TaskStatus]) -> list[Task]:

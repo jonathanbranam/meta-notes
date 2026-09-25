@@ -7,10 +7,17 @@ filename_pattern: "plan/week/{{week_start:%y}}-{{quarter}}/{{week_start:%Y-%m-%d
 
 Quarterly Plan: [[plan/quarter/{{date:%Y}}-{{quarter}}]]
 
+- [ ] review complete
+- [ ] plan complete
+
 ## Goals
 
 ## Projects
 
 ## Areas
+
+## Review
+
+## Plan
 
 ## Notes

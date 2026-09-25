@@ -19,8 +19,10 @@ from dataclasses import dataclass, field
 from datetime import date
 
 import find_tasks
+import tasks as task_model
 from tags import canonical_tag
-from meta_notes import __version__, init, note, ops, query, task_update, time
+from meta_notes import (__version__, ceremony, conventions, init, note, ops,
+                        projects, query, task_update, time)
 from meta_notes.root import SENTINEL, find_root
 
 
@@ -226,7 +228,7 @@ def cmd_note(args, root: str) -> Output:
     return out
 
 
-STATUS_CHARS = (" ", "x", "X", ">", "-", ".", "o", "O")
+STATUS_CHARS = tuple(task_model.STATUS_CHARS)
 
 
 def _date_value(value: str, keywords: tuple[str, ...]) -> str:
@@ -240,9 +242,9 @@ def _date_value(value: str, keywords: tuple[str, ...]) -> str:
             return value
         except ValueError:
             pass
+    expected = " or ".join(("YYYY-MM-DD", *keywords))
     raise argparse.ArgumentTypeError(
-        f"invalid value: {value!r} (expected YYYY-MM-DD or "
-        f"{' or '.join(keywords)})")
+        f"invalid value: {value!r} (expected {expected})")
 
 
 def _due_value(value: str) -> str:
@@ -251,6 +253,10 @@ def _due_value(value: str) -> str:
 
 def _start_value(value: str) -> str:
     return _date_value(value, ("none",))
+
+
+def _day_value(value: str) -> str:
+    return _date_value(value, ())
 
 
 def _tag_value(value: str) -> str:
@@ -302,6 +308,23 @@ def cmd_task_update(args, root: str) -> Output:
     else:
         out.text = [f"{path}:{line_no} unchanged"]
     return out
+
+
+def cmd_ceremony_status(args, root: str) -> Output:
+    day = date.fromisoformat(args.date) if args.date else date.today()
+    lines, data = ceremony.run(day)
+    return Output(data, lines)
+
+
+def cmd_projects(args, root: str) -> Output:
+    lines, entries = projects.run(".", warnings_only=args.warnings)
+    return Output({"projects": entries}, lines)
+
+
+def cmd_conventions(args, root: None) -> Output:
+    text = conventions.run()
+    return Output({"version": __version__, "text": text},
+                  [text.removesuffix("\n")])
 
 
 INIT_MESSAGES = {
@@ -494,6 +517,29 @@ def build_parser() -> argparse.ArgumentParser:
     k.add_argument("--no-completed", action="store_true",
                    help="don't add a ✅ date when marking the task done")
     p.set_defaults(handler=cmd_task_update)
+
+    p = sub.add_parser("ceremony", parents=[common],
+                       help="read ceremony markers in daily and weekly notes")
+    kinds = p.add_subparsers(dest="kind", metavar="KIND", parser_class=_Parser)
+    kinds.required = True
+    k = kinds.add_parser("status", parents=[common],
+                         help="which ceremonies are done for a day and its "
+                              "week")
+    k.add_argument("--date", type=_day_value, metavar="DAY",
+                   help="YYYY-MM-DD (default: today)")
+    p.set_defaults(handler=cmd_ceremony_status)
+
+    p = sub.add_parser("projects", parents=[common],
+                       help="list projects with status, latest date, last "
+                            "review, and warnings")
+    p.add_argument("--warnings", action="store_true",
+                   help="only projects with at least one warning")
+    p.set_defaults(handler=cmd_projects)
+
+    p = sub.add_parser("conventions", parents=[common],
+                       help="print the note syntax and editing conventions "
+                            "skills follow, as markdown")
+    p.set_defaults(handler=cmd_conventions, resolves_root=False)
 
     return parser
 

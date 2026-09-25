@@ -169,6 +169,15 @@ natural successor ends by offering it, never by running it.
 | Task cleanup | task-cleanup | Anytime, 5–10 minutes | — |
 | Project review | project-review | Monthly | — |
 
+**Markers.** The daily template has `- [ ] plan complete` and
+`- [ ] shutdown complete`; the weekly template has `- [ ] review complete`
+and `- [ ] plan complete`. They have no dates, so task queries don't list
+them. A skill checks its marker with `meta-notes task update --status x`,
+which appends `✅ <today>`, the day it was actually done.
+`meta-notes ceremony status [--date DAY]` reports all four for a day and
+its week; a missing note or marker counts as not done. The daily template
+also has `## Follow Up`, and the weekly template `## Review` and `## Plan`.
+
 ### Daily shutdown (end of day, about 15 minutes)
 
 Closes out today's note. It does not plan tomorrow.
@@ -186,10 +195,10 @@ Closes out today's note. It does not plan tomorrow.
 4. **Time log.** Run today's time report and look for gaps and for large
    stretches that don't clearly map to a project or work item. Ask about
    each, then update the log from the answers. A rough log beats none.
-5. **Follow up.** Write a short list in today's note of what to pick up on
-   the next workday: unfinished work, promised replies, the first thing to
-   do. This survives even if planning is skipped.
-6. **Commit** and mark `- [x] shutdown complete`.
+5. **Follow up.** Write a short list under today's `## Follow Up` of what
+   to pick up on the next workday: unfinished work, promised replies, the
+   first thing to do. This survives even if planning is skipped.
+6. **Commit** (after I confirm) and mark `- [x] shutdown complete`.
 7. **Offer daily planning** for the next workday. Declining is normal on a
    busy day; planning then happens the next morning.
 
@@ -202,14 +211,18 @@ One skill whether run in the evening after shutdown or the next morning.
 1. **Pick the target day.** If today's note has no plan, plan today.
    Otherwise plan the next workday. State the choice in one line.
 2. **Read the previous workday's note**, always: its Follow up list, its
-   unfinished blocks, and whether shutdown was completed. When the target
-   day is a Monday, also read the weekly plan.
+   unfinished blocks, and whether shutdown was completed (a skipped
+   shutdown is mentioned, not run). When the target day is a Monday, also
+   read the weekly plan. A Follow up item worth tracking becomes a task in
+   place with `task update --due`.
 3. **Gather:** meetings (calendar screenshot), due and overdue tasks, PR
    tasks, and open commitments due soon.
 4. **Write the plan:** create the target day's note if needed, fill the
    Time Block Plan column, and pick a concrete first block.
 5. Mark `- [x] plan complete`. In the morning, the goal is the first block
    started by 8:15, not a polished plan.
+
+Old tasks aren't worked through here; that is task cleanup.
 
 ### Weekly review (Friday, about 9:00–10:30)
 
@@ -225,12 +238,17 @@ Then:
 
 1. Plan versus actual for the week.
 2. Commitments in both directions.
-3. Warnings only: projects with no recent activity or no open
-   `#next`, and a reminder to run project review when any project's last
-   `#review` is more than 30 days old or missing.
-4. Scan `#later` for anything that has become live.
-5. Mark the review complete and remind me that weekly planning is next,
-   usually scheduled for Friday afternoon.
+3. Warnings only, from `meta-notes projects --warnings`:
+   `no-recent-activity` and `no-next`, and `review-overdue` (the last
+   `#review` is more than 30 days old or missing) as a reminder to run
+   project review.
+4. Scan `#later` for anything that has become live: remove `#later` and
+   date it if needed.
+5. Write the summary in the weekly note's `## Review`, in two parts: what
+   I did this week and why it matters, then important upcoming dates and
+   deadlines. No plan for next week; that is weekly planning.
+6. Mark `- [x] review complete` and remind me that weekly planning is
+   next, usually scheduled for Friday afternoon.
 
 ### Weekly planning (Friday afternoon)
 
@@ -239,7 +257,8 @@ Then:
    Shorter gaps are listed separately.
 3. Meetings to schedule, and deadlines landing next week.
 4. Choose 3–5 priorities and place them roughly on days.
-5. Write the plan into next week's note. Monday's daily planning reads it.
+5. Write the plan into next week's `## Plan` and mark that note's
+   `- [x] plan complete`. Monday's daily planning reads it.
 
 ### Task cleanup (anytime, 5–10 minutes)
 
@@ -273,9 +292,22 @@ Cleans up dead and dormant projects. One project per session. See
 ## Skills
 
 Skills ship in `skills/` in this repo and are installed into the notes
-root's `.claude/skills/` by `meta-notes init`. They call the CLI for all
-reads and edits, using focused queries (tags, date ranges, folders) to keep
-agent context small. See the `planning-skills` change.
+root's `.claude/skills/` by `meta-notes init`: `daily-shutdown`,
+`daily-plan`, `weekly-review`, `weekly-plan`, `task-cleanup`, and
+`project-review`. Each states a time budget, can be stopped at any point
+(saving what's decided and leaving its marker unchecked), and ends by
+offering its successor without running it.
+
+Every skill starts by running `meta-notes conventions`, which prints the
+shared syntax and rules as markdown: the task and project models, status
+characters, due emoji, and tag aliases (generated from the code), how to
+edit a task line (`meta-notes task update <file>:<line> --expect <text>`
+with `file`, `line`, and `text` from `meta-notes tasks --json`), carrying
+a task forward (`>` on the old line and a new copy), the ceremony
+markers, and structural changes only through `move`, `rename`, and
+`archive` after confirmation. Skills don't copy these rules. They call
+the CLI for all reads and edits, using focused queries (tags, date
+ranges, folders) to keep agent context small.
 
 ## CLI
 
@@ -295,7 +327,11 @@ Specified across several openspec changes, in this order:
 - `cli-init`: `meta-notes init`, including skill install
 - `note-create`: `meta-notes note`, creating daily, weekly, and other notes
   from templates, with template rendering moved to Python
-- `planning-skills`: the ceremony skills and the queries they need
+- `planning-skills`: the ceremony skills and the queries they need:
+  `meta-notes conventions`, `meta-notes ceremony status`, and
+  `meta-notes projects` (status, latest date, last review, and the
+  `no-home-note`, `no-next`, `no-recent-activity`, and `review-overdue`
+  warnings, with a 30-day threshold)
 
 The Vim plugin becomes a thin caller. Read-only task buffers gain mappings
 that edit the source line through `task update`.
@@ -355,5 +391,5 @@ creating events, which would sync back to Google.
 
 - Whether to mark people in commitments.
 - Whether the calendar options 2 and 3 are acceptable under work policy.
-- The threshold for "no recent activity" on a project (proposed: 30 days
-  since its latest date).
+- Whether 30 days (since the latest date, and since the last review) is
+  the right threshold for project warnings.

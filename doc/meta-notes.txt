@@ -18,6 +18,7 @@ CONTENTS                                        *meta-notes-contents*
   7. Time Tracking ............. |meta-notes-time-tracking|
   8. Wiki Links ................ |meta-notes-wiki-links|
   9. Command Line .............. |meta-notes-cli|
+ 10. Planning Skills ........... |meta-notes-skills|
 
 ==============================================================================
 1. INTRODUCTION                                 *meta-notes-intro*
@@ -651,10 +652,11 @@ Commands ~
                                                 *meta-notes-task-tags*
     Every `#tag` on a task line is a tag of the task: `#` followed by
     letters, digits, `_`, or `-`. Tags are compared ignoring case. Time
-    logs use the same parser and aliases: `#mtg` is `meeting`, and `#pers`
-    and `#per` are `personal`, so `--tag mtg` and `--tag meeting` select
-    the same tasks. `--group-by tag` lists each section's tasks under a
-    `## <tag>` heading per tag, sorted ignoring case, then `## Not tagged`.
+    logs use the same parser and aliases: `#mtg` is `meeting`, `#pers`
+    and `#per` are `personal`, and `#waiting` is `wait`, so `--tag mtg`
+    and `--tag meeting` select the same tasks. `--group-by tag` lists each
+    section's tasks under a `## <tag>` heading per tag, sorted ignoring
+    case, then `## Not tagged`.
     A task with several tags is listed under each. Under a tag heading, the
     standard format's file headings are `### [[link]]`.
 
@@ -783,6 +785,63 @@ Commands ~
     `by_tag`, and `days` (`[{date, weekday, logged, work_minutes,
     earliest, latest, span_minutes}]`).
 
+`meta-notes conventions`                        *meta-notes-cli-conventions*
+    Print, as markdown, the note syntax and editing rules the shipped
+    skills follow (|meta-notes-skills|): the task model, status
+    characters, tags and aliases, the project model, how to edit task
+    lines with |meta-notes-cli-task-update|, carrying a task forward,
+    ceremony markers, and structural changes. The status characters, due
+    emoji, and tag aliases are generated from the definitions queries and
+    updates use, so the text matches the installed CLI. Works outside a
+    notes root and reads no notes. With `--json`, the object has `version`
+    and `text`, the markdown.
+
+`meta-notes ceremony status [--date {day}]`     *meta-notes-cli-ceremony*
+    Report which ceremony markers (|meta-notes-ceremonies|) are checked
+    for {day}, a single `YYYY-MM-DD` (default: today), and the Monday to
+    Sunday week containing it. A range or other period is a usage error.
+    Daily planning and daily shutdown are read from {day}'s daily note,
+    weekly review and weekly planning from the week's weekly note, at the
+    paths |meta-notes-cli-note| uses. A missing note or marker makes its
+    ceremonies not done; it isn't an error. Writes nothing.
+
+    The output is one line per ceremony: >
+        daily-plan:     done
+        daily-shutdown: done 2026-09-26
+        weekly-review:  not done (no note)
+        weekly-plan:    not done (no note)
+<   A date after `done` is the marker's `✅` date. `(no note)` and
+    `(no marker)` say what's missing. With `--json`, the object has
+    `date`, `week_start`, and `ceremonies`, each with `name`
+    (`daily-plan`, `daily-shutdown`, `weekly-review`, `weekly-plan`),
+    `note`, `note_exists`, `marker_present`, `done`, and `completed` (the
+    `✅` date or null).
+
+`meta-notes projects [--warnings]`              *meta-notes-cli-projects*
+    List every project directly in `project/`: each note, and each folder,
+    whose home note is its `Home.md`. Archived projects aren't listed. A
+    project's fields are the `key: value` items of the first list after
+    its home note's title; `status` is `active` when missing. Its tasks
+    are the tasks in its note or folder plus tasks anywhere with its
+    `tag`. Reads notes only; no git history or file times.
+
+    Each line has the path, status, latest date, last review (or
+    `never`), and warnings. The latest date is the latest `YYYY-MM-DD`, up
+    to today, in the project's file names, heading lines, and tasks other
+    than `#review` tasks. The last review is the latest completion date of
+    a completed `#review` task. Warnings, with a 30-day threshold:
+
+        no-home-note        a folder project without `Home.md`
+        no-next             active, and no open task tagged `#next`
+        no-recent-activity  active, and no latest date in the last 30 days
+        review-overdue      not `done`, and no review in the last 30 days
+
+    `--warnings` lists only projects with a warning. Warnings never make
+    the command fail. With `--json`, the object has `projects`, each with
+    `path`, `home` (or null), `status`, `tag` (or null), `last_review`,
+    `latest_date` (dates or null), `open_tasks`, `completed_tasks`, and
+    `warnings`.
+
 `meta-notes --version`                          *meta-notes-cli-version*
     Print `meta-notes {version}`, where {version} is MAJOR.MINOR.PATCH.
     When the plugin directory is the top level of a git checkout, the
@@ -834,9 +893,58 @@ note existed before), `created` (whether this command wrote it), and
 also returns `content`, the rendered note. `--version` returns `version`,
 `commit` (the short hash, or null), and `dirty`. Output from template commands
 appears only in `content` or the written note, never on stdout.
+`conventions`, `ceremony status`, and `projects` return the fields listed
+under each command above.
 
 The exit status is non-zero on failure. `--root` and `--json` may come
 before or after the command name.
+
+==============================================================================
+10. PLANNING SKILLS                             *meta-notes-skills*
+
+The plugin ships Claude Code skills in `skills/`, linked into a notes root's
+`.claude/skills/` by |meta-notes-cli-init|. Re-run `meta-notes init` after
+updating the plugin to link new ones. Each skill states a time budget,
+starts by running |meta-notes-cli-conventions|, reads notes through focused
+CLI queries, edits task lines only with |meta-notes-cli-task-update|, and
+can be stopped at any point.
+
+    daily-shutdown  End of each workday, about 15 minutes: collect loose
+                    items into tasks, PR check, a next step per project
+                    worked on, the time-log check, a Follow up list,
+                    commit (after you confirm), and `shutdown complete`.
+                    Offers daily-plan.
+    daily-plan      After shutdown or the next morning, 10-15 minutes:
+                    plans today if it has no plan, otherwise the next
+                    workday. Fills the Time Block Plan column.
+    weekly-review   Friday morning: the Monday to Friday week, a summary
+                    for your manager in the weekly note's `## Review`,
+                    commitments, project warnings, and a `#later` scan.
+                    Reminds you that weekly-plan is next.
+    weekly-plan     Friday afternoon: capacity from a calendar screenshot,
+                    deadlines, and 3-5 priorities in next week's `## Plan`.
+    task-cleanup    Anytime, 5-10 minutes: overdue and undated tasks,
+                    oldest first, in batches.
+    project-review  One project at a time.
+
+Ceremony markers ~
+                                                *meta-notes-ceremonies*
+The daily and weekly templates carry checklist lines that record whether a
+ceremony was done:
+
+    daily note      `- [ ] plan complete`       daily planning
+                    `- [ ] shutdown complete`   daily shutdown
+    weekly note     `- [ ] review complete`     weekly review
+                    `- [ ] plan complete`       weekly planning
+
+A skill checks its marker with `meta-notes task update --status x`, which
+appends `✅ {today}`, the day the ceremony was done. A marker is done when
+its status is `x` or `X`; its text is compared ignoring case and
+surrounding whitespace, and may be anywhere in the note. The markers have no
+dates, so task queries don't list them. The daily template also has a
+`## Follow Up` section, and the weekly template `## Review` and `## Plan`.
+Notes created before these were added have no markers; they read as not
+done. |meta-notes-cli-ceremony| reports them.
 
 ==============================================================================
 vim:ft=help:tw=78:ts=4:et:

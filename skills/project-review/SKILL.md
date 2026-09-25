@@ -1,6 +1,6 @@
 ---
 name: project-review
-description: Review ONE meta-notes project in 5–10 minutes. Use when the user asks to review a project, reconcile projects, clean up stale tasks, or says "next project" or "review <project>". Never review more than one project per invocation.
+description: Review ONE meta-notes project in 5–10 minutes. Use when the user asks to review a project, reconcile projects, or says "next project" or "review <project>". Never review more than one project per invocation. Stale tasks across all notes are task-cleanup, not this skill.
 ---
 
 # Project Review

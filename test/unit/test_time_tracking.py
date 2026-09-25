@@ -246,6 +246,25 @@ def test_tag_alias_pers_expands_to_personal():
     assert tag.text == "#personal"
 
 
+def test_tag_alias_waiting_expands_to_wait():
+    """Test that #waiting tag is expanded to #wait."""
+    assert Tag("#waiting").text == "#wait"
+
+
+def test_tag_totals_waiting_totals_under_wait():
+    """Test that #waiting time totals under #wait."""
+    entries = [
+        TimeLogEntry("- chase legal", "test.md", 1,
+                     time(9, 0), time(9, 30), "chase legal", [Tag("#waiting")]),
+        TimeLogEntry("- chase vendor", "test.md", 2,
+                     time(10, 0), time(10, 15), "chase vendor", [Tag("#wait")]),
+    ]
+
+    result = tag_totals(entries)
+
+    assert result == {"wait": timedelta(minutes=45)}
+
+
 def test_tag_canonical_not_changed():
     """Test that canonical tags (not aliases) are not changed."""
     assert Tag("#meeting").text == "#meeting"

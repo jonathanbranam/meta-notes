@@ -29,6 +29,11 @@ def test_canonical_tag_alias():
     assert tags.canonical_tag('#per') == 'personal'
 
 
+def test_canonical_tag_waiting_alias():
+    assert tags.canonical_tag('#waiting') == 'wait'
+    assert tags.canonical_tag('Waiting') == 'wait'
+
+
 def test_canonical_tag_alias_ignores_case():
     assert tags.canonical_tag('#MTG') == 'meeting'
 

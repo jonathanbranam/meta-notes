@@ -811,3 +811,136 @@ def test_task_update_not_a_checkbox(task_note, capsys):
     assert code == 1
     assert 'not a checkbox' in out['error']
     assert 'current' not in out
+
+
+# Tests for the conventions command
+
+def test_conventions_outside_notes_root(tmp_path, monkeypatch, capsys):
+    monkeypatch.delenv('META_NOTES_ROOT', raising=False)
+    monkeypatch.setenv('HOME', str(tmp_path))
+    monkeypatch.chdir(tmp_path)
+
+    code = cli.main(['conventions'])
+
+    out = capsys.readouterr().out
+    assert code == 0
+    assert out.startswith('# meta-notes conventions\n')
+    assert '--expect <text>' in out
+
+
+def test_conventions_json(tmp_path, monkeypatch, capsys):
+    monkeypatch.delenv('META_NOTES_ROOT', raising=False)
+    monkeypatch.setenv('HOME', str(tmp_path))
+    monkeypatch.chdir(tmp_path)
+
+    code, data, err = run_json(capsys, ['conventions'])
+
+    assert code == 0
+    assert data['ok'] is True
+    assert data['version'] == cli.__version__
+    assert data['text'].startswith('# meta-notes conventions\n')
+    assert err == ''
+
+
+# Tests for the ceremony status command
+
+def _write_note(root, path, text):
+    target = root / path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(text)
+
+
+def test_ceremony_status_all_four(notes_root, capsys):
+    _write_note(notes_root, 'plan/daily/26-Q3/2026-09-25 Fri.md',
+                '- [x] plan complete\n- [ ] shutdown complete\n')
+    _write_note(notes_root, 'plan/week/26-Q3/2026-09-21.md',
+                '- [x] review complete ✅ 2026-09-25\n- [ ] plan complete\n')
+
+    code = cli.main(['ceremony', 'status', '--date', '2026-09-25'])
+
+    assert code == 0
+    assert capsys.readouterr().out.splitlines() == [
+        'daily-plan:     done',
+        'daily-shutdown: not done',
+        'weekly-review:  done 2026-09-25',
+        'weekly-plan:    not done',
+    ]
+
+
+def test_ceremony_status_missing_weekly_note(notes_root, capsys):
+    _write_note(notes_root, 'plan/daily/26-Q3/2026-09-25 Fri.md',
+                '- [ ] plan complete\n- [ ] shutdown complete\n')
+
+    code, data, _ = run_json(capsys, ['ceremony', 'status', '--date',
+                                      '2026-09-25'])
+
+    assert code == 0
+    weekly = [c for c in data['ceremonies'] if c['name'].startswith('weekly')]
+    assert len(weekly) == 2
+    assert all(not c['note_exists'] and not c['done'] for c in weekly)
+
+
+@pytest.mark.parametrize('value', ['2026-09-21..2026-09-25', '2026-09',
+                                   '2026-02-30', 'today'])
+def test_ceremony_status_rejects_non_day(notes_root, capsys, value):
+    code, data, _ = run_json(capsys, ['ceremony', 'status', '--date', value])
+
+    assert code == 1
+    assert data['ok'] is False
+    assert 'expected YYYY-MM-DD' in data['error']
+
+
+def test_ceremony_status_json(notes_root, capsys):
+    _write_note(notes_root, 'plan/daily/26-Q3/2026-09-25 Fri.md',
+                '- [ ] plan complete\n- [x] shutdown complete ✅ 2026-09-25\n')
+
+    code, data, _ = run_json(capsys, ['ceremony', 'status', '--date',
+                                      '2026-09-25'])
+
+    assert code == 0
+    assert data['date'] == '2026-09-25'
+    assert data['week_start'] == '2026-09-21'
+    shutdown = [c for c in data['ceremonies'] if c['name'] == 'daily-shutdown'][0]
+    assert shutdown == {'name': 'daily-shutdown',
+                        'note': 'plan/daily/26-Q3/2026-09-25 Fri.md',
+                        'note_exists': True, 'marker_present': True,
+                        'done': True, 'completed': '2026-09-25'}
+
+
+def test_ceremony_status_writes_nothing(notes_root, capsys):
+    before = sorted(p for p in notes_root.rglob('*'))
+
+    assert cli.main(['ceremony', 'status', '--date', '2026-09-25']) == 0
+
+    assert sorted(p for p in notes_root.rglob('*')) == before
+
+
+# Tests for the projects command
+
+def test_projects_only_warnings(notes_root, capsys):
+    _write_note(notes_root, 'project/done.md', '# Done\n\n- status: done\n')
+    _write_note(notes_root, 'project/stale.md', '# Stale\n')
+
+    code = cli.main(['projects', '--warnings'])
+
+    out = capsys.readouterr().out.splitlines()
+    assert code == 0
+    assert len(out) == 1
+    assert out[0].startswith('project/stale.md  active')
+
+
+def test_projects_json(notes_root, capsys):
+    _write_note(notes_root, 'project/make-bread.md',
+                '# Make Bread\n\n- tag: make-bread\n')
+
+    code, data, _ = run_json(capsys, ['projects'])
+
+    assert code == 0
+    [entry] = data['projects']
+    assert entry['path'] == 'project/make-bread.md'
+    assert entry['tag'] == 'make-bread'
+    assert entry['last_review'] is None
+    assert 'review-overdue' in entry['warnings']
+    assert set(entry) == {'path', 'home', 'status', 'tag', 'last_review',
+                          'latest_date', 'open_tasks', 'completed_tasks',
+                          'warnings'}

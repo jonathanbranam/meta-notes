@@ -15,6 +15,7 @@ TAG_ALIASES: dict[str, str] = {
     '#mtg': '#meeting',
     '#pers': '#personal',
     '#per': '#personal',
+    '#waiting': '#wait',
 }
 
 TAG_PATTERN = re.compile(r'#([\w-]+)')

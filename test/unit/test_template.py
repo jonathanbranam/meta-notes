@@ -464,3 +464,47 @@ def test_render_matches_vim_fixture(fixture, notes_root, monkeypatch):
     result = note.create(kind, day, render_only=True)
 
     assert result.content.encode('utf-8') == (FIXTURES / fixture).read_bytes()
+
+
+# Tests for the shipped templates' ceremony sections
+
+def install_templates(notes_root):
+    Path('resource/template').mkdir(parents=True)
+    for name in ('daily', 'weekly'):
+        (notes_root / 'resource/template' / f'{name}.md').write_bytes(
+            (TEMPLATES / f'{name}.md').read_bytes())
+
+
+def test_shipped_daily_template_ceremony_sections(notes_root, monkeypatch):
+    install_templates(notes_root)
+    monkeypatch.setattr(template, '_run', lambda command: (0, ''))
+
+    lines = note.create('daily', '2026-09-25', render_only=True).content.splitlines()
+
+    assert '## Follow Up' in lines
+    assert lines.count('- [ ] plan complete') == 1
+    assert lines.count('- [ ] shutdown complete') == 1
+
+
+def test_shipped_weekly_template_ceremony_sections(notes_root, monkeypatch):
+    install_templates(notes_root)
+    monkeypatch.setattr(template, '_run', lambda command: (0, ''))
+
+    lines = note.create('weekly', '2026-09-21', render_only=True).content.splitlines()
+
+    assert '## Review' in lines
+    assert '## Plan' in lines
+    assert lines.count('- [ ] review complete') == 1
+    assert lines.count('- [ ] plan complete') == 1
+
+
+def test_shipped_template_markers_are_not_tasks(notes_root, monkeypatch):
+    from meta_notes import query
+    install_templates(notes_root)
+    monkeypatch.setattr(template, '_run', lambda command: (0, ''))
+    note.create('daily', '2026-09-25')
+    note.create('weekly', '2026-09-25')
+
+    _, found = query.run('.', modes=['all'], status='all', later=True)
+
+    assert found == []

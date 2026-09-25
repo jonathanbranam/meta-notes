@@ -500,39 +500,39 @@ def test_is_task_plain_checkbox():
     assert not tasks_module.is_task("- [x] buy milk ✅ 2026-09-25")
 
 
-# Tests for _char_to_status function
+# Tests for char_to_status function
 
-def test_char_to_status_completed_lowercase():
+def testchar_to_status_completed_lowercase():
     """Test completed status with lowercase x."""
-    assert tasks_module._char_to_status("x") == TaskStatus.COMPLETED
+    assert tasks_module.char_to_status("x") == TaskStatus.COMPLETED
 
 
-def test_char_to_status_completed_uppercase():
+def testchar_to_status_completed_uppercase():
     """Test completed status with uppercase X."""
-    assert tasks_module._char_to_status("X") == TaskStatus.COMPLETED
+    assert tasks_module.char_to_status("X") == TaskStatus.COMPLETED
 
 
-def test_char_to_status_rescheduled():
+def testchar_to_status_rescheduled():
     """Test rescheduled status."""
-    assert tasks_module._char_to_status(">") == TaskStatus.RESCHEDULED
+    assert tasks_module.char_to_status(">") == TaskStatus.RESCHEDULED
 
 
-def test_char_to_status_canceled():
+def testchar_to_status_canceled():
     """Test canceled status."""
-    assert tasks_module._char_to_status("-") == TaskStatus.CANCELED
+    assert tasks_module.char_to_status("-") == TaskStatus.CANCELED
 
 
-def test_char_to_status_incomplete():
+def testchar_to_status_incomplete():
     """Test incomplete status for common and unrecognized characters."""
-    assert tasks_module._char_to_status(" ") == TaskStatus.INCOMPLETE
-    assert tasks_module._char_to_status(".") == TaskStatus.INCOMPLETE
-    assert tasks_module._char_to_status("o") == TaskStatus.INCOMPLETE
-    assert tasks_module._char_to_status("O") == TaskStatus.INCOMPLETE
-    assert tasks_module._char_to_status("/") == TaskStatus.INCOMPLETE
+    assert tasks_module.char_to_status(" ") == TaskStatus.INCOMPLETE
+    assert tasks_module.char_to_status(".") == TaskStatus.INCOMPLETE
+    assert tasks_module.char_to_status("o") == TaskStatus.INCOMPLETE
+    assert tasks_module.char_to_status("O") == TaskStatus.INCOMPLETE
+    assert tasks_module.char_to_status("/") == TaskStatus.INCOMPLETE
     # Unrecognized characters should also be incomplete
-    assert tasks_module._char_to_status("?") == TaskStatus.INCOMPLETE
-    assert tasks_module._char_to_status("!") == TaskStatus.INCOMPLETE
-    assert tasks_module._char_to_status("*") == TaskStatus.INCOMPLETE
+    assert tasks_module.char_to_status("?") == TaskStatus.INCOMPLETE
+    assert tasks_module.char_to_status("!") == TaskStatus.INCOMPLETE
+    assert tasks_module.char_to_status("*") == TaskStatus.INCOMPLETE
 
 
 # Tests for categorize_status function

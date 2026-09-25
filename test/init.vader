@@ -53,6 +53,9 @@ Execute (MetaNotesInit creates daily template with correct content):
   Assert content =~ '## Time Tracking', 'Daily template should have Time Tracking section'
   Assert content =~ '### Log', 'Daily template should have Log section'
   Assert content =~ '### Time Block', 'Daily template should have Time Block section'
+  Assert content =~ '## Follow Up', 'Daily template should have Follow Up section'
+  AssertEqual 1, count(lines, '- [ ] plan complete'), 'Daily template should have one plan marker'
+  AssertEqual 1, count(lines, '- [ ] shutdown complete'), 'Daily template should have one shutdown marker'
 
   " Check for condensed format in task commands
   Assert content =~ 'find_tasks.py --due --date.*--condensed', 'Tasks Due Today should use condensed format'
@@ -74,6 +77,10 @@ Execute (MetaNotesInit creates weekly template with correct content):
   Assert content =~ '## Goals', 'Weekly template should have Goals section'
   Assert content =~ '## Projects', 'Weekly template should have Projects section'
   Assert content =~ '## Areas', 'Weekly template should have Areas section'
+  Assert content =~ '## Review', 'Weekly template should have Review section'
+  Assert content =~ '## Plan', 'Weekly template should have Plan section'
+  AssertEqual 1, count(lines, '- [ ] review complete'), 'Weekly template should have one review marker'
+  AssertEqual 1, count(lines, '- [ ] plan complete'), 'Weekly template should have one plan marker'
 
 Execute (MetaNotesInit creates quarterly template with correct content):
   MetaNotesInit

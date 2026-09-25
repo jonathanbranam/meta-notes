@@ -5,6 +5,9 @@ filename_pattern: "plan/daily/{{date:%y}}-{{date:Q{{((date.month-1)//3)+1}}}}/{{
 
 Week Plan: [[plan/week/{{week_start:%y}}-{{week_quarter}}/{{week_start:%Y-%m-%d}}]]
 
+- [ ] plan complete
+- [ ] shutdown complete
+
 ## Tasks Due Today
 
 {{% python scripts/find_tasks.py --due --date {{date:%Y-%m-%d}} --condensed %}}
@@ -12,6 +15,8 @@ Week Plan: [[plan/week/{{week_start:%y}}-{{week_quarter}}/{{week_start:%Y-%m-%d}
 
 {{% python scripts/find_tasks.py --overdue --date {{date:%Y-%m-%d}} --condensed %}}
 ## Notes
+
+## Follow Up
 
 ## Time Tracking
 

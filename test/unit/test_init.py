@@ -59,7 +59,10 @@ def run_json(capsys, argv):
 
 @pytest.mark.parametrize('name', TEMPLATE_NAMES)
 def test_templates_match_vim_output(name):
-    """Shipped templates are byte-identical to what :MetaNotesInit wrote."""
+    """
+    Shipped templates are byte-identical to what :MetaNotesInit wrote, with
+    the ceremony markers and sections since added to daily and weekly.
+    """
     shipped = (init.TEMPLATES_DIR / name).read_bytes()
     assert shipped == (FIXTURES / name).read_bytes()
 
