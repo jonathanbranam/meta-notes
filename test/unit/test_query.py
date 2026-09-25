@@ -17,7 +17,6 @@ scripts_dir = Path(__file__).parent.parent.parent / 'scripts'
 sys.path.insert(0, str(scripts_dir))
 
 from meta_notes import cli, query
-from notes import calculate_week_end
 
 FIND_TASKS = scripts_dir / 'find_tasks.py'
 
@@ -28,28 +27,31 @@ FUTURE = (TODAY + timedelta(days=30)).isoformat()
 
 @pytest.fixture
 def root(tmp_path, monkeypatch):
-    """A notes root with tasks of every status, date, and folder."""
+    """A notes root with tasks of every status, date, tag, and folder."""
     files = {
         'plan/daily/today.md': [
             '# today',
             f'- [ ] Overdue 📆 {PAST}',
-            f'- [x] Done ✅ {PAST}',
-            '- [>] Moved',
+            f'- [x] Done 📆 {PAST} ✅ {PAST}',
+            f'- [>] Moved 📆 {PAST}',
+            '- [ ] Plain checkbox',
         ],
         'project/foo.md': [
             '# project/foo',
             '',
-            '- [ ] Call Sam 📆 2026-10-01',
+            '- [ ] #mtg Call Sam 📆 2026-10-01',
             f'- [ ] Later 🛫 {FUTURE}',
-            '  - [/] Nested in progress',
-            '- [-] Dropped',
+            '  - [/] #admin Nested in progress 📅',
+            '- [-] Dropped 📆',
+            f'- [ ] #later Someday #admin 📆 {PAST}',
+            f'- [ ] Due today 📆 {TODAY.isoformat()}',
         ],
         'project/sub/bar.md': [
-            '* [ ] No date',
+            '* [ ] #admin No date 🗓',
             f'+ [X] Finished 📆 {PAST} ✅ {PAST}',
         ],
         'area/home.md': [
-            f'- [ ] Fix sink 🗓 {FUTURE}',
+            f'- [ ] #cd Fix sink 🗓 {FUTURE}',
             'Not a task',
         ],
         'resource/empty.md': ['# nothing here'],
@@ -93,15 +95,20 @@ def cli_json(capsys, args):
     ['--format', 'condensed'],
     ['--folder', 'project'],
     ['--folder', 'project/'],
-    ['--folder', 'project', '--status', 'all'],
+    ['--all', '--folder', 'project', '--status', 'all'],
+    ['--all'],
+    ['--all', '--later'],
     ['--status', 'all'],
-    ['--status', 'completed'],
-    ['--status', 'rescheduled'],
-    ['--status', 'canceled'],
-    ['--due-on', '2026-10-01'],
-    ['--due-by', TODAY.isoformat()],
-    ['--due-between', PAST, FUTURE],
-    ['--due-between', PAST, FUTURE, '--status', 'all', '--condensed'],
+    ['--status', 'completed', '--due', '--date', PAST],
+    ['--status', 'rescheduled', '--all'],
+    ['--status', 'canceled', '--all'],
+    ['--overdue', '--due'],
+    ['--overdue', '--due', '--condensed'],
+    ['--scheduled', '--date', f'{PAST}..{FUTURE}'],
+    ['--future', '--undated'],
+    ['--group-by', 'tag'],
+    ['--all', '--group-by', 'tag', '--condensed'],
+    ['--all', '--tag', 'admin', '--tag', 'mtg'],
     ['--folder', 'nowhere'],
 ], ids=lambda a: ' '.join(a) or 'default')
 def test_cli_tasks_matches_find_tasks(root, capsys, args):
@@ -129,60 +136,62 @@ def test_cli_tasks_matches_find_tasks_no_tasks(tmp_path, capsys, monkeypatch):
 
 
 def test_cli_tasks_invalid_date(root, capsys):
-    code, out = cli_json(capsys, ['--due-on', '2026-13-01'])
+    code, out = cli_json(capsys, ['--date', '2026-W45'])
 
     assert code == 1
     assert out['ok'] is False
-    assert out['error'] == 'Invalid date format: 2026-13-01. Use YYYY-MM-DD format.'
+    assert out['error'].startswith('Invalid date: 2026-W45. Use YYYY-MM-DD,')
 
 
 def test_cli_tasks_reversed_range(root, capsys):
-    code, out = cli_json(capsys, ['--due-between', FUTURE, PAST])
+    code, out = cli_json(capsys, ['--date', f'{FUTURE}..{PAST}'])
 
     assert code == 1
-    assert out['error'] == 'Start date must be before or equal to end date'
+    assert 'start of a range' in out['error']
+
+
+def test_cli_tasks_removed_option_is_usage_error(root, capsys):
+    code = cli.main(['tasks', '--due-on', '2026-09-25'])
+
+    assert code != 0
+    assert '--due-on' in capsys.readouterr().err
 
 
 # Tests for JSON output
 
 def test_cli_tasks_json_fields(root, capsys):
-    """Spec scenario: file, line, status, and due date."""
-    code, out = cli_json(capsys, ['--folder', 'project'])
+    """Spec scenario: file, line, status, due date, and tags."""
+    code, out = cli_json(capsys, ['--folder', 'project', '--all'])
 
     assert code == 0
-    assert out['tasks'][0] == {
+    sam = [t for t in out['tasks'] if t['line'] == 3 and t['file'] == 'project/foo.md']
+    assert sam == [{
         'file': 'project/foo.md',
         'line': 3,
-        'text': '- [ ] Call Sam 📆 2026-10-01',
+        'text': '- [ ] #mtg Call Sam 📆 2026-10-01',
         'status': 'incomplete',
         'start': None,
         'due': '2026-10-01',
         'completed': None,
-    }
+        'tags': ['meeting'],
+        'section': 'ready' if date(2026, 10, 1) <= TODAY else 'future',
+    }]
+    assert all('category' not in t for t in out['tasks'])
 
 
-def test_cli_tasks_json_filtered_same_tasks_as_text(root, capsys):
-    code, out = cli_json(capsys, ['--status', 'all'])
+def test_cli_tasks_json_section(root, capsys):
+    """Spec scenario: a task that is overdue and ready is listed once, as overdue."""
+    code, out = cli_json(capsys, ['--overdue', '--ready'])
 
-    assert [(t['file'], t['line']) for t in out['tasks']] == [
-        ('area/home.md', 1),
-        ('plan/daily/today.md', 2),
-        ('plan/daily/today.md', 3),
-        ('plan/daily/today.md', 4),
-        ('project/foo.md', 3),
-        ('project/foo.md', 4),
-        ('project/foo.md', 5),
-        ('project/foo.md', 6),
-        ('project/sub/bar.md', 1),
-        ('project/sub/bar.md', 2),
-    ]
-    assert [t['status'] for t in out['tasks']][1:4] == [
-        'incomplete', 'completed', 'rescheduled']
-    assert 'category' not in out['tasks'][0]
+    overdue = [t for t in out['tasks'] if t['text'].startswith('- [ ] Overdue')]
+    assert len(overdue) == 1
+    assert overdue[0]['section'] == 'overdue'
+    assert [t['section'] for t in out['tasks']] == \
+        sorted([t['section'] for t in out['tasks']], key=['overdue', 'ready'].index)
 
 
 def test_cli_tasks_json_dates(root, capsys):
-    code, out = cli_json(capsys, ['--folder', 'project/sub', '--status', 'completed'])
+    code, out = cli_json(capsys, ['--folder', 'project/sub', '--status', 'completed', '--all'])
 
     assert out['tasks'] == [{
         'file': 'project/sub/bar.md',
@@ -192,33 +201,38 @@ def test_cli_tasks_json_dates(root, capsys):
         'start': None,
         'due': PAST,
         'completed': PAST,
+        'tags': [],
+        'section': 'ready',
     }]
 
 
-def test_cli_tasks_json_default_report_categories(root, capsys):
-    """Without filters, tasks carry the report category in report order."""
-    sam_is_current = date(2026, 10, 1) <= calculate_week_end(TODAY)
-    sam = ('past_or_current' if sam_is_current else 'future', 'project/foo.md', 3)
+def test_cli_tasks_json_group_by_tag_lists_task_once(tmp_path, capsys, monkeypatch):
+    (tmp_path / 'a.md').write_text('- [ ] #x #y both 📆\n')
+    (tmp_path / '.meta-notes').write_text('# meta-notes notes root\n')
+    monkeypatch.delenv('META_NOTES_ROOT', raising=False)
+    monkeypatch.chdir(tmp_path)
 
-    code, out = cli_json(capsys, [])
+    code, out = cli_json(capsys, ['--undated', '--group-by', 'tag'])
 
-    assert code == 0
-    assert [(t['category'], t['file'], t['line']) for t in out['tasks']] == sorted(
-        [('past_or_current', 'plan/daily/today.md', 2),
-         ('future', 'area/home.md', 1),
-         ('future', 'project/foo.md', 4),
-         sam,
-         ('no_date', 'project/foo.md', 5),
-         ('no_date', 'project/sub/bar.md', 1)],
-        key=lambda t: (query.CATEGORIES.index(t[0]), t[1], t[2]))
+    assert [t['text'] for t in out['tasks']] == ['- [ ] #x #y both 📆']
+    assert out['tasks'][0]['tags'] == ['x', 'y']
 
 
 def test_query_run_tasks_appear_in_report(root):
-    """The JSON tasks are the tasks in the text report."""
-    lines, tasks = query.run('.')
+    """The JSON tasks are the tasks in the text report, in the same order."""
+    lines, tasks = query.run('.', modes=['overdue', 'due', 'future', 'undated'])
 
     task_lines = [line for line in lines if line.lstrip().startswith(('-', '*', '+'))]
     assert [t['text'] for t in tasks] == task_lines
+    assert {t['section'] for t in tasks} == {'overdue', 'due', 'future', 'undated'}
+
+
+def test_query_run_later_tasks(root):
+    _, without = query.run('.', modes=['all'])
+    _, with_later = query.run('.', modes=['all'], later=True)
+
+    assert not any('Someday' in t['text'] for t in without)
+    assert [t['section'] for t in with_later if 'Someday' in t['text']] == ['ready']
 
 
 def test_query_run_empty_root(tmp_path):

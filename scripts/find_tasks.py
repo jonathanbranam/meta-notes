@@ -1,38 +1,76 @@
 #!/usr/bin/env python3
 """
-Find and list incomplete tasks from markdown files.
+Find and list tasks from markdown files.
 
-Searches recursively through all markdown files and outputs:
-- File name as a wiki link
-- All incomplete tasks defined within that file
+Searches recursively through all markdown files and lists the selected
+tasks grouped by file, each file as a wiki link.
 
-Task format: bullet (-, *, +) followed by [status]
-- [ ], [.], [o], [O], [/], or any other character = incomplete (reported)
-- [x] or [X] = completed (not reported)
-- [>] = rescheduled (not reported)
-- [-] = canceled (not reported)
+A checkbox line (-, *, or + followed by [status]) is a task only when it
+has a due emoji (📅, 📆, or 🗓, with or without a date) or a start date
+(🛫 YYYY-MM-DD). A bare due emoji marks an undated task. A completed
+task's ✅ date stands in for its due date.
+
+Status:
+- [ ], [.], [o], [O], [/], or any other character = incomplete
+- [x] or [X] = completed
+- [>] = rescheduled
+- [-] = canceled
+
+Modes select tasks relative to the --date period START..END (default:
+today). Each task is listed once, in the first matching selected mode:
+- overdue: due before START
+- due: due within START..END
+- scheduled: due or start date within START..END
+- ready: due or start date on or before END (the default mode)
+- future: dated, but neither date on or before END
+- undated: bare due emoji and no start date
+--all selects ready, future, and undated. Tasks tagged #later are left out
+unless --later is given.
 """
 
 import argparse
 import os
 import sys
-from datetime import date, timedelta
+from datetime import date
+from typing import Callable
 
 from tasks import Task, TaskStatus, find_tasks_in_file, filter_tasks_by_status
-from notes import get_wiki_link, find_all_markdown_files, calculate_week_end
+from notes import get_wiki_link, find_all_markdown_files
+from period import FORMS, parse_period
+from tags import canonical_tag
+
+# Sections in report order. A task is listed in the first selected one that
+# matches it.
+SECTIONS = ('overdue', 'due', 'scheduled', 'ready', 'future', 'undated')
+
+# Modes that --all selects
+ALL_MODES = ('ready', 'future', 'undated')
+
+NOT_TAGGED = 'Not tagged'
 
 
-def filter_incomplete_tasks(tasks: list[Task]) -> list[Task]:
-    """
-    Filter a list of tasks to only include incomplete tasks.
+def _on_or_before(day: date | None, end: date) -> bool:
+    return day is not None and day <= end
 
-    Args:
-        tasks: List of Task objects to filter.
 
-    Returns:
-        List containing only tasks with INCOMPLETE status.
-    """
-    return filter_tasks_by_status(tasks, [TaskStatus.INCOMPLETE])
+def _within(day: date | None, start: date, end: date) -> bool:
+    return day is not None and start <= day <= end
+
+
+def _is_ready(task: Task, start: date, end: date) -> bool:
+    return _on_or_before(task.effective_due, end) or _on_or_before(task.start_date, end)
+
+
+PREDICATES: dict[str, Callable[[Task, date, date], bool]] = {
+    'overdue': lambda t, start, end: t.effective_due is not None and t.effective_due < start,
+    'due': lambda t, start, end: _within(t.effective_due, start, end),
+    'scheduled': lambda t, start, end: (_within(t.effective_due, start, end)
+                                        or _within(t.start_date, start, end)),
+    'ready': _is_ready,
+    'future': lambda t, start, end: ((t.effective_due is not None or t.start_date is not None)
+                                     and not _is_ready(t, start, end)),
+    'undated': lambda t, start, end: t.undated and t.start_date is None,
+}
 
 
 def filter_tasks_by_folder(tasks: list[Task], folder: str, root_dir: str) -> list[Task]:
@@ -68,44 +106,6 @@ def filter_tasks_by_folder(tasks: list[Task], folder: str, root_dir: str) -> lis
     return filtered_tasks
 
 
-def filter_tasks_by_due_date(tasks: list[Task], due_on: date | None = None,
-                             due_by: date | None = None,
-                             due_between: tuple[date, date] | None = None) -> list[Task]:
-    """
-    Filter tasks by due date criteria.
-
-    Args:
-        tasks: List of Task objects to filter.
-        due_on: If provided, only include tasks due on this exact date.
-        due_by: If provided, only include tasks due on or before this date.
-        due_between: If provided, only include tasks due between these dates (inclusive).
-
-    Returns:
-        List containing only tasks matching the date criteria.
-    """
-    filtered_tasks = []
-
-    for task in tasks:
-        if task.due_date is None:
-            continue
-
-        if due_on is not None:
-            if task.due_date == due_on:
-                filtered_tasks.append(task)
-        elif due_by is not None:
-            if task.due_date <= due_by:
-                filtered_tasks.append(task)
-        elif due_between is not None:
-            start_date, end_date = due_between
-            if start_date <= task.due_date <= end_date:
-                filtered_tasks.append(task)
-        else:
-            # No date filtering
-            filtered_tasks.append(task)
-
-    return filtered_tasks
-
-
 def filter_tasks_by_status_arg(tasks: list[Task], status_arg: str) -> list[Task]:
     """
     Filter tasks by status argument.
@@ -131,44 +131,142 @@ def filter_tasks_by_status_arg(tasks: list[Task], status_arg: str) -> list[Task]
         return tasks
 
 
-def get_task_relevant_date(task: Task) -> date | None:
+def filter_tasks_by_tags(tasks: list[Task], tags: list[str]) -> list[Task]:
     """
-    Get the most relevant date from a task (due_date takes precedence over start_date).
+    Filter tasks to those with any of the given tags.
 
     Args:
-        task: Task object to extract date from.
+        tasks: List of Task objects to filter.
+        tags: Tag names, with or without #. Aliases apply and case is ignored.
 
     Returns:
-        The due_date if present, otherwise start_date, or None if neither exists.
+        List containing only tasks with at least one of the tags.
     """
-    return task.due_date or task.start_date
+    wanted = {canonical_tag(tag).lower() for tag in tags}
+    return [task for task in tasks
+            if any(tag.lower() in wanted for tag in task.tags)]
 
 
-def categorize_task_by_date(task: Task, today: date, week_end: date) -> str:
+def collect_tasks(markdown_files: list[str], root_dir: str, folder: str | None = None,
+                  status: str = 'incomplete', tags: list[str] | None = None) -> list[Task]:
     """
-    Categorize a task based on its due/start date.
+    Collect tasks from markdown files, filtered by status, folder, and tags.
 
     Args:
-        task: Task object to categorize.
-        today: Today's date.
-        week_end: Date representing the end of this week.
+        markdown_files: Files to read.
+        root_dir: Root directory being searched (for --folder).
+        folder: Only include tasks from this folder (and subfolders).
+        status: Status argument ('incomplete', 'completed', 'all', ...).
+        tags: Only include tasks with any of these tags.
 
     Returns:
-        'past_or_current' for tasks due in the past or this week,
-        'future' for tasks due beyond this week,
-        'no_date' for tasks without due or start dates.
+        Matching tasks in file order.
     """
-    relevant_date = get_task_relevant_date(task)
+    all_tasks: list[Task] = []
+    for filepath in markdown_files:
+        all_tasks.extend(find_tasks_in_file(filepath))
 
-    if relevant_date is None:
-        return 'no_date'
-    elif relevant_date <= week_end:
-        return 'past_or_current'
-    else:
-        return 'future'
+    filtered_tasks = filter_tasks_by_status_arg(all_tasks, status)
+    if folder:
+        filtered_tasks = filter_tasks_by_folder(filtered_tasks, folder, root_dir)
+    if tags:
+        filtered_tasks = filter_tasks_by_tags(filtered_tasks, tags)
+    return filtered_tasks
 
 
-def format_file_tasks(filepath: str, tasks: list[Task], root_dir: str) -> list[str]:
+def resolve_modes(modes: list[str] | tuple[str, ...] | None) -> list[str]:
+    """
+    Expand --all and apply the default mode.
+
+    Args:
+        modes: Selected mode names, possibly including 'all'.
+
+    Returns:
+        Distinct mode names in section order. 'ready' when none is selected.
+    """
+    selected = set(modes or ())
+    if 'all' in selected:
+        selected.discard('all')
+        selected.update(ALL_MODES)
+    if not selected:
+        selected = {'ready'}
+    return [section for section in SECTIONS if section in selected]
+
+
+def is_later(task: Task) -> bool:
+    """Whether a task is tagged #later (any case)."""
+    return any(tag.lower() == 'later' for tag in task.tags)
+
+
+def select(tasks: list[Task], modes: list[str] | tuple[str, ...] | None,
+           start: date, end: date, later: bool = False) -> list[tuple[str, Task]]:
+    """
+    Select tasks by mode for the period START..END.
+
+    Args:
+        tasks: Tasks to select from (already filtered by status, folder, tags).
+        modes: Selected mode names ('all' expands; none means 'ready').
+        start: First day of the period.
+        end: Last day of the period.
+        later: Include tasks tagged #later.
+
+    Returns:
+        (section, task) pairs, in the order of tasks. Each task appears at
+        most once, in the first matching mode in section order.
+    """
+    sections = resolve_modes(modes)
+    selected: list[tuple[str, Task]] = []
+    for task in tasks:
+        if not later and is_later(task):
+            continue
+        for section in sections:
+            if PREDICATES[section](task, start, end):
+                selected.append((section, task))
+                break
+    return selected
+
+
+def sort_selection(selected: list[tuple[str, Task]]) -> list[tuple[str, Task]]:
+    """Order selected tasks by section, then file path, then line."""
+    return sorted(selected, key=lambda pair: (SECTIONS.index(pair[0]),
+                                              pair[1].filename, pair[1].line_no))
+
+
+def group_tasks_by_file(tasks: list[Task]) -> dict[str, list[Task]]:
+    """Group tasks by filename, preserving task order within each file."""
+    tasks_by_file: dict[str, list[Task]] = {}
+    for task in tasks:
+        tasks_by_file.setdefault(task.filename, []).append(task)
+    return tasks_by_file
+
+
+def group_tasks_by_tag(tasks: list[Task]) -> list[tuple[str, list[Task]]]:
+    """
+    Group tasks by tag, ignoring case.
+
+    Args:
+        tasks: Tasks to group.
+
+    Returns:
+        (heading, tasks) pairs, tags sorted ignoring case with 'Not tagged'
+        last. A tag's heading is the first spelling seen. A task with several
+        tags is in each of their groups.
+    """
+    groups: dict[str, tuple[str, list[Task]]] = {}
+    untagged: list[Task] = []
+    for task in tasks:
+        if not task.tags:
+            untagged.append(task)
+        for tag in task.tags:
+            groups.setdefault(tag.lower(), (tag, []))[1].append(task)
+    result = [groups[key] for key in sorted(groups)]
+    if untagged:
+        result.append((NOT_TAGGED, untagged))
+    return result
+
+
+def format_file_tasks(filepath: str, tasks: list[Task], root_dir: str,
+                      level: int = 2) -> list[str]:
     """
     Format tasks from a single file as output lines (standard format).
 
@@ -176,6 +274,7 @@ def format_file_tasks(filepath: str, tasks: list[Task], root_dir: str) -> list[s
         filepath: Path to the file containing tasks.
         tasks: List of Task objects from the file.
         root_dir: Root directory for generating wiki links.
+        level: Heading level of the file heading.
 
     Returns:
         List of formatted output lines (empty if no tasks).
@@ -185,7 +284,7 @@ def format_file_tasks(filepath: str, tasks: list[Task], root_dir: str) -> list[s
 
     lines: list[str] = []
     wiki_link = get_wiki_link(filepath, root_dir)
-    lines.append(f"## {wiki_link}")
+    lines.append(f"{'#' * level} {wiki_link}")
     lines.append("")
 
     for task in tasks:
@@ -226,295 +325,65 @@ def format_file_tasks_condensed(filepath: str, tasks: list[Task], root_dir: str)
     return lines
 
 
-def collect_categorized_tasks(root_dir: str, today: date) -> dict[str, list[tuple[str, list[Task]]]]:
-    """
-    Collect and categorize all incomplete tasks from markdown files.
-
-    Args:
-        root_dir: Directory to search for markdown files.
-        today: Reference date to use for categorization.
-
-    Returns:
-        Dictionary with categories as keys ('past_or_current', 'future', 'no_date')
-        and lists of (filepath, tasks) tuples as values.
-    """
-    # Calculate date boundaries (week ends on Sunday)
-    week_end = calculate_week_end(today)
-
-    # Find all markdown files
-    markdown_files = find_all_markdown_files(root_dir)
-
-    # Structure: {category: [(filepath, [tasks])]}
-    categorized_files: dict[str, list[tuple[str, list[Task]]]] = {
-        'past_or_current': [],
-        'future': [],
-        'no_date': []
-    }
-
-    for filepath in markdown_files:
-        all_tasks = find_tasks_in_file(filepath)
-        incomplete_tasks = filter_incomplete_tasks(all_tasks)
-
-        if not incomplete_tasks:
-            continue
-
-        # Categorize tasks by date
-        tasks_by_category: dict[str, list[Task]] = {
-            'past_or_current': [],
-            'future': [],
-            'no_date': []
-        }
-
-        for task in incomplete_tasks:
-            category = categorize_task_by_date(task, today, week_end)
-            tasks_by_category[category].append(task)
-
-        # Add to categorized files (only if tasks exist in that category)
-        for category, tasks in tasks_by_category.items():
-            if tasks:
-                categorized_files[category].append((filepath, tasks))
-
-    return categorized_files
-
-
-def format_section(
-    category: str,
-    header: str,
-    file_tasks: list[tuple[str, list[Task]]],
-    root_dir: str,
-    condensed: bool = False
-) -> list[str]:
-    """
-    Format a single section of the report.
-
-    Args:
-        category: Category name (for identification).
-        header: Markdown header for the section.
-        file_tasks: List of (filepath, tasks) tuples for this section.
-        root_dir: Root directory for generating wiki links.
-        condensed: If True, use condensed format.
-
-    Returns:
-        List of formatted output lines for the section.
-    """
-    if not file_tasks:
-        return []
-
+def format_files(tasks: list[Task], root_dir: str, condensed: bool,
+                 level: int = 2) -> list[str]:
+    """Format tasks grouped by file, files sorted by path."""
     lines: list[str] = []
+    tasks_by_file = group_tasks_by_file(tasks)
+    for filepath in sorted(tasks_by_file):
+        if condensed:
+            lines.extend(format_file_tasks_condensed(filepath, tasks_by_file[filepath], root_dir))
+        else:
+            lines.extend(format_file_tasks(filepath, tasks_by_file[filepath], root_dir, level))
+            lines.append("")  # Empty line between files (standard format only)
+    return lines
 
-    # Add section header
-    lines.append(header)
+
+def _add_heading(lines: list[str], heading: str) -> None:
+    """Append a heading and a blank line, after a blank line if needed."""
+    if lines and lines[-1] != "":
+        lines.append("")
+    lines.append(heading)
     lines.append("")
 
-    # Format each file's tasks in this category
-    formatter = format_file_tasks_condensed if condensed else format_file_tasks
-    for filepath, tasks in file_tasks:
-        file_lines = formatter(filepath, tasks, root_dir)
-        lines.extend(file_lines)
-        if not condensed:
-            lines.append("")  # Empty line between files (standard format only)
 
-    return lines
-
-
-def generate_report(root_dir: str, today: date, condensed: bool = False) -> list[str]:
+def build_report(selected: list[tuple[str, Task]], sections: list[str], root_dir: str,
+                 group_by: str | None = None, condensed: bool = False) -> list[str]:
     """
-    Generate a complete report of incomplete tasks in all markdown files.
-
-    Tasks are organized into three sections:
-    1. Past or current week (tasks due in past or within 7 days)
-    2. Future tasks (tasks due more than 7 days out)
-    3. Tasks without dates
+    Build the report lines for selected tasks.
 
     Args:
-        root_dir: Directory to search for markdown files.
-        today: Reference date to use for categorization.
-        condensed: If True, use condensed format.
-
-    Returns:
-        List of output lines for the complete report.
-    """
-    # Find all markdown files
-    markdown_files = find_all_markdown_files(root_dir)
-
-    if not markdown_files:
-        return ["No markdown files found."]
-
-    # Collect and categorize tasks
-    categorized_files = collect_categorized_tasks(root_dir, today)
-
-    # Check if we have any tasks at all
-    total_tasks = sum(
-        sum(len(tasks) for _, tasks in file_tasks)
-        for file_tasks in categorized_files.values()
-    )
-
-    if total_tasks == 0:
-        return ["No incomplete tasks found in any markdown files."]
-
-    # Generate output for each section
-    lines: list[str] = []
-
-    sections = [
-        ('past_or_current', '# Past & Current Week'),
-        ('future', '# Future (>1 Week)'),
-        ('no_date', '# No Date')
-    ]
-
-    for category, header in sections:
-        section_lines = format_section(
-            category,
-            header,
-            categorized_files[category],
-            root_dir,
-            condensed
-        )
-        lines.extend(section_lines)
-
-    # Add summary (not in condensed format)
-    if not condensed:
-        total_files = sum(len(file_tasks) for file_tasks in categorized_files.values())
-        task_word = "task" if total_tasks == 1 else "tasks"
-        section_word = "file section" if total_files == 1 else "file sections"
-        lines.append("")
-        lines.append(f"Summary: Found {total_tasks} incomplete {task_word} in {total_files} {section_word}")
-
-    return lines
-
-
-def parse_date_arg(date_str: str) -> date:
-    """
-    Parse a date string in YYYY-MM-DD format.
-
-    Args:
-        date_str: Date string to parse.
-
-    Returns:
-        Parsed date object.
-
-    Raises:
-        ValueError: If date string is invalid.
-    """
-    try:
-        return date.fromisoformat(date_str)
-    except ValueError:
-        raise ValueError(f"Invalid date format: {date_str}. Use YYYY-MM-DD format.")
-
-
-def parse_date_filters(due_on_arg: str | None, due_by_arg: str | None,
-                       due_between_arg: list[str] | None
-                       ) -> tuple[date | None, date | None, tuple[date, date] | None]:
-    """
-    Parse the date filter arguments.
-
-    Args:
-        due_on_arg: --due-on value, if given.
-        due_by_arg: --due-by value, if given.
-        due_between_arg: --due-between START END values, if given.
-
-    Returns:
-        Tuple of (due_on, due_by, due_between).
-
-    Raises:
-        ValueError: If a date is invalid or the range is reversed.
-    """
-    due_on = parse_date_arg(due_on_arg) if due_on_arg else None
-    due_by = parse_date_arg(due_by_arg) if due_by_arg else None
-    due_between = None
-    if due_between_arg:
-        start = parse_date_arg(due_between_arg[0])
-        end = parse_date_arg(due_between_arg[1])
-        if start > end:
-            raise ValueError("Start date must be before or equal to end date")
-        due_between = (start, end)
-    return due_on, due_by, due_between
-
-
-def is_filtered(folder: str | None, due_on: date | None, due_by: date | None,
-                due_between: tuple[date, date] | None, status: str) -> bool:
-    """Whether any filter is set (otherwise the categorized report is used)."""
-    return bool(folder or due_on or due_by or due_between or status != 'incomplete')
-
-
-def collect_filtered_tasks(root_dir: str, folder: str | None = None,
-                           due_on: date | None = None, due_by: date | None = None,
-                           due_between: tuple[date, date] | None = None,
-                           status: str = 'incomplete') -> list[Task]:
-    """
-    Collect tasks from all markdown files matching the filters.
-
-    Args:
-        root_dir: Directory to search for markdown files.
-        folder: Only include tasks from this folder (and subfolders).
-        due_on: Only include tasks due on this date.
-        due_by: Only include tasks due on or before this date.
-        due_between: Only include tasks due in this inclusive range.
-        status: Status argument ('incomplete', 'completed', 'all', ...).
-
-    Returns:
-        Matching tasks in file order.
-    """
-    all_tasks = []
-    for filepath in find_all_markdown_files(root_dir):
-        all_tasks.extend(find_tasks_in_file(filepath))
-
-    filtered_tasks = filter_tasks_by_status_arg(all_tasks, status)
-
-    if folder:
-        filtered_tasks = filter_tasks_by_folder(filtered_tasks, folder, root_dir)
-
-    if due_on or due_by or due_between:
-        filtered_tasks = filter_tasks_by_due_date(filtered_tasks, due_on, due_by, due_between)
-
-    return filtered_tasks
-
-
-def group_tasks_by_file(tasks: list[Task]) -> dict[str, list[Task]]:
-    """Group tasks by filename, preserving task order within each file."""
-    tasks_by_file: dict[str, list[Task]] = {}
-    for task in tasks:
-        tasks_by_file.setdefault(task.filename, []).append(task)
-    return tasks_by_file
-
-
-def generate_filtered_report(root_dir: str, folder: str | None = None,
-                             due_on: date | None = None, due_by: date | None = None,
-                             due_between: tuple[date, date] | None = None,
-                             status: str = 'incomplete',
-                             condensed: bool = False) -> list[str]:
-    """
-    Generate the filtered report: matching tasks grouped by file.
-
-    Args:
-        root_dir: Directory to search for markdown files.
-        folder, due_on, due_by, due_between, status: Filters, as for
-            collect_filtered_tasks.
+        selected: (section, task) pairs from select, in sort_selection order.
+        sections: The resolved modes. With more than one, each non-empty
+            section gets a '# <Section>' heading.
+        root_dir: Root directory for generating wiki links.
+        group_by: 'tag' to list tasks under a heading per tag.
         condensed: If True, use condensed format.
 
     Returns:
         List of output lines.
     """
-    if not find_all_markdown_files(root_dir):
-        return ["No markdown files found."]
-
-    filtered_tasks = collect_filtered_tasks(root_dir, folder, due_on, due_by,
-                                            due_between, status)
-    tasks_by_file = group_tasks_by_file(filtered_tasks)
-
-    if not tasks_by_file:
+    if not selected:
         return ["No tasks found matching the criteria."]
 
     lines: list[str] = []
-    formatter = format_file_tasks_condensed if condensed else format_file_tasks
-    for filepath in sorted(tasks_by_file.keys()):
-        lines.extend(formatter(filepath, tasks_by_file[filepath], root_dir))
-        if not condensed:
-            lines.append("")  # Empty line between files (standard format only)
+    for section in sections:
+        tasks = [task for name, task in selected if name == section]
+        if not tasks:
+            continue
+        if len(sections) > 1:
+            _add_heading(lines, f"# {section.capitalize()}")
+        if group_by == 'tag':
+            for heading, tag_tasks in group_tasks_by_tag(tasks):
+                _add_heading(lines, f"## {heading}")
+                lines.extend(format_files(tag_tasks, root_dir, condensed, level=3))
+        else:
+            lines.extend(format_files(tasks, root_dir, condensed))
 
     # Add summary (not in condensed format)
     if not condensed:
-        total_tasks = len(filtered_tasks)
-        total_files = len(tasks_by_file)
+        total_tasks = len(selected)
+        total_files = len({task.filename for _, task in selected})
         task_word = "task" if total_tasks == 1 else "tasks"
         file_word = "file" if total_files == 1 else "files"
         lines.append("")
@@ -523,55 +392,90 @@ def generate_filtered_report(root_dir: str, folder: str | None = None,
     return lines
 
 
-def main() -> None:
+def run_query(root_dir: str, period: str | None = None,
+              modes: list[str] | tuple[str, ...] | None = None, later: bool = False,
+              tags: list[str] | None = None, group_by: str | None = None,
+              folder: str | None = None, status: str = 'incomplete',
+              condensed: bool = False,
+              today: date | None = None) -> tuple[list[str], list[tuple[str, Task]]]:
     """
-    Main entry point for the script.
+    Run a task query.
+
+    Args:
+        root_dir: Directory to search for markdown files.
+        period: --date value (default: today).
+        modes: Selected mode names ('all' expands; none means 'ready').
+        later: Include tasks tagged #later.
+        tags: Only include tasks with any of these tags.
+        group_by: 'tag' to group the report by tag.
+        folder: Only include tasks from this folder (and subfolders).
+        status: Status argument ('incomplete', 'completed', 'all', ...).
+        condensed: If True, use condensed format.
+        today: Reference date for the default period (default: today).
+
+    Returns:
+        Tuple of (report lines, selected (section, task) pairs in report
+        order, each task once).
+
+    Raises:
+        ValueError: If period is invalid.
     """
-    parser = argparse.ArgumentParser(
-        description='Find and list tasks from markdown files.',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  %(prog)s                           # All incomplete tasks in current directory
-  %(prog)s --folder project          # Tasks from project/ folder
-  %(prog)s --due-on 2026-02-14       # Tasks due on specific date
-  %(prog)s --due-by 2026-02-20       # Tasks due by date
-  %(prog)s --status all              # All tasks regardless of status
-  %(prog)s --due-between 2026-02-01 2026-02-28  # Tasks due in date range
-  %(prog)s --condensed               # Condensed format output
-  %(prog)s --format=condensed        # Same as --condensed
-        """
+    start, end = parse_period(period, today)
+
+    markdown_files = find_all_markdown_files(root_dir)
+    if not markdown_files:
+        return ["No markdown files found."], []
+
+    sections = resolve_modes(modes)
+    tasks = collect_tasks(markdown_files, root_dir, folder, status, tags)
+    selected = sort_selection(select(tasks, sections, start, end, later))
+    return build_report(selected, sections, root_dir, group_by, condensed), selected
+
+
+def add_query_arguments(parser: argparse.ArgumentParser) -> None:
+    """Add the task query options (shared with `meta-notes tasks`)."""
+    parser.add_argument(
+        '--date',
+        metavar='PERIOD',
+        help=f'Day or period to select for (default: today): {FORMS}'
+    )
+
+    modes = parser.add_argument_group('modes (combine; default: --ready)')
+    for mode, help_text in (
+        ('scheduled', 'Due or start date within the period'),
+        ('due', 'Due date within the period'),
+        ('overdue', 'Due date before the period'),
+        ('ready', 'Due or start date on or before the end of the period'),
+        ('future', 'Dated, but not ready'),
+        ('undated', 'Bare due emoji and no start date'),
+        ('all', 'Ready, future, and undated tasks'),
+    ):
+        modes.add_argument(f'--{mode}', dest='modes', action='append_const',
+                           const=mode, help=help_text)
+
+    parser.add_argument(
+        '--later',
+        action='store_true',
+        help='Include tasks tagged #later'
     )
 
     parser.add_argument(
-        'root_dir',
-        nargs='?',
-        default='.',
-        help='Root directory to search (default: current directory)'
+        '--tag',
+        action='append',
+        dest='tags',
+        metavar='TAG',
+        help='Only tasks with this tag (repeatable; any tag matches)'
+    )
+
+    parser.add_argument(
+        '--group-by',
+        choices=['tag'],
+        help='List tasks under a heading per tag'
     )
 
     parser.add_argument(
         '--folder',
         help='Filter tasks from specific folder (includes subfolders)'
-    )
-
-    parser.add_argument(
-        '--due-on',
-        metavar='DATE',
-        help='Show tasks due on specific date (YYYY-MM-DD)'
-    )
-
-    parser.add_argument(
-        '--due-by',
-        metavar='DATE',
-        help='Show tasks due on or before date (YYYY-MM-DD)'
-    )
-
-    parser.add_argument(
-        '--due-between',
-        nargs=2,
-        metavar=('START', 'END'),
-        help='Show tasks due between dates (YYYY-MM-DD YYYY-MM-DD)'
     )
 
     parser.add_argument(
@@ -594,33 +498,59 @@ Examples:
         help='Use condensed output format (synonym for --format=condensed)'
     )
 
-    args = parser.parse_args()
 
-    # Determine output format (--condensed flag overrides --format)
-    use_condensed = args.condensed or args.format == 'condensed'
+def main() -> None:
+    """
+    Main entry point for the script.
+    """
+    parser = argparse.ArgumentParser(
+        description='Find and list tasks from markdown files.',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s                                # Tasks ready today
+  %(prog)s --due --date 2026-02-14        # Tasks due on a date
+  %(prog)s --overdue                      # Tasks due before today
+  %(prog)s --ready --date 2026-02-15      # Tasks ready by Sunday
+  %(prog)s --scheduled --date 2026-11     # Tasks scheduled in November
+  %(prog)s --due --date 2026-02-01..2026-02-28  # Tasks due in a range
+  %(prog)s --all --folder project         # Every task in project/
+  %(prog)s --all --later                  # Every task, including #later
+  %(prog)s --status completed --due --date 2026-Q3  # Completed in Q3
+  %(prog)s --tag admin --group-by tag     # Tasks tagged #admin
+  %(prog)s --condensed                    # Condensed format output
+
+Replacements for removed options:
+  --due-on D            --due --date D
+  --due-by D            --overdue --date D+1
+  --due-between A B     --due --date A..B
+        """
+    )
+
+    parser.add_argument(
+        'root_dir',
+        nargs='?',
+        default='.',
+        help='Root directory to search (default: current directory)'
+    )
+
+    add_query_arguments(parser)
+
+    args = parser.parse_args()
 
     # Validate root directory
     if not os.path.isdir(args.root_dir):
         print(f"Error: {args.root_dir} is not a directory", file=sys.stderr)
         sys.exit(1)
 
-    # Parse date arguments
     try:
-        due_on, due_by, due_between = parse_date_filters(
-            args.due_on, args.due_by, args.due_between)
+        lines, _selected = run_query(
+            args.root_dir, args.date, args.modes, args.later, args.tags,
+            args.group_by, args.folder, args.status,
+            args.condensed or args.format == 'condensed')
     except ValueError as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
-
-    # Get current date
-    today = date.today()
-
-    if is_filtered(args.folder, due_on, due_by, due_between, args.status):
-        lines = generate_filtered_report(args.root_dir, args.folder, due_on, due_by,
-                                         due_between, args.status, use_condensed)
-    else:
-        # Use categorized report (for backward compatibility with templates)
-        lines = generate_report(args.root_dir, today, use_condensed)
 
     print("\n".join(lines))
 

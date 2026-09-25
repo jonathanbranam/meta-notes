@@ -16,6 +16,7 @@ import subprocess
 import sys
 from dataclasses import dataclass, field
 
+import find_tasks
 from meta_notes import __version__, init, note, ops, query
 from meta_notes.root import SENTINEL, find_root
 
@@ -173,8 +174,9 @@ def cmd_archive(args, root: str) -> Output:
 def cmd_tasks(args, root: str) -> Output:
     try:
         lines, tasks = query.run(
-            ".", folder=args.folder, due_on=args.due_on, due_by=args.due_by,
-            due_between=args.due_between, status=args.status,
+            ".", period=args.date, modes=args.modes, later=args.later,
+            tags=args.tags, group_by=args.group_by, folder=args.folder,
+            status=args.status,
             condensed=args.condensed or args.format == "condensed")
     except ValueError as e:
         raise CliError(str(e))
@@ -334,21 +336,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("tasks", parents=[common],
                        help="list tasks (same options and output as find_tasks.py)")
-    p.add_argument("--folder",
-                   help="filter tasks from specific folder (includes subfolders)")
-    p.add_argument("--due-on", metavar="DATE",
-                   help="show tasks due on specific date (YYYY-MM-DD)")
-    p.add_argument("--due-by", metavar="DATE",
-                   help="show tasks due on or before date (YYYY-MM-DD)")
-    p.add_argument("--due-between", nargs=2, metavar=("START", "END"),
-                   help="show tasks due between dates (YYYY-MM-DD YYYY-MM-DD)")
-    p.add_argument("--status", default="incomplete",
-                   choices=["incomplete", "completed", "rescheduled", "canceled", "all"],
-                   help="filter by task status (default: incomplete)")
-    p.add_argument("--format", choices=["standard", "condensed"], default="standard",
-                   help="output format (default: standard)")
-    p.add_argument("--condensed", action="store_true",
-                   help="use condensed output format (synonym for --format=condensed)")
+    find_tasks.add_query_arguments(p)
     p.set_defaults(handler=cmd_tasks)
 
     p = sub.add_parser("note", parents=[common],

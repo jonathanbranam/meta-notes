@@ -87,8 +87,10 @@ meta-notes/
 │   │   ├── query.py             # Task query
 │   │   ├── root.py              # Sentinel search for the notes root
 │   │   └── template.py          # Template discovery and rendering
-│   ├── find_tasks.py        # Task discovery and filtering
+│   ├── find_tasks.py        # Task selection and report
 │   ├── notes.py             # Note utilities
+│   ├── period.py            # --date day and period parsing
+│   ├── tags.py              # Tag parsing and aliases
 │   ├── tasks.py             # Task parsing and processing
 │   ├── time_report.py       # Time tracking reports
 │   ├── time_tracking.py     # Time log parsing
@@ -101,9 +103,11 @@ meta-notes/
 │   │   ├── test_init.py
 │   │   ├── test_note.py
 │   │   ├── test_notes.py
+│   │   ├── test_period.py
 │   │   ├── test_ops.py
 │   │   ├── test_query.py
 │   │   ├── test_root.py
+│   │   ├── test_tags.py
 │   │   ├── test_tasks.py
 │   │   ├── test_template.py
 │   │   ├── test_time_tracking.py
@@ -173,7 +177,9 @@ meta-notes note weekly 2026-04-02 --render --json
 meta-notes note new "project/trip/Packing" --template checklist
 bin/meta-notes archive 'project/2024-*'
 bin/meta-notes move project/foo area/foo --json
-bin/meta-notes tasks --folder project --status all
+bin/meta-notes tasks --all --folder project --status all
+meta-notes tasks --overdue --due          # overdue and due today
+meta-notes tasks --scheduled --date 2026-11 --group-by tag
 ```
 
 Other commands find the notes root by walking up from the current directory

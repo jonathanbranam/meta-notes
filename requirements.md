@@ -130,17 +130,35 @@ These navigation commands scan the filesystem for existing notes and skip over m
 
 The `scripts/find_tasks.py` script finds tasks across all notes and supports filtering:
 
+**What is a task:**
+- A checkbox line with a due-date emoji (📅, 📆, or 🗓), with or without a date, or a start date (`🛫 YYYY-MM-DD`)
+- Plain checkboxes are checklist items and are ignored
+- A bare due emoji marks an undated task
+- A completed task's `✅ YYYY-MM-DD` date stands in for its due date
+- Every `#tag` on the line is a tag (`#mtg` → `meeting`, `#pers`/`#per` → `personal`)
+
 **Filter by location:**
 - `--folder project/kitchen-remodel` - Find tasks in specific folder
 - Includes subfolders by default
 
 **Filter by date:**
-- `--due-on YYYY-MM-DD` - Tasks due on specific date
-- `--due-by YYYY-MM-DD` - Tasks due on or before date
-- `--due-between YYYY-MM-DD YYYY-MM-DD` - Tasks due within date range
+- `--date PERIOD` - Day or period to select for (default: today): `YYYY-MM-DD`, `YYYY-MM-DD..YYYY-MM-DD`, `YYYY-MM`, `YYYY-Qn`, or `YYYY`
+- `--overdue` - Due before the period
+- `--due` - Due within the period
+- `--scheduled` - Due or starting within the period
+- `--ready` - Due or starting on or before the end of the period (default mode)
+- `--future` - Dated, but not ready
+- `--undated` - Bare due emoji and no start date
+- `--all` - Ready, future, and undated tasks
+- Modes combine; each task is listed once, in the first matching section (overdue, due, scheduled, ready, future, undated)
+
+**Filter by tag:**
+- `--tag TAG` - Tasks with this tag (repeatable; any tag matches)
+- `--later` - Include tasks tagged `#later`, which every mode otherwise leaves out
+- `--group-by tag` - List tasks under a heading per tag
 
 **Filter by status:**
-- `--status incomplete|completed|rescheduled|canceled` - Filter by task status
+- `--status incomplete|completed|rescheduled|canceled|all` - Filter by task status (default: incomplete)
 - Multiple filters can be combined
 
 **Output formats:**
@@ -175,7 +193,7 @@ Use wrapped command syntax:
 
 ```markdown
 {{% vim MetaNotesListTasks %}}
-{{% python scripts/find_tasks.py --due-on {{today}} %}}
+{{% python scripts/find_tasks.py --due --date {{today}} %}}
 {{% shell echo "Hello World" %}}
 ```
 
@@ -242,10 +260,10 @@ All date formatting uses Python strftime format specifiers.
 Week Plan: [[plan/week/Plan {{week_start}}]]
 
 ## Tasks Due Today
-{{% python scripts/find_tasks.py --due-on {{date:%Y-%m-%d}} --status incomplete --condensed %}}
+{{% python scripts/find_tasks.py --due --date {{date:%Y-%m-%d}} --condensed %}}
 
 ## Overdue Tasks
-{{% python scripts/find_tasks.py --due-by {{date-1:%Y-%m-%d}} --status incomplete --condensed %}}
+{{% python scripts/find_tasks.py --overdue --date {{date:%Y-%m-%d}} --condensed %}}
 
 ## Notes
 

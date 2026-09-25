@@ -5,6 +5,7 @@ Tests all task-related functions and classes.
 """
 
 import sys
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -22,13 +23,13 @@ from tasks import Task, TaskStatus
 def test_find_tasks_in_file_simple_uncompleted_task(tmp_path):
     """Test finding a simple uncompleted task."""
     test_file = tmp_path / "test.md"
-    test_file.write_text("- [ ] Simple task\n")
+    test_file.write_text("- [ ] Simple task 📆\n")
 
     tasks = tasks_module.find_tasks_in_file(str(test_file))
 
     assert len(tasks) == 1
     assert tasks[0].line_no == 1
-    assert tasks[0].text == "- [ ] Simple task"
+    assert tasks[0].text == "- [ ] Simple task 📆"
     assert tasks[0].status == TaskStatus.INCOMPLETE
     assert tasks[0].filename == str(test_file)
 
@@ -36,7 +37,7 @@ def test_find_tasks_in_file_simple_uncompleted_task(tmp_path):
 def test_find_tasks_in_file_completed_task_lowercase_x(tmp_path):
     """Test finding completed task with lowercase x."""
     test_file = tmp_path / "test.md"
-    test_file.write_text("- [x] Completed task\n")
+    test_file.write_text("- [x] Completed task 📆\n")
 
     tasks = tasks_module.find_tasks_in_file(str(test_file))
 
@@ -47,7 +48,7 @@ def test_find_tasks_in_file_completed_task_lowercase_x(tmp_path):
 def test_find_tasks_in_file_completed_task_uppercase_x(tmp_path):
     """Test finding completed task with uppercase X."""
     test_file = tmp_path / "test.md"
-    test_file.write_text("- [X] Completed task\n")
+    test_file.write_text("- [X] Completed task 📆\n")
 
     tasks = tasks_module.find_tasks_in_file(str(test_file))
 
@@ -58,7 +59,7 @@ def test_find_tasks_in_file_completed_task_uppercase_x(tmp_path):
 def test_find_tasks_in_file_rescheduled_task(tmp_path):
     """Test finding rescheduled task."""
     test_file = tmp_path / "test.md"
-    test_file.write_text("- [>] Rescheduled task\n")
+    test_file.write_text("- [>] Rescheduled task 📆\n")
 
     tasks = tasks_module.find_tasks_in_file(str(test_file))
 
@@ -69,7 +70,7 @@ def test_find_tasks_in_file_rescheduled_task(tmp_path):
 def test_find_tasks_in_file_canceled_task(tmp_path):
     """Test finding canceled task."""
     test_file = tmp_path / "test.md"
-    test_file.write_text("- [-] Canceled task\n")
+    test_file.write_text("- [-] Canceled task 📆\n")
 
     tasks = tasks_module.find_tasks_in_file(str(test_file))
 
@@ -80,9 +81,9 @@ def test_find_tasks_in_file_canceled_task(tmp_path):
 def test_find_tasks_in_file_all_bullet_types(tmp_path):
     """Test all three bullet types (-, *, +)."""
     test_file = tmp_path / "test.md"
-    content = """- [ ] Dash bullet
-* [ ] Asterisk bullet
-+ [ ] Plus bullet
+    content = """- [ ] Dash bullet 📆
+* [ ] Asterisk bullet 📆
++ [ ] Plus bullet 📆
 """
     test_file.write_text(content)
 
@@ -101,13 +102,13 @@ def test_find_tasks_in_file_mixed_content(tmp_path):
 
 Some text here.
 
-- [ ] First task
-- Not a task (no brackets)
-- [x] Second task
+- [ ] First task 📆
+- Not a task (no brackets) 📆
+- [x] Second task 📆
 
 More text.
 
-* [ ] Third task
+* [ ] Third task 📆
 """
     test_file.write_text(content)
 
@@ -122,10 +123,10 @@ More text.
 def test_find_tasks_in_file_indented_tasks(tmp_path):
     """Test tasks with various indentation levels."""
     test_file = tmp_path / "test.md"
-    content = """- [ ] No indent
-  - [ ] Two space indent
-    - [ ] Four space indent
-\t- [ ] Tab indent
+    content = """- [ ] No indent 📆
+  - [ ] Two space indent 📆
+    - [ ] Four space indent 📆
+\t- [ ] Tab indent 📆
 """
     test_file.write_text(content)
 
@@ -139,10 +140,10 @@ def test_find_tasks_in_file_line_numbers(tmp_path):
     test_file = tmp_path / "test.md"
     content = """Line 1
 Line 2
-- [ ] Task on line 3
+- [ ] Task on line 3 📆
 Line 4
 Line 5
-- [ ] Task on line 6
+- [ ] Task on line 6 📆
 """
     test_file.write_text(content)
 
@@ -182,11 +183,11 @@ Just some text.
 def test_find_tasks_in_file_invalid_task_formats(tmp_path):
     """Test that invalid task formats are not matched."""
     test_file = tmp_path / "test.md"
-    content = """- [] Missing space in brackets
-- [  ] Two characters in brackets
-- [ab] Multiple characters
--[ ] Missing space after dash
-- [ ]Missing space after brackets is OK but no text
+    content = """- [] Missing space in brackets 📆
+- [  ] Two characters in brackets 📆
+- [ab] Multiple characters 📆
+-[ ] Missing space after dash 📆
+- [ ]Missing space after brackets is OK but no text 📆
 """
     test_file.write_text(content)
 
@@ -206,7 +207,7 @@ def test_find_tasks_in_file_nonexistent_file():
 def test_find_tasks_in_file_task_attributes(tmp_path):
     """Test that Task object has all required attributes."""
     test_file = tmp_path / "test.md"
-    test_file.write_text("- [x] Complete task\n")
+    test_file.write_text("- [x] Complete task 📆\n")
 
     tasks = tasks_module.find_tasks_in_file(str(test_file))
 
@@ -269,7 +270,7 @@ def test_find_tasks_in_file_with_due_date_calendar(tmp_path):
 def test_find_tasks_in_file_with_completed_date(tmp_path):
     """Test parsing task with completed date."""
     test_file = tmp_path / "test.md"
-    test_file.write_text("- [x] Completed task ✅ 2026-02-10\n")
+    test_file.write_text("- [x] Completed task 📆 ✅ 2026-02-10\n")
 
     tasks = tasks_module.find_tasks_in_file(str(test_file))
 
@@ -301,9 +302,9 @@ def test_find_tasks_in_file_with_all_dates(tmp_path):
 
 
 def test_find_tasks_in_file_with_no_dates(tmp_path):
-    """Test task without any dates."""
+    """Test task with a bare due emoji and no dates."""
     test_file = tmp_path / "test.md"
-    test_file.write_text("- [ ] Simple task without dates\n")
+    test_file.write_text("- [ ] Simple task without dates 📆\n")
 
     tasks = tasks_module.find_tasks_in_file(str(test_file))
 
@@ -311,17 +312,17 @@ def test_find_tasks_in_file_with_no_dates(tmp_path):
     assert tasks[0].start_date is None
     assert tasks[0].due_date is None
     assert tasks[0].completed_date is None
+    assert tasks[0].undated
 
 
 def test_find_tasks_in_file_with_invalid_date_format(tmp_path):
-    """Test task with invalid date format."""
+    """Test that an invalid start date doesn't make a line a task."""
     test_file = tmp_path / "test.md"
     test_file.write_text("- [ ] Task with bad date 🛫 02-13-2026\n")
 
     tasks = tasks_module.find_tasks_in_file(str(test_file))
 
-    assert len(tasks) == 1
-    assert tasks[0].start_date is None
+    assert len(tasks) == 0
 
 
 def test_find_tasks_in_file_with_date_no_whitespace(tmp_path):
@@ -634,3 +635,108 @@ def test_filter_tasks_by_status_preserves_order():
     assert result[0].text == "- [ ] Task 1"
     assert result[1].text == "- [ ] Task 3"
     assert result[2].text == "- [ ] Task 4"
+
+
+# Tests for find_tasks_in_file: task definition, due emojis, and tags
+
+def test_find_tasks_in_file_plain_checkbox_skipped(tmp_path):
+    """A checkbox with no due emoji or start date is not a task."""
+    test_file = tmp_path / "test.md"
+    test_file.write_text("- [ ] buy milk\n- [x] done item\n")
+
+    assert tasks_module.find_tasks_in_file(str(test_file)) == []
+
+
+def test_find_tasks_in_file_start_date_only_kept(tmp_path):
+    """A checkbox with only a start date is a task."""
+    test_file = tmp_path / "test.md"
+    test_file.write_text("- [ ] draft outline 🛫 2026-10-05\n")
+
+    tasks = tasks_module.find_tasks_in_file(str(test_file))
+
+    assert len(tasks) == 1
+    assert tasks[0].start_date == date(2026, 10, 5)
+    assert tasks[0].due_date is None
+    assert not tasks[0].undated
+
+
+@pytest.mark.parametrize('emoji', ['📅', '📆', '🗓'])
+def test_find_tasks_in_file_each_due_emoji(tmp_path, emoji):
+    """Each due emoji gives a due date."""
+    test_file = tmp_path / "test.md"
+    test_file.write_text(f"- [ ] a {emoji} 2026-10-01\n")
+
+    tasks = tasks_module.find_tasks_in_file(str(test_file))
+
+    assert len(tasks) == 1
+    assert tasks[0].due_date == date(2026, 10, 1)
+    assert not tasks[0].undated
+
+
+def test_find_tasks_in_file_due_emoji_variation_selector(tmp_path):
+    """🗓 followed by an emoji variation selector still gives a due date."""
+    test_file = tmp_path / "test.md"
+    test_file.write_text("- [ ] a 🗓️ 2026-10-01\n")
+
+    tasks = tasks_module.find_tasks_in_file(str(test_file))
+
+    assert tasks[0].due_date == date(2026, 10, 1)
+
+
+@pytest.mark.parametrize('emoji', ['📅', '📆', '🗓'])
+def test_find_tasks_in_file_bare_due_emoji_undated(tmp_path, emoji):
+    """A bare due emoji makes an undated task."""
+    test_file = tmp_path / "test.md"
+    test_file.write_text(f"- [ ] someday task {emoji}\n")
+
+    tasks = tasks_module.find_tasks_in_file(str(test_file))
+
+    assert len(tasks) == 1
+    assert tasks[0].due_date is None
+    assert tasks[0].undated
+
+
+def test_find_tasks_in_file_invalid_due_date_undated(tmp_path):
+    """A due emoji followed by an impossible date makes an undated task."""
+    test_file = tmp_path / "test.md"
+    test_file.write_text("- [ ] bad date 📆 2026-02-30\n")
+
+    tasks = tasks_module.find_tasks_in_file(str(test_file))
+
+    assert len(tasks) == 1
+    assert tasks[0].due_date is None
+    assert tasks[0].undated
+
+
+def test_find_tasks_in_file_tags(tmp_path):
+    """Tags are read from anywhere on the line, with aliases applied."""
+    test_file = tmp_path / "test.md"
+    test_file.write_text("- [ ] #aftr #design follow up 📅 2026-07-08\n"
+                         "- [ ] #mtg prep 📆 2026-10-01 #Admin\n"
+                         "- [ ] untagged 📆\n")
+
+    tasks = tasks_module.find_tasks_in_file(str(test_file))
+
+    assert tasks[0].tags == ['aftr', 'design']
+    assert tasks[1].tags == ['meeting', 'Admin']
+    assert tasks[2].tags == []
+
+
+# Tests for Task.effective_due property
+
+def test_task_effective_due_completed_with_completion_date():
+    task = Task("- [x] ship it", TaskStatus.COMPLETED, "f.md", 1,
+                due_date=date(2026, 10, 1), completed_date=date(2026, 10, 3))
+    assert task.effective_due == date(2026, 10, 3)
+
+
+def test_task_effective_due_completed_without_completion_date():
+    task = Task("- [x] ship it", TaskStatus.COMPLETED, "f.md", 1,
+                due_date=date(2026, 10, 1))
+    assert task.effective_due == date(2026, 10, 1)
+
+
+def test_task_effective_due_incomplete_ignores_completion_date():
+    task = Task("- [ ] ship it", TaskStatus.INCOMPLETE, "f.md", 1,
+                due_date=date(2026, 10, 1), completed_date=date(2026, 10, 3))
+    assert task.effective_due == date(2026, 10, 1)

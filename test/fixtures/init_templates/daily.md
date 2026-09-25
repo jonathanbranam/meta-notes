@@ -7,10 +7,10 @@ Week Plan: [[plan/week/{{week_start:%y}}-{{week_quarter}}/{{week_start:%Y-%m-%d}
 
 ## Tasks Due Today
 
-{{% python scripts/find_tasks.py --due-on {{date:%Y-%m-%d}} --status incomplete --condensed %}}
+{{% python scripts/find_tasks.py --due --date {{date:%Y-%m-%d}} --condensed %}}
 ## Overdue Tasks
 
-{{% python scripts/find_tasks.py --due-by {{date-1:%Y-%m-%d}} --status incomplete --condensed %}}
+{{% python scripts/find_tasks.py --overdue --date {{date:%Y-%m-%d}} --condensed %}}
 ## Notes
 
 ## Time Tracking

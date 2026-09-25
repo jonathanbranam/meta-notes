@@ -4,12 +4,22 @@ Task management module for markdown files.
 Handles task parsing, status tracking, and date extraction from markdown tasks.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from enum import Enum
 from typing import Optional
 import re
 import sys
+
+from tags import parse_tags
+
+# Emojis that mark a due date. Used bare (no date after it), one marks an
+# undated task.
+DUE_EMOJIS = ('📅', '📆', '🗓')
+
+# A due emoji (optionally with an emoji variation selector) and a date
+_DUE_DATE_PATTERN = re.compile(
+    '(?:' + '|'.join(DUE_EMOJIS) + r')\ufe0f?\s*(\d{4}-\d{2}-\d{2})')
 
 
 class TaskStatus(Enum):
@@ -26,8 +36,11 @@ class Task:
 
     Dates can be specified in the task text using emojis:
     - 🛫 YYYY-MM-DD for start_date
-    - 🗓 or 📆 YYYY-MM-DD for due_date
+    - 📅, 📆, or 🗓 YYYY-MM-DD for due_date
     - ✅ YYYY-MM-DD for completed_date
+
+    A due emoji with no valid date after it makes the task undated. Tags
+    are the canonical names (without #) of every #tag on the line.
     """
     text: str
     status: TaskStatus
@@ -36,6 +49,15 @@ class Task:
     start_date: Optional[date] = None
     due_date: Optional[date] = None
     completed_date: Optional[date] = None
+    undated: bool = False
+    tags: list[str] = field(default_factory=list)
+
+    @property
+    def effective_due(self) -> Optional[date]:
+        """The ✅ date of a completed task that has one, otherwise the due date."""
+        if self.status == TaskStatus.COMPLETED and self.completed_date:
+            return self.completed_date
+        return self.due_date
 
 
 def _extract_date(text: str, emoji: str) -> Optional[date]:
@@ -73,10 +95,20 @@ def _parse_task_dates(text: str) -> tuple[Optional[date], Optional[date], Option
         A tuple of (start_date, due_date, completed_date).
     """
     start_date = _extract_date(text, '🛫')
-    # Try both calendar emojis for due_date
-    due_date = _extract_date(text, '🗓') or _extract_date(text, '📆')
+    due_date = None
+    for match in _DUE_DATE_PATTERN.finditer(text):
+        try:
+            due_date = date.fromisoformat(match.group(1))
+            break
+        except ValueError:
+            continue
     completed_date = _extract_date(text, '✅')
     return start_date, due_date, completed_date
+
+
+def _has_due_emoji(text: str) -> bool:
+    """Whether text contains any due emoji, with or without a date."""
+    return any(emoji in text for emoji in DUE_EMOJIS)
 
 
 def _char_to_status(status_char: str) -> TaskStatus:
@@ -105,6 +137,10 @@ def find_tasks_in_file(filepath: str) -> list[Task]:
     """
     Find all task lines in a markdown file.
 
+    A checkbox line is a task only when it contains a due emoji (with or
+    without a date) or a start date (🛫 YYYY-MM-DD). Other checkbox lines
+    are checklist items and are skipped.
+
     Args:
         filepath: Path to the markdown file to search.
 
@@ -120,21 +156,24 @@ def find_tasks_in_file(filepath: str) -> list[Task]:
         with open(filepath, 'r', encoding='utf-8') as f:
             for line_num, line in enumerate(f, 1):
                 match = task_pattern.match(line)
-                if match:
-                    status_char = match.group(1)
-                    status = _char_to_status(status_char)
-                    text = line.rstrip()
-                    start_date, due_date, completed_date = _parse_task_dates(text)
-                    task = Task(
-                        text=text,
-                        status=status,
-                        filename=filepath,
-                        line_no=line_num,
-                        start_date=start_date,
-                        due_date=due_date,
-                        completed_date=completed_date
-                    )
-                    tasks.append(task)
+                if not match:
+                    continue
+                text = line.rstrip()
+                start_date, due_date, completed_date = _parse_task_dates(text)
+                has_due_emoji = _has_due_emoji(text)
+                if not has_due_emoji and start_date is None:
+                    continue
+                tasks.append(Task(
+                    text=text,
+                    status=_char_to_status(match.group(1)),
+                    filename=filepath,
+                    line_no=line_num,
+                    start_date=start_date,
+                    due_date=due_date,
+                    completed_date=completed_date,
+                    undated=has_due_emoji and due_date is None,
+                    tags=parse_tags(text),
+                ))
     except (IOError, UnicodeDecodeError) as e:
         print(f"Warning: Could not read {filepath}: {e}", file=sys.stderr)
 

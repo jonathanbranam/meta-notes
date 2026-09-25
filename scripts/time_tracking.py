@@ -11,16 +11,8 @@ from collections import defaultdict
 import re
 import sys
 
+from tags import TAG_ALIASES, canonical_tag
 
-# Tag aliases: abbreviations expanded to their canonical (full) tag text.
-# When a tag is parsed, its text is normalized using this mapping.
-# Note: #off-task is NOT aliased to #personal because it has different
-# boundary semantics (non-work time within the work window, not a boundary marker).
-TAG_ALIASES: dict[str, str] = {
-    '#mtg': '#meeting',
-    '#pers': '#personal',
-    '#per': '#personal',
-}
 
 # Tag groups: tags that share meaning and should be reported together.
 # Tags listed here should use canonical (non-alias) forms.
@@ -52,11 +44,7 @@ class Tag:
 
     def __post_init__(self):
         """Ensure tag text starts with # and expand any known abbreviations."""
-        if not self.text.startswith('#'):
-            self.text = '#' + self.text
-        canonical = TAG_ALIASES.get(self.text.lower())
-        if canonical:
-            self.text = canonical
+        self.text = '#' + canonical_tag(self.text)
 
 
 @dataclass

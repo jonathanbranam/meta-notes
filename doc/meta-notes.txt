@@ -359,7 +359,7 @@ run from the notes root, with their stderr included in the output.
     {{% vim :Command %}}        run a Vim command; insert its output
 
 Example — insert the tasks due on the note's date: >
-    {{% python scripts/find_tasks.py --due-on {{date:%Y-%m-%d}} --condensed %}}
+    {{% python scripts/find_tasks.py --due --date {{date:%Y-%m-%d}} --condensed %}}
     {{% shell git log --oneline -5 %}}
     {{% vim echo "Created " . strftime('%H:%M') %}}
 <
@@ -509,10 +509,101 @@ Commands ~
         meta-notes note weekly 2026-04-02 --render
         meta-notes note new project/trip/Packing --template checklist
 <
-`meta-notes tasks [options]`
-    List tasks. Takes the same options as `scripts/find_tasks.py`
-    (`--folder`, `--due-on`, `--due-by`, `--due-between`, `--status`,
-    `--format`, `--condensed`) and prints the same output.
+`meta-notes tasks [options]`                     *meta-notes-cli-tasks*
+    List tasks. Takes the same options as `scripts/find_tasks.py` and
+    prints the same output. With no options, lists the incomplete tasks
+    ready today (|meta-notes-tasks-modes|).
+
+    --date {period}     The day or period to select for (default: today).
+                        See |meta-notes-date|.
+    --overdue, --due, --scheduled, --ready, --future, --undated, --all
+                        Selection modes (|meta-notes-tasks-modes|).
+    --later             Include tasks tagged `#later`.
+    --tag {tag}         Only tasks with this tag. Repeat for any of
+                        several tags. See |meta-notes-task-tags|.
+    --group-by tag      List tasks under a heading per tag.
+    --folder {dir}      Only tasks in {dir} and its subfolders.
+    --status {status}   `incomplete` (default), `completed`,
+                        `rescheduled`, `canceled`, or `all`.
+    --format standard|condensed, --condensed
+                        Output format (default: standard).
+
+    Example: >
+        meta-notes tasks --overdue --due
+        meta-notes tasks --ready --date 2026-09-27
+        meta-notes tasks --scheduled --date 2026-11
+        meta-notes tasks --status completed --due --date 2026-Q3
+        meta-notes tasks --all --folder project --group-by tag
+<
+                                                *meta-notes-tasks-model*
+    A checkbox line (`-`, `*`, or `+`, then `[<char>]`) is a task only when
+    it has a due-date emoji (📅, 📆, or 🗓) or a start date (`🛫 YYYY-MM-DD`).
+    Plain checkboxes are checklist items and are ignored. The date after the
+    due emoji is the due date. A due emoji with no date after it (a bare
+    📆) marks an undated task, so an item worth tracking gets a bare 📆.
+    For a completed task with a `✅ YYYY-MM-DD` date, that date is used in
+    place of its due date by every mode. The status character `x` or `X` is
+    completed, `>` rescheduled, `-` canceled, and anything else incomplete.
+
+                                                *meta-notes-tasks-modes*
+    Modes select tasks relative to the `--date` period START..END, after
+    `--status`, `--folder`, and `--tag` filter them:
+
+        --overdue       due before START
+        --due           due within START..END (with `--status completed`,
+                        completed in the period)
+        --scheduled     due or starting within START..END
+        --ready         due or starting on or before END (includes overdue)
+        --future        dated, but neither date on or before END
+        --undated       bare due emoji and no start date
+        --all           --ready, --future, and --undated: every task
+
+    With no mode, `--ready` is used. Modes combine. With more than one, each
+    non-empty section gets a heading (`# Overdue`, `# Due`, `# Scheduled`,
+    `# Ready`, `# Future`, `# Undated`, in that order), and each task is
+    listed once, in the first section that matches. Tasks are grouped by
+    file (`## [[link]]`, or `- [[link]]` when condensed) and printed exactly
+    as written. The standard format ends with a summary line.
+
+                                                *meta-notes-tasks-later*
+    Every mode, including `--all`, leaves out tasks tagged `#later` (any
+    case). `--later` includes them under the same rules, in the same
+    sections. `meta-notes tasks --all --later` lists every open task.
+
+                                                *meta-notes-task-tags*
+    Every `#tag` on a task line is a tag of the task: `#` followed by
+    letters, digits, `_`, or `-`. Tags are compared ignoring case. Time
+    logs use the same parser and aliases: `#mtg` is `meeting`, and `#pers`
+    and `#per` are `personal`, so `--tag mtg` and `--tag meeting` select
+    the same tasks. `--group-by tag` lists each section's tasks under a
+    `## <tag>` heading per tag, sorted ignoring case, then `## Not tagged`.
+    A task with several tags is listed under each. Under a tag heading, the
+    standard format's file headings are `### [[link]]`.
+
+                                                *meta-notes-date*
+    `--date` takes one of these forms. Nothing else is accepted, including
+    relative names and ISO week numbers (`2026-W45`); an invalid value is
+    an error that lists the accepted forms.
+
+        2026-11-15              one day
+        2026-11-02..2026-11-08  an inclusive range
+        2026-11                 a month
+        2026-Q4                 a quarter (Q1 to Q4)
+        2026                    a year
+
+                                                *meta-notes-tasks-migration*
+    `--due-on`, `--due-by`, and `--due-between` were removed and are now
+    usage errors. Replace them with: >
+        --due-on D              --due --date D
+        --due-by D              --overdue --date D+1
+        --due-between A B       --due --date A..B
+<   A daily template copied into a notes root before this change still
+    calls the old options, and its task sections render as a
+    `<!-- Command failed: ...` comment. In `resource/template/daily.md`,
+    replace `--due-on {{date:%Y-%m-%d}}` with `--due --date {{date:%Y-%m-%d}}`
+    and `--due-by {{date-1:%Y-%m-%d}}` with
+    `--overdue --date {{date:%Y-%m-%d}}`, or run `meta-notes init --force`
+    if you haven't edited the templates.
 
 `meta-notes --version`                          *meta-notes-cli-version*
     Print `meta-notes {version}`, where {version} is MAJOR.MINOR.PATCH.
@@ -553,8 +644,10 @@ nothing to stderr, whether it succeeds or fails: >
 `move` and `rename` return `source`, `dest`, `moves` (`[old, new]` pairs),
 and `links_updated` (files whose wiki-links were rewritten). `archive` adds
 `items` with a result per archived path. `tasks` returns `tasks`, each with
-`file`, `line`, `text`, `status`, `start`, `due`, `completed`, and, without
-filters, the report `category`. `note` returns `path`, `exists` (whether the
+`file`, `line`, `text`, `status`, `start`, `due`, `completed`, `tags`
+(canonical names without `#`), and `section` (the section it is listed in:
+`overdue`, `due`, `scheduled`, `ready`, `future`, or `undated`), in report
+order. A task under several tags with `--group-by tag` appears once. `note` returns `path`, `exists` (whether the
 note existed before), `created` (whether this command wrote it), and
 `template` (the template used, or null); with `--render` and a new note, it
 also returns `content`, the rendered note. `--version` returns `version`,

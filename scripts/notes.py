@@ -67,25 +67,3 @@ def calculate_week_start(today: date) -> date:
 
     return today - timedelta(days=days_since_monday)
 
-
-def calculate_week_end(today: date) -> date:
-    """
-    Calculate the end of the current week (Sunday).
-
-    Week runs Monday through Sunday. If today is Sunday, returns today.
-    Otherwise, returns the date of the following Sunday.
-
-    Args:
-        today: The reference date.
-
-    Returns:
-        The date of the current or next Sunday.
-    """
-    # weekday() returns 0 for Monday, 6 for Sunday
-    days_until_sunday = 6 - today.weekday()
-
-    if days_until_sunday < 0:
-        # This shouldn't happen since 6 - weekday() is always >= 0
-        days_until_sunday = 0
-
-    return today + timedelta(days=days_until_sunday)
