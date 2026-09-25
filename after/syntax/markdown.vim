@@ -1,12 +1,6 @@
 " after/syntax/markdown.vim - Extended syntax highlighting for meta-notes
 " Extends markdown syntax with time tracking specific highlighting
 
-" Only load once
-if exists("b:meta_notes_syntax_loaded")
-  finish
-endif
-let b:meta_notes_syntax_loaded = 1
-
 " Time tracking special tags (different colors for different activity types)
 " Meeting tags - highlighted in blue/cyan
 syntax match metaNotesTagMeeting /#mtg\>/

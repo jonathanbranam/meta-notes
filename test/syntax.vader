@@ -1,0 +1,38 @@
+" Tests for after/syntax/markdown.vim
+
+Execute (Setup - Create temporary test directory):
+  let g:test_dir = tempname()
+  call mkdir(g:test_dir, 'p')
+  let g:original_dir = getcwd()
+  execute 'cd' g:test_dir
+  let g:original_rtp = &runtimepath
+  execute 'set runtimepath+=' . fnameescape(g:original_dir . '/after')
+  call writefile(['- start work:', '  * start: 08:00', '  * end:   9:30 am'],
+        \ g:test_dir . '/daily.md')
+
+  function! TimeGroup(lnum) abort
+    let l:col = match(getline(a:lnum), '\d\{1,2}:\d\d') + 1
+    return join(map(synstack(a:lnum, l:col), 'synIDattr(v:val, "name")'), ',')
+  endfunction
+
+Execute (Time log times are highlighted):
+  edit daily.md
+  AssertEqual 'markdown', &filetype
+  AssertEqual 'metaNotesTime', TimeGroup(2)
+  AssertEqual 'metaNotesTime', TimeGroup(3)
+
+Execute (Time log times stay highlighted after the buffer is reloaded):
+  edit daily.md
+  edit!
+  AssertEqual 'metaNotesTime', TimeGroup(2)
+  AssertEqual 'metaNotesTime', TimeGroup(3)
+
+Execute (Cleanup):
+  bwipeout!
+  delfunction TimeGroup
+  let &runtimepath = g:original_rtp
+  execute 'cd' g:original_dir
+  call delete(g:test_dir, 'rf')
+  unlet g:test_dir
+  unlet g:original_dir
+  unlet g:original_rtp
