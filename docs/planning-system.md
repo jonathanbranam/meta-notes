@@ -45,13 +45,13 @@ possible.
 
 ## Task model
 
-No new syntax beyond a bare 📆.
+No new syntax beyond a bare 📅.
 
 | Line | Meaning | In task lists |
 |---|---|---|
 | `- [ ] text` | Checklist item in a note | No |
-| `- [ ] text 📆` | Task, no date yet | Yes, as undated |
-| `- [ ] text 📆 YYYY-MM-DD` or `🛫 YYYY-MM-DD` | Dated task | Yes |
+| `- [ ] text 📅` | Task, no date yet | Yes, as undated |
+| `- [ ] text 📅 YYYY-MM-DD` or `🛫 YYYY-MM-DD` | Dated task | Yes |
 | Any of the above plus `#later` | Someday/maybe | Only on request |
 
 - Status characters are unchanged: space (open), `x`/`X` (done), `>`
@@ -59,7 +59,7 @@ No new syntax beyond a bare 📆.
 - `#later` is excluded from task queries by default and listed in its own
   section when requested. This exists on the work copy of meta-notes and
   needs porting back.
-- A bare 📆 makes an undated line a task. Reviews prompt for a date.
+- A bare 📅 makes an undated line a task. Reviews prompt for a date.
 - Lines should fit in 80 columns. Emoji render two columns wide in most
   terminals.
 - `#next` marks a project's next action. A project with no open `#next` is
@@ -220,7 +220,7 @@ Then:
 Works down the backlog of stale tasks across all notes, independent of
 projects.
 
-- Lists open tasks oldest first (by last edited), plus undated 📆 tasks,
+- Lists open tasks oldest first (by last edited), plus undated 📅 tasks,
   in batches sized to the time available.
 - For each: keep, date it, `#later`, cancel, or done. Bulk "cancel all" or
   "later all" for very old batches.
@@ -256,7 +256,7 @@ Specified across several openspec changes, in this order:
 - `cli-core`: the CLI itself, with `move`, `rename`, `archive`, and `tasks`
   ported from today's code without behavior changes (no git commits; the
   CLI only reads git), and JSON output on every command
-- `find-tasks-enhancements`: the task model (📆 or 🛫 required, bare 📆
+- `find-tasks-enhancements`: the task model (📅 or 🛫 required, bare 📅
   undated), `#later`, tag and date-range filters, a last-edited date, and
   an untouched-days filter
 - `task-update`: change status, tags, or date on a specific line, with a

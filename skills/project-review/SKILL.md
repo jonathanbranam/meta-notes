@@ -26,10 +26,10 @@ steps 2 and 7 with those commands.
 
 ## Syntax reference
 
-- Task: a checklist line with `📆` (dated or bare) or `🛫 YYYY-MM-DD`
+- Task: a checklist line with `📅` (dated or bare) or `🛫 YYYY-MM-DD`
 - Status: space open, `x` done, `>` rescheduled, `-` canceled; `.`, `o`, `O`
   partial
-- Completion: append `✅ YYYY-MM-DD` when marking done or canceled
+- Completion: append `✅ YYYY-MM-DD` when marking done, never when canceling
 - `#later`: someday/maybe, excluded from active lists
 - `#next`: the project's next action
 - Links: `[[path/without/extension]]`, relative to the notes root
@@ -108,13 +108,13 @@ the walk when the user signals time is short.
   command now, for example `meta-notes move project/x area/x` or
   `meta-notes archive project/x`. If the user would rather wait, add a task
   to the index note instead, for example
-  `- [ ] Convert to area: meta-notes move project/x area/x 📆 <date> #next`.
+  `- [ ] Convert to area: meta-notes move project/x area/x 📅 <date> #next`.
   Run structural commands last, after the other edits in this step.
 
 ### 8. Close
 
 Summarize in three lines: disposition, tasks changed, next action. If the
 user stopped early, stamp `reviewed:` anyway and add `- [ ] Finish project
-review 📆 <today+1>` to the index note, so it comes up next time.
+review 📅 <today+1>` to the index note, so it comes up next time.
 
 Don't commit. Commits happen at shutdown.

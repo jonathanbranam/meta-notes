@@ -603,7 +603,7 @@ Commands ~
     it has a due-date emoji (📅, 📆, or 🗓) or a start date (`🛫 YYYY-MM-DD`).
     Plain checkboxes are checklist items and are ignored. The date after the
     due emoji is the due date. A due emoji with no date after it (a bare
-    📆) marks an undated task, so an item worth tracking gets a bare 📆.
+    📅) marks an undated task, so an item worth tracking gets a bare 📅.
     For a completed task with a `✅ YYYY-MM-DD` date, that date is used in
     place of its due date by every mode. The status character `x` or `X` is
     completed, `>` rescheduled, `-` canceled, and anything else incomplete.

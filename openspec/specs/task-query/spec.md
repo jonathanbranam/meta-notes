@@ -19,7 +19,7 @@ Specifies `meta-notes tasks`, the CLI task query that exposes the existing `scri
 With `--json`, `meta-notes tasks` SHALL return the same tasks as the text output, in the same order. Each task SHALL have its file, line number, line text, status, start, due, and completed dates, `tags` (canonical names without `#`), and `section` (the section it is listed in: `overdue`, `due`, `scheduled`, `ready`, `future`, or `undated`). A task listed under several tags with `--group-by tag` SHALL appear once.
 
 #### Scenario: JSON task fields
-- **WHEN** `project/foo.md` line 3 is `- [ ] #mtg Call Sam 📆 2026-10-01` and the user runs `meta-notes tasks --folder project --all --json`
+- **WHEN** `project/foo.md` line 3 is `- [ ] #mtg Call Sam 📅 2026-10-01` and the user runs `meta-notes tasks --folder project --all --json`
 - **THEN** the result SHALL include a task with file `project/foo.md`, line 3, status `incomplete`, due date `2026-10-01`, and tags `["meeting"]`
 
 #### Scenario: JSON section
@@ -38,7 +38,7 @@ A checkbox line (`-`, `*`, or `+`, then `[<char>]`) SHALL be a task only when it
 - **THEN** all three SHALL be tasks due 2026-10-01
 
 #### Scenario: Bare due emoji
-- **WHEN** a note contains `- [ ] someday task 📆`
+- **WHEN** a note contains `- [ ] someday task 📅`
 - **THEN** it SHALL be an undated task
 
 #### Scenario: Start date only
@@ -49,11 +49,11 @@ A checkbox line (`-`, `*`, or `+`, then `[<char>]`) SHALL be a task only when it
 For a completed task that has a `✅ YYYY-MM-DD` date, that date SHALL be used in place of its due date by every mode. A completed task without a ✅ date SHALL use its due date.
 
 #### Scenario: Completed with a completion date
-- **WHEN** a note contains `- [x] ship it 📆 2026-10-01 ✅ 2026-10-03` and the user runs `meta-notes tasks --status completed --due --date 2026-10-03`
+- **WHEN** a note contains `- [x] ship it 📅 2026-10-01 ✅ 2026-10-03` and the user runs `meta-notes tasks --status completed --due --date 2026-10-03`
 - **THEN** the task SHALL be listed
 
 #### Scenario: Completed without a completion date
-- **WHEN** a note contains `- [x] ship it 📆 2026-10-01` and the user runs `meta-notes tasks --status completed --due --date 2026-10`
+- **WHEN** a note contains `- [x] ship it 📅 2026-10-01` and the user runs `meta-notes tasks --status completed --due --date 2026-10`
 - **THEN** the task SHALL be listed
 
 ### Requirement: Task tags
@@ -64,7 +64,7 @@ Every `#tag` on a task line SHALL be a tag of the task, wherever it appears in t
 - **THEN** its tags SHALL be `aftr` and `design`
 
 #### Scenario: Alias
-- **WHEN** a task line is `- [ ] #mtg prep 📆 2026-10-01`
+- **WHEN** a task line is `- [ ] #mtg prep 📅 2026-10-01`
 - **THEN** its tags SHALL be `meeting`, and `--tag mtg` and `--tag meeting` SHALL both select it
 
 ### Requirement: Selection modes
@@ -102,7 +102,7 @@ The period from `--date` (see `date-period`) SHALL set START and END. Tasks SHAL
 - **THEN** only the task due 2026-11-12 and the task starting 2026-11-03 SHALL be listed
 
 #### Scenario: Future and undated
-- **WHEN** the user runs `meta-notes tasks --future --undated --date 2026-09-25`, task C is due 2026-10-01, and task U is `- [ ] someday 📆`
+- **WHEN** the user runs `meta-notes tasks --future --undated --date 2026-09-25`, task C is due 2026-10-01, and task U is `- [ ] someday 📅`
 - **THEN** C SHALL be listed in the future section and U in the undated section
 
 #### Scenario: All
@@ -113,7 +113,7 @@ The period from `--date` (see `date-period`) SHALL set START and END. Tasks SHAL
 A task tagged `#later` (any case) SHALL NOT be selected by any mode unless `--later` is given. With `--later`, `#later` tasks SHALL be selected by the same rules as other tasks and listed in the same sections.
 
 #### Scenario: Later excluded
-- **WHEN** a task is `- [ ] #later read book 📆 2026-09-01` and the user runs `meta-notes tasks --overdue`
+- **WHEN** a task is `- [ ] #later read book 📅 2026-09-01` and the user runs `meta-notes tasks --overdue`
 - **THEN** it SHALL NOT be listed
 
 #### Scenario: Later included
