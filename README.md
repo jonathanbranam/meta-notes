@@ -81,8 +81,10 @@ meta-notes/
 │   ├── meta_notes/          # meta-notes CLI package
 │   │   ├── __main__.py          # Entry point (Python version check)
 │   │   ├── cli.py               # Subcommands, root resolution, output
+│   │   ├── init.py              # Notes root setup
 │   │   ├── ops.py               # Move, rename, archive
-│   │   └── query.py             # Task query
+│   │   ├── query.py             # Task query
+│   │   └── root.py              # Sentinel search for the notes root
 │   ├── find_tasks.py        # Task discovery and filtering
 │   ├── notes.py             # Note utilities
 │   ├── tasks.py             # Task parsing and processing
@@ -94,14 +96,18 @@ meta-notes/
 │   ├── unit/                # Python unit tests
 │   │   ├── test_cli.py
 │   │   ├── test_find_tasks.py
+│   │   ├── test_init.py
 │   │   ├── test_notes.py
 │   │   ├── test_ops.py
 │   │   ├── test_query.py
+│   │   ├── test_root.py
 │   │   ├── test_tasks.py
 │   │   ├── test_time_tracking.py
 │   │   └── test_update_links.py
 │   └── fixtures/            # Test data/files
 ├── doc/                 # Vim documentation
+├── skills/              # Claude Code skills, linked into notes roots by init
+├── templates/           # Planning templates copied into notes roots by init
 ├── run_tests.sh         # Test runner script
 └── README.md
 ```
@@ -133,16 +139,29 @@ This structure is compatible with vim-plug, Vundle, and Pathogen.
 
 ## Command Line
 
-`bin/meta-notes` performs the plugin's file operations (`move`, `rename`,
-`archive`) and task query (`tasks`) outside Vim, for shells, agents, and other
-tools. The Vim commands call it. Every command accepts `--json`. It needs
-Python 3.10 or newer as `python3`. See `:help meta-notes-cli`.
+`bin/meta-notes` performs the plugin's setup (`init`), file operations
+(`move`, `rename`, `archive`), and task query (`tasks`) outside Vim, for
+shells, agents, and other tools. The Vim commands call it. Every command
+accepts `--json`. It needs Python 3.10 or newer as `python3`. See
+`:help meta-notes-cli`.
+
+Set up a notes root by running `init` in its top-level directory. It creates
+the PPARA folders, templates, a `.meta-notes` sentinel, and links the shipped
+Claude Code skills into `.claude/skills/`. Re-running is safe.
 
 ```bash
+mkdir notes && cd notes && git init
+meta-notes init
 bin/meta-notes archive 'project/2024-*'
 bin/meta-notes move project/foo area/foo --json
 bin/meta-notes tasks --folder project --status all
 ```
+
+Other commands find the notes root by walking up from the current directory
+to the nearest `.meta-notes`, stopping after `$HOME`. Notes roots created
+before the sentinel existed need `meta-notes init` run once (and the new
+`.meta-notes` committed); until then, pass `--root` or set
+`META_NOTES_ROOT`.
 
 ## Key Mappings
 

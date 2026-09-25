@@ -15,9 +15,8 @@ import os
 import sys
 from dataclasses import dataclass, field
 
-from meta_notes import ops, query
-
-ROOT_MARKERS = ("plan", "project", "area")
+from meta_notes import init, ops, query
+from meta_notes.root import SENTINEL, find_root
 
 
 class CliError(Exception):
@@ -42,18 +41,16 @@ class _Parser(argparse.ArgumentParser):
         raise CliError(f"{self.prog}: {message}")
 
 
-def is_notes_root(path: str) -> bool:
-    return all(os.path.isdir(os.path.join(path, m)) for m in ROOT_MARKERS)
-
-
-def resolve_root(explicit: str | None, env: str | None, cwd: str) -> str:
+def resolve_root(explicit: str | None, env: str | None, cwd: str,
+                 home: str | None = None) -> str:
     """
     Resolve the notes root.
 
     Args:
         explicit: --root value, used as-is if given.
         env: META_NOTES_ROOT value, used as-is if given.
-        cwd: Directory to walk up from otherwise.
+        cwd: Directory to search upward from otherwise.
+        home: $HOME, where the upward search stops.
 
     Returns:
         Absolute path of the notes root.
@@ -68,16 +65,12 @@ def resolve_root(explicit: str | None, env: str | None, cwd: str) -> str:
             raise CliError(f"Notes root is not a directory: {given}")
         return root
 
-    path = os.path.abspath(cwd)
-    while True:
-        if is_notes_root(path):
-            return path
-        parent = os.path.dirname(path)
-        if parent == path:
-            raise CliError(
-                "No notes root found (a directory containing plan/, project/, "
-                "and area/); use --root or set META_NOTES_ROOT")
-        path = parent
+    root = find_root(cwd, home)
+    if root is None:
+        raise CliError(
+            f"No notes root found (a directory containing {SENTINEL}); run "
+            "`meta-notes init` in the notes root, or pass --root")
+    return root
 
 
 def to_root_relative(path: str, root: str) -> str:
@@ -172,6 +165,38 @@ def cmd_tasks(args, root: str) -> Output:
     return Output({"tasks": tasks}, lines)
 
 
+INIT_MESSAGES = {
+    ("folder", "created"): "Created directory: {}",
+    ("folder", "exists"): "Directory already exists: {}",
+    ("template", "created"): "Created template: {}",
+    ("template", "overwritten"): "Overwrote template: {}",
+    ("template", "exists"): "Template already exists: {}",
+    ("sentinel", "created"): "Created notes root marker: {}",
+    ("sentinel", "exists"): "Notes root marker already exists: {}",
+    ("skill", "created"): "Linked skill: {}",
+    ("skill", "exists"): "Skill already linked: {}",
+    ("skill", "repointed"): "Relinked skill: {}",
+    ("skill", "replaced"): "Replaced with skill link: {}",
+}
+
+
+def cmd_init(args, root: None) -> Output:
+    # init doesn't resolve a root: it initializes --root or the current
+    # directory, and ignores META_NOTES_ROOT
+    target = getattr(args, "root", None) or os.getcwd()
+    try:
+        result = init.init(target, force=args.force, home=os.environ.get("HOME"))
+    except init.InitError as e:
+        raise CliError(str(e))
+
+    items = [{"kind": i.kind, "path": i.path, "status": i.status}
+             for i in result.items]
+    text = [INIT_MESSAGES[(i.kind, i.status)].format(i.path)
+            for i in result.items if (i.kind, i.status) in INIT_MESSAGES]
+    text.append("Meta-notes initialization complete!")
+    return Output({"root": result.root, "items": items}, text, result.warnings)
+
+
 def build_parser() -> argparse.ArgumentParser:
     # --root and --json are accepted before or after the subcommand. Both
     # default to SUPPRESS so the subcommand's copy doesn't overwrite the top
@@ -179,15 +204,24 @@ def build_parser() -> argparse.ArgumentParser:
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--root", default=argparse.SUPPRESS,
                         help="notes root (default: $META_NOTES_ROOT, or the "
-                             "nearest directory containing plan/, project/, area/)")
+                             f"nearest directory containing {SENTINEL})")
     common.add_argument("--json", action="store_true", default=argparse.SUPPRESS,
                         help="write one JSON object to stdout")
 
     parser = _Parser(prog="meta-notes", parents=[common],
                      description="Operate on a meta-notes notes root.")
+    parser.set_defaults(resolves_root=True)
     sub = parser.add_subparsers(dest="command", metavar="COMMAND",
                                 parser_class=_Parser)
     sub.required = True
+
+    p = sub.add_parser("init", parents=[common],
+                       help="set up a notes root (--root or the current "
+                            "directory): folders, templates, sentinel, skills")
+    p.add_argument("--force", action="store_true",
+                   help="overwrite templates and replace skill targets "
+                        "that aren't links")
+    p.set_defaults(handler=cmd_init, resolves_root=False)
 
     p = sub.add_parser("move", parents=[common],
                        help="move a note or folder, updating headers and links")
@@ -231,7 +265,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 def _run(argv: list[str]) -> Output:
     args = build_parser().parse_args(argv)
-    root = resolve_root(getattr(args, "root", None), os.environ.get("META_NOTES_ROOT"), os.getcwd())
+    if not args.resolves_root:
+        return args.handler(args, None)
+    root = resolve_root(getattr(args, "root", None), os.environ.get("META_NOTES_ROOT"),
+                        os.getcwd(), os.environ.get("HOME"))
     os.chdir(root)
     return args.handler(args, root)
 

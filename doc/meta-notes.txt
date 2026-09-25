@@ -38,9 +38,15 @@ Add to your `.vimrc`: >
 Then initialize the folder structure in your notes root directory: >
     :MetaNotesInit
 <
+or from a shell, in the notes root (see |meta-notes-cli-init|): >
+    meta-notes init
+<
 To force re-creation of template files: >
     :MetaNotesInit!
 <
+Notes roots created before `.meta-notes` existed should be initialized once
+more so the CLI can find them (see |meta-notes-cli-root|). Re-running is
+safe: only missing items are created.
 Set your local leader if not already set: >
     let maplocalleader = ","
 <
@@ -79,9 +85,11 @@ INITIALIZATION ~
 
                                                 *:MetaNotesInit*
 :MetaNotesInit[!]
-    Initialize the PARA folder structure and default templates. Creates all
-    necessary directories and template files. With [!], overwrites existing
-    template files.
+    Initialize Vim's current directory as a notes root: the PARA folders,
+    default templates, the `.meta-notes` sentinel, and links to the plugin's
+    skills. Only missing items are created. With [!], overwrites existing
+    template files and replaces skill targets that aren't links. Runs
+    `meta-notes init`; see |meta-notes-cli-init|.
 
 ------------------------------------------------------------------------------
 NAVIGATION ~
@@ -359,13 +367,32 @@ updated automatically across the entire notes directory.
 `bin/meta-notes` runs the same file operations and task query as the plugin,
 so notes can be reorganized from a shell, by an agent, or by other tools. The
 plugin's |:MetaNotesArchive|, |:MetaNotesRename|, and |:MetaNotesMoveItem|
-commands call it. It needs Python 3.10 or newer as `python3` on your `PATH`.
+commands call it, and |:MetaNotesInit| calls `meta-notes init`. It needs
+Python 3.10 or newer as `python3` on your `PATH`.
 
 To put it on your `PATH`, link it: >
     ln -s /path/to/meta-notes/bin/meta-notes ~/bin/meta-notes
 <
 Commands ~
                                                 *meta-notes-cli-commands*
+`meta-notes init [--root {dir}] [--force]`      *meta-notes-cli-init*
+    Initialize a notes root: the PARA folders, the templates in
+    `resource/template/`, the `.meta-notes` sentinel, and a link in
+    `.claude/skills/` to each skill the plugin ships in `skills/`, so
+    updating the plugin updates the skills. Initializes `--root` if given,
+    creating it if missing, otherwise the current directory. It ignores
+    `META_NOTES_ROOT`. Run it in the top-level directory of the notes root,
+    for example right after `git init`.
+
+    Re-running is safe: existing folders, templates, notes, and the sentinel
+    are kept. A skill link to the right place is kept, and a broken or
+    foreign one is repointed. A real file or directory at a skill's link path
+    is left alone with a warning. With `--force`, templates are overwritten
+    and those skill targets are replaced.
+
+    Notes roots never nest: init fails if a directory above the target is a
+    notes root (found the same way as |meta-notes-cli-root|).
+
 `meta-notes move {source} {dest}`
     Same as |:MetaNotesMoveItem|.
 
@@ -392,7 +419,13 @@ first of:
     1. `--root {dir}`
     2. the `META_NOTES_ROOT` environment variable
     3. the nearest directory, starting from the current one, that contains
-       `plan/`, `project/`, and `area/`
+       the `.meta-notes` sentinel created by |meta-notes-cli-init|
+
+The upward search checks each directory only for `.meta-notes`. It stops
+after `$HOME`, and stops quietly at the first directory you can't read,
+write, and enter. If it finds nothing, the command fails and suggests running
+`meta-notes init` or passing `--root`. An explicit `--root` or
+`META_NOTES_ROOT` is used as given, with or without a sentinel.
 
 The plugin always passes `--root` with Vim's current directory.
 

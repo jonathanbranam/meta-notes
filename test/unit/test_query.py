@@ -58,7 +58,9 @@ def root(tmp_path, monkeypatch):
         p = tmp_path / path
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text('\n'.join(lines) + '\n')
+    (tmp_path / '.meta-notes').write_text('# meta-notes notes root\n')
     monkeypatch.delenv('META_NOTES_ROOT', raising=False)
+    monkeypatch.setenv('HOME', str(tmp_path))
     monkeypatch.chdir(tmp_path)
     return tmp_path
 
@@ -117,6 +119,8 @@ def test_cli_tasks_matches_find_tasks_no_tasks(tmp_path, capsys, monkeypatch):
     for folder in ('plan', 'project', 'area'):
         (tmp_path / folder).mkdir()
     (tmp_path / 'project' / 'a.md').write_text('# a\n')
+    (tmp_path / '.meta-notes').write_text('# meta-notes notes root\n')
+    monkeypatch.delenv('META_NOTES_ROOT', raising=False)
     monkeypatch.chdir(tmp_path)
 
     assert cli_output(capsys, []) == find_tasks_output(tmp_path, [])

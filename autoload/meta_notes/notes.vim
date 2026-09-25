@@ -602,200 +602,43 @@ function! meta_notes#notes#JumpToWeek() abort
   call meta_notes#notes#OpenWeekPlan(l:current_date)
 endfunction
 
-" Initialize PARA folder structure and default templates
-" Creates all necessary directories and template files for the meta-notes system
+" Initialize a notes root in the current directory: PPARA folders, templates,
+" the .meta-notes sentinel, and shipped skills (via `meta-notes init`)
 " Args:
-"   force: Optional boolean to force overwrite of existing template files (default: 0)
+"   force: Optional boolean to overwrite templates and replace skill targets
+"          that aren't links (default: 0)
 function! meta_notes#notes#Init(...) abort
   let l:force = a:0 > 0 ? a:1 : 0
-  " Define directory structure
-  let l:directories = [
-        \ 'project',
-        \ 'area',
-        \ 'resource',
-        \ 'resource/template',
-        \ 'plan/daily',
-        \ 'resource/plan',
-        \ 'plan/week',
-        \ 'plan/quarter',
-        \ 'plan/year',
-        \ 'archive',
-        \ 'archive/project',
-        \ 'archive/area',
-        \ 'archive/resource'
-        \ ]
+  let l:cli = meta_notes#cli#Run(['init'] + (l:force ? ['--force'] : []))
 
-  " Create directories
-  for l:dir in l:directories
-    if !isdirectory(l:dir)
-      call mkdir(l:dir, 'p')
-      echo 'Created directory: ' . l:dir
-    else
-      echo 'Directory already exists: ' . l:dir
+  if !l:cli.ok
+    echoerr l:cli.error
+    return
+  endif
+
+  for l:item in l:cli.items
+    let l:message = get(s:init_messages, l:item.kind . '/' . l:item.status, '')
+    if l:message !=# ''
+      echo printf(l:message, l:item.path)
     endif
   endfor
 
-  " Define template files with their content
-  let l:templates = {
-        \ 'resource/template/daily.md': [
-        \   '---',
-        \   'filename_pattern: "plan/daily/{{date:%y}}-{{date:Q{{((date.month-1)//3)+1}}}}/{{date:%Y-%m-%d %a}}.md"',
-        \   '---',
-        \   '# Daily Note - {{date}}',
-        \   '',
-        \   'Week Plan: [[plan/week/{{week_start:%y}}-{{quarter}}/{{week_start}}]]',
-        \   '',
-        \   '## Tasks Due Today',
-        \   '',
-        \   '{{% python scripts/find_tasks.py --due-on {{date:%Y-%m-%d}} --status incomplete --condensed %}}',
-        \   '## Overdue Tasks',
-        \   '',
-        \   '{{% python scripts/find_tasks.py --due-by {{date-1:%Y-%m-%d}} --status incomplete --condensed %}}',
-        \   '## Notes',
-        \   '',
-        \   '## Time Tracking',
-        \   '',
-        \   '### Log',
-        \   '',
-        \   '- start of day',
-        \   '  * start: {{date}} HH:MM',
-        \   '  * end:   {{date}} HH:MM',
-        \   '',
-        \   '### Time Block',
-        \   '',
-        \   '| Time    | Plan                                 | Actual                      |',
-        \   '| ------- | ------------------------------------ | --------------------------- |',
-        \   '|  8:00am |                                      |                             |',
-        \   '|  8:15am |                                      |                             |',
-        \   '|  8:30am |                                      |                             |',
-        \   '|  8:45am |                                      |                             |',
-        \   '|  9:00am |                                      |                             |',
-        \   '|  9:15am |                                      |                             |',
-        \   '|  9:30am |                                      |                             |',
-        \   '|  9:45am |                                      |                             |',
-        \   '| 10:00am |                                      |                             |',
-        \   '| 10:15am |                                      |                             |',
-        \   '| 10:30am |                                      |                             |',
-        \   '| 10:45am |                                      |                             |',
-        \   '| 11:00am |                                      |                             |',
-        \   '| 11:15am |                                      |                             |',
-        \   '| 11:30am |                                      |                             |',
-        \   '| 11:45am |                                      |                             |',
-        \   '| 12:00pm |                                      |                             |',
-        \   '| 12:15pm |                                      |                             |',
-        \   '| 12:30pm |                                      |                             |',
-        \   '| 12:45pm |                                      |                             |',
-        \   '|  1:00pm |                                      |                             |',
-        \   '|  1:15pm |                                      |                             |',
-        \   '|  1:30pm |                                      |                             |',
-        \   '|  1:45pm |                                      |                             |',
-        \   '|  2:00pm |                                      |                             |',
-        \   '|  2:15pm |                                      |                             |',
-        \   '|  2:30pm |                                      |                             |',
-        \   '|  2:45pm |                                      |                             |',
-        \   '|  3:00pm |                                      |                             |',
-        \   '|  3:15pm |                                      |                             |',
-        \   '|  3:30pm |                                      |                             |',
-        \   '|  3:45pm |                                      |                             |',
-        \   '|  4:00pm |                                      |                             |',
-        \   '|  4:15pm |                                      |                             |',
-        \   '|  4:30pm |                                      |                             |',
-        \   '|  4:45pm |                                      |                             |',
-        \   '|  5:00pm |                                      |                             |',
-        \   '|  5:15pm |                                      |                             |',
-        \   '|  5:30pm |                                      |                             |',
-        \   '|  5:45pm |                                      |                             |',
-        \   '|  6:00pm |                                      |                             |'
-        \ ],
-        \ 'resource/template/weekly.md': [
-        \   '---',
-        \   'filename_pattern: "plan/week/{{week_start:%y}}-{{quarter}}/{{week_start}}.md"',
-        \   '---',
-        \   '# Week Plan - {{week_start}}',
-        \   '',
-        \   '**Week of {{week_start:%B %d}} - {{week_end:%B %d, %Y}}**',
-        \   '',
-        \   'Quarterly Plan: [[plan/quarter/{{date:%Y}}-{{quarter}}]]',
-        \   '',
-        \   '## Goals',
-        \   '',
-        \   '## Projects',
-        \   '',
-        \   '## Areas',
-        \   '',
-        \   '## Notes'
-        \ ],
-        \ 'resource/template/quarterly.md': [
-        \   '---',
-        \   'filename_pattern: "plan/quarter/{{date:%Y}}-{{quarter}}.md"',
-        \   '---',
-        \   '# Quarterly Plan - {{date:%Y}} {{quarter}}',
-        \   '',
-        \   'Yearly Plan: [[plan/year/{{date:%Y}}]]',
-        \   '',
-        \   '## Quarter Goals',
-        \   '',
-        \   '## Projects',
-        \   '',
-        \   '## Areas',
-        \   '',
-        \   '## Review & Reflection',
-        \   '',
-        \   '### Last Quarter Highlights',
-        \   '',
-        \   '### This Quarter Focus',
-        \   '',
-        \   '## Notes'
-        \ ],
-        \ 'resource/template/yearly.md': [
-        \   '---',
-        \   'filename_pattern: "plan/year/{{date:%Y}}.md"',
-        \   '---',
-        \   '# Year Plan - {{date:%Y}}',
-        \   '',
-        \   '## Annual Goals',
-        \   '',
-        \   '## Key Projects',
-        \   '',
-        \   '## Areas of Focus',
-        \   '',
-        \   '## Quarterly Breakdown',
-        \   '',
-        \   '### Q1 (Jan-Mar)',
-        \   '',
-        \   '[[plan/quarter/{{date:%Y}}-Q1]]',
-        \   '',
-        \   '### Q2 (Apr-Jun)',
-        \   '',
-        \   '[[plan/quarter/{{date:%Y}}-Q2]]',
-        \   '',
-        \   '### Q3 (Jul-Sep)',
-        \   '',
-        \   '[[plan/quarter/{{date:%Y}}-Q3]]',
-        \   '',
-        \   '### Q4 (Oct-Dec)',
-        \   '',
-        \   '[[plan/quarter/{{date:%Y}}-Q4]]',
-        \   '',
-        \   '## Review & Reflection',
-        \   '',
-        \   '## Notes'
-        \ ]
-        \ }
-
-  " Create template files
-  for [l:filepath, l:content] in items(l:templates)
-    if l:force || !filereadable(l:filepath)
-      call writefile(l:content, l:filepath)
-      if filereadable(l:filepath) && l:force
-        echo 'Overwrote template: ' . l:filepath
-      else
-        echo 'Created template: ' . l:filepath
-      endif
-    else
-      echo 'Template already exists: ' . l:filepath
-    endif
-  endfor
-
+  call meta_notes#cli#ShowWarnings(l:cli)
   echo 'Meta-notes initialization complete!'
 endfunction
+
+" Messages for `meta-notes init` items, keyed by kind/status. Skipped skills
+" are reported through the CLI's warnings instead.
+let s:init_messages = {
+      \ 'folder/created': 'Created directory: %s',
+      \ 'folder/exists': 'Directory already exists: %s',
+      \ 'template/created': 'Created template: %s',
+      \ 'template/overwritten': 'Overwrote template: %s',
+      \ 'template/exists': 'Template already exists: %s',
+      \ 'sentinel/created': 'Created notes root marker: %s',
+      \ 'sentinel/exists': 'Notes root marker already exists: %s',
+      \ 'skill/created': 'Linked skill: %s',
+      \ 'skill/exists': 'Skill already linked: %s',
+      \ 'skill/repointed': 'Relinked skill: %s',
+      \ 'skill/replaced': 'Replaced with skill link: %s',
+      \ }

@@ -153,6 +153,20 @@ Execute (MetaNotesInit without force preserves existing templates):
   let lines = readfile('resource/template/daily.md')
   Assert lines[0] == '# Modified Template', 'Template should not be overwritten without force flag'
 
+Execute (MetaNotesInit creates the notes root sentinel):
+  MetaNotesInit
+
+  Assert filereadable('.meta-notes'), '.meta-notes sentinel should exist'
+
+Execute (MetaNotesInit links shipped skills):
+  MetaNotesInit
+
+  let link = '.claude/skills/project-review'
+  AssertEqual 'link', getftype(link)
+  AssertEqual resolve(meta_notes#template#GetPluginRoot() . '/skills/project-review'),
+        \ resolve(link)
+  Assert filereadable(link . '/SKILL.md'), 'SKILL.md should be readable through the link'
+
 Execute (Cleanup - Remove temporary test directory):
   execute 'cd -'
   call delete(g:test_dir, 'rf')

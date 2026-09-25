@@ -24,10 +24,12 @@ SHIM = repo_dir / 'bin' / 'meta-notes'
 
 @pytest.fixture
 def notes_root(tmp_path, monkeypatch):
-    """A notes root with plan/, project/, and area/, as the current directory."""
+    """A notes root with its sentinel and PPARA folders, as the current directory."""
     for folder in ('plan', 'project', 'area', 'resource'):
         (tmp_path / folder).mkdir()
+    (tmp_path / '.meta-notes').write_text('# meta-notes notes root\n')
     monkeypatch.delenv('META_NOTES_ROOT', raising=False)
+    monkeypatch.setenv('HOME', str(tmp_path))
     monkeypatch.chdir(tmp_path)
     return tmp_path
 
@@ -64,19 +66,26 @@ def test_resolve_root_explicit_missing_directory(tmp_path):
         cli.resolve_root(str(tmp_path / 'missing'), None, '/')
 
 
-def test_resolve_root_walks_up(notes_root):
-    """The nearest ancestor with plan/, project/, and area/ is the root."""
+def test_resolve_root_walks_up_to_sentinel(notes_root):
+    """The nearest ancestor containing .meta-notes is the root."""
     nested = notes_root / 'project' / 'foo'
     nested.mkdir()
-    assert cli.resolve_root(None, None, str(nested)) == str(notes_root)
+    root = cli.resolve_root(None, None, str(nested), str(notes_root))
+    assert root == os.path.realpath(notes_root)
 
 
-def test_resolve_root_walk_requires_all_markers(tmp_path):
-    """A directory with only project/ and area/ is not a root."""
-    (tmp_path / 'project').mkdir()
-    (tmp_path / 'area').mkdir()
+def test_resolve_root_folder_markers_alone_not_a_root(tmp_path):
+    """plan/, project/, and area/ without .meta-notes are not a root."""
+    for folder in ('plan', 'project', 'area'):
+        (tmp_path / folder).mkdir()
     with pytest.raises(cli.CliError, match='No notes root found'):
-        cli.resolve_root(None, None, str(tmp_path / 'project'))
+        cli.resolve_root(None, None, str(tmp_path / 'project'), str(tmp_path))
+
+
+def test_resolve_root_no_root_error_suggests_init(tmp_path):
+    """The no-root error says to run meta-notes init or pass --root."""
+    with pytest.raises(cli.CliError, match=r'meta-notes init.*--root'):
+        cli.resolve_root(None, None, str(tmp_path), str(tmp_path))
 
 
 # Tests for main function
@@ -122,6 +131,7 @@ def test_main_absolute_paths_made_root_relative(notes_root, capsys):
 def test_main_no_root_found(tmp_path, monkeypatch, capsys):
     """No resolvable root is a non-zero exit with an error."""
     monkeypatch.delenv('META_NOTES_ROOT', raising=False)
+    monkeypatch.setenv('HOME', str(tmp_path))
     monkeypatch.chdir(tmp_path)
 
     code, out, err = run_json(capsys, ['tasks'])
