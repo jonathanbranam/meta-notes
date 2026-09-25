@@ -1,0 +1,23 @@
+" Tests for MetaNotesVersion command
+
+Execute (Setup - Create temporary test directory):
+  let g:test_dir = tempname()
+  call mkdir(g:test_dir, 'p')
+  let g:original_dir = getcwd()
+  execute 'cd' g:test_dir
+
+Execute (Version returns the version line outside a notes root):
+  Assert !filereadable('.meta-notes'), 'test directory should not be a notes root'
+  let line = meta_notes#cli#Version()
+  Assert line =~# '^meta-notes \d\+\.\d\+\.\d\+\( (\x\+\(-dirty\)\?)\)\?$',
+        \ 'unexpected version line: ' . line
+
+Execute (MetaNotesVersion echoes the version line):
+  let output = trim(execute('MetaNotesVersion'))
+  AssertEqual meta_notes#cli#Version(), output
+
+Execute (Cleanup):
+  execute 'cd' g:original_dir
+  call delete(g:test_dir, 'rf')
+  unlet g:test_dir
+  unlet g:original_dir

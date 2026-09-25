@@ -6,6 +6,7 @@ Tests notes root resolution and output conventions.
 
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -355,6 +356,137 @@ def test_note_json_command_output_only_in_content(notes_root):
     assert out['content'] == '# T\n{"ok": false}\nto-stderr\n\nfrom python\n\n'
 
 
+# Tests for git_commit function
+
+def git(cwd, *args):
+    """Run git in cwd with a throwaway identity."""
+    subprocess.run(['git', '-c', 'user.name=Test', '-c', 'user.email=t@example.com',
+                    *args], cwd=cwd, check=True, capture_output=True)
+
+
+@pytest.fixture
+def plugin_repo(tmp_path):
+    """A git repository with one commit, standing in for the plugin checkout."""
+    repo = tmp_path / 'plugin'
+    repo.mkdir()
+    (repo / 'file.txt').write_text('one\n')
+    git(repo, 'init', '-q')
+    git(repo, 'add', 'file.txt')
+    git(repo, 'commit', '-q', '-m', 'initial')
+    return repo
+
+
+def head(repo):
+    return subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], cwd=repo,
+                          capture_output=True, text=True, check=True).stdout.strip()
+
+
+def test_git_commit_clean(plugin_repo):
+    """A clean checkout reports its short hash and not dirty."""
+    assert cli.git_commit(str(plugin_repo)) == (head(plugin_repo), False)
+
+
+def test_git_commit_dirty(plugin_repo):
+    """A modified tracked file makes the checkout dirty."""
+    (plugin_repo / 'file.txt').write_text('two\n')
+
+    assert cli.git_commit(str(plugin_repo)) == (head(plugin_repo), True)
+
+
+def test_git_commit_untracked_not_dirty(plugin_repo):
+    """Untracked files alone don't make the checkout dirty."""
+    (plugin_repo / 'Session.vim').write_text('')
+
+    assert cli.git_commit(str(plugin_repo)) == (head(plugin_repo), False)
+
+
+def test_git_commit_inside_other_repo(plugin_repo):
+    """A plugin directory inside another repository reports no commit."""
+    nested = plugin_repo / 'bundle' / 'meta-notes'
+    nested.mkdir(parents=True)
+
+    assert cli.git_commit(str(nested)) == (None, False)
+
+
+def test_git_commit_not_a_repo(tmp_path):
+    """A directory outside any repository reports no commit."""
+    assert cli.git_commit(str(tmp_path)) == (None, False)
+
+
+def test_git_commit_git_missing(plugin_repo, monkeypatch):
+    """No commit is reported when git can't be run."""
+    monkeypatch.setenv('PATH', '')
+
+    assert cli.git_commit(str(plugin_repo)) == (None, False)
+
+
+# Tests for --version
+
+def test_version_text(tmp_path, monkeypatch, capsys):
+    """--version prints the name, version, and commit, with no notes root."""
+    monkeypatch.setattr(cli, 'git_commit', lambda d: ('abc1234', False))
+    monkeypatch.delenv('META_NOTES_ROOT', raising=False)
+    monkeypatch.setenv('HOME', str(tmp_path))
+    monkeypatch.chdir(tmp_path)
+
+    assert cli.main(['--version']) == 0
+    captured = capsys.readouterr()
+    assert captured.out == f'meta-notes {cli.__version__} (abc1234)\n'
+    assert captured.err == ''
+
+
+def test_version_text_dirty(monkeypatch, capsys):
+    """A dirty checkout is marked -dirty."""
+    monkeypatch.setattr(cli, 'git_commit', lambda d: ('abc1234', True))
+
+    cli.main(['--version'])
+
+    assert capsys.readouterr().out == f'meta-notes {cli.__version__} (abc1234-dirty)\n'
+
+
+def test_version_text_no_commit(monkeypatch, capsys):
+    """Without a commit, only the name and version are printed."""
+    monkeypatch.setattr(cli, 'git_commit', lambda d: (None, False))
+
+    cli.main(['--version'])
+
+    captured = capsys.readouterr()
+    assert captured.out == f'meta-notes {cli.__version__}\n'
+    assert captured.err == ''
+
+
+def test_version_json(tmp_path, monkeypatch, capsys):
+    """--version --json reports the fields and keeps stderr empty."""
+    monkeypatch.setattr(cli, 'git_commit', lambda d: (None, False))
+    monkeypatch.delenv('META_NOTES_ROOT', raising=False)
+    monkeypatch.setenv('HOME', str(tmp_path))
+    monkeypatch.chdir(tmp_path)
+
+    code, out, err = run_json(capsys, ['--version'])
+
+    assert code == 0
+    assert out == {'ok': True, 'version': cli.__version__, 'commit': None,
+                   'dirty': False, 'warnings': []}
+    assert err == ''
+
+
+def test_version_with_subcommand(notes_root, monkeypatch, capsys):
+    """--version after a subcommand reports the version and runs nothing."""
+    monkeypatch.setattr(cli, 'git_commit', lambda d: (None, False))
+    (notes_root / 'project' / 'foo.md').write_text('# Foo\n')
+
+    code, out, _ = run_json(capsys, ['archive', 'project/foo.md', '--version'])
+
+    assert code == 0
+    assert out['version'] == cli.__version__
+    assert (notes_root / 'project' / 'foo.md').exists()
+
+
+def test_version_matches_semver():
+    """The version is MAJOR.MINOR.PATCH."""
+    assert re.fullmatch(r'\d+\.\d+\.\d+', cli.__version__)
+
+
 # Tests for bin/meta-notes shim
 
 def test_shim_json_output(notes_root):
@@ -386,3 +518,16 @@ def test_shim_not_shadowed_by_notes_root_modules(notes_root):
                           capture_output=True, text=True, cwd=str(notes_root))
 
     assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_shim_version_outside_notes_root(tmp_path):
+    """The shim reports the version from a directory with no notes root."""
+    env = {**os.environ, 'HOME': str(tmp_path)}
+    env.pop('META_NOTES_ROOT', None)
+
+    proc = subprocess.run([str(SHIM), '--version'], capture_output=True,
+                          text=True, cwd=str(tmp_path), env=env)
+
+    assert proc.returncode == 0
+    assert re.match(r'meta-notes \d+\.\d+\.\d+', proc.stdout)
+    assert proc.stderr == ''

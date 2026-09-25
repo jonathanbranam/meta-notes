@@ -1,6 +1,6 @@
 " meta_notes.vim - Life management system based on PARA methodology
 " Maintainer: Your Name
-" Version: 0.1.0
+" Version: see :MetaNotesVersion (scripts/meta_notes/__init__.py)
 
 if exists('g:loaded_meta_notes')
   finish
@@ -84,6 +84,9 @@ function! s:MetaNotesMoveItemWrapper(...) abort
     echo 'Updated headers and wiki-links'
   endif
 endfunction
+
+" Show the meta-notes version
+command! MetaNotesVersion call meta_notes#cli#ShowVersion()
 
 " Time tracking
 command! MetaNotesTimeReport call meta_notes#time_tracking#ShowReport()

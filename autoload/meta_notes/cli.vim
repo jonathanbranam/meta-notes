@@ -41,3 +41,32 @@ function! meta_notes#cli#ShowWarnings(result) abort
     echohl None
   endfor
 endfunction
+
+" Get the meta-notes version line from the CLI
+" Returns:
+"   The line `meta-notes --version` prints, such as
+"   'meta-notes 0.1.0 (f20d0de)', or '' if the CLI failed (after echoing
+"   the error)
+function! meta_notes#cli#Version() abort
+  let l:result = meta_notes#cli#Run(['--version'])
+  if !l:result.ok
+    echohl ErrorMsg
+    echo l:result.error
+    echohl None
+    return ''
+  endif
+
+  let l:line = 'meta-notes ' . l:result.version
+  if type(get(l:result, 'commit', v:null)) == v:t_string
+    let l:line .= ' (' . l:result.commit . (l:result.dirty ? '-dirty' : '') . ')'
+  endif
+  return l:line
+endfunction
+
+" Echo the meta-notes version (for :MetaNotesVersion)
+function! meta_notes#cli#ShowVersion() abort
+  let l:line = meta_notes#cli#Version()
+  if !empty(l:line)
+    echo l:line
+  endif
+endfunction

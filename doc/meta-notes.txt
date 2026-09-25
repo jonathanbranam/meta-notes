@@ -202,6 +202,15 @@ TIME TRACKING ~
     See |meta-notes-time-tracking|.
 
 ------------------------------------------------------------------------------
+VERSION ~
+
+                                                *:MetaNotesVersion*
+:MetaNotesVersion
+    Show the meta-notes version, as `meta-notes --version` prints it
+    (|meta-notes-cli-version|). It runs the CLI, so it also shows an error
+    if Python or the CLI can't run from Vim.
+
+------------------------------------------------------------------------------
 DEVELOPMENT ~
 
                                                 *:MetaNotesReload*
@@ -505,6 +514,15 @@ Commands ~
     (`--folder`, `--due-on`, `--due-by`, `--due-between`, `--status`,
     `--format`, `--condensed`) and prints the same output.
 
+`meta-notes --version`                          *meta-notes-cli-version*
+    Print `meta-notes {version}`, where {version} is MAJOR.MINOR.PATCH.
+    When the plugin directory is the top level of a git checkout, the
+    commit follows, with `-dirty` if tracked files have uncommitted
+    changes: >
+        meta-notes 0.1.0 (f20d0de-dirty)
+<   Works from any directory and ignores a subcommand given with it.
+    |:MetaNotesVersion| shows the same line in Vim.
+
 The CLI changes only the working tree. It never stages or commits.
 
 Notes root ~
@@ -539,7 +557,8 @@ and `links_updated` (files whose wiki-links were rewritten). `archive` adds
 filters, the report `category`. `note` returns `path`, `exists` (whether the
 note existed before), `created` (whether this command wrote it), and
 `template` (the template used, or null); with `--render` and a new note, it
-also returns `content`, the rendered note. Output from template commands
+also returns `content`, the rendered note. `--version` returns `version`,
+`commit` (the short hash, or null), and `dirty`. Output from template commands
 appears only in `content` or the written note, never on stdout.
 
 The exit status is non-zero on failure. `--root` and `--json` may come

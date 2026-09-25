@@ -12,10 +12,11 @@ import contextlib
 import io
 import json
 import os
+import subprocess
 import sys
 from dataclasses import dataclass, field
 
-from meta_notes import init, note, ops, query
+from meta_notes import __version__, init, note, ops, query
 from meta_notes.root import SENTINEL, find_root
 
 
@@ -32,6 +33,21 @@ class Output:
     error: str | None = None
     # Text-mode-only stderr lines, for details the JSON carries elsewhere
     notices: list[str] = field(default_factory=list)
+
+
+class _ShowVersion(Exception):
+    """--version was given; report the version instead of running a command."""
+
+
+class _VersionAction(argparse.Action):
+    """Raise _ShowVersion when --version is parsed, so main() formats it."""
+
+    def __init__(self, option_strings, dest, **kwargs):
+        super().__init__(option_strings, dest, nargs=0,
+                         default=argparse.SUPPRESS, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        raise _ShowVersion()
 
 
 class _Parser(argparse.ArgumentParser):
@@ -223,6 +239,53 @@ def cmd_init(args, root: None) -> Output:
     return Output({"root": result.root, "items": items}, text, result.warnings)
 
 
+# The plugin checkout: scripts/meta_notes/cli.py -> the plugin directory
+PLUGIN_DIR = os.path.dirname(os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__))))
+
+
+def _git(plugin_dir: str, *args: str) -> str | None:
+    """Run git in plugin_dir; return its stdout, or None if it fails."""
+    try:
+        result = subprocess.run(["git", "-C", plugin_dir, *args],
+                                stdin=subprocess.DEVNULL, capture_output=True,
+                                text=True, timeout=5)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return result.stdout if result.returncode == 0 else None
+
+
+def git_commit(plugin_dir: str) -> tuple[str | None, bool]:
+    """
+    Find the commit a plugin checkout is on.
+
+    Args:
+        plugin_dir: The plugin directory.
+
+    Returns:
+        (short hash, dirty), where dirty means tracked files have uncommitted
+        changes. (None, False) if plugin_dir isn't the top level of a git
+        working tree (so an enclosing repository isn't reported) or git
+        fails.
+    """
+    out = _git(plugin_dir, "rev-parse", "--show-toplevel", "--short", "HEAD")
+    lines = out.split() if out else []
+    if (len(lines) != 2
+            or os.path.realpath(lines[0]) != os.path.realpath(plugin_dir)):
+        return None, False
+    status = _git(plugin_dir, "status", "--porcelain", "--untracked-files=no")
+    return lines[1], bool(status and status.strip())
+
+
+def cmd_version(plugin_dir: str = PLUGIN_DIR) -> Output:
+    commit, dirty = git_commit(plugin_dir)
+    line = f"meta-notes {__version__}"
+    if commit:
+        line += f" ({commit}{'-dirty' if dirty else ''})"
+    return Output({"version": __version__, "commit": commit, "dirty": dirty},
+                  [line])
+
+
 def build_parser() -> argparse.ArgumentParser:
     # --root and --json are accepted before or after the subcommand. Both
     # default to SUPPRESS so the subcommand's copy doesn't overwrite the top
@@ -233,6 +296,8 @@ def build_parser() -> argparse.ArgumentParser:
                              f"nearest directory containing {SENTINEL})")
     common.add_argument("--json", action="store_true", default=argparse.SUPPRESS,
                         help="write one JSON object to stdout")
+    common.add_argument("--version", action=_VersionAction,
+                        help="show the meta-notes version and exit")
 
     parser = _Parser(prog="meta-notes", parents=[common],
                      description="Operate on a meta-notes notes root.")
@@ -312,7 +377,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _run(argv: list[str]) -> Output:
-    args = build_parser().parse_args(argv)
+    try:
+        args = build_parser().parse_args(argv)
+    except _ShowVersion:
+        return cmd_version()
     if not args.resolves_root:
         return args.handler(args, None)
     root = resolve_root(getattr(args, "root", None), os.environ.get("META_NOTES_ROOT"),

@@ -200,6 +200,21 @@ pipenv run pytest test/unit/test_tasks.py::test_find_tasks_in_file_simple_uncomp
 - **Focus** - Tests are organized by file, not by class hierarchy
 
 
+## Versioning
+
+The version lives in `scripts/meta_notes/__init__.py` (`__version__`) and is
+reported by `meta-notes --version` and `:MetaNotesVersion`. When archiving
+an openspec change that alters CLI or plugin behavior, bump it in the same
+commit:
+
+- PATCH for fixes
+- MINOR for new commands, options, or behavior
+- MAJOR for incompatible CLI changes (once past 1.0)
+
+Then tag that commit `v<version>` and push the tag (`git push origin
+v<version>`). Changes that touch only docs, tests, or openspec artifacts
+don't bump the version.
+
 ## Task Management Workflow
 
 This project previously used Beads (`br`) for task tracking. Beads has been replaced by openspec.
