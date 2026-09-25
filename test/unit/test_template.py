@@ -58,6 +58,7 @@ def test_build_context_all_variables():
         'week_start': date(2026, 2, 9),
         'week_end': date(2026, 2, 15),
         'quarter': 'Q1',
+        'week_quarter': 'Q1',
         'filepath': 'test/note.md',
         'note_path': 'test/note',
         'note_name': 'note',
@@ -83,6 +84,23 @@ def test_build_context_week_start_and_end():
         ctx = template.build_context(date(2026, 2, day), 'test.md')
         assert ctx['week_start'] == date(2026, 2, 9)
         assert ctx['week_end'] == date(2026, 2, 15)
+
+
+def test_build_context_week_quarter_monday_in_previous_quarter():
+    """Thursday 2026-04-02 is in Q2; its Monday, 2026-03-30, is in Q1."""
+    ctx = template.build_context(date(2026, 4, 2), 'test.md')
+    assert template.render_line('{{quarter}} {{week_quarter}}', ctx) == 'Q2 Q1'
+
+
+def test_build_context_week_quarter_monday_in_previous_year():
+    """Thursday 2026-01-01's Monday, 2025-12-29, is in Q4."""
+    ctx = template.build_context(date(2026, 1, 1), 'test.md')
+    assert template.render_line('{{week_quarter}}', ctx) == 'Q4'
+
+
+def test_build_context_week_quarter_week_within_one_quarter():
+    ctx = template.build_context(date(2026, 2, 13), 'test.md')
+    assert template.render_line('{{week_quarter}}', ctx) == 'Q1'
 
 
 def test_build_context_project_name():
@@ -417,7 +435,9 @@ def test_render_matches_vim_fixture(fixture, notes_root, monkeypatch):
     friends produced for that date, rendered by the Vimscript before it was
     removed, with a python3 on PATH that printed `- [ ] stub: <script>
     <args>` for command blocks. They were later edited to drop the day name
-    from the week plan link and heading, matching the shipped templates.
+    from the week plan link and heading, and to file the week plan link of
+    `daily-2026-04-02.md` under the quarter of its Monday (`26-Q1`), matching
+    the shipped templates.
     """
     kind, _, day = fixture.removesuffix('.md').partition('-')
     Path('resource/template').mkdir(parents=True)

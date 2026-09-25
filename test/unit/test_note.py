@@ -8,7 +8,7 @@ ExtractDateForTemplate vader tests.
 
 import os
 import sys
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import pytest
@@ -18,8 +18,9 @@ repo_dir = Path(__file__).parent.parent.parent
 scripts_dir = repo_dir / 'scripts'
 sys.path.insert(0, str(scripts_dir))
 
-from meta_notes import note
+from meta_notes import note, template
 
+DAILY_TEMPLATE = repo_dir / 'templates' / 'daily.md'
 TODAY = date(2026, 9, 25)
 
 
@@ -84,6 +85,25 @@ def test_periodic_note_quarterly():
 def test_periodic_note_yearly():
     assert note.periodic_note('yearly', date(2026, 8, 15)) == (
         'plan/year/2026.md', date(2026, 1, 1), '# Year Plan - 2026')
+
+
+def test_periodic_note_daily_template_week_link_is_weekly_path(monkeypatch):
+    """
+    The shipped daily template links to the path `weekly` files that week under.
+
+    Covers every day of 2025 and 2026: the quarter and year boundaries, and
+    the weeks that span them.
+    """
+    monkeypatch.setattr(template, '_run', lambda command: (0, ''))
+    d = date(2025, 1, 1)
+    while d.year < 2027:
+        path, _, _ = note.periodic_note('daily', d)
+        rendered = template.render(str(DAILY_TEMPLATE),
+                                   template.build_context(d, path, TODAY))
+        links = [line.removeprefix('Week Plan: [[').removesuffix(']]') + '.md'
+                 for line in rendered.lines if line.startswith('Week Plan: ')]
+        assert links == [note.periodic_note('weekly', d)[0]], d
+        d += timedelta(days=1)
 
 
 # Tests for parse_date function

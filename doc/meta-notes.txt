@@ -320,6 +320,14 @@ created. Arithmetic and format specifiers do not apply to them.
 Other variables ~
 
     quarter         Quarter string derived from the note date, e.g. `Q2`
+    week_quarter    Quarter string of `week_start`, the Monday of the note's
+                    week, e.g. `Q1` for a note dated 2026-04-02 (whose
+                    Monday is 2026-03-30). Week plans are filed under the
+                    quarter of their Monday, so use this, not `quarter`, in
+                    week plan paths. The daily template links to its week
+                    plan with: >
+                        [[plan/week/{{week_start:%y}}-{{week_quarter}}/{{week_start:%Y-%m-%d}}]]
+<
     project_name    Second path component for notes under `project/`,
                     e.g. `lunch` for `project/lunch/note.md`.
                     Empty string for notes outside `project/`.
