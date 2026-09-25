@@ -633,7 +633,7 @@ def test_version_matches_semver():
 
 def test_shim_json_output(notes_root):
     """The shim runs the CLI and keeps stderr empty under --json."""
-    (notes_root / 'project' / 'foo.md').write_text('- [ ] Task 📆 2000-01-01\n')
+    (notes_root / 'project' / 'foo.md').write_text('- [ ] Task 📅 2000-01-01\n')
 
     proc = subprocess.run([str(SHIM), '--root', str(notes_root), '--json', 'tasks'],
                           capture_output=True, text=True, cwd='/')

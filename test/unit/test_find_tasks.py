@@ -290,57 +290,57 @@ def test_format_file_tasks_condensed_empty_list(tmp_path):
 # Tests for run_query function: report layout
 
 def test_run_query_single_mode_condensed(tmp_path):
-    write_notes(tmp_path, {'project/foo.md': "# foo\n- [ ] Call Sam 📆 2026-09-25\n"})
+    write_notes(tmp_path, {'project/foo.md': "# foo\n- [ ] Call Sam 📅 2026-09-25\n"})
 
     lines, _ = find_tasks.run_query(str(tmp_path), modes=['due'], condensed=True,
                                     today=TODAY)
 
-    assert lines == ["- [[project/foo]]", "  - [ ] Call Sam 📆 2026-09-25"]
+    assert lines == ["- [[project/foo]]", "  - [ ] Call Sam 📅 2026-09-25"]
 
 
 def test_run_query_single_mode_standard(tmp_path):
     write_notes(tmp_path, {
-        'b.md': "- [ ] B1 📆 2026-09-20\n  - [ ] B2 📆 2026-09-21\n",
-        'a.md': "- [ ] A1 📆 2026-09-22\n",
+        'b.md': "- [ ] B1 📅 2026-09-20\n  - [ ] B2 📅 2026-09-21\n",
+        'a.md': "- [ ] A1 📅 2026-09-22\n",
     })
 
     lines, _ = find_tasks.run_query(str(tmp_path), today=TODAY)
 
     assert lines == [
-        "## [[a]]", "", "- [ ] A1 📆 2026-09-22", "",
-        "## [[b]]", "", "- [ ] B1 📆 2026-09-20", "  - [ ] B2 📆 2026-09-21", "",
+        "## [[a]]", "", "- [ ] A1 📅 2026-09-22", "",
+        "## [[b]]", "", "- [ ] B1 📅 2026-09-20", "  - [ ] B2 📅 2026-09-21", "",
         "", "Summary: Found 3 tasks in 2 files",
     ]
 
 
 def test_run_query_several_modes_have_section_headings(tmp_path):
-    write_notes(tmp_path, {'foo.md': "- [ ] today 📆 2026-09-25\n- [ ] late 📆 2026-09-01\n"})
+    write_notes(tmp_path, {'foo.md': "- [ ] today 📅 2026-09-25\n- [ ] late 📅 2026-09-01\n"})
 
     lines, selected = find_tasks.run_query(str(tmp_path), modes=['due', 'overdue'],
                                            today=TODAY)
 
     assert lines == [
-        "# Overdue", "", "## [[foo]]", "", "- [ ] late 📆 2026-09-01", "",
-        "# Due", "", "## [[foo]]", "", "- [ ] today 📆 2026-09-25", "",
+        "# Overdue", "", "## [[foo]]", "", "- [ ] late 📅 2026-09-01", "",
+        "# Due", "", "## [[foo]]", "", "- [ ] today 📅 2026-09-25", "",
         "", "Summary: Found 2 tasks in 1 file",
     ]
     assert [section for section, _ in selected] == ['overdue', 'due']
 
 
 def test_run_query_several_modes_condensed(tmp_path):
-    write_notes(tmp_path, {'foo.md': "- [ ] today 📆 2026-09-25\n- [ ] late 📆 2026-09-01\n"})
+    write_notes(tmp_path, {'foo.md': "- [ ] today 📅 2026-09-25\n- [ ] late 📅 2026-09-01\n"})
 
     lines, _ = find_tasks.run_query(str(tmp_path), modes=['due', 'overdue'],
                                     condensed=True, today=TODAY)
 
     assert lines == [
-        "# Overdue", "", "- [[foo]]", "  - [ ] late 📆 2026-09-01",
-        "", "# Due", "", "- [[foo]]", "  - [ ] today 📆 2026-09-25",
+        "# Overdue", "", "- [[foo]]", "  - [ ] late 📅 2026-09-01",
+        "", "# Due", "", "- [[foo]]", "  - [ ] today 📅 2026-09-25",
     ]
 
 
 def test_run_query_empty_section_has_no_heading(tmp_path):
-    write_notes(tmp_path, {'foo.md': "- [ ] today 📆 2026-09-25\n"})
+    write_notes(tmp_path, {'foo.md': "- [ ] today 📅 2026-09-25\n"})
 
     lines, _ = find_tasks.run_query(str(tmp_path), modes=['due', 'overdue'], today=TODAY)
 
@@ -349,7 +349,7 @@ def test_run_query_empty_section_has_no_heading(tmp_path):
 
 
 def test_run_query_summary_counts_unique_tasks(tmp_path):
-    write_notes(tmp_path, {'foo.md': "- [ ] #a #b both 📆 2026-09-20\n"})
+    write_notes(tmp_path, {'foo.md': "- [ ] #a #b both 📅 2026-09-20\n"})
 
     lines, selected = find_tasks.run_query(str(tmp_path), group_by='tag', today=TODAY)
 
@@ -379,30 +379,30 @@ def test_run_query_invalid_period(tmp_path):
 
 
 def test_run_query_period(tmp_path):
-    write_notes(tmp_path, {'foo.md': "- [ ] nov 📆 2026-11-12\n- [ ] oct 📆 2026-10-12\n"})
+    write_notes(tmp_path, {'foo.md': "- [ ] nov 📅 2026-11-12\n- [ ] oct 📅 2026-10-12\n"})
 
     _, selected = find_tasks.run_query(str(tmp_path), period='2026-11', modes=['scheduled'],
                                        today=TODAY)
 
-    assert texts(selected) == ["- [ ] nov 📆 2026-11-12"]
+    assert texts(selected) == ["- [ ] nov 📅 2026-11-12"]
 
 
 def test_run_query_status_folder_and_tag_filter_before_selection(tmp_path):
     write_notes(tmp_path, {
-        'project/a.md': ("- [ ] #admin open 📆\n"
-                         "- [x] #admin done 📆\n"
-                         "- [ ] #cd other 📆\n"),
-        'area/b.md': "- [ ] #admin elsewhere 📆\n",
+        'project/a.md': ("- [ ] #admin open 📅\n"
+                         "- [x] #admin done 📅\n"
+                         "- [ ] #cd other 📅\n"),
+        'area/b.md': "- [ ] #admin elsewhere 📅\n",
     })
 
     _, selected = find_tasks.run_query(str(tmp_path), modes=['all'], folder='project',
                                        tags=['admin'], status='all', today=TODAY)
 
-    assert texts(selected) == ["- [ ] #admin open 📆", "- [x] #admin done 📆"]
+    assert texts(selected) == ["- [ ] #admin open 📅", "- [x] #admin done 📅"]
 
 
 def test_run_query_later_included(tmp_path):
-    write_notes(tmp_path, {'foo.md': "- [ ] #later read book 📆 2026-09-01\n"})
+    write_notes(tmp_path, {'foo.md': "- [ ] #later read book 📅 2026-09-01\n"})
 
     _, excluded = find_tasks.run_query(str(tmp_path), modes=['overdue'], today=TODAY)
     _, included = find_tasks.run_query(str(tmp_path), modes=['overdue'], later=True,
@@ -415,48 +415,48 @@ def test_run_query_later_included(tmp_path):
 # Tests for run_query function: group by tag
 
 def test_run_query_group_by_tag_headings(tmp_path):
-    write_notes(tmp_path, {'foo.md': ("- [ ] #cd one 📆 2026-09-20\n"
-                                      "- [ ] #Admin two 📆 2026-09-20\n"
-                                      "- [ ] three 📆 2026-09-20\n")})
+    write_notes(tmp_path, {'foo.md': ("- [ ] #cd one 📅 2026-09-20\n"
+                                      "- [ ] #Admin two 📅 2026-09-20\n"
+                                      "- [ ] three 📅 2026-09-20\n")})
 
     lines, _ = find_tasks.run_query(str(tmp_path), group_by='tag', today=TODAY)
 
     assert lines == [
-        "## Admin", "", "### [[foo]]", "", "- [ ] #Admin two 📆 2026-09-20", "",
-        "## cd", "", "### [[foo]]", "", "- [ ] #cd one 📆 2026-09-20", "",
-        "## Not tagged", "", "### [[foo]]", "", "- [ ] three 📆 2026-09-20", "",
+        "## Admin", "", "### [[foo]]", "", "- [ ] #Admin two 📅 2026-09-20", "",
+        "## cd", "", "### [[foo]]", "", "- [ ] #cd one 📅 2026-09-20", "",
+        "## Not tagged", "", "### [[foo]]", "", "- [ ] three 📅 2026-09-20", "",
         "", "Summary: Found 3 tasks in 1 file",
     ]
 
 
 def test_run_query_group_by_tag_with_tag_filter(tmp_path):
-    write_notes(tmp_path, {'foo.md': ("- [ ] #cd #admin both 📆 2026-09-20\n"
-                                      "- [ ] #cd one 📆 2026-09-20\n"
-                                      "- [ ] #other no 📆 2026-09-20\n"
-                                      "- [ ] untagged 📆 2026-09-20\n")})
+    write_notes(tmp_path, {'foo.md': ("- [ ] #cd #admin both 📅 2026-09-20\n"
+                                      "- [ ] #cd one 📅 2026-09-20\n"
+                                      "- [ ] #other no 📅 2026-09-20\n"
+                                      "- [ ] untagged 📅 2026-09-20\n")})
 
     lines, selected = find_tasks.run_query(str(tmp_path), group_by='tag',
                                            tags=['admin', 'cd'], condensed=True,
                                            today=TODAY)
 
     assert lines == [
-        "## admin", "", "- [[foo]]", "  - [ ] #cd #admin both 📆 2026-09-20",
-        "", "## cd", "", "- [[foo]]", "  - [ ] #cd #admin both 📆 2026-09-20",
-        "  - [ ] #cd one 📆 2026-09-20",
+        "## admin", "", "- [[foo]]", "  - [ ] #cd #admin both 📅 2026-09-20",
+        "", "## cd", "", "- [[foo]]", "  - [ ] #cd #admin both 📅 2026-09-20",
+        "  - [ ] #cd one 📅 2026-09-20",
     ]
     assert len(selected) == 2
 
 
 def test_run_query_group_by_tag_inside_sections(tmp_path):
-    write_notes(tmp_path, {'foo.md': ("- [ ] #x late 📆 2026-09-01\n"
-                                      "- [ ] #x today 📆 2026-09-25\n")})
+    write_notes(tmp_path, {'foo.md': ("- [ ] #x late 📅 2026-09-01\n"
+                                      "- [ ] #x today 📅 2026-09-25\n")})
 
     lines, _ = find_tasks.run_query(str(tmp_path), modes=['overdue', 'due'],
                                     group_by='tag', condensed=True, today=TODAY)
 
     assert lines == [
-        "# Overdue", "", "## x", "", "- [[foo]]", "  - [ ] #x late 📆 2026-09-01",
-        "", "# Due", "", "## x", "", "- [[foo]]", "  - [ ] #x today 📆 2026-09-25",
+        "# Overdue", "", "## x", "", "- [[foo]]", "  - [ ] #x late 📅 2026-09-01",
+        "", "# Due", "", "## x", "", "- [[foo]]", "  - [ ] #x today 📅 2026-09-25",
     ]
 
 
@@ -464,10 +464,10 @@ def test_run_query_group_by_tag_inside_sections(tmp_path):
 
 def test_main_default_lists_ready_tasks(tmp_path, capsys, monkeypatch):
     (tmp_path / "tasks.md").write_text("# Tasks\n"
-                                       "- [ ] Task 1 📆 2000-01-01\n"
-                                       "- [x] Task 2 📆 2000-01-01\n"
+                                       "- [ ] Task 1 📅 2000-01-01\n"
+                                       "- [x] Task 2 📅 2000-01-01\n"
                                        "- [ ] Task 3 🛫 2000-01-01\n"
-                                       "- [ ] Task 4 📆 2999-01-01\n"
+                                       "- [ ] Task 4 📅 2999-01-01\n"
                                        "- [ ] Plain checkbox\n")
 
     out = run_main(monkeypatch, capsys, str(tmp_path))
@@ -495,7 +495,7 @@ def test_main_invalid_directory(capsys, monkeypatch):
 def test_main_default_directory(capsys, monkeypatch, tmp_path):
     """Test main function uses current directory by default."""
     monkeypatch.chdir(tmp_path)
-    (tmp_path / "test.md").write_text("- [ ] Test task 📆 2000-01-01\n")
+    (tmp_path / "test.md").write_text("- [ ] Test task 📅 2000-01-01\n")
 
     out = run_main(monkeypatch, capsys)
 
@@ -503,23 +503,23 @@ def test_main_default_directory(capsys, monkeypatch, tmp_path):
 
 
 def test_main_with_condensed_flag(tmp_path, capsys, monkeypatch):
-    (tmp_path / "tasks.md").write_text("- [ ] Task 1 📆\n- [ ] Task 2 📆\n")
+    (tmp_path / "tasks.md").write_text("- [ ] Task 1 📅\n- [ ] Task 2 📅\n")
 
     out = run_main(monkeypatch, capsys, str(tmp_path), "--undated", "--condensed")
 
-    assert out == "- [[tasks]]\n  - [ ] Task 1 📆\n  - [ ] Task 2 📆\n"
+    assert out == "- [[tasks]]\n  - [ ] Task 1 📅\n  - [ ] Task 2 📅\n"
 
 
 def test_main_with_format_condensed(tmp_path, capsys, monkeypatch):
-    (tmp_path / "tasks.md").write_text("- [ ] Task 1 📆\n")
+    (tmp_path / "tasks.md").write_text("- [ ] Task 1 📅\n")
 
     out = run_main(monkeypatch, capsys, str(tmp_path), "--undated", "--format=condensed")
 
-    assert out == "- [[tasks]]\n  - [ ] Task 1 📆\n"
+    assert out == "- [[tasks]]\n  - [ ] Task 1 📅\n"
 
 
 def test_main_condensed_flag_overrides_format(tmp_path, capsys, monkeypatch):
-    (tmp_path / "tasks.md").write_text("- [ ] Task 1 📆\n")
+    (tmp_path / "tasks.md").write_text("- [ ] Task 1 📅\n")
 
     out = run_main(monkeypatch, capsys, str(tmp_path), "--undated",
                    "--format=standard", "--condensed")
@@ -530,18 +530,18 @@ def test_main_condensed_flag_overrides_format(tmp_path, capsys, monkeypatch):
 
 def test_main_modes_date_tag_and_folder(tmp_path, capsys, monkeypatch):
     write_notes(tmp_path, {
-        'project/a.md': "- [ ] #mtg prep 📆 2026-10-01\n- [ ] other 📆 2026-10-01\n",
-        'area/b.md': "- [ ] #meeting elsewhere 📆 2026-10-01\n",
+        'project/a.md': "- [ ] #mtg prep 📅 2026-10-01\n- [ ] other 📅 2026-10-01\n",
+        'area/b.md': "- [ ] #meeting elsewhere 📅 2026-10-01\n",
     })
 
     out = run_main(monkeypatch, capsys, str(tmp_path), "--due", "--date", "2026-10",
                    "--tag", "meeting", "--folder", "project", "--condensed")
 
-    assert out == "- [[project/a]]\n  - [ ] #mtg prep 📆 2026-10-01\n"
+    assert out == "- [[project/a]]\n  - [ ] #mtg prep 📅 2026-10-01\n"
 
 
 def test_main_all_and_later(tmp_path, capsys, monkeypatch):
-    (tmp_path / "a.md").write_text("- [ ] #later someday 📆\n- [ ] now 📆\n")
+    (tmp_path / "a.md").write_text("- [ ] #later someday 📅\n- [ ] now 📅\n")
 
     out = run_main(monkeypatch, capsys, str(tmp_path), "--all", "--later", "--condensed")
 
@@ -550,12 +550,12 @@ def test_main_all_and_later(tmp_path, capsys, monkeypatch):
 
 
 def test_main_group_by_tag(tmp_path, capsys, monkeypatch):
-    (tmp_path / "a.md").write_text("- [ ] #x task 📆\n")
+    (tmp_path / "a.md").write_text("- [ ] #x task 📅\n")
 
     out = run_main(monkeypatch, capsys, str(tmp_path), "--undated", "--group-by", "tag",
                    "--condensed")
 
-    assert out == "## x\n\n- [[a]]\n  - [ ] #x task 📆\n"
+    assert out == "## x\n\n- [[a]]\n  - [ ] #x task 📅\n"
 
 
 @pytest.mark.parametrize('option', [

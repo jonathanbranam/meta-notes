@@ -31,24 +31,24 @@ def root(tmp_path, monkeypatch):
     files = {
         'plan/daily/today.md': [
             '# today',
-            f'- [ ] Overdue 📆 {PAST}',
-            f'- [x] Done 📆 {PAST} ✅ {PAST}',
-            f'- [>] Moved 📆 {PAST}',
+            f'- [ ] Overdue 📅 {PAST}',
+            f'- [x] Done 📅 {PAST} ✅ {PAST}',
+            f'- [>] Moved 📅 {PAST}',
             '- [ ] Plain checkbox',
         ],
         'project/foo.md': [
             '# project/foo',
             '',
-            '- [ ] #mtg Call Sam 📆 2026-10-01',
+            '- [ ] #mtg Call Sam 📅 2026-10-01',
             f'- [ ] Later 🛫 {FUTURE}',
             '  - [/] #admin Nested in progress 📅',
-            '- [-] Dropped 📆',
-            f'- [ ] #later Someday #admin 📆 {PAST}',
-            f'- [ ] Due today 📆 {TODAY.isoformat()}',
+            '- [-] Dropped 📅',
+            f'- [ ] #later Someday #admin 📅 {PAST}',
+            f'- [ ] Due today 📅 {TODAY.isoformat()}',
         ],
         'project/sub/bar.md': [
             '* [ ] #admin No date 🗓',
-            f'+ [X] Finished 📆 {PAST} ✅ {PAST}',
+            f'+ [X] Finished 📅 {PAST} ✅ {PAST}',
         ],
         'area/home.md': [
             f'- [ ] #cd Fix sink 🗓 {FUTURE}',
@@ -168,7 +168,7 @@ def test_cli_tasks_json_fields(root, capsys):
     assert sam == [{
         'file': 'project/foo.md',
         'line': 3,
-        'text': '- [ ] #mtg Call Sam 📆 2026-10-01',
+        'text': '- [ ] #mtg Call Sam 📅 2026-10-01',
         'status': 'incomplete',
         'start': None,
         'due': '2026-10-01',
@@ -196,7 +196,7 @@ def test_cli_tasks_json_dates(root, capsys):
     assert out['tasks'] == [{
         'file': 'project/sub/bar.md',
         'line': 2,
-        'text': f'+ [X] Finished 📆 {PAST} ✅ {PAST}',
+        'text': f'+ [X] Finished 📅 {PAST} ✅ {PAST}',
         'status': 'completed',
         'start': None,
         'due': PAST,
@@ -207,14 +207,14 @@ def test_cli_tasks_json_dates(root, capsys):
 
 
 def test_cli_tasks_json_group_by_tag_lists_task_once(tmp_path, capsys, monkeypatch):
-    (tmp_path / 'a.md').write_text('- [ ] #x #y both 📆\n')
+    (tmp_path / 'a.md').write_text('- [ ] #x #y both 📅\n')
     (tmp_path / '.meta-notes').write_text('# meta-notes notes root\n')
     monkeypatch.delenv('META_NOTES_ROOT', raising=False)
     monkeypatch.chdir(tmp_path)
 
     code, out = cli_json(capsys, ['--undated', '--group-by', 'tag'])
 
-    assert [t['text'] for t in out['tasks']] == ['- [ ] #x #y both 📆']
+    assert [t['text'] for t in out['tasks']] == ['- [ ] #x #y both 📅']
     assert out['tasks'][0]['tags'] == ['x', 'y']
 
 

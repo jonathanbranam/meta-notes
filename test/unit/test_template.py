@@ -361,7 +361,7 @@ def test_run_command_block_python_scripts_resolved_to_plugin(tmp_path, monkeypat
 def test_run_command_block_python_script_sees_notes_root(tmp_path, monkeypatch):
     """The plugin's find_tasks.py runs from the notes root with substituted args."""
     monkeypatch.chdir(tmp_path)
-    write('project/p.md', ['- [ ] Pay rent 📆 2026-02-13', '- [ ] Other 📆 2026-02-14'])
+    write('project/p.md', ['- [ ] Pay rent 📅 2026-02-13', '- [ ] Other 📅 2026-02-14'])
     output, warning, _ = template.run_command_block(
         '{{% python scripts/find_tasks.py --due --date {{date:%Y-%m-%d}} --condensed %}}',
         context(date='2026-02-13'))
@@ -373,7 +373,7 @@ def test_run_command_block_python_script_sees_notes_root(tmp_path, monkeypatch):
 def test_run_command_block_python_script_removed_option(tmp_path, monkeypatch):
     """A template copied before --due-on was removed renders the usage error."""
     monkeypatch.chdir(tmp_path)
-    write('project/p.md', ['- [ ] Pay rent 📆 2026-02-13'])
+    write('project/p.md', ['- [ ] Pay rent 📅 2026-02-13'])
     line = '{{% python scripts/find_tasks.py --due-on {{date:%Y-%m-%d}} --condensed %}}'
     output, warning, _ = template.run_command_block(line, context(date='2026-02-13'))
     assert output.startswith(f'<!-- Command failed: {line}\nError: ')

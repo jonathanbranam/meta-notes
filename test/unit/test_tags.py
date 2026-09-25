@@ -52,7 +52,7 @@ def test_parse_tags_hyphen_and_underscore():
 
 
 def test_parse_tags_alias():
-    assert tags.parse_tags('- [ ] #mtg prep 📆 2026-10-01') == ['meeting']
+    assert tags.parse_tags('- [ ] #mtg prep 📅 2026-10-01') == ['meeting']
 
 
 def test_parse_tags_duplicates_removed_ignoring_case():
