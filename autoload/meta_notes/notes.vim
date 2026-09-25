@@ -57,59 +57,9 @@ function! meta_notes#notes#GetLinkUnderCursor() abort
   return meta_notes#notes#GetTextWithinDelimiters('[[', ']]')
 endfunction
 
-" Extract the appropriate date for template context from a filepath
-" Args:
-"   filepath: Path to the note file
-" Returns:
-"   Date string in YYYY-MM-DD format appropriate for the note type
-" Examples:
-"   For 'plan/daily/26-Q1/2026-02-13 Fri.md', returns '2026-02-13'
-"   For 'plan/week/26-Q1/2026-02-09.md', returns '2026-02-09' (Monday)
-"   For 'plan/quarter/2026-Q1.md', returns '2026-01-01' (first day of quarter)
-"   For 'plan/year/2026.md', returns '2026-01-01' (January 1st)
-"   For other notes, returns today's date
-function! meta_notes#notes#ExtractDateForTemplate(filepath) abort
-  " Check for daily note: plan/daily/YY-Q#/YYYY-MM-DD ddd.md
-  let l:daily_pattern = '\vplan/daily/\d{2}-Q\d/(\d{4}-\d{2}-\d{2})\s+\w{3}\.md$'
-  let l:daily_matches = matchlist(a:filepath, l:daily_pattern)
-  if len(l:daily_matches) > 1
-    return l:daily_matches[1]
-  endif
-
-  " Check for weekly note: plan/week/YY-Q#/YYYY-MM-DD.md or YYYY-MM-DD ddd.md
-  let l:weekly_pattern = '\vplan/week/\d{2}-Q\d/(\d{4}-\d{2}-\d{2})(\s+\w{3})?\.md$'
-  let l:weekly_matches = matchlist(a:filepath, l:weekly_pattern)
-  if len(l:weekly_matches) > 1
-    return l:weekly_matches[1]
-  endif
-
-  " Check for quarterly note: plan/quarter/YYYY-Q#.md
-  let l:quarterly_pattern = '\vplan/quarter/(\d{4})-(Q\d)\.md$'
-  let l:quarterly_matches = matchlist(a:filepath, l:quarterly_pattern)
-  if len(l:quarterly_matches) > 2
-    let l:year = l:quarterly_matches[1]
-    let l:quarter = l:quarterly_matches[2]
-    " Return first day of the quarter
-    let l:month = l:quarter == 'Q1' ? '01' : (l:quarter == 'Q2' ? '04' : (l:quarter == 'Q3' ? '07' : '10'))
-    return l:year . '-' . l:month . '-01'
-  endif
-
-  " Check for yearly note: plan/year/YYYY.md
-  let l:yearly_pattern = '\vplan/year/(\d{4})\.md$'
-  let l:yearly_matches = matchlist(a:filepath, l:yearly_pattern)
-  if len(l:yearly_matches) > 1
-    let l:year = l:yearly_matches[1]
-    " Return January 1st
-    return l:year . '-01-01'
-  endif
-
-  " Default to today's date for non-plan notes
-  return strftime('%Y-%m-%d')
-endfunction
-
 " Open a note from a wiki-style link [[path/to/note]]
-" If cursor is within [[...]], opens or creates the note
-" If note doesn't exist, creates a new buffer with template or header
+" If cursor is within [[...]], opens the note, or a new unsaved buffer
+" rendered by `meta-notes note new` if it doesn't exist
 function! meta_notes#notes#Open() abort
   let path = meta_notes#notes#GetLinkUnderCursor()
 
@@ -118,101 +68,43 @@ function! meta_notes#notes#Open() abort
     return
   endif
 
-  " Create filepath with .md extension
-  let filepath = path . '.md'
+  call meta_notes#notes#OpenNote(['new', path])
+endfunction
 
-  " Check if file exists
-  if filereadable(filepath)
-    " Open existing file
-    execute 'edit!' fnameescape(filepath)
+" Open a note through `meta-notes note ... --render`
+" If the note exists, opens it. Otherwise opens a new, unsaved buffer for
+" the note's path filled with the rendered content, with {{% vim %}} blocks
+" run. Creates the note's folder so the buffer can be written.
+" Args:
+"   args: List of arguments to `meta-notes note`, e.g. ['daily', '2026-02-13']
+"         or ['new', 'project/foo']
+function! meta_notes#notes#OpenNote(args) abort
+  let l:cli = meta_notes#cli#Run(['note'] + a:args + ['--render'])
+
+  if !l:cli.ok
+    echoerr l:cli.error
+    return
+  endif
+
+  if l:cli.exists
+    execute 'edit!' fnameescape(l:cli.path)
   else
-    " Create parent directory if it doesn't exist
-    let folder = fnamemodify(filepath, ':h')
-    if !isdirectory(folder)
-      call mkdir(folder, 'p')
+    let l:folder = fnamemodify(l:cli.path, ':h')
+    if !isdirectory(l:folder)
+      call mkdir(l:folder, 'p')
     endif
 
-    " Create new buffer with template or header
-    execute 'edit!' fnameescape(filepath)
+    execute 'edit!' fnameescape(l:cli.path)
 
-    " Look for template
-    let template_path = meta_notes#template#FindTemplate(filepath)
-    if template_path != ''
-      " Process template with appropriate date for note type
-      let date_str = meta_notes#notes#ExtractDateForTemplate(filepath)
-      let context = meta_notes#template#CreateContext(date_str, filepath)
-      let lines = meta_notes#template#ProcessTemplate(template_path, context)
-      call setline(1, lines)
-      call cursor(1, 1)
-    else
-      " Use simple header
-      call setline(1, ['# ' . path, ''])
-      call cursor(3, 1)
-    endif
-  endif
-endfunction
+    " content ends in a newline; drop the empty item after it
+    let l:lines = split(l:cli.content, "\n", 1)[:-2]
+    call setline(1, meta_notes#template#RunVimBlocks(l:lines))
 
-" Calculate the Monday of the current week
-" Args:
-"   date_str: Optional date string in YYYY-mm-dd format (defaults to today)
-" Returns:
-"   Date string in YYYY-mm-dd format representing the Monday of the week
-" Example:
-"   For Friday 2026-02-13, returns '2026-02-09' (previous Monday)
-"   For Monday 2026-02-09, returns '2026-02-09' (same day)
-function! meta_notes#notes#CalculateWeekStart(...) abort
-  let l:date_str = a:0 > 0 ? a:1 : strftime('%Y-%m-%d')
-
-  " Convert date string to timestamp
-  let l:timestamp = strptime("%Y-%m-%d", l:date_str)
-
-  " Get day of week (0=Sunday, 1=Monday, ..., 6=Saturday)
-  let l:weekday = str2nr(strftime("%w", l:timestamp))
-
-  " Convert to 0=Monday, 1=Tuesday, ..., 6=Sunday
-  let l:dow = (l:weekday + 6) % 7
-
-  " If already Monday, return same date
-  if l:dow == 0
-    return l:date_str
+    " Cursor at the top of a template, or below the fallback header
+    call cursor(l:cli.template is v:null ? 3 : 1, 1)
   endif
 
-  " Subtract days to get Monday (86400 seconds per day)
-  let l:monday_timestamp = l:timestamp - (l:dow * 86400)
-
-  return strftime('%Y-%m-%d', l:monday_timestamp)
-endfunction
-
-" Calculate the Sunday of the current week
-" Args:
-"   date_str: Optional date string in YYYY-mm-dd format (defaults to today)
-" Returns:
-"   Date string in YYYY-mm-dd format representing the Sunday of the week
-" Example:
-"   For Friday 2026-02-13, returns '2026-02-15' (next Sunday)
-"   For Sunday 2026-02-15, returns '2026-02-15' (same day)
-function! meta_notes#notes#CalculateWeekEnd(...) abort
-  let l:date_str = a:0 > 0 ? a:1 : strftime('%Y-%m-%d')
-
-  " Convert date string to timestamp
-  let l:timestamp = strptime("%Y-%m-%d", l:date_str)
-
-  " Get day of week (0=Sunday, 1=Monday, ..., 6=Saturday)
-  let l:weekday = str2nr(strftime("%w", l:timestamp))
-
-  " Convert to 0=Monday, 1=Tuesday, ..., 6=Sunday
-  let l:dow = (l:weekday + 6) % 7
-
-  " If already Sunday, return same date
-  if l:dow == 6
-    return l:date_str
-  endif
-
-  " Add days to get Sunday (86400 seconds per day)
-  let l:days_until_sunday = 6 - l:dow
-  let l:sunday_timestamp = l:timestamp + (l:days_until_sunday * 86400)
-
-  return strftime('%Y-%m-%d', l:sunday_timestamp)
+  call meta_notes#cli#ShowWarnings(l:cli)
 endfunction
 
 " Open the week plan file for the current week
@@ -223,68 +115,7 @@ endfunction
 " Example:
 "   For any day in the week of Feb 9-15, 2026, opens 'plan/week/26-Q1/2026-02-09.md'
 function! meta_notes#notes#OpenWeekPlan(...) abort
-  let l:date_str = a:0 > 0 ? a:1 : strftime('%Y-%m-%d')
-  let l:week_start = meta_notes#notes#CalculateWeekStart(l:date_str)
-
-  " Calculate quarter and year components for the folder path
-  let l:timestamp = strptime("%Y-%m-%d", l:week_start)
-  let l:quarter = meta_notes#notes#CalculateQuarter(l:week_start)
-  let l:year_short = strftime('%y', l:timestamp)
-  let l:folder = 'plan/week/' . l:year_short . '-' . l:quarter
-
-  " Create directory if it doesn't exist
-  if !isdirectory(l:folder)
-    call mkdir(l:folder, 'p')
-  endif
-
-  " Construct the week plan file path
-  let l:filepath = l:folder . '/' . l:week_start . '.md'
-
-  " Check if file exists
-  if filereadable(l:filepath)
-    " Open existing file
-    execute 'edit!' fnameescape(l:filepath)
-  else
-    " Create new file with template or header
-    execute 'edit!' fnameescape(l:filepath)
-
-    " Look for template (folder-specific or standard weekly template)
-    let l:template_path = meta_notes#template#FindTemplate(l:filepath, 'weekly')
-    if l:template_path != ''
-      " Process template
-      let l:context = meta_notes#template#CreateContext(l:week_start, l:filepath)
-      let l:lines = meta_notes#template#ProcessTemplate(l:template_path, l:context)
-      call setline(1, l:lines)
-      call cursor(1, 1)
-    else
-      " Use simple header
-      call setline(1, ['# Week Plan - ' . l:week_start, ''])
-      call cursor(3, 1)
-    endif
-  endif
-endfunction
-
-" Calculate the quarter from a date
-" Args:
-"   date_str: Date string in YYYY-mm-dd format
-" Returns:
-"   Quarter string: 'Q1', 'Q2', 'Q3', or 'Q4'
-" Example:
-"   For '2026-02-13', returns 'Q1' (February is month 2, in Q1)
-"   For '2026-07-15', returns 'Q3' (July is month 7, in Q3)
-function! meta_notes#notes#CalculateQuarter(date_str) abort
-  let l:timestamp = strptime("%Y-%m-%d", a:date_str)
-  let l:month = str2nr(strftime("%m", l:timestamp))
-
-  if l:month >= 1 && l:month <= 3
-    return 'Q1'
-  elseif l:month >= 4 && l:month <= 6
-    return 'Q2'
-  elseif l:month >= 7 && l:month <= 9
-    return 'Q3'
-  else
-    return 'Q4'
-  endif
+  call meta_notes#notes#OpenNote(['weekly'] + a:000)
 endfunction
 
 " Open the daily note file for today or a specific date
@@ -293,50 +124,9 @@ endfunction
 " Args:
 "   date_str: Optional date string in YYYY-mm-dd format (defaults to today)
 " Example:
-"   For 2026-02-13 (Thursday), opens 'plan/daily/26-Q1/2026-02-13 Thu.md'
+"   For 2026-02-13 (Friday), opens 'plan/daily/26-Q1/2026-02-13 Fri.md'
 function! meta_notes#notes#OpenDaily(...) abort
-  let l:date_str = a:0 > 0 ? a:1 : strftime('%Y-%m-%d')
-
-  " Convert date string to timestamp for formatting
-  let l:timestamp = strptime("%Y-%m-%d", l:date_str)
-
-  " Calculate quarter and format components
-  let l:quarter = meta_notes#notes#CalculateQuarter(l:date_str)
-  let l:year_short = strftime('%y', l:timestamp)
-  let l:day_abbr = strftime('%a', l:timestamp)
-
-  " Construct the directory and file path
-  let l:dir = 'plan/daily/' . l:year_short . '-' . l:quarter
-  let l:filename = l:date_str . ' ' . l:day_abbr . '.md'
-  let l:filepath = l:dir . '/' . l:filename
-
-  " Create directory if it doesn't exist
-  if !isdirectory(l:dir)
-    call mkdir(l:dir, 'p')
-  endif
-
-  " Check if file exists
-  if filereadable(l:filepath)
-    " Open existing file
-    execute 'edit!' fnameescape(l:filepath)
-  else
-    " Create new file with template or header
-    execute 'edit!' fnameescape(l:filepath)
-
-    " Look for template (folder-specific or standard daily template)
-    let l:template_path = meta_notes#template#FindTemplate(l:filepath, 'daily')
-    if l:template_path != ''
-      " Process template
-      let l:context = meta_notes#template#CreateContext(l:date_str, l:filepath)
-      let l:lines = meta_notes#template#ProcessTemplate(l:template_path, l:context)
-      call setline(1, l:lines)
-      call cursor(1, 1)
-    else
-      " Use simple header
-      call setline(1, ['# Daily Note - ' . l:date_str . ' ' . l:day_abbr, ''])
-      call cursor(3, 1)
-    endif
-  endif
+  call meta_notes#notes#OpenNote(['daily'] + a:000)
 endfunction
 
 " Open the quarterly plan file for the current quarter or a specific date
@@ -346,48 +136,7 @@ endfunction
 " Example:
 "   For any day in Q1 2026, opens 'plan/quarter/2026-Q1.md'
 function! meta_notes#notes#OpenQuarterPlan(...) abort
-  let l:date_str = a:0 > 0 ? a:1 : strftime('%Y-%m-%d')
-
-  " Convert date string to timestamp for formatting
-  let l:timestamp = strptime("%Y-%m-%d", l:date_str)
-
-  " Calculate quarter and year
-  let l:quarter = meta_notes#notes#CalculateQuarter(l:date_str)
-  let l:year = strftime('%Y', l:timestamp)
-
-  " Construct the quarterly plan file path
-  let l:dir = 'plan/quarter'
-  let l:filename = l:year . '-' . l:quarter . '.md'
-  let l:filepath = l:dir . '/' . l:filename
-
-  " Create directory if it doesn't exist
-  if !isdirectory(l:dir)
-    call mkdir(l:dir, 'p')
-  endif
-
-  " Check if file exists
-  if filereadable(l:filepath)
-    " Open existing file
-    execute 'edit!' fnameescape(l:filepath)
-  else
-    " Create new file with template or header
-    execute 'edit!' fnameescape(l:filepath)
-
-    " Look for template (folder-specific or standard quarterly template)
-    let l:template_path = meta_notes#template#FindTemplate(l:filepath, 'quarterly')
-    if l:template_path != ''
-      " Process template with the first day of the quarter as the date
-      let l:quarter_start = l:year . '-' . (l:quarter == 'Q1' ? '01' : (l:quarter == 'Q2' ? '04' : (l:quarter == 'Q3' ? '07' : '10'))) . '-01'
-      let l:context = meta_notes#template#CreateContext(l:quarter_start, l:filepath)
-      let l:lines = meta_notes#template#ProcessTemplate(l:template_path, l:context)
-      call setline(1, l:lines)
-      call cursor(1, 1)
-    else
-      " Use simple header
-      call setline(1, ['# Quarterly Plan - ' . l:year . ' ' . l:quarter, ''])
-      call cursor(3, 1)
-    endif
-  endif
+  call meta_notes#notes#OpenNote(['quarterly'] + a:000)
 endfunction
 
 " Open the yearly plan file for the current year or a specific date
@@ -397,47 +146,7 @@ endfunction
 " Example:
 "   For any day in 2026, opens 'plan/year/2026.md'
 function! meta_notes#notes#OpenYearPlan(...) abort
-  let l:date_str = a:0 > 0 ? a:1 : strftime('%Y-%m-%d')
-
-  " Convert date string to timestamp for formatting
-  let l:timestamp = strptime("%Y-%m-%d", l:date_str)
-
-  " Get year
-  let l:year = strftime('%Y', l:timestamp)
-
-  " Construct the yearly plan file path
-  let l:dir = 'plan/year'
-  let l:filename = l:year . '.md'
-  let l:filepath = l:dir . '/' . l:filename
-
-  " Create directory if it doesn't exist
-  if !isdirectory(l:dir)
-    call mkdir(l:dir, 'p')
-  endif
-
-  " Check if file exists
-  if filereadable(l:filepath)
-    " Open existing file
-    execute 'edit!' fnameescape(l:filepath)
-  else
-    " Create new file with template or header
-    execute 'edit!' fnameescape(l:filepath)
-
-    " Look for template (folder-specific or standard yearly template)
-    let l:template_path = meta_notes#template#FindTemplate(l:filepath, 'yearly')
-    if l:template_path != ''
-      " Process template with January 1st as the date
-      let l:year_start = l:year . '-01-01'
-      let l:context = meta_notes#template#CreateContext(l:year_start, l:filepath)
-      let l:lines = meta_notes#template#ProcessTemplate(l:template_path, l:context)
-      call setline(1, l:lines)
-      call cursor(1, 1)
-    else
-      " Use simple header
-      call setline(1, ['# Year Plan - ' . l:year, ''])
-      call cursor(3, 1)
-    endif
-  endif
+  call meta_notes#notes#OpenNote(['yearly'] + a:000)
 endfunction
 
 " Get list of all daily note files sorted by date

@@ -15,7 +15,7 @@ import os
 import sys
 from dataclasses import dataclass, field
 
-from meta_notes import init, ops, query
+from meta_notes import init, note, ops, query
 from meta_notes.root import SENTINEL, find_root
 
 
@@ -165,6 +165,32 @@ def cmd_tasks(args, root: str) -> Output:
     return Output({"tasks": tasks}, lines)
 
 
+def cmd_note(args, root: str) -> Output:
+    if args.kind == "new":
+        value = to_root_relative(args.path, root)
+        template_name = args.template
+    else:
+        value = args.date
+        template_name = None
+    try:
+        result = note.create(args.kind, value, template_name=template_name,
+                             render_only=args.render)
+    except note.NoteError as e:
+        raise CliError(str(e))
+
+    out = Output({"path": result.path, "exists": result.exists,
+                  "created": result.created, "template": result.template},
+                 warnings=result.warnings)
+    if not args.render:
+        out.text = [result.path]
+    elif result.exists:
+        out.notices = [f"Note already exists: {result.path}"]
+    else:
+        out.data["content"] = result.content
+        out.text = [result.content.removesuffix("\n")]
+    return out
+
+
 INIT_MESSAGES = {
     ("folder", "created"): "Created directory: {}",
     ("folder", "exists"): "Directory already exists: {}",
@@ -259,6 +285,28 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--condensed", action="store_true",
                    help="use condensed output format (synonym for --format=condensed)")
     p.set_defaults(handler=cmd_tasks)
+
+    p = sub.add_parser("note", parents=[common],
+                       help="create a note from its template, unless it exists; "
+                            "print its path")
+    kinds = p.add_subparsers(dest="kind", metavar="KIND", parser_class=_Parser)
+    kinds.required = True
+    render = argparse.ArgumentParser(add_help=False)
+    render.add_argument("--render", action="store_true",
+                        help="print the rendered note instead of writing it")
+    for kind, period in (("daily", "day"), ("weekly", "week"),
+                         ("quarterly", "quarter"), ("yearly", "year")):
+        k = kinds.add_parser(kind, parents=[common, render],
+                             help=f"the {period}'s plan note")
+        k.add_argument("date", nargs="?",
+                       help=f"a date in the {period}, YYYY-MM-DD (default: today)")
+    k = kinds.add_parser("new", parents=[common, render],
+                         help="any other note, by path (.md added if missing)")
+    k.add_argument("path")
+    k.add_argument("--template", metavar="NAME",
+                   help="use resource/template/NAME.md instead of "
+                        "template discovery")
+    p.set_defaults(handler=cmd_note)
 
     return parser
 

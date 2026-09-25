@@ -97,8 +97,9 @@ NAVIGATION ~
                                                 *:MetaNotesOpen*
 :MetaNotesOpen
     Follow the wiki-style link under the cursor. Opens or creates the note
-    referenced by `[[path/to/note]]`. If the note does not exist, creates a
-    new buffer with a template or default header.
+    referenced by `[[path/to/note]]`. If the note does not exist, opens a
+    new, unsaved buffer with a template or default header, rendered by
+    `meta-notes note new` (|meta-notes-cli-note|).
     See |meta-notes-wiki-links|.
 
                                                 *:MetaNotesDaily*
@@ -238,32 +239,39 @@ template if one is defined for that note type, or a plain `# Title` header
 otherwise. Templates are populated with the note's date and other contextual
 information automatically.
 
+Templates are rendered by `meta-notes note` (|meta-notes-cli-note|), so a
+note created from a shell or by an agent gets the same content as one opened
+in Vim. Vim asks the CLI for the rendered content and opens it as a new,
+unsaved buffer: nothing is written until you save it.
+
 Templates are created by |:MetaNotesInit| and stored in the notes root.
 
 ------------------------------------------------------------------------------
 TEMPLATE RESOLUTION ~                       *meta-notes-template-resolution*
 
-When a note is opened, the template is chosen in this priority order:
+When a note is created, the template is chosen in this priority order:
 
-1. Folder-specific template: a file named `template.md` in the same
-   directory as the note being created. Takes priority over all others.
+1. `--template {name}`: `meta-notes note new {path} --template {name}` uses
+   `resource/template/{name}.md` and skips the rest. It is an error if that
+   file doesn't exist.
+
+2. Folder-specific template: a file named `template.md` in the same
+   directory as the note being created.
    Example: `project/kitchen-remodel/template.md` is used for every new
    note inside that folder.
 
-2. Named standard template: `resource/template/{type}.md` where {type} is
-   passed by the opening command (`daily`, `weekly`, `quarterly`, `yearly`).
-
-3. Auto-detected standard template: same `resource/template/` lookup, but
-   the type is inferred from the note's path: >
+3. Standard template for plan folders, chosen by the note's path: >
        plan/daily/   → resource/template/daily.md
        plan/week/    → resource/template/weekly.md
        plan/quarter/ → resource/template/quarterly.md
        plan/year/    → resource/template/yearly.md
 <
-If no template is found, the new note starts with a plain `# Title` header.
+If no template is found, the new note starts with a plain header: `# Daily
+Note - YYYY-MM-DD ddd`, `# Week Plan - YYYY-MM-DD`, `# Quarterly Plan - YYYY
+QN`, `# Year Plan - YYYY`, or `# {path}` for other notes.
 
-YAML frontmatter (lines between `---` delimiters at the start of the
-template file) is stripped and does not appear in the created note.
+YAML frontmatter (lines between `---` delimiters starting on the first line
+of the template file) is stripped and does not appear in the created note.
 
 ------------------------------------------------------------------------------
 TEMPLATE VARIABLES ~                        *meta-notes-template-variables*
@@ -277,7 +285,10 @@ Date variables support optional day-offset arithmetic and strftime format
 specifiers. Without a format specifier the default output is `YYYY-MM-DD ddd`
 (e.g. `2026-06-19 Fri`).
 
-    date            The note's canonical date (YYYY-MM-DD)
+    date            The note's canonical date (YYYY-MM-DD): the day for a
+                    daily note, the Monday for a weekly note, the first
+                    day of the quarter or year for quarterly and yearly
+                    notes, and today for other notes
     today           Today's actual date (YYYY-MM-DD)
     week_start      Monday of the note's week (YYYY-MM-DD)
     week_end        Sunday of the note's week (YYYY-MM-DD)
@@ -286,7 +297,8 @@ Arithmetic — add or subtract whole days: >
     {{date+7}}          seven days after the note date
     {{week_end-2}}      two days before the end of the week
 <
-Format specifiers — any strftime conversion: >
+Format specifiers — any strftime conversion. Day and month names are
+always English, whatever the locale: >
     {{today:%A}}            full weekday name, e.g. Friday
     {{date:%B %-d, %Y}}     e.g. June 19, 2026
     {{date+7:%Y-%m-%d}}     arithmetic combined with a custom format
@@ -318,18 +330,31 @@ Unknown variables produce an HTML comment: >
 ------------------------------------------------------------------------------
 COMMAND BLOCKS ~                            *meta-notes-template-commands*
 
-A template line of the form `{{% type command %}}` is replaced by the
-output of that command when the note is created. Template variables are
-substituted in the command string before execution.
+A template line containing `{{% type command %}}` is replaced, as a whole
+line, by the output of that command when the note is created. Template
+variables are substituted in the command string before execution. Commands
+run from the notes root, with their stderr included in the output.
 
-    {{% vim :Command %}}        run a vim command; capture its output
-    {{% python script.py %}}    run a script from the plugin's scripts/ dir
+    {{% python script.py %}}    run a Python script with the Python running
+                                `meta-notes`; a path starting with
+                                `scripts/` is the plugin's scripts/ dir
     {{% shell command %}}       run any shell command
+    {{% vim :Command %}}        run a Vim command; insert its output
 
-Example — insert an open-task list for the current week: >
-    {{% python scripts/find_tasks.py --week {{week_start}} %}}
+Example — insert the tasks due on the note's date: >
+    {{% python scripts/find_tasks.py --due-on {{date:%Y-%m-%d}} --condensed %}}
+    {{% shell git log --oneline -5 %}}
+    {{% vim echo "Created " . strftime('%H:%M') %}}
 <
-Failed commands are replaced with an HTML comment that includes the error.
+`{{% vim %}}` blocks run only when a note is opened in Vim. `meta-notes note`
+substitutes the variables in the block and leaves it in its output, and
+Vim runs it when it fills the new buffer. A note created outside Vim (for
+example by `meta-notes note` without `--render`) keeps the block as text,
+and the CLI warns about it.
+
+A failed command is replaced with an HTML comment that includes the error,
+and `meta-notes note` reports a warning. An unknown type is replaced with
+`<!-- Unknown command type: {type} -->`.
 
 ==============================================================================
 7. TIME TRACKING                                *meta-notes-time-tracking*
@@ -367,7 +392,9 @@ updated automatically across the entire notes directory.
 `bin/meta-notes` runs the same file operations and task query as the plugin,
 so notes can be reorganized from a shell, by an agent, or by other tools. The
 plugin's |:MetaNotesArchive|, |:MetaNotesRename|, and |:MetaNotesMoveItem|
-commands call it, and |:MetaNotesInit| calls `meta-notes init`. It needs
+commands call it, |:MetaNotesInit| calls `meta-notes init`, and
+|:MetaNotesDaily|, |:MetaNotesWeekPlan|, |:MetaNotesQuarterPlan|,
+|:MetaNotesYearPlan|, and |:MetaNotesOpen| call `meta-notes note`. It needs
 Python 3.10 or newer as `python3` on your `PATH`.
 
 Put it on your `PATH`; the Claude Code skills call it by name. Link it into
@@ -410,6 +437,30 @@ Commands ~
     CLI expands them; each match is archived independently and failures are
     reported per item.
 
+`meta-notes note daily|weekly|quarterly|yearly [{date}] [--render]`
+`meta-notes note new {path} [--template {name}] [--render]`
+                                                *meta-notes-cli-note*
+    Create a note from its template (|meta-notes-templates|) and print its
+    path. {date} is any day in the note's period, as YYYY-MM-DD, and
+    defaults to today. Periodic notes go where the Vim commands put them: >
+        plan/daily/YY-QN/YYYY-MM-DD ddd.md
+        plan/week/YY-QN/YYYY-MM-DD.md       (the week's Monday)
+        plan/quarter/YYYY-QN.md
+        plan/year/YYYY.md
+<   `new` creates the note at {path} inside the notes root, appending `.md`
+    if missing. A plan note's template date is taken from its name, and
+    other notes use today.
+
+    An existing note is never changed: the command just prints its path.
+    With `--render`, nothing is written and no folder is created: the
+    rendered note is printed instead, or, if the note exists, nothing is
+    printed and `Note already exists: {path}` goes to stderr.
+
+    Example: >
+        meta-notes note daily
+        meta-notes note weekly 2026-04-02 --render
+        meta-notes note new project/trip/Packing --template checklist
+<
 `meta-notes tasks [options]`
     List tasks. Takes the same options as `scripts/find_tasks.py`
     (`--folder`, `--due-on`, `--due-by`, `--due-between`, `--status`,
@@ -446,7 +497,11 @@ nothing to stderr, whether it succeeds or fails: >
 and `links_updated` (files whose wiki-links were rewritten). `archive` adds
 `items` with a result per archived path. `tasks` returns `tasks`, each with
 `file`, `line`, `text`, `status`, `start`, `due`, `completed`, and, without
-filters, the report `category`.
+filters, the report `category`. `note` returns `path`, `exists` (whether the
+note existed before), `created` (whether this command wrote it), and
+`template` (the template used, or null); with `--render` and a new note, it
+also returns `content`, the rendered note. Output from template commands
+appears only in `content` or the written note, never on stdout.
 
 The exit status is non-zero on failure. `--root` and `--json` may come
 before or after the command name.

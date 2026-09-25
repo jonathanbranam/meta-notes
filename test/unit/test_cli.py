@@ -214,6 +214,147 @@ def test_main_text_success(notes_root, capsys):
     assert captured.err == ''
 
 
+# Tests for the note subcommand
+
+DAILY = 'plan/daily/26-Q1/2026-02-13 Fri.md'
+
+
+@pytest.fixture
+def daily_template(notes_root):
+    """The shipped daily template in resource/template/."""
+    folder = notes_root / 'resource' / 'template'
+    folder.mkdir()
+    (folder / 'daily.md').write_bytes((repo_dir / 'templates' / 'daily.md').read_bytes())
+    return folder / 'daily.md'
+
+
+def test_note_json_created(daily_template, notes_root, capsys):
+    code, out, err = run_json(capsys, ['note', 'daily', '2026-02-13'])
+
+    assert code == 0
+    assert err == ''
+    assert out == {'ok': True, 'path': DAILY, 'exists': False, 'created': True,
+                   'template': 'resource/template/daily.md', 'warnings': []}
+    assert (notes_root / DAILY).read_text().startswith('# Daily Note - 2026-02-13 Fri\n')
+
+
+def test_note_json_rendered(daily_template, notes_root, capsys):
+    code, out, _ = run_json(capsys, ['note', 'daily', '2026-02-13', '--render'])
+
+    assert code == 0
+    assert (out['exists'], out['created']) == (False, False)
+    assert not (notes_root / 'plan' / 'daily').exists()
+
+    code, written, _ = run_json(capsys, ['note', 'daily', '2026-02-13'])
+    assert (notes_root / DAILY).read_text() == out['content']
+
+
+def test_note_json_existing(daily_template, notes_root, capsys):
+    (notes_root / DAILY).parent.mkdir(parents=True)
+    (notes_root / DAILY).write_text('# Mine\n')
+
+    code, out, err = run_json(capsys, ['note', 'daily', '2026-02-13', '--render'])
+
+    assert code == 0
+    assert err == ''
+    assert out == {'ok': True, 'path': DAILY, 'exists': True, 'created': False,
+                   'template': None, 'warnings': []}
+    assert (notes_root / DAILY).read_text() == '# Mine\n'
+
+
+def test_note_json_invalid_date(notes_root, capsys):
+    code, out, _ = run_json(capsys, ['note', 'daily', '2026-13-45'])
+
+    assert code == 1
+    assert out['error'] == 'Invalid date: 2026-13-45 (expected YYYY-MM-DD)'
+    assert not (notes_root / 'plan' / 'daily').exists()
+
+
+def test_note_json_warnings(notes_root, capsys):
+    (notes_root / 'project' / 'template.md').write_text(
+        '{{% shell exit 1 %}}\n{{% vim echo 1 %}}\n')
+
+    code, out, _ = run_json(capsys, ['note', 'new', 'project/x'])
+
+    assert code == 0
+    assert out['warnings'] == [
+        'Command failed: {{% shell exit 1 %}}',
+        'project/x.md: {{% vim %}} blocks are left as text outside Vim']
+
+
+def test_note_new_absolute_path(notes_root, capsys):
+    code, out, _ = run_json(capsys, ['note', 'new', str(notes_root / 'area' / 'Beds')])
+
+    assert code == 0
+    assert out['path'] == 'area/Beds.md'
+    assert (notes_root / 'area' / 'Beds.md').read_text() == '# area/Beds\n\n'
+
+
+def test_note_new_outside_root(notes_root, capsys):
+    code, out, _ = run_json(capsys, ['note', 'new', '../elsewhere/note'])
+
+    assert code == 1
+    assert 'outside the notes root' in out['error']
+
+
+def test_note_new_template_option(notes_root, capsys):
+    (notes_root / 'resource' / 'template').mkdir()
+    (notes_root / 'resource' / 'template' / 'checklist.md').write_text('# {{note_name}}\n')
+
+    code, out, _ = run_json(capsys, ['note', 'new', 'project/trip/Packing',
+                                     '--template', 'checklist', '--render'])
+
+    assert code == 0
+    assert out['content'] == '# Packing\n'
+    assert out['template'] == 'resource/template/checklist.md'
+
+
+def test_note_text_prints_path(notes_root, capsys):
+    for _ in range(2):
+        code = cli.main(['note', 'yearly', '2026-02-13'])
+        captured = capsys.readouterr()
+        assert code == 0
+        assert (captured.out, captured.err) == ('plan/year/2026.md\n', '')
+
+
+def test_note_text_render_prints_content(notes_root, capsys):
+    code = cli.main(['note', 'yearly', '2026-02-13', '--render'])
+    captured = capsys.readouterr()
+
+    assert code == 0
+    assert captured.out == '# Year Plan - 2026\n\n'
+    assert not (notes_root / 'plan' / 'year').exists()
+
+
+def test_note_text_render_existing(notes_root, capsys):
+    (notes_root / 'plan' / 'year').mkdir()
+    (notes_root / 'plan' / 'year' / '2026.md').write_text('# Mine\n')
+
+    code = cli.main(['note', 'yearly', '2026-02-13', '--render'])
+    captured = capsys.readouterr()
+
+    assert code == 0
+    assert captured.out == ''
+    assert captured.err == 'Note already exists: plan/year/2026.md\n'
+
+
+def test_note_json_command_output_only_in_content(notes_root):
+    """Command-block stdout and stderr end up in content, never on stdout."""
+    (notes_root / 'project' / 'template.md').write_text(
+        '# T\n'
+        '{{% shell echo "{\\"ok\\": false}"; echo to-stderr >&2 %}}\n'
+        '{{% python -c "print(\'from python\')" %}}\n')
+
+    proc = subprocess.run([str(SHIM), '--json', 'note', 'new', 'project/x', '--render'],
+                          capture_output=True, text=True, cwd=str(notes_root))
+
+    assert proc.returncode == 0
+    assert proc.stderr == ''
+    out = json.loads(proc.stdout)
+    assert out['ok'] is True
+    assert out['content'] == '# T\n{"ok": false}\nto-stderr\n\nfrom python\n\n'
+
+
 # Tests for bin/meta-notes shim
 
 def test_shim_json_output(notes_root):

@@ -71,8 +71,8 @@ meta-notes/
 │   └── meta_notes/
 │       ├── cli.vim          # Runs bin/meta-notes and decodes its JSON
 │       ├── file_ops.vim     # File operations (archive, rename) via the CLI
-│       ├── notes.vim        # Note management and navigation
-│       ├── template.vim     # Template processing
+│       ├── notes.vim        # Note navigation; opens notes via the CLI
+│       ├── template.vim     # Runs {{% vim %}} blocks in rendered notes
 │       └── time_tracking.vim # Time tracking functionality
 ├── after/               # After-directory for syntax highlighting
 │   └── syntax/
@@ -82,9 +82,11 @@ meta-notes/
 │   │   ├── __main__.py          # Entry point (Python version check)
 │   │   ├── cli.py               # Subcommands, root resolution, output
 │   │   ├── init.py              # Notes root setup
+│   │   ├── note.py              # Note paths and creation
 │   │   ├── ops.py               # Move, rename, archive
 │   │   ├── query.py             # Task query
-│   │   └── root.py              # Sentinel search for the notes root
+│   │   ├── root.py              # Sentinel search for the notes root
+│   │   └── template.py          # Template discovery and rendering
 │   ├── find_tasks.py        # Task discovery and filtering
 │   ├── notes.py             # Note utilities
 │   ├── tasks.py             # Task parsing and processing
@@ -97,14 +99,17 @@ meta-notes/
 │   │   ├── test_cli.py
 │   │   ├── test_find_tasks.py
 │   │   ├── test_init.py
+│   │   ├── test_note.py
 │   │   ├── test_notes.py
 │   │   ├── test_ops.py
 │   │   ├── test_query.py
 │   │   ├── test_root.py
 │   │   ├── test_tasks.py
+│   │   ├── test_template.py
 │   │   ├── test_time_tracking.py
 │   │   └── test_update_links.py
 │   └── fixtures/            # Test data/files
+│       └── templates/           # Vim renderings of the shipped templates
 ├── doc/                 # Vim documentation
 ├── skills/              # Claude Code skills, linked into notes roots by init
 ├── templates/           # Planning templates copied into notes roots by init
@@ -139,10 +144,10 @@ This structure is compatible with vim-plug, Vundle, and Pathogen.
 
 ## Command Line
 
-`bin/meta-notes` performs the plugin's setup (`init`), file operations
-(`move`, `rename`, `archive`), and task query (`tasks`) outside Vim, for
-shells, agents, and other tools. The Vim commands call it. Every command
-accepts `--json`. It needs Python 3.10 or newer as `python3`. See
+`bin/meta-notes` performs the plugin's setup (`init`), note creation from
+templates (`note`), file operations (`move`, `rename`, `archive`), and task
+query (`tasks`) outside Vim, for shells, agents, and other tools. The Vim
+commands call it. Every command accepts `--json`. It needs Python 3.10 or newer as `python3`. See
 `:help meta-notes-cli`.
 
 Link it into a directory on your `PATH`; the shipped Claude Code skills call
@@ -160,6 +165,9 @@ Claude Code skills into `.claude/skills/`. Re-running is safe.
 ```bash
 mkdir notes && cd notes && git init
 meta-notes init
+meta-notes note daily                    # create today's daily note, print its path
+meta-notes note weekly 2026-04-02 --render --json
+meta-notes note new "project/trip/Packing" --template checklist
 bin/meta-notes archive 'project/2024-*'
 bin/meta-notes move project/foo area/foo --json
 bin/meta-notes tasks --folder project --status all

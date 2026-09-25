@@ -11,46 +11,6 @@ Execute (Setup - Create temporary test directory):
   call mkdir('plan/year', 'p')
 
 " ============================================================================
-" Quarter Calculations
-" ============================================================================
-
-Execute (Test CalculateQuarter - Q1):
-  AssertEqual 'Q1', meta_notes#notes#CalculateQuarter('2026-01-15')
-  AssertEqual 'Q1', meta_notes#notes#CalculateQuarter('2026-02-13')
-  AssertEqual 'Q1', meta_notes#notes#CalculateQuarter('2026-03-31')
-
-Execute (Test CalculateQuarter - Q2):
-  AssertEqual 'Q2', meta_notes#notes#CalculateQuarter('2026-04-01')
-  AssertEqual 'Q2', meta_notes#notes#CalculateQuarter('2026-05-15')
-  AssertEqual 'Q2', meta_notes#notes#CalculateQuarter('2026-06-30')
-
-Execute (Test CalculateQuarter - Q3):
-  AssertEqual 'Q3', meta_notes#notes#CalculateQuarter('2026-07-01')
-  AssertEqual 'Q3', meta_notes#notes#CalculateQuarter('2026-08-15')
-  AssertEqual 'Q3', meta_notes#notes#CalculateQuarter('2026-09-30')
-
-Execute (Test CalculateQuarter - Q4):
-  AssertEqual 'Q4', meta_notes#notes#CalculateQuarter('2026-10-01')
-  AssertEqual 'Q4', meta_notes#notes#CalculateQuarter('2026-11-15')
-  AssertEqual 'Q4', meta_notes#notes#CalculateQuarter('2026-12-31')
-
-" ============================================================================
-" Week Calculations
-" ============================================================================
-
-Execute (Test CalculateWeekStart):
-  AssertEqual '2026-02-09', meta_notes#notes#CalculateWeekStart('2026-02-09')
-  AssertEqual '2026-02-09', meta_notes#notes#CalculateWeekStart('2026-02-10')
-  AssertEqual '2026-02-09', meta_notes#notes#CalculateWeekStart('2026-02-13')
-  AssertEqual '2026-02-09', meta_notes#notes#CalculateWeekStart('2026-02-15')
-
-Execute (Test CalculateWeekEnd):
-  AssertEqual '2026-02-15', meta_notes#notes#CalculateWeekEnd('2026-02-15')
-  AssertEqual '2026-02-15', meta_notes#notes#CalculateWeekEnd('2026-02-09')
-  AssertEqual '2026-02-15', meta_notes#notes#CalculateWeekEnd('2026-02-13')
-  AssertEqual '2026-02-15', meta_notes#notes#CalculateWeekEnd('2026-02-14')
-
-" ============================================================================
 " Daily Notes
 " ============================================================================
 
