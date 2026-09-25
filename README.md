@@ -80,6 +80,7 @@ meta-notes/
 ├── scripts/             # Python helper scripts
 │   ├── meta_notes/          # meta-notes CLI package
 │   │   ├── __main__.py          # Entry point (Python version check)
+│   │   ├── brief.py             # Project brief
 │   │   ├── ceremony.py          # Ceremony status
 │   │   ├── cli.py               # Subcommands, root resolution, output
 │   │   ├── conventions.md       # Conventions text for skills
@@ -105,6 +106,7 @@ meta-notes/
 ├── test/                # Tests
 │   ├── *.vader              # Vimscript integration tests
 │   ├── unit/                # Python unit tests
+│   │   ├── test_brief.py
 │   │   ├── test_ceremony.py
 │   │   ├── test_cli.py
 │   │   ├── test_conventions.py
@@ -199,6 +201,7 @@ meta-notes task update project/foo.md:3 --expect '- [ ] call Sam 📅 2026-09-22
 meta-notes time                           # today's time report
 meta-notes time --date 2026-09 --json     # a month's time summary
 meta-notes projects --warnings            # stalled or unreviewed projects
+meta-notes project brief project/kitchen/  # one project's files, tasks, dates
 meta-notes ceremony status --date 2026-09-25
 meta-notes conventions                    # syntax and rules the skills follow
 ```

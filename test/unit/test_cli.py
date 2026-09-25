@@ -944,3 +944,115 @@ def test_projects_json(notes_root, capsys):
     assert set(entry) == {'path', 'home', 'status', 'tag', 'last_review',
                           'latest_date', 'open_tasks', 'completed_tasks',
                           'warnings'}
+
+
+# Tests for the project brief command
+
+def test_project_brief_json(notes_root, capsys):
+    _write_note(notes_root, 'project/make-bread.md',
+                '# Make Bread\n\n- tag: make-bread\n\n'
+                '- [ ] #next buy flour 📅 2026-09-26\n')
+    today = date.today()
+
+    code, out, err = run_json(capsys, ['project', 'brief', 'project/make-bread'])
+
+    assert code == 0
+    assert out['ok'] is True
+    assert out['warnings'] == []
+    data = out['project']
+    assert data['tag'] == 'make-bread'
+    assert data['has_next'] is True
+    assert data['last_review'] is None
+    assert data['since'] == date.fromordinal(today.toordinal() - 90).isoformat()
+    assert 'review-overdue' in data['warnings']
+    [task] = data['open']
+    assert (task['file'], task['line'], task['text']) == (
+        'project/make-bread.md', 5, '- [ ] #next buy flour 📅 2026-09-26')
+    assert set(data) == {'path', 'home', 'status', 'tag', 'fields',
+                         'latest_date', 'last_review', 'has_next', 'warnings',
+                         'files', 'open', 'later', 'deadlines',
+                         'scheduled_reviews', 'completed', 'completed_total',
+                         'since'}
+    assert err == ''
+
+
+def test_project_brief_warnings_not_cli_warnings(notes_root, capsys):
+    _write_note(notes_root, 'project/a.md', '# A\n')
+
+    code = cli.main(['project', 'brief', 'project/a'])
+
+    captured = capsys.readouterr()
+    assert code == 0
+    assert 'warnings: no-next' in captured.out
+    assert captured.err == ''
+
+
+def test_project_brief_absolute_path(notes_root, capsys):
+    _write_note(notes_root, 'project/a.md', '# A\n')
+
+    code, data, _ = run_json(capsys, ['project', 'brief',
+                                      str(notes_root / 'project/a.md')])
+
+    assert code == 0
+    assert data['project']['path'] == 'project/a.md'
+
+
+@pytest.mark.parametrize('value', ['2026-09', '2026-09-01..2026-09-30',
+                                   '2026-02-30'])
+def test_project_brief_invalid_since(notes_root, capsys, value):
+    _write_note(notes_root, 'project/make-bread.md', '# Make Bread\n')
+
+    code, data, _ = run_json(capsys, ['project', 'brief', 'project/make-bread',
+                                      '--since', value])
+
+    assert code == 1
+    assert data['ok'] is False
+    assert 'expected YYYY-MM-DD' in data['error']
+
+
+def test_project_brief_since(notes_root, capsys):
+    _write_note(notes_root, 'project/a.md',
+                '# A\n\n- [x] old 📅 ✅ 2026-01-02\n')
+
+    code, data, _ = run_json(capsys, ['project', 'brief', 'project/a',
+                                      '--since', '2026-01-01'])
+
+    assert code == 0
+    assert data['project']['since'] == '2026-01-01'
+    assert len(data['project']['completed']) == 1
+
+
+def test_project_brief_not_a_project_json(notes_root, capsys):
+    _write_note(notes_root, 'area/health.md', '# Health\n')
+
+    code = cli.main(['project', 'brief', 'area/health', '--json'])
+
+    out = capsys.readouterr().out
+    assert code == 1
+    assert len(out.splitlines()) == 1
+    data = json.loads(out)
+    assert data['ok'] is False
+    assert 'area/health is not a project' in data['error']
+
+
+def test_project_brief_not_a_project_text(notes_root, capsys):
+    code = cli.main(['project', 'brief', 'project/kitchen/Tasks.md'])
+
+    captured = capsys.readouterr()
+    assert code == 1
+    assert 'project/kitchen/Tasks.md is not a project' in captured.err
+
+
+def test_project_brief_task_line_usable_by_task_update(notes_root, capsys):
+    _write_note(notes_root, 'project/make-bread.md',
+                '# Make Bread\n\n- tag: make-bread\n\n'
+                '- [ ] buy flour 📅 2026-09-26\n')
+    _, data, _ = run_json(capsys, ['project', 'brief', 'project/make-bread'])
+    [task] = data['project']['open']
+
+    code, result, _ = run_json(capsys, [
+        'task', 'update', f"{task['file']}:{task['line']}",
+        '--expect', task['text'], '--status', 'x', '--no-completed'])
+
+    assert code == 0
+    assert result['new'] == '- [x] buy flour 📅 2026-09-26'

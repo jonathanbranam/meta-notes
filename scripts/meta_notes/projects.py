@@ -36,6 +36,7 @@ class Project:
     home: str | None
     status: str = "active"
     tag: str | None = None
+    fields: dict[str, str] = field(default_factory=dict)
     tasks: list[Task] = field(default_factory=list)
     files: list[str] = field(default_factory=list)
     last_review: date | None = None
@@ -43,7 +44,7 @@ class Project:
     warnings: list[str] = field(default_factory=list)
 
 
-def _has_tag(task: Task, tag: str) -> bool:
+def has_tag(task: Task, tag: str) -> bool:
     return any(t.lower() == tag.lower() for t in task.tags)
 
 
@@ -67,27 +68,42 @@ def list_projects(root_dir: str = ".") -> list[Project]:
     for name in names:
         if name.startswith("."):
             continue
-        full = os.path.join(folder, name)
-        rel = f"{PROJECT_FOLDER}/{name}"
-        if os.path.isdir(full):
-            files = sorted(os.path.relpath(f, root_dir)
-                           for f in _walk_files(full))
-            home = os.path.join(full, project.HOME_NOTE)
-            p = Project(rel + "/", f"{rel}/{project.HOME_NOTE}"
-                        if os.path.isfile(home) else None, files=files)
-        elif name.endswith(".md") and os.path.isfile(full):
-            p = Project(rel, rel, files=[rel])
-        else:
-            continue
-
-        if p.home is None:
-            p.warnings.append("no-home-note")
-        else:
-            fields = project.read_fields(os.path.join(root_dir, p.home))
-            p.status = fields.get("status") or "active"
-            p.tag = canonical_tag(fields["tag"]) if fields.get("tag") else None
-        projects.append(p)
+        p = load_project(f"{PROJECT_FOLDER}/{name}", root_dir)
+        if p is not None:
+            projects.append(p)
     return projects
+
+
+def load_project(rel: str, root_dir: str = ".") -> Project | None:
+    """
+    One project, with its home note, fields, and files.
+
+    Args:
+        rel: A note or folder in project/ or archive/project/, relative to
+            the notes root (a folder with or without a trailing /).
+
+    Returns:
+        The Project, or None if rel is neither a folder nor a markdown note.
+    """
+    rel = rel.rstrip("/")
+    full = os.path.join(root_dir, rel)
+    if os.path.isdir(full):
+        files = sorted(os.path.relpath(f, root_dir) for f in _walk_files(full))
+        home = os.path.join(full, project.HOME_NOTE)
+        p = Project(rel + "/", f"{rel}/{project.HOME_NOTE}"
+                    if os.path.isfile(home) else None, files=files)
+    elif rel.endswith(".md") and os.path.isfile(full):
+        p = Project(rel, rel, files=[rel])
+    else:
+        return None
+
+    if p.home is None:
+        p.warnings.append("no-home-note")
+    else:
+        p.fields = project.read_fields(os.path.join(root_dir, p.home))
+        p.status = p.fields.get("status") or "active"
+        p.tag = canonical_tag(p.fields["tag"]) if p.fields.get("tag") else None
+    return p
 
 
 def _walk_files(folder: str) -> list[str]:
@@ -113,14 +129,14 @@ def assign_tasks(projects: list[Project], tasks: list[Task],
     for task in tasks:
         rel = os.path.relpath(task.filename, root_dir)
         for p in projects:
-            if _owns(p, rel) or (p.tag and _has_tag(task, p.tag)):
+            if _owns(p, rel) or (p.tag and has_tag(task, p.tag)):
                 p.tasks.append(task)
 
 
 def last_review(tasks: list[Task]) -> date | None:
     """The latest completion date among completed #review tasks."""
     days = [t.effective_due for t in tasks
-            if t.status == TaskStatus.COMPLETED and _has_tag(t, "review")
+            if t.status == TaskStatus.COMPLETED and has_tag(t, "review")
             and t.effective_due]
     return max(days, default=None)
 
@@ -151,14 +167,16 @@ def latest_date(p: Project, today: date, root_dir: str = ".") -> date | None:
     its markdown heading lines, and its tasks other than #review tasks.
     """
     days: list[date] = []
+    parent = os.path.dirname(p.path.rstrip("/")) + "/"
     for rel in p.files:
-        # Only the part inside project/ counts, not the folder it's in
-        days += _dates(rel.removeprefix(PROJECT_FOLDER + "/"), today)
+        # Only the part inside the project's folder counts, not the folder
+        # it's in (project/ or archive/project/)
+        days += _dates(rel.removeprefix(parent), today)
         if rel.endswith(".md"):
             for line in _heading_lines(os.path.join(root_dir, rel)):
                 days += _dates(line, today)
     for task in p.tasks:
-        if not _has_tag(task, "review"):
+        if not has_tag(task, "review"):
             days += _dates(task.text, today)
     return max(days, default=None)
 
@@ -171,7 +189,7 @@ def warnings(p: Project, today: date) -> list[str]:
     """The warnings that apply to a project, in WARNINGS order."""
     found = set(p.warnings)
     active = p.status.lower() == "active"
-    if active and not any(t.status == TaskStatus.INCOMPLETE and _has_tag(t, "next")
+    if active and not any(t.status == TaskStatus.INCOMPLETE and has_tag(t, "next")
                           for t in p.tasks):
         found.add("no-next")
     if active and _older_than(p.latest_date, today):

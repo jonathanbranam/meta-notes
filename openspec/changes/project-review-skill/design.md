@@ -24,9 +24,18 @@ and requirements and ships `task-cleanup`; `project-brief` adds
 
 ### Selection from `meta-notes projects`
 
-With no project named, the skill runs `meta-notes projects --json` and
-picks the entry with no `last_review`, then the oldest. It doesn't show
-the list, so it never proposes other projects.
+With no project named, the skill runs `meta-notes projects --json`,
+leaves out `done` projects (they're waiting to be archived, and
+`review-overdue` skips them too), and picks the entry with no
+`last_review`, then the oldest, ties in list order. It doesn't show the
+list, so it never proposes other projects.
+
+`projects` doesn't report scheduled reviews, so the skill checks the
+picked project's brief: an open `#review` due after today (a paused
+project's reconsider date, or a stopped review's follow-up) means the
+user asked to wait, and the skill takes the next candidate. That costs an
+extra `project brief` only when a pick is passed over. A named project is
+always reviewed.
 
 *Alternative:* `project brief` on every project. That repeats the task
 parse per project, which `projects` avoids.
@@ -37,19 +46,47 @@ Step 2 is `meta-notes project brief <path> --json`. The skill summarizes
 fields, files, open and completed tasks, `#later`, `#deadline`, and
 `has_next` in about ten lines.
 
+### Dispositions
+
+Pause and done set `status` by editing the field list directly, as
+"Edits go through the CLI" allows. Done offers `meta-notes archive` at
+once; declining leaves a `done` project in `project/`, which selection
+skips. Convert to area is a `meta-notes move` to `area/`. Split and merge
+carry tasks with the "Carrying a task forward" rule (copy, then mark the
+old line `>`), create new project notes with `meta-notes note new`, and
+move notes with `meta-notes move`. The skill asks for a next action only
+when the project stays active, the same condition as `no-next`.
+
 ### Recording the review
 
 The review is a completed `#review` task in the home note. An open
-`#review` task is checked off with `task update --status x`; otherwise the
-skill adds `- [ ] project #review 📅` and checks it off the same way, so
-the ✅ date comes from the CLI.
+`#review` in the home note that is undated or due on or before today is
+checked off with `task update --status x`, the earliest first. Otherwise
+the skill adds `- [ ] project #review 📅`, re-runs `project brief --json`
+to get the new line's `file`, `line`, and `text`, and checks it off the
+same way, so the ✅ date comes from the CLI. Open `#review` tasks due
+after today are reminders the user set and stay open.
+
+A folder project without `Home.md` has nowhere to record the review; the
+skill offers to create one (title and field list) and otherwise says the
+review wasn't recorded.
+
+### Order of edits
+
+Fields and the `#review` record are written first; confirmed `archive`
+and `move` commands run last. `archive` and `move` change the home
+note's path, and `archive` sets `status: archived` itself.
 
 ## Risks / Trade-offs
 
 - [`project brief` output changes before this lands] → The skill is
   written after `project-brief` is archived, against its real output.
-- [Large projects produce long briefs] → The skill summarizes; the
-  completed-task window is `project-brief`'s open question.
+- [Large projects produce long briefs] → The skill summarizes, and the
+  brief lists completed tasks from the last 90 days only (`--since` for
+  more).
+- [A stopped review counts as a review] → It resets `last_review`, so
+  selection won't pick the project again; the open `#review` dated the
+  next workday brings it back through daily planning's due tasks.
 
 ## Migration Plan
 
@@ -57,3 +94,4 @@ the ✅ date comes from the CLI.
 2. Rewrite the skill, then the docs.
 3. `init` links skills, so existing notes roots see the new skill without
    re-running it.
+4. PATCH version bump on archive; tag `v<version>`.

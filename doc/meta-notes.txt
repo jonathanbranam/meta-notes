@@ -842,6 +842,47 @@ Commands ~
     `latest_date` (dates or null), `open_tasks`, `completed_tasks`, and
     `warnings`.
 
+`meta-notes project brief {path} [--since {day}]`
+                                                *meta-notes-cli-project-brief*
+    Report one project's full state: its fields, files, tasks, dates, and
+    warnings. {path} is a note or folder directly in `project/` or
+    `archive/project/`, relative to the notes root or absolute inside it;
+    `.md` and a trailing `/` are optional. Anything else, such as an area
+    or a note inside a folder project, is an error. Reads notes only.
+
+    The home note, fields, tasks, latest date, last review, and warnings
+    are the ones |meta-notes-cli-projects| reports for the project, so the
+    two commands agree. The project's tasks are those in its note or
+    folder plus tasks anywhere with its `tag`; canceled and rescheduled
+    tasks are left out. Files include every file in the project, markdown
+    or not, except names starting with `.`; their modification dates are
+    shown but never used for the latest date.
+
+    The text output starts with the path, status, tag, latest date, last
+    review, and warnings, then these sections, leaving out empty ones:
+
+        Files               size, modification date, and path
+        Deadlines           open tasks tagged `#deadline`
+        Scheduled reviews   open `#review` tasks with a due date
+        Open                open tasks, except `#later` ones
+        Later               open `#later` tasks
+        Completed           completed tasks in the window
+
+    Task lines are `{file}:{line}  {text}`, the target
+    |meta-notes-cli-task-update| takes. Deadlines and scheduled reviews also appear under Open (or
+    Later). A completed task's date is its `✅` date, or its due date
+    without one; completed tasks dated on or after `--since {day}`
+    (YYYY-MM-DD, default 90 days ago) are listed, and the heading gives
+    how many are listed of the project's total.
+
+    With `--json`, the object has `project`, with `path`, `home` (or null),
+    `status`, `tag` (or null), `fields` (every field, keys lowercase),
+    `latest_date` and `last_review` (dates or null), `has_next` (an open
+    `#next` task exists), `warnings` (names, as for `projects`), `files`
+    (each with `path`, `size`, and `modified`), `open`, `later`,
+    `deadlines`, `scheduled_reviews`, `completed` (tasks as `tasks`
+    returns them, without `section`), `completed_total`, and `since`.
+
 `meta-notes --version`                          *meta-notes-cli-version*
     Print `meta-notes {version}`, where {version} is MAJOR.MINOR.PATCH.
     When the plugin directory is the top level of a git checkout, the

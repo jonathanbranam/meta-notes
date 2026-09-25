@@ -321,7 +321,11 @@ Specified across several openspec changes, in this order:
   and untouched-days filter (`task-age`) are deferred.
 - `task-update`: change status, tags, or date on a specific line, with a
   guard against stale line numbers
-- `project-brief`: everything the project review needs in one call
+- `project-brief`: `meta-notes project brief <path> [--since DAY]`,
+  everything the project review needs in one call: a project's fields,
+  files, open, `#later`, and completed tasks (the last 90 days by
+  default), `#deadline` and scheduled `#review` tasks, and the latest
+  date, last review, and warnings as `meta-notes projects` computes them
 - `archive-project-status`: `archive` sets `status: archived` and
   `archived:` on a project's home note
 - `cli-init`: `meta-notes init`, including skill install

@@ -2,4 +2,4 @@
 
 # The meta-notes version. Bump it when archiving a change that alters
 # behavior; see AGENTS.md.
-__version__ = "0.6.0"
+__version__ = "0.7.0"

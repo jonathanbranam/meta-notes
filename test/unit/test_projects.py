@@ -117,6 +117,46 @@ def test_list_projects_ignores_frontmatter(tmp_path, monkeypatch):
     assert projects.list_projects('.')[0].status == 'active'
 
 
+# Tests for load_project function
+
+def test_load_project_archived_folder(tmp_path, monkeypatch):
+    write_notes(tmp_path, {
+        'archive/project/kitchen/Home.md': '# Kitchen\n\n- status: archived\n',
+        'archive/project/kitchen/plan.pdf': 'x',
+    })
+    monkeypatch.chdir(tmp_path)
+
+    p = projects.load_project('archive/project/kitchen', '.')
+
+    assert p.path == 'archive/project/kitchen/'
+    assert p.home == 'archive/project/kitchen/Home.md'
+    assert p.status == 'archived'
+    assert p.fields == {'status': 'archived'}
+    assert p.files == ['archive/project/kitchen/Home.md',
+                       'archive/project/kitchen/plan.pdf']
+
+
+def test_load_project_not_a_project(tmp_path, monkeypatch):
+    write_notes(tmp_path, {'project/picture.png': 'x'})
+    monkeypatch.chdir(tmp_path)
+
+    assert projects.load_project('project/picture.png', '.') is None
+    assert projects.load_project('project/missing', '.') is None
+
+
+# Tests for latest_date function
+
+def test_latest_date_archived_project_own_dates_only(tmp_path, monkeypatch):
+    write_notes(tmp_path, {
+        'archive/project/2026-03-01-trip/Home.md': '# Trip\n',
+        'archive/project/2026-03-01-trip/notes.md': '## Notes 2026-04-02\n',
+    })
+    monkeypatch.chdir(tmp_path)
+    p = projects.load_project('archive/project/2026-03-01-trip/', '.')
+
+    assert projects.latest_date(p, TODAY, '.') == date(2026, 4, 2)
+
+
 # Tests for project tasks
 
 def test_collect_tagged_task_elsewhere(tmp_path, monkeypatch):

@@ -18,13 +18,14 @@ _FIELD = re.compile(rb"^[-*+] ([A-Za-z0-9_-]+):[ \t]*(.*?)[ \t]*$")
 _CHECKBOX = re.compile(rb"^[-*+] \[.\]")
 
 
-def project_for(path: str) -> str | None:
+def project_for(path: str, root_dir: str = ".") -> str | None:
     """
     The project a path names, or None if it isn't one.
 
     Args:
         path: A note (with or without `.md`) or folder path, relative to the
             notes root.
+        root_dir: Notes root.
 
     Returns:
         The project path (`project/foo.md` or `project/foo`), or None for
@@ -34,11 +35,11 @@ def project_for(path: str) -> str | None:
     parent, name = os.path.split(path)
     if parent not in PROJECT_FOLDERS or not name:
         return None
-    if os.path.isdir(path):
+    if os.path.isdir(os.path.join(root_dir, path)):
         return path
     if not path.endswith(".md"):
         path += ".md"
-    return path if os.path.isfile(path) else None
+    return path if os.path.isfile(os.path.join(root_dir, path)) else None
 
 
 def home_note(project: str) -> str | None:

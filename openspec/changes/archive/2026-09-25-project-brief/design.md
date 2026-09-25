@@ -82,6 +82,12 @@ a usage error. `cmd_project_brief` wraps `brief.run` and maps its
 `ValueError` to an error `Output`. The group leaves room for later
 project commands without another top-level name.
 
+The brief goes under a `project` key in the JSON result. Every `--json`
+result already has a top-level `warnings` list of CLI warning messages, so
+the project's warning names can't share that name at the top level; nesting
+keeps the spec's field names and matches `projects`, whose entries are
+under `projects`.
+
 ### Text output
 
 A header line (`path  status  tag`, then `latest <date>  review

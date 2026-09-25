@@ -21,8 +21,8 @@ from datetime import date
 import find_tasks
 import tasks as task_model
 from tags import canonical_tag
-from meta_notes import (__version__, ceremony, conventions, init, note, ops,
-                        projects, query, task_update, time)
+from meta_notes import (__version__, brief, ceremony, conventions, init, note,
+                        ops, projects, query, task_update, time)
 from meta_notes.root import SENTINEL, find_root
 
 
@@ -321,6 +321,15 @@ def cmd_projects(args, root: str) -> Output:
     return Output({"projects": entries}, lines)
 
 
+def cmd_project_brief(args, root: str) -> Output:
+    since = date.fromisoformat(args.since) if args.since else None
+    try:
+        lines, data = brief.run(".", to_root_relative(args.path, root), since)
+    except ValueError as e:
+        raise CliError(str(e))
+    return Output({"project": data}, lines)
+
+
 def cmd_conventions(args, root: None) -> Output:
     text = conventions.run()
     return Output({"version": __version__, "text": text},
@@ -535,6 +544,21 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--warnings", action="store_true",
                    help="only projects with at least one warning")
     p.set_defaults(handler=cmd_projects)
+
+    p = sub.add_parser("project", parents=[common],
+                       help="report on one project")
+    kinds = p.add_subparsers(dest="kind", metavar="KIND", parser_class=_Parser)
+    kinds.required = True
+    k = kinds.add_parser("brief", parents=[common],
+                         help="a project's fields, files, tasks, dates, and "
+                              "warnings")
+    k.add_argument("path",
+                   help="a note or folder directly in project/ or "
+                        "archive/project/ (.md and trailing / optional)")
+    k.add_argument("--since", type=_day_value, metavar="DAY",
+                   help="list tasks completed on or after YYYY-MM-DD "
+                        "(default: 90 days ago)")
+    p.set_defaults(handler=cmd_project_brief)
 
     p = sub.add_parser("conventions", parents=[common],
                        help="print the note syntax and editing conventions "

@@ -25,12 +25,14 @@ skills don't wait on `project-brief`.
 
 - **`project-review`** (revised): one project per run, monthly, 5–10
   minutes. It starts with `meta-notes conventions`, reads state from
-  `meta-notes project brief`, picks the project with the oldest or missing
-  `#review` when none is named, and asks for a disposition (continue,
-  pause, done, convert to area, split, merge). Pause and done set the
-  `status` field; archiving and converting use `meta-notes archive` or
-  `move` after confirmation. It records the review as a completed
-  `#review` task in the home note.
+  `meta-notes project brief`, and, when none is named, picks the project
+  with the oldest or missing `#review`, skipping `done` projects and
+  those with a review scheduled after today. It asks for a disposition
+  (continue, pause, done, convert to area, split, merge). Pause and done
+  set the `status` field; done offers `meta-notes archive`; converting,
+  splitting, and merging use `move`, `note new`, and carried tasks after
+  confirmation. It records the review as a completed `#review` task in
+  the home note before any `archive` or `move`.
 - Its stale-task walk is removed in favor of `task-cleanup`, and its
   description no longer triggers on task cleanup.
 - It follows the shared skill shape from `planning-skills`: time budget,
@@ -44,11 +46,14 @@ skills don't wait on `project-brief`.
 *(none)*
 
 ### Modified Capabilities
-- `ceremony-skills`: adds the "Project review" requirement.
+- `ceremony-skills`: "Shipped skills" lists `project-review`; adds the
+  "Project review", "Project review selection", "Project review
+  disposition", and "Project review record" requirements.
 
 ## Impact
 
 - `skills/project-review/SKILL.md`: rewritten. This supersedes the step 2
   swap listed in `project-brief`'s Impact.
 - `docs/planning-system.md`: the project review section matches the skill.
-- No CLI or template changes, so no version bump on its own.
+- No CLI or template changes. The shipped skill's behavior changes, so
+  archiving bumps the PATCH version.
