@@ -416,7 +416,8 @@ def test_render_matches_vim_fixture(fixture, notes_root, monkeypatch):
     The fixtures are `<kind>-<date>.md`: the buffer :MetaNotesDaily and
     friends produced for that date, rendered by the Vimscript before it was
     removed, with a python3 on PATH that printed `- [ ] stub: <script>
-    <args>` for command blocks.
+    <args>` for command blocks. They were later edited to drop the day name
+    from the week plan link and heading, matching the shipped templates.
     """
     kind, _, day = fixture.removesuffix('.md').partition('-')
     Path('resource/template').mkdir(parents=True)
