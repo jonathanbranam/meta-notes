@@ -15,9 +15,10 @@ for each ceremony and adds the scripts they depend on.
 - **`cli-init`**: templates become markdown files shipped with the plugin,
   and skills get installed into the notes root. The template updates here
   edit those files, and the new skills are installed through that mechanism.
-- **`find-tasks-enhancements`**: the task model, `#later`, tag filters,
-  `last_edited`, and `--untouched-days`. Task cleanup and daily planning
-  both rank tasks by age.
+- **`find-tasks-enhancements`**: the task model, selection modes (`--ready`,
+  `--due`, `--overdue`), `#later`, and tag filters.
+- **`task-age`**: `last_edited` and `--untouched-days`. Task cleanup and
+  daily planning both rank tasks by age.
 - **`task-update`**: skills edit task lines through `meta-notes task update`,
   not by rewriting lines themselves.
 - **`project-brief`**: the project list used for weekly-review warnings is

@@ -14,10 +14,8 @@ task half of that document is in `find-tasks-enhancements`.
 
 ## Dependencies
 
-- **`time-log-hhmm-format`** is in progress. It edits
-  `scripts/time_tracking.py`, templates, and fixtures, and adds the
-  `time-log` capability (entry syntax and timestamp formats). Start this
-  change after it is archived.
+- **`time-log-hhmm-format`** (archived 2026-09-25) added the `time-log`
+  capability (entry syntax and timestamp formats). Nothing blocks.
 - **`cli-core`** (archived) provides the CLI package, root resolution, and
   `--json` conventions that `meta-notes time` follows.
 

@@ -10,8 +10,8 @@ returns it all, computed the same way for every caller.
 
 ## Dependencies
 
-**Depends on `cli-core`** and **`find-tasks-enhancements`**, for the task
-model, `#later`, tag filters, and `last_edited`.
+**Depends on `cli-core`**, **`find-tasks-enhancements`** (for the task
+model, `#later`, and tag filters), and **`task-age`** (for `last_edited`).
 
 ## What Changes
 
