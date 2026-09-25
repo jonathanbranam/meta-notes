@@ -22,7 +22,7 @@ Week Plan: [[plan/week/{{week_start:%y}}-{{week_quarter}}/{{week_start:%Y-%m-%d}
 
 ### Log
 
-- start of day
+- start work:
   * start: HH:MM
   * end:   HH:MM
 
