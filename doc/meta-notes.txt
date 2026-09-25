@@ -17,6 +17,7 @@ CONTENTS                                        *meta-notes-contents*
   6. Templates ................. |meta-notes-templates|
   7. Time Tracking ............. |meta-notes-time-tracking|
   8. Wiki Links ................ |meta-notes-wiki-links|
+  9. Command Line .............. |meta-notes-cli|
 
 ==============================================================================
 1. INTRODUCTION                                 *meta-notes-intro*
@@ -351,6 +352,66 @@ Examples: >
 <
 When a note is moved, renamed, or archived, all wiki-links pointing to it are
 updated automatically across the entire notes directory.
+
+==============================================================================
+9. COMMAND LINE                                 *meta-notes-cli*
+
+`bin/meta-notes` runs the same file operations and task query as the plugin,
+so notes can be reorganized from a shell, by an agent, or by other tools. The
+plugin's |:MetaNotesArchive|, |:MetaNotesRename|, and |:MetaNotesMoveItem|
+commands call it. It needs Python 3.10 or newer as `python3` on your `PATH`.
+
+To put it on your `PATH`, link it: >
+    ln -s /path/to/meta-notes/bin/meta-notes ~/bin/meta-notes
+<
+Commands ~
+                                                *meta-notes-cli-commands*
+`meta-notes move {source} {dest}`
+    Same as |:MetaNotesMoveItem|.
+
+`meta-notes rename {source} {new-name}`
+    Same as |:MetaNotesRename| for the note at {source}. A {new-name} without
+    `/` keeps the note's directory; `.md` is appended if missing.
+
+`meta-notes archive {path} ...`
+    Same as |:MetaNotesArchive|. Quote wildcards (`'project/2024-*'`) so the
+    CLI expands them; each match is archived independently and failures are
+    reported per item.
+
+`meta-notes tasks [options]`
+    List tasks. Takes the same options as `scripts/find_tasks.py`
+    (`--folder`, `--due-on`, `--due-by`, `--due-between`, `--status`,
+    `--format`, `--condensed`) and prints the same output.
+
+The CLI changes only the working tree. It never stages or commits.
+
+Notes root ~
+                                                *meta-notes-cli-root*
+Paths in arguments and output are relative to the notes root, which is the
+first of:
+    1. `--root {dir}`
+    2. the `META_NOTES_ROOT` environment variable
+    3. the nearest directory, starting from the current one, that contains
+       `plan/`, `project/`, and `area/`
+
+The plugin always passes `--root` with Vim's current directory.
+
+Output ~
+                                                *meta-notes-cli-json*
+Output is human-readable text by default, with errors and warnings on stderr.
+With `--json`, every command writes exactly one JSON object to stdout and
+nothing to stderr, whether it succeeds or fails: >
+    {"ok": true, "moves": [...], "links_updated": [...], "warnings": []}
+    {"ok": false, "error": "Source not found: project/foo.md", "warnings": []}
+<
+`move` and `rename` return `source`, `dest`, `moves` (`[old, new]` pairs),
+and `links_updated` (files whose wiki-links were rewritten). `archive` adds
+`items` with a result per archived path. `tasks` returns `tasks`, each with
+`file`, `line`, `text`, `status`, `start`, `due`, `completed`, and, without
+filters, the report `category`.
+
+The exit status is non-zero on failure. `--root` and `--json` may come
+before or after the command name.
 
 ==============================================================================
 vim:ft=help:tw=78:ts=4:et:

@@ -35,4 +35,4 @@
 
 ## 6. Verification
 
-- [ ] 6.1 Run full test suite (`./run_tests.sh` and `pipenv run pytest test/unit/`)
+- [x] 6.1 Run full test suite (`./run_tests.sh` and `pipenv run pytest test/unit/`)

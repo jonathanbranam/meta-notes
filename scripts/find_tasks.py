@@ -401,6 +401,128 @@ def parse_date_arg(date_str: str) -> date:
         raise ValueError(f"Invalid date format: {date_str}. Use YYYY-MM-DD format.")
 
 
+def parse_date_filters(due_on_arg: str | None, due_by_arg: str | None,
+                       due_between_arg: list[str] | None
+                       ) -> tuple[date | None, date | None, tuple[date, date] | None]:
+    """
+    Parse the date filter arguments.
+
+    Args:
+        due_on_arg: --due-on value, if given.
+        due_by_arg: --due-by value, if given.
+        due_between_arg: --due-between START END values, if given.
+
+    Returns:
+        Tuple of (due_on, due_by, due_between).
+
+    Raises:
+        ValueError: If a date is invalid or the range is reversed.
+    """
+    due_on = parse_date_arg(due_on_arg) if due_on_arg else None
+    due_by = parse_date_arg(due_by_arg) if due_by_arg else None
+    due_between = None
+    if due_between_arg:
+        start = parse_date_arg(due_between_arg[0])
+        end = parse_date_arg(due_between_arg[1])
+        if start > end:
+            raise ValueError("Start date must be before or equal to end date")
+        due_between = (start, end)
+    return due_on, due_by, due_between
+
+
+def is_filtered(folder: str | None, due_on: date | None, due_by: date | None,
+                due_between: tuple[date, date] | None, status: str) -> bool:
+    """Whether any filter is set (otherwise the categorized report is used)."""
+    return bool(folder or due_on or due_by or due_between or status != 'incomplete')
+
+
+def collect_filtered_tasks(root_dir: str, folder: str | None = None,
+                           due_on: date | None = None, due_by: date | None = None,
+                           due_between: tuple[date, date] | None = None,
+                           status: str = 'incomplete') -> list[Task]:
+    """
+    Collect tasks from all markdown files matching the filters.
+
+    Args:
+        root_dir: Directory to search for markdown files.
+        folder: Only include tasks from this folder (and subfolders).
+        due_on: Only include tasks due on this date.
+        due_by: Only include tasks due on or before this date.
+        due_between: Only include tasks due in this inclusive range.
+        status: Status argument ('incomplete', 'completed', 'all', ...).
+
+    Returns:
+        Matching tasks in file order.
+    """
+    all_tasks = []
+    for filepath in find_all_markdown_files(root_dir):
+        all_tasks.extend(find_tasks_in_file(filepath))
+
+    filtered_tasks = filter_tasks_by_status_arg(all_tasks, status)
+
+    if folder:
+        filtered_tasks = filter_tasks_by_folder(filtered_tasks, folder, root_dir)
+
+    if due_on or due_by or due_between:
+        filtered_tasks = filter_tasks_by_due_date(filtered_tasks, due_on, due_by, due_between)
+
+    return filtered_tasks
+
+
+def group_tasks_by_file(tasks: list[Task]) -> dict[str, list[Task]]:
+    """Group tasks by filename, preserving task order within each file."""
+    tasks_by_file: dict[str, list[Task]] = {}
+    for task in tasks:
+        tasks_by_file.setdefault(task.filename, []).append(task)
+    return tasks_by_file
+
+
+def generate_filtered_report(root_dir: str, folder: str | None = None,
+                             due_on: date | None = None, due_by: date | None = None,
+                             due_between: tuple[date, date] | None = None,
+                             status: str = 'incomplete',
+                             condensed: bool = False) -> list[str]:
+    """
+    Generate the filtered report: matching tasks grouped by file.
+
+    Args:
+        root_dir: Directory to search for markdown files.
+        folder, due_on, due_by, due_between, status: Filters, as for
+            collect_filtered_tasks.
+        condensed: If True, use condensed format.
+
+    Returns:
+        List of output lines.
+    """
+    if not find_all_markdown_files(root_dir):
+        return ["No markdown files found."]
+
+    filtered_tasks = collect_filtered_tasks(root_dir, folder, due_on, due_by,
+                                            due_between, status)
+    tasks_by_file = group_tasks_by_file(filtered_tasks)
+
+    if not tasks_by_file:
+        return ["No tasks found matching the criteria."]
+
+    lines: list[str] = []
+    formatter = format_file_tasks_condensed if condensed else format_file_tasks
+    for filepath in sorted(tasks_by_file.keys()):
+        lines.extend(formatter(filepath, tasks_by_file[filepath], root_dir))
+        if not condensed:
+            lines.append("")  # Empty line between files (standard format only)
+
+    # Add summary (not in condensed format)
+    if not condensed:
+        total_tasks = len(filtered_tasks)
+        total_files = len(tasks_by_file)
+        task_word = "task" if total_tasks == 1 else "tasks"
+        file_word = "file" if total_files == 1 else "files"
+        lines.append("")
+        lines.append(f"Summary: Found {total_tasks} {task_word} in {total_files} {file_word}")
+
+    return lines
+
+
 def main() -> None:
     """
     Main entry point for the script.
@@ -483,22 +605,9 @@ Examples:
         sys.exit(1)
 
     # Parse date arguments
-    due_on = None
-    due_by = None
-    due_between = None
-
     try:
-        if args.due_on:
-            due_on = parse_date_arg(args.due_on)
-        if args.due_by:
-            due_by = parse_date_arg(args.due_by)
-        if args.due_between:
-            start = parse_date_arg(args.due_between[0])
-            end = parse_date_arg(args.due_between[1])
-            if start > end:
-                print("Error: Start date must be before or equal to end date", file=sys.stderr)
-                sys.exit(1)
-            due_between = (start, end)
+        due_on, due_by, due_between = parse_date_filters(
+            args.due_on, args.due_by, args.due_between)
     except ValueError as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
@@ -506,73 +615,14 @@ Examples:
     # Get current date
     today = date.today()
 
-    # Check if we're using filters (if so, use filtered output; otherwise use categorized report)
-    using_filters = args.folder or due_on or due_by or due_between or args.status != 'incomplete'
-
-    if not using_filters:
+    if is_filtered(args.folder, due_on, due_by, due_between, args.status):
+        lines = generate_filtered_report(args.root_dir, args.folder, due_on, due_by,
+                                         due_between, args.status, use_condensed)
+    else:
         # Use categorized report (for backward compatibility with templates)
         lines = generate_report(args.root_dir, today, use_condensed)
-        output = "\n".join(lines)
-        print(output)
-        return
 
-    # Filtered mode: apply filters and show simple output
-    # Find all markdown files
-    markdown_files = find_all_markdown_files(args.root_dir)
-
-    if not markdown_files:
-        print("No markdown files found.")
-        return
-
-    # Collect all tasks and apply filters
-    all_tasks = []
-    for filepath in markdown_files:
-        file_tasks = find_tasks_in_file(filepath)
-        all_tasks.extend(file_tasks)
-
-    # Apply status filter
-    filtered_tasks = filter_tasks_by_status_arg(all_tasks, args.status)
-
-    # Apply folder filter if specified
-    if args.folder:
-        filtered_tasks = filter_tasks_by_folder(filtered_tasks, args.folder, args.root_dir)
-
-    # Apply date filters if specified
-    if due_on or due_by or due_between:
-        filtered_tasks = filter_tasks_by_due_date(filtered_tasks, due_on, due_by, due_between)
-
-    # Group tasks by file
-    tasks_by_file: dict[str, list[Task]] = {}
-    for task in filtered_tasks:
-        if task.filename not in tasks_by_file:
-            tasks_by_file[task.filename] = []
-        tasks_by_file[task.filename].append(task)
-
-    # Generate output
-    if not tasks_by_file:
-        print("No tasks found matching the criteria.")
-        return
-
-    lines: list[str] = []
-    formatter = format_file_tasks_condensed if use_condensed else format_file_tasks
-    for filepath in sorted(tasks_by_file.keys()):
-        tasks = tasks_by_file[filepath]
-        file_lines = formatter(filepath, tasks, args.root_dir)
-        lines.extend(file_lines)
-        if not use_condensed:
-            lines.append("")  # Empty line between files (standard format only)
-
-    # Add summary (not in condensed format)
-    if not use_condensed:
-        total_tasks = len(filtered_tasks)
-        total_files = len(tasks_by_file)
-        task_word = "task" if total_tasks == 1 else "tasks"
-        file_word = "file" if total_files == 1 else "files"
-        lines.append("")
-        lines.append(f"Summary: Found {total_tasks} {task_word} in {total_files} {file_word}")
-
-    output = "\n".join(lines)
-    print(output)
+    print("\n".join(lines))
 
 
 if __name__ == '__main__':

@@ -63,11 +63,14 @@ This plugin follows standard vim plugin conventions:
 
 ```
 meta-notes/
+├── bin/                 # Command line interface
+│   └── meta-notes           # Shim that runs scripts/meta_notes
 ├── plugin/              # Main vim plugin files (auto-loaded by vim)
 │   └── meta_notes.vim
 ├── autoload/            # Functions loaded on-demand
 │   └── meta_notes/
-│       ├── file_ops.vim     # File operations (archive, rename)
+│       ├── cli.vim          # Runs bin/meta-notes and decodes its JSON
+│       ├── file_ops.vim     # File operations (archive, rename) via the CLI
 │       ├── notes.vim        # Note management and navigation
 │       ├── template.vim     # Template processing
 │       └── time_tracking.vim # Time tracking functionality
@@ -75,6 +78,11 @@ meta-notes/
 │   └── syntax/
 │       └── markdown.vim
 ├── scripts/             # Python helper scripts
+│   ├── meta_notes/          # meta-notes CLI package
+│   │   ├── __main__.py          # Entry point (Python version check)
+│   │   ├── cli.py               # Subcommands, root resolution, output
+│   │   ├── ops.py               # Move, rename, archive
+│   │   └── query.py             # Task query
 │   ├── find_tasks.py        # Task discovery and filtering
 │   ├── notes.py             # Note utilities
 │   ├── tasks.py             # Task parsing and processing
@@ -84,13 +92,16 @@ meta-notes/
 ├── test/                # Tests
 │   ├── *.vader              # Vimscript integration tests
 │   ├── unit/                # Python unit tests
+│   │   ├── test_cli.py
 │   │   ├── test_find_tasks.py
 │   │   ├── test_notes.py
+│   │   ├── test_ops.py
+│   │   ├── test_query.py
 │   │   ├── test_tasks.py
 │   │   ├── test_time_tracking.py
 │   │   └── test_update_links.py
 │   └── fixtures/            # Test data/files
-├── doc/                 # Vim documentation (future)
+├── doc/                 # Vim documentation
 ├── run_tests.sh         # Test runner script
 └── README.md
 ```
@@ -119,6 +130,19 @@ ln -s /Volumes/Data/work/meta-notes ~/.vim/pack/meta-notes/start/meta-notes
 **Option 2: Plugin Manager**
 
 This structure is compatible with vim-plug, Vundle, and Pathogen.
+
+## Command Line
+
+`bin/meta-notes` performs the plugin's file operations (`move`, `rename`,
+`archive`) and task query (`tasks`) outside Vim, for shells, agents, and other
+tools. The Vim commands call it. Every command accepts `--json`. It needs
+Python 3.10 or newer as `python3`. See `:help meta-notes-cli`.
+
+```bash
+bin/meta-notes archive 'project/2024-*'
+bin/meta-notes move project/foo area/foo --json
+bin/meta-notes tasks --folder project --status all
+```
 
 ## Key Mappings
 
