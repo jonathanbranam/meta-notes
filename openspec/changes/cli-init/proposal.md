@@ -22,22 +22,18 @@ dependency is met.
 
 ## What Changes
 
-- Add `meta-notes init [<dir>] [--force]`, which creates the PPARA folders
-  and templates the way `:MetaNotesInit` does today. It is meant to be run in
-  the top-level directory of the notes root, usually right after `git init`
-  (`meta-notes init .`).
+- Add `meta-notes init [--root <dir>] [--force]`, which creates the PPARA
+  folders and templates the way `:MetaNotesInit` does today. It is meant to
+  be run in the top-level directory of the notes root, usually right after
+  `git init`.
 - `init` creates a sentinel file, `.meta-notes`, at the top of the notes
   root. Its presence is what marks a directory as a notes root. It is meant to
   be committed with the notes.
-- `init` never searches for a notes root. It initializes the directory it is
-  given:
-  - `<dir>`, resolved against the current directory, when given. If it
-    doesn't exist, it is created, including parents.
-  - otherwise `--root`, when given (this is what Vim passes)
-  - otherwise the current directory
-- Giving `init` both `<dir>` and `--root` is an error. `META_NOTES_ROOT` is
-  ignored, because it names an existing root to operate on, not where to
-  create one.
+- `init` doesn't search for where to initialize. It initializes `--root` when
+  given (this is what Vim passes), otherwise the current directory. Unlike
+  other commands, `init` creates the `--root` directory, including parents,
+  if it doesn't exist. `META_NOTES_ROOT` is ignored, because it names an
+  existing root to operate on, not where to create one.
 - Other commands find the notes root by the sentinel instead of by folder
   names. When neither `--root` nor `META_NOTES_ROOT` is given, they search
   upward from the current directory for the nearest directory containing
