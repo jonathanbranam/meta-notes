@@ -277,17 +277,28 @@ planning and project review leave it to this skill.
 Cleans up dead and dormant projects. One project per session. See
 `skills/project-review/SKILL.md`.
 
-- With no argument, it picks the project with the oldest (or missing)
-  `#review`. The first pass works through the whole backlog; after that it
-  runs monthly.
-- It shows the files and the project tasks, open and completed. It gives
-  the project state in about ten lines.
+- With no argument, it picks from `meta-notes projects` the project with
+  the oldest (or missing) `#review`, skipping `done` projects and ones
+  with a `#review` scheduled after today. It never lists the others. The
+  first pass works through the whole backlog; after that it runs monthly.
+- It reads the project with `meta-notes project brief`, shows the files
+  and the project tasks, open and completed, and gives the project state
+  in about ten lines.
 - It asks for a disposition: continue, pause, done, convert to area, split,
-  or merge.
-- It asks for a next action, applies the edits, and adds
-  `- [x] project #review 📅 ✅ <today>` to the home note.
-  Stopping early saves partial progress. Task-by-task cleanup is left to
-  task cleanup.
+  or merge. Pause and done set `status`; pause offers a dated `#review`
+  for when to reconsider, and done offers `meta-notes archive`. Convert
+  is a `meta-notes move` to `area/`; split and merge carry tasks forward
+  and use `note new` and `move`. Every structural command waits for
+  confirmation.
+- It asks for a next action only when the project stays active and has
+  no open `#next`.
+- It records the review in the home note before any `archive` or `move`:
+  it checks off an open `#review` that is undated or due, or adds
+  `- [ ] project #review 📅` and checks it off, giving
+  `- [x] project #review 📅 ✅ <today>`. Later `#review` tasks stay open.
+- Stopping early records the review anyway and adds
+  `- [ ] Finish project review #review 📅 <next workday>`. Task-by-task
+  cleanup is left to task cleanup.
 
 ## Skills
 

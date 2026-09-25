@@ -1,130 +1,157 @@
 ---
 name: project-review
-description: Review ONE meta-notes project in 5–10 minutes. Use when the user asks to review a project, reconcile projects, or says "next project" or "review <project>". Never review more than one project per invocation. Stale tasks across all notes are task-cleanup, not this skill.
+description: Review ONE meta-notes project in 5–10 minutes, monthly, to decide whether it continues, pauses, is done, or becomes an area. Use when the user asks to review a project, says "project review", "next project", or "review <project>". Never reviews more than one project per run. It doesn't clean up stale or overdue tasks (task-cleanup) or plan a day or week.
 ---
 
 # Project Review
 
-Reconcile a single project so its state is current enough to plan against.
-The user usually has 5–10 minutes between meetings. Respect that: be brief,
-ask one thing at a time, and save progress whenever the user stops.
+Decide what happens to one project and record that it was reviewed. The
+user usually has 5–10 minutes between meetings: be brief, ask one thing
+at a time, and save what's decided if the user stops.
 
-This draft uses the tools that exist today (the `meta-notes` CLI, git,
-grep). `meta-notes` is on `PATH`; run it from anywhere in the notes root.
-When `meta-notes project brief` lands, replace step 2 with that command.
+## Time budget
+
+5–10 minutes for one project. Say so in one line when you start.
+
+## Start
+
+1. Run `command -v meta-notes`. If it prints nothing, stop and tell the
+   user: "`meta-notes` isn't on your PATH. Link the plugin's
+   `bin/meta-notes` into a directory on your PATH, for example
+   `ln -s <plugin>/bin/meta-notes ~/bin/meta-notes`." Don't read or edit
+   any note.
+2. Run `meta-notes conventions` and follow it for everything below.
 
 ## Hard rules
 
-- One project per invocation. Never list or propose other projects to review.
-- Never edit a file without the user's decision for that item.
-- If the user says stop, go to step 8 immediately.
-- Move, rename, or archive only with `meta-notes move`, `rename`, or
-  `archive`, which update links, and only after the user confirms that
-  exact command. Never use `mv` or `git mv`.
-- Keep task lines within 80 columns.
-
-## Syntax reference
-
-- Task: a checklist line with `📅` (dated or bare) or `🛫 YYYY-MM-DD`
-- Status: space open, `x` done, `>` rescheduled, `-` canceled; `.`, `o`, `O`
-  partial
-- Completion: `✅ YYYY-MM-DD`; `meta-notes task update --status x` adds it
-  when needed and removes it for any other status
-- `#later`: someday/maybe, excluded from active lists
-- `#next`: the project's next action
-- Links: `[[path/without/extension]]`, relative to the notes root
+- One project per run. Never list or propose other projects to review.
+- Don't walk through the project's old tasks one by one. That is
+  `task-cleanup`; suggest it if the open list is long and stale.
+- Change existing task lines only with `meta-notes task update`, with
+  `file`, `line`, and `text` from `meta-notes project brief --json`. If
+  it says the line changed, re-run the brief and retry, or ask. Never
+  rewrite a task line by hand.
+- Set fields (`status`) and add new lines by editing the home note
+  directly, tags before date markers, lines within 80 columns.
+- Run `meta-notes archive`, `move`, and `note new` only after the user
+  confirms the exact command, and only in step 6, after the review is
+  recorded. Never use `mv` or `git mv`.
+- Don't read git history, `git blame`, or file modification times. The
+  brief's `latest_date` and task dates are the signal of activity.
+- If the user says stop, go to "Stopping early".
 
 ## Steps
 
 ### 1. Pick the project
 
-If the user named one, use it. Otherwise choose the project in `project/`
-whose index note has the oldest `reviewed:` frontmatter date, treating a
-missing date as oldest. For a folder project the index note is `index.md`,
-or the note named after the folder if there's no `index.md`. State which
-project you picked in one line.
+If the user named one, use it, whatever its status.
 
-### 2. Gather (quietly, with commands, not by reading every file)
+Otherwise run `meta-notes projects --json`. Leave out projects with
+status `done`. Pick the one with `last_review` null; if none, the oldest
+`last_review`; ties go to the first in the list. Run step 2's brief on
+it: if `scheduled_reviews` has a task due after today, the user asked to
+wait, so pass over it and take the next candidate. Say which project
+you're reviewing in one line. Don't show the list.
 
-- Files: `git ls-files project/<name>` and sizes.
-- Last meaningful change per file:
-  `git log -1 --format=%as --follow -- <file>`. Uncommitted changes count
-  as today (`git status --porcelain`).
-- Open tasks inside:
-  `meta-notes tasks --folder project/<name> --json`
-- Open tasks elsewhere: grep for `[[project/<name>` and for the project's
-  `tag:` (if set), limited to checklist lines. `meta-notes tasks` has no
-  tag filter yet.
-- Task age: `git blame --porcelain` on files with open tasks. The author
-  date of a task's line is its last-edited date.
-- Time data: the most recent daily note mentioning the tag or link.
+### 2. Gather
 
-Read the index note. Open other files only if the index doesn't explain the
+```sh
+meta-notes project brief <path> --json
+```
+
+The result is under `project`: `home`, `status`, `tag`, `fields`,
+`latest_date`, `last_review`, `has_next`, `warnings`, `files`, `open`,
+`later`, `deadlines`, `scheduled_reviews`, `completed` (the last 90 days,
+`--since <YYYY-MM-DD>` for more), and `completed_total`. Read the home
+note. Open other files only if the home note doesn't explain the
 project.
 
 ### 3. State (about ten lines)
 
-- What the project is, in one sentence (the `outcome:` if present)
-- Status, deadline, and `revisit:` if present
-- Last meaningful change and last logged time
-- Open tasks: count inside, count elsewhere, count older than 30 days
+Show the files and the tasks, open and completed, then:
+
+- What the project is, in one sentence
+- Status, tag, deadlines, and scheduled reviews
+- Latest date and last review (or never)
+- Open tasks, `#later` tasks, and completed (listed of total)
 - Whether there's an open `#next`
-- Anything that looks off (deadline passed, no activity in months)
+- Anything that looks off: a deadline passed, no activity in months, a
+  `no-home-note` warning
+
+Ignore warnings on a project in `archive/project/`.
 
 ### 4. Disposition
 
 Ask the user to choose one:
 
-- **Continue**: still active
-- **Pause**: set `status: paused`, optionally with `revisit:`
-- **Done**: set `status: done`; archive later
-- **Convert to area**: it has become an ongoing responsibility
-- **Split or merge**: parts belong in other projects
+- **Continue**: still active. No field change.
+- **Pause**: set `status: paused`. Offer to add
+  `- [ ] Reconsider project #review 📅 <YYYY-MM-DD>` for when to look
+  again; selection skips the project until then.
+- **Done**: set `status: done`. Offer `meta-notes archive <path>` for
+  step 6. If the user declines, it stays in `project/`; selection skips
+  `done` projects.
+- **Convert to area**: it has become an ongoing responsibility. Offer
+  `meta-notes move <path> area/<name>` for step 6.
+- **Split**: part of it is its own project. Offer
+  `meta-notes note new project/<name>` for the new home note (add a title
+  and `- status: active` if the note lacks them), and carry the tasks
+  that belong there (step 5).
+- **Merge**: it belongs in another project. Carry its tasks to that
+  project's home note (step 5), and offer
+  `meta-notes move <path> <other-project>/<name>` or
+  `meta-notes archive <path>` for what's left.
 
-For anything other than continue or pause, go to step 6 afterwards and keep
-the task walk short.
+Set fields by editing the field list in the home note: replace the
+`- status:` item, or add one after the title if there's no field list.
 
-### 5. Stale tasks
+### 5. Next action and carried tasks
 
-Present open tasks oldest first, in batches of up to 8, one line each with
-its age. For each batch, offer: keep, date it, `#later`, cancel, or done.
-Offer "cancel all" or "later all" for a batch when most are very old. Stop
-the walk when the user signals time is short.
+- If the project stays active (continue, split, or the kept side of a
+  merge) and `has_next` is false, ask for one concrete next action and
+  write `- [ ] <action> #next 📅 [<YYYY-MM-DD>]` in the home note. If the
+  user doesn't want one, accept that. Don't ask for paused, done, or
+  converted projects.
+- For each task carried to another project, write the copy in the
+  target note, then mark the original
+  `meta-notes task update <file>:<line> --expect '<text>' --status '>'`.
+  Don't change the original's dates.
 
-### 6. Next action and capture
+### 6. Record, then restructure
 
-- If there's no open `#next`, ask for one concrete next action. If the user
-  doesn't want one, accept that; it's a warning, not a rule.
-- Ask once: "Anything else you owe, are waiting on, or need to do here?"
-  Capture answers as task lines.
+Record the review in the home note before any `archive` or `move`:
 
-### 7. Apply
+1. In the brief's `open`, find `#review` tasks in the home note that are
+   undated or due on or before today. Check off the earliest:
+   `meta-notes task update <file>:<line> --expect '<text>' --status x`.
+   Leave `#review` tasks due after today open.
+2. If there's none, add `- [ ] project #review 📅` to the home note,
+   under its other `#review` lines, or after the field list if it has
+   none. Re-run `meta-notes project brief <path> --json`,
+   find that line in `open`, and check it off the same way. The result
+   is `- [x] project #review 📅 ✅ <today>`.
 
-- Edit existing task lines only with `meta-notes task update`, one call per
-  line, never by rewriting the line yourself. Take `file`, `line`, and
-  `text` from `meta-notes tasks --json` (or from `grep -n` for tasks found
-  elsewhere) and pass `text` as `--expect`:
-  `meta-notes task update <file>:<line> --expect '<text>' <options>`.
-  Combine options in one call: `--status x` (done; the ✅ date is handled),
-  `--status -` (cancel), `--add-tag later`, `--remove-tag later`,
-  `--add-tag next`, `--due <date>`, `--due undated`, `--start <date>`.
-  Line numbers stay valid across updates, so several edits can use one
-  query. If a call fails because the line changed, re-run the query and
-  use the current `text`; never retry with a guessed line.
-- New tasks go in the project's index note unless the user says otherwise.
-- Frontmatter: set whatever changed (`status`, `revisit`, `outcome`) and
-  stamp `reviewed: <today>`. Add frontmatter if the note has none.
-- Structural changes (archive, convert to area, split): offer to run the
-  command now, for example `meta-notes move project/x area/x` or
-  `meta-notes archive project/x`. If the user would rather wait, add a task
-  to the index note instead, for example
-  `- [ ] Convert to area: meta-notes move project/x area/x #next 📅 <date>`.
-  Run structural commands last, after the other edits in this step.
+If a folder project has no home note, offer to create `<path>Home.md`
+with a `# <Title>` line and a field list (`- status: <status>`, and
+`- tag:` if the user gives one), then record there. If the user
+declines, say the review wasn't recorded.
 
-### 8. Close
+Then show each structural command offered in step 4 and run it after
+the user confirms it. `archive` sets `status: archived` and the
+`archived` date itself. If the user would rather wait, add a task to the
+home note instead, for example
+`- [ ] Convert to area: meta-notes move <path> area/<name> #next 📅`.
 
-Summarize in three lines: disposition, tasks changed, next action. If the
-user stopped early, stamp `reviewed:` anyway and add `- [ ] Finish project
-review 📅 <today+1>` to the index note, so it comes up next time.
+### 7. Close
 
-Don't commit. Commits happen at shutdown.
+Summarize in three lines: disposition, tasks changed, next action.
+Don't commit; commits happen at shutdown.
+
+## Stopping early
+
+When the user says stop: apply what's decided (fields and task updates),
+record the review as in step 6, and add
+`- [ ] Finish project review #review 📅 <next workday>` to the home note
+(Monday to Friday; on Friday 2026-09-25, `📅 2026-09-28`). Skip
+structural commands not yet confirmed. List what was left undone and end
+without further questions.
