@@ -71,7 +71,9 @@ Age comes from dates already written in the notes, not from git history
 or file mtimes. A stale task has an old due date or sits in a note whose
 dates are all old; abandoned tasks and projects are months or years stale,
 so this is enough. A `git blame` last-edited date (`task-age`) is deferred.
-No created-date syntax is needed.
+No created-date syntax is needed. The one use of git history is the weekly
+review's list of changed notes (`meta-notes changes`), which finds work,
+not stale tasks.
 
 ### Commitments
 
@@ -233,6 +235,10 @@ which is rare, isn't reviewed. The agent drafts it from:
 - tasks completed this week (✅ dates)
 - the week's time report
 - daily notes and their Follow up lists
+- notes changed this week, from `meta-notes changes --date MON..FRI`,
+  skipping rename-only moves and the daily and weekly plan notes; these
+  prompt questions about work the other inputs missed, with no matching
+  against tasks or time entries
 
 Then:
 
@@ -347,6 +353,9 @@ Specified across several openspec changes, in this order:
   `meta-notes projects` (status, latest date, last review, and the
   `no-home-note`, `no-next`, `no-recent-activity`, and `review-overdue`
   warnings, with a 30-day threshold)
+- `weekly-review-changes`: `meta-notes changes [--date PERIOD]`, the
+  notes changed in a period from git history and uncommitted changes,
+  as an input to the weekly review
 
 The Vim plugin becomes a thin caller. Read-only task buffers gain mappings
 that edit the source line through `task update`.

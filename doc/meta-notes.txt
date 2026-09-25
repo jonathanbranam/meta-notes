@@ -785,6 +785,55 @@ Commands ~
     `by_tag`, and `days` (`[{date, weekday, logged, work_minutes,
     earliest, latest, span_minutes}]`).
 
+`meta-notes changes [--date {period}]`          *meta-notes-cli-changes*
+    List the notes changed in a period, from the notes root's git
+    history and working tree. `--date` takes the forms in
+    |meta-notes-date|; the default is today. A note is a `.md` file at
+    any depth under `plan/`, `project/`, `area/`, `resource/`, or
+    `archive/`; other files aren't listed. Notes under `archive/` are
+    listed like any other, since a note may be worked on and archived in
+    the same week.
+
+    A commit counts when its author date, in the timezone recorded with
+    it, falls in the period. Merge commits are skipped. When the period
+    includes today, uncommitted changes count too: staged, unstaged, and
+    untracked (but not ignored) files.
+
+    Each note has one entry, under its path at the end of the period,
+    combining all its changes. Its kind is `deleted` if it no longer
+    exists, else `added` if it didn't exist at the start of the period,
+    else `renamed` if its path changed, else `modified`. A move with no
+    content change, such as `meta-notes archive` without link edits,
+    is marked rename only. Renames are detected as git detects them by
+    default; a move combined with a large edit shows as a deleted note
+    and an added one.
+
+    One line per entry: the kind's first letter, lines added and removed,
+    the path, the old path for a rename, and `(rename only)`: >
+        M   +5  -1  area/health.md
+        R   +0  -0  archive/project/trip.md  <- project/trip.md  (rename only)
+        A  +12  -0  resource/sourdough.md
+<   A period with no changes prints nothing.
+
+    Example: >
+        meta-notes changes
+        meta-notes changes --date 2026-09-21..2026-09-25 --json
+<
+    With `--json`, the object has `start`, `end`, and `changes`, a list
+    sorted by path of:
+
+        path                the note, relative to the notes root
+        kind                `added`, `modified`, `renamed`, or `deleted`
+        old_path            the path at the start of the period for
+                            `renamed`, else null
+        added, removed      lines added and removed in the period
+        rename_only         true when every change was a rename with no
+                            lines added or removed
+
+    Read-only: it writes no file and doesn't touch the git index. It
+    fails if `git` isn't available, the notes root isn't a git
+    repository, or the notes root isn't the top level of its repository.
+
 `meta-notes conventions`                        *meta-notes-cli-conventions*
     Print, as markdown, the note syntax and editing rules the shipped
     skills follow (|meta-notes-skills|): the task model, status

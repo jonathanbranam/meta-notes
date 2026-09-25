@@ -82,6 +82,7 @@ meta-notes/
 │   │   ├── __main__.py          # Entry point (Python version check)
 │   │   ├── brief.py             # Project brief
 │   │   ├── ceremony.py          # Ceremony status
+│   │   ├── changes.py           # Notes changed in a period, from git
 │   │   ├── cli.py               # Subcommands, root resolution, output
 │   │   ├── conventions.md       # Conventions text for skills
 │   │   ├── conventions.py       # Conventions, generated parts filled in
@@ -108,6 +109,7 @@ meta-notes/
 │   ├── unit/                # Python unit tests
 │   │   ├── test_brief.py
 │   │   ├── test_ceremony.py
+│   │   ├── test_changes.py
 │   │   ├── test_cli.py
 │   │   ├── test_conventions.py
 │   │   ├── test_find_tasks.py
@@ -165,7 +167,8 @@ This structure is compatible with vim-plug, Vundle, and Pathogen.
 
 `bin/meta-notes` performs the plugin's setup (`init`), note creation from
 templates (`note`), file operations (`move`, `rename`, `archive`), task
-query (`tasks`), task edits (`task update`), time reports (`time`), the
+query (`tasks`), task edits (`task update`), time reports (`time`), changed
+notes (`changes`), the
 project list (`projects`), ceremony status (`ceremony status`), and the
 skills' shared conventions (`conventions`) outside Vim, for shells, agents, and other tools. The Vim
 commands call it. Every command accepts `--json`. It needs Python 3.10 or newer as `python3`. See
@@ -200,6 +203,7 @@ meta-notes tasks --scheduled --date 2026-11 --group-by tag
 meta-notes task update project/foo.md:3 --expect '- [ ] call Sam 📅 2026-09-22' --status x
 meta-notes time                           # today's time report
 meta-notes time --date 2026-09 --json     # a month's time summary
+meta-notes changes --date 2026-09-21..2026-09-25  # notes changed this week
 meta-notes projects --warnings            # stalled or unreviewed projects
 meta-notes project brief project/kitchen/  # one project's files, tasks, dates
 meta-notes ceremony status --date 2026-09-25

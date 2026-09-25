@@ -30,7 +30,8 @@ you start. Each step below can stand alone if the user has less time.
   `file`, `line`, and `text` from `meta-notes tasks --json`. If it says
   the line changed, re-query and retry, or ask. Never rewrite by hand.
 - The summary has no plan for next week. That is `weekly-plan`.
-- Don't read git history or file modification times.
+- Read git history only through `meta-notes changes`; don't run `git` or
+  read file modification times.
 - If the user says stop, go to "Stopping early".
 
 ## Steps
@@ -48,12 +49,22 @@ For a review on Friday 2026-09-25, MON..FRI is 2026-09-21..2026-09-25.
   `## Follow Up` list and `## Notes` headings, not whole folders.
 - The week's plan: the `## Plan` section of this week's weekly note (the
   `weekly-plan` entry's `note`), if any.
+- Changed notes: `meta-notes changes --date MON..FRI --json`. Skip
+  entries with `rename_only` true and notes under `plan/daily/` and
+  `plan/week/` (read above). The rest are prompts for work the other
+  inputs missed. If the command fails, say so in one line and continue
+  without it.
 
 ### 2. Plan versus actual
 
 In a few lines: the week's planned priorities and what happened to each,
 the biggest unplanned time sinks (from per-tag time), and skipped
 shutdowns or plans. Ask the user to correct anything.
+
+Then, in one batch, list the changed notes the other inputs don't already
+account for and ask which were real work worth a line in the summary.
+Don't match them against tasks or time entries; judge from what you've
+read, and ask when unsure.
 
 ### 3. Commitments
 
@@ -98,8 +109,9 @@ missing), in two parts and nothing else:
 - <YYYY-MM-DD>: <important date or deadline>
 ```
 
-Draft "This week" from completed tasks, time, and notes, grouped by
-project or theme, 3–7 bullets. Draft "Coming up" from
+Draft "This week" from completed tasks, time, notes, and the changed
+notes the user kept, grouped by project or theme, 3–7 bullets. Draft
+"Coming up" from
 `meta-notes tasks --tag deadline --all --json` and dated tasks due in the
 next few weeks that others care about. Show the draft, apply the user's
 edits, then write it.

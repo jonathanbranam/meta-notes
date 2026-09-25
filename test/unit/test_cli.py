@@ -7,6 +7,7 @@ Tests notes root resolution and output conventions.
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from datetime import date
@@ -1056,3 +1057,74 @@ def test_project_brief_task_line_usable_by_task_update(notes_root, capsys):
 
     assert code == 0
     assert result['new'] == '- [x] buy flour 📅 2026-09-26'
+
+
+# Tests for the changes command
+
+def git_in(root, *args, env=None):
+    """Run git in root as a test user."""
+    subprocess.run(['git', '-C', str(root), '-c', 'user.name=Test',
+                    '-c', 'user.email=test@example.com', *args],
+                   capture_output=True, check=True,
+                   env=os.environ | (env or {}))
+
+
+@pytest.fixture
+def notes_repo(notes_root, monkeypatch):
+    """The notes root as a git repository with a commit on 2026-09-18."""
+    if shutil.which('git') is None:
+        pytest.skip('git is not installed')
+    for key in ('GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE'):
+        monkeypatch.delenv(key, raising=False)
+    git_in(notes_root, 'init', '-q')
+    (notes_root / 'area' / 'health.md').write_text('a\nb\n')
+    commit_all(notes_root, '2026-09-18T10:00:00-07:00')
+    return notes_root
+
+
+def commit_all(root, when):
+    git_in(root, 'add', '-A')
+    git_in(root, 'commit', '-q', '-m', when,
+           env={'GIT_AUTHOR_DATE': when, 'GIT_COMMITTER_DATE': when})
+
+
+def test_changes_default_period_is_today(notes_repo, capsys):
+    (notes_repo / 'area' / 'health.md').write_text('a\nb\nc\n')
+
+    code, data, _ = run_json(capsys, ['changes'])
+
+    assert code == 0
+    assert data['start'] == data['end'] == date.today().isoformat()
+    assert [c['path'] for c in data['changes']] == ['area/health.md']
+
+
+def test_changes_json_output(notes_repo, capsys):
+    (notes_repo / 'area' / 'health.md').write_text('a\n1\n2\n3\n4\n5\n')
+    commit_all(notes_repo, '2026-09-23T10:00:00-07:00')
+
+    code, data, err = run_json(
+        capsys, ['changes', '--date', '2026-09-21..2026-09-25'])
+
+    assert code == 0
+    assert err == ''
+    assert data == {'ok': True, 'start': '2026-09-21', 'end': '2026-09-25',
+                    'changes': [{'path': 'area/health.md', 'kind': 'modified',
+                                 'old_path': None, 'added': 5, 'removed': 1,
+                                 'rename_only': False}],
+                    'warnings': []}
+
+
+def test_changes_text_nothing_changed(notes_repo, capsys):
+    code = cli.main(['changes', '--date', '2026-09-21..2026-09-25'])
+
+    assert code == 0
+    assert capsys.readouterr().out == ''
+
+
+def test_changes_json_not_a_git_repository(notes_root, capsys):
+    code, data, err = run_json(capsys, ['changes'])
+
+    assert code == 1
+    assert data['ok'] is False
+    assert 'not a git repository' in data['error']
+    assert err == ''

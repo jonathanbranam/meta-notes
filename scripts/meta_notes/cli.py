@@ -21,8 +21,8 @@ from datetime import date
 import find_tasks
 import tasks as task_model
 from tags import canonical_tag
-from meta_notes import (__version__, brief, ceremony, conventions, init, note,
-                        ops, projects, query, task_update, time)
+from meta_notes import (__version__, brief, ceremony, changes, conventions,
+                        init, note, ops, projects, query, task_update, time)
 from meta_notes.root import SENTINEL, find_root
 
 
@@ -200,6 +200,14 @@ def cmd_time(args, root: str) -> Output:
     except ValueError as e:
         raise CliError(str(e))
     return Output(data | {"report": "\n".join(lines)}, lines)
+
+
+def cmd_changes(args, root: str) -> Output:
+    try:
+        lines, data = changes.run(".", args.date)
+    except ValueError as e:
+        raise CliError(str(e))
+    return Output(data, lines)
 
 
 def cmd_note(args, root: str) -> Output:
@@ -474,6 +482,14 @@ def build_parser() -> argparse.ArgumentParser:
                         "YYYY-MM, YYYY-Qn, or YYYY for a period report "
                         "(default: today)")
     p.set_defaults(handler=cmd_time)
+
+    p = sub.add_parser("changes", parents=[common],
+                       help="list notes changed in a period, from git history "
+                            "and uncommitted changes")
+    p.add_argument("--date", metavar="PERIOD",
+                   help="YYYY-MM-DD, YYYY-MM-DD..YYYY-MM-DD, YYYY-MM, YYYY-Qn, "
+                        "or YYYY (default: today)")
+    p.set_defaults(handler=cmd_changes)
 
     p = sub.add_parser("note", parents=[common],
                        help="create a note from its template, unless it exists; "

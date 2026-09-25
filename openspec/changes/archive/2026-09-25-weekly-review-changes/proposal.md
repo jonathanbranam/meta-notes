@@ -6,9 +6,15 @@ meeting's notes, a resource page cleaned up. The notes root is a git repo
 committed daily, so the files I changed in a week are already recorded.
 Listing them gives the review a second source for "what I did this week".
 
+The skills were written not to read git history or file modification
+times. This change lifts that rule for `weekly-review` alone, and only
+through `meta-notes changes`: the command lists files, it doesn't judge
+tasks as stale, and it only feeds a draft the user checks. The other
+skills keep the rule.
+
 ## Dependencies
 
-- **`planning-skills`**: the `weekly-review` skill this change augments.
+- **`planning-skills`** (archived): the `weekly-review` skill this change augments.
 - **`date-period`** (archived): the shared `--date` syntax.
 
 ## What Changes
@@ -23,15 +29,23 @@ Listing them gives the review a second source for "what I did this week".
     (added, modified, deleted, renamed), lines added and removed, and its
     old path for a rename
   - rename-only changes (a move with no content change, such as an
-    archive) marked so they can be ignored
+    archive) marked so they can be ignored; git's default rename
+    detection is enough
+  - notes under `archive/` count, since a note may be worked on and
+    archived in the same week
+- The notes root is the git repository's top level. A commit's day is its
+  author date in its own timezone.
 - Read-only: no git writes, no index changes. Outside a git repo the
   command fails with a clear error.
 - `weekly-review` runs `meta-notes changes --date <Monday>..<Friday>` for
   the workweek it reviews (weekend work isn't covered) and uses it
   to augment the summary. It skips rename-only entries and daily and weekly
-  plan notes (already read directly). It asks about changed files that no
-  completed task or time-log entry explains. If the command fails, the
-  review continues without it.
+  plan notes (already read directly). It uses the remaining files as
+  prompts for work the other inputs missed, with no matching against
+  tasks or time entries, and asks the user about any it can't place. Its
+  "Don't read git history" rule becomes "Read git history only through
+  `meta-notes changes`". If the command fails, the review continues
+  without it.
 
 ## Capabilities
 
