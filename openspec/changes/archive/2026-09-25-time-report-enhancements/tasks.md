@@ -31,4 +31,4 @@
 
 - [x] 6.1 Update `doc/meta-notes.txt` (`:MetaNotesTimeReport`, a `meta-notes time` entry under the CLI section, and the new report sections, including the Mon–Sun week summary replacing `hours worked` / `Weekly total worked`) and the README command-line examples; verify `:helptags doc` reports no errors and the new tags resolve
 - [x] 6.2 Run the full suites, `pipenv run pytest test/unit/` and `./run_tests.sh`, and verify both pass;
-- [ ] 6.3 When archiving, bump the MINOR version in `scripts/meta_notes/__init__.py`, tag `v<version>`, and push the tag; verify `meta-notes --version` shows the new version
+- [x] 6.3 When archiving, bump the MINOR version in `scripts/meta_notes/__init__.py`, tag `v<version>`, and push the tag; verify `meta-notes --version` shows the new version
