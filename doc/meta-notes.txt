@@ -370,9 +370,11 @@ plugin's |:MetaNotesArchive|, |:MetaNotesRename|, and |:MetaNotesMoveItem|
 commands call it, and |:MetaNotesInit| calls `meta-notes init`. It needs
 Python 3.10 or newer as `python3` on your `PATH`.
 
-To put it on your `PATH`, link it: >
+Put it on your `PATH`; the Claude Code skills call it by name. Link it into
+any directory on your `PATH`: >
     ln -s /path/to/meta-notes/bin/meta-notes ~/bin/meta-notes
-<
+<The script follows the link back to the plugin, so the link keeps working
+when a plugin manager updates the plugin.
 Commands ~
                                                 *meta-notes-cli-commands*
 `meta-notes init [--root {dir}] [--force]`      *meta-notes-cli-init*
@@ -392,6 +394,9 @@ Commands ~
 
     Notes roots never nest: init fails if a directory above the target is a
     notes root (found the same way as |meta-notes-cli-root|).
+
+    The skills call `meta-notes` by name, so init warns, with the `ln -s`
+    command to fix it, when no `meta-notes` is on your `PATH`.
 
 `meta-notes move {source} {dest}`
     Same as |:MetaNotesMoveItem|.

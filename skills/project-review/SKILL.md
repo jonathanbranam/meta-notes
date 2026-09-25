@@ -9,17 +9,19 @@ Reconcile a single project so its state is current enough to plan against.
 The user usually has 5–10 minutes between meetings. Respect that: be brief,
 ask one thing at a time, and save progress whenever the user stops.
 
-This draft uses the tools that exist today (`scripts/find_tasks.py`, git,
-grep). When `meta-notes project brief` and `meta-notes task update` land,
-replace steps 2 and 7 with those commands.
+This draft uses the tools that exist today (the `meta-notes` CLI, git,
+grep). `meta-notes` is on `PATH`; run it from anywhere in the notes root.
+When `meta-notes project brief` and `meta-notes task update` land, replace
+steps 2 and 7 with those commands.
 
 ## Hard rules
 
 - One project per invocation. Never list or propose other projects to review.
 - Never edit a file without the user's decision for that item.
 - If the user says stop, go to step 8 immediately.
-- Don't move, rename, or archive files yet. Those operations only exist in
-  Vim until the CLI lands. Record them as a task instead (step 7).
+- Move, rename, or archive only with `meta-notes move`, `rename`, or
+  `archive`, which update links, and only after the user confirms that
+  exact command. Never use `mv` or `git mv`.
 - Keep task lines within 80 columns.
 
 ## Syntax reference
@@ -49,10 +51,10 @@ project you picked in one line.
   `git log -1 --format=%as --follow -- <file>`. Uncommitted changes count
   as today (`git status --porcelain`).
 - Open tasks inside:
-  `python3 <plugin>/scripts/find_tasks.py --folder project/<name> --status incomplete`
+  `meta-notes tasks --folder project/<name> --json`
 - Open tasks elsewhere: grep for `[[project/<name>` and for the project's
-  `tag:` (if set), limited to checklist lines. Use the tag filter in
-  find_tasks.py if this copy has it.
+  `tag:` (if set), limited to checklist lines. `meta-notes tasks` has no
+  tag filter yet.
 - Task age: `git blame --porcelain` on files with open tasks. The author
   date of a task's line is its last-edited date.
 - Time data: the most recent daily note mentioning the tag or link.
@@ -102,9 +104,12 @@ the walk when the user signals time is short.
 - New tasks go in the project's index note unless the user says otherwise.
 - Frontmatter: set whatever changed (`status`, `revisit`, `outcome`) and
   stamp `reviewed: <today>`. Add frontmatter if the note has none.
-- Structural changes (archive, convert to area, split): add a task to the
-  index note, for example
+- Structural changes (archive, convert to area, split): offer to run the
+  command now, for example `meta-notes move project/x area/x` or
+  `meta-notes archive project/x`. If the user would rather wait, add a task
+  to the index note instead, for example
   `- [ ] Convert to area: meta-notes move project/x area/x 📆 <date> #next`.
+  Run structural commands last, after the other edits in this step.
 
 ### 8. Close
 

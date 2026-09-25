@@ -33,3 +33,8 @@
 
 - [x] 6.1 Run the full suite (`./run_tests.sh` and `pipenv run pytest test/unit/`); all must pass
 - [x] 6.2 Manual check: `git init` a temp directory, run `bin/meta-notes init`, then `bin/meta-notes tasks` from its `project/` subfolder without `--root` finds the root; run `bin/meta-notes init` from that subfolder and confirm it refuses
+
+## 7. CLI on PATH
+
+- [x] 7.1 Warn from `init` when no `meta-notes` is on `PATH`, giving the `ln -s` command with the plugin's absolute `bin/meta-notes`; document it in `doc/meta-notes.txt` and the README; verify with the tests for the new requirement in `specs/init/spec.md`
+- [x] 7.2 Switch `skills/project-review` from `scripts/find_tasks.py` to `meta-notes tasks`, and allow `meta-notes move`, `rename`, and `archive` after the user confirms; verify `grep -n find_tasks skills/` finds nothing

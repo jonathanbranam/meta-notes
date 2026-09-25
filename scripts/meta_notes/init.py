@@ -15,6 +15,7 @@ from pathlib import Path
 from meta_notes.root import SENTINEL, find_root
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[2]
+CLI_PATH = PLUGIN_ROOT / "bin" / "meta-notes"
 TEMPLATES_DIR = PLUGIN_ROOT / "templates"
 SKILLS_DIR = PLUGIN_ROOT / "skills"
 
@@ -117,6 +118,11 @@ def _install_skill(name: str, force: bool, result: InitResult) -> None:
         result.items.append(Item("skill", path, "created"))
 
 
+def cli_on_path() -> bool:
+    """Whether a `meta-notes` command is on PATH, where skills call it."""
+    return shutil.which("meta-notes") is not None
+
+
 def init(target: str, force: bool = False, home: str | None = None) -> InitResult:
     """
     Initialize target as a notes root.
@@ -172,5 +178,11 @@ def init(target: str, force: bool = False, home: str | None = None) -> InitResul
     except OSError as e:
         where = f": {e.filename}" if e.filename else ""
         raise InitError(f"{e.strerror or e}{where}")
+
+    if not cli_on_path():
+        result.warnings.append(
+            "meta-notes is not on PATH, and the skills call it; link it into "
+            f"a directory on PATH, for example: ln -s {CLI_PATH} "
+            "~/bin/meta-notes")
 
     return result

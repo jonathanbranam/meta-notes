@@ -21,13 +21,17 @@ from meta_notes import cli, init
 FIXTURES = repo_dir / 'test' / 'fixtures' / 'init_templates'
 TEMPLATE_NAMES = ('daily.md', 'weekly.md', 'quarterly.md', 'yearly.md')
 
+# The env fixture stubs init.cli_on_path; keep the real one for its own test
+REAL_CLI_ON_PATH = init.cli_on_path
+
 
 @pytest.fixture(autouse=True)
 def env(tmp_path, monkeypatch):
-    """Isolate HOME and META_NOTES_ROOT, and restore the cwd init changes."""
+    """Isolate HOME and META_NOTES_ROOT, restore the cwd, and stub the PATH check."""
     monkeypatch.setenv('HOME', str(tmp_path))
     monkeypatch.delenv('META_NOTES_ROOT', raising=False)
     monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(init, 'cli_on_path', lambda: True)
 
 
 @pytest.fixture
@@ -290,6 +294,28 @@ def test_init_skill_force_replaces_real_file(tmp_path, skills):
     init.init(str(tmp_path / 'n'), force=True)
 
     assert (target / 'review').is_symlink()
+
+
+def test_init_warns_when_cli_not_on_path(tmp_path, skills, monkeypatch):
+    """Init succeeds but warns, with the link command, if meta-notes isn't on PATH."""
+    monkeypatch.setattr(init, 'cli_on_path', lambda: False)
+
+    result = init.init(str(tmp_path / 'n'))
+
+    assert len(result.warnings) == 1
+    assert 'not on PATH' in result.warnings[0]
+    assert str(init.CLI_PATH) in result.warnings[0]
+
+
+def test_cli_on_path_finds_command(tmp_path, monkeypatch):
+    """cli_on_path is true only when an executable meta-notes is on PATH."""
+    bin_dir = tmp_path / 'bin'
+    bin_dir.mkdir()
+    monkeypatch.setenv('PATH', str(bin_dir))
+    assert not REAL_CLI_ON_PATH()
+
+    (bin_dir / 'meta-notes').symlink_to(init.CLI_PATH)
+    assert REAL_CLI_ON_PATH()
 
 
 def test_init_shipped_skills_includes_project_review():

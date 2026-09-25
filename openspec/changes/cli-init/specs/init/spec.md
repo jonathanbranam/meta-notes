@@ -98,6 +98,17 @@ Init SHALL NOT remove links for skills the plugin no longer ships.
 - **WHEN** `.claude/skills/project-review` is a real directory and the user runs `meta-notes init --force`
 - **THEN** it SHALL be replaced by a link to the plugin's copy
 
+### Requirement: Init warns when the CLI is not on PATH
+Skills call `meta-notes` by name, so it must be on `PATH`. When no `meta-notes` command is found on `PATH`, `meta-notes init` SHALL still succeed and SHALL report a warning that gives the command to link the plugin's `bin/meta-notes` into a directory on `PATH`.
+
+#### Scenario: CLI not on PATH
+- **WHEN** no `meta-notes` is on `PATH` and the user runs `meta-notes init` by its full path
+- **THEN** the command SHALL succeed and its output SHALL include a warning containing the absolute path of the plugin's `bin/meta-notes`
+
+#### Scenario: CLI on PATH
+- **WHEN** `meta-notes` is on `PATH` and the user runs `meta-notes init` in an empty directory
+- **THEN** its output SHALL include no warnings
+
 ### Requirement: Init reports what it did
 `meta-notes init` SHALL report, for each folder, template, the sentinel, and each skill, whether it was created, already existed, was overwritten, or was skipped. With `--json`, this report SHALL be part of the single JSON object, and skill conflicts left alone SHALL appear in `warnings`.
 

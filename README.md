@@ -145,6 +145,14 @@ shells, agents, and other tools. The Vim commands call it. Every command
 accepts `--json`. It needs Python 3.10 or newer as `python3`. See
 `:help meta-notes-cli`.
 
+Link it into a directory on your `PATH`; the shipped Claude Code skills call
+`meta-notes` by name, and `init` warns if it isn't found. For example, with
+the plugin installed by vim-plug into `~/.vim/bundle`:
+
+```bash
+ln -s ~/.vim/bundle/meta-notes/bin/meta-notes ~/bin/meta-notes
+```
+
 Set up a notes root by running `init` in its top-level directory. It creates
 the PPARA folders, templates, a `.meta-notes` sentinel, and links the shipped
 Claude Code skills into `.claude/skills/`. Re-running is safe.
