@@ -1,50 +1,66 @@
 ## Why
 
-A project review needs a project's full state: what's in it, when it last
-really changed, its open tasks inside and elsewhere, and when time was last
-logged against it. Today the project-review skill gathers this with half a
-dozen commands (`git ls-files`, `git log`, `find_tasks.py`, grep,
-`git blame`, and a daily-note search). That's slow, uses a lot of the
-agent's context, and differs from what the dashboard will need. One command
-returns it all, computed the same way for every caller.
+A project review needs a project's full state: its fields, its files, and
+its tasks, open and completed, inside the project and anywhere else that
+carries its tag. The tasks are the signal of work on the project; there is
+no separate "last touched" date. Today the project-review skill gathers
+this with half a dozen commands (`git ls-files`, `git log`,
+`find_tasks.py`, grep, `git blame`, and a daily-note search). That's slow,
+uses a lot of the agent's context, and differs from what the dashboard
+will need. One command returns it all, computed the same way for every
+caller.
 
 ## Dependencies
 
 **Depends on `cli-core`**, **`find-tasks-enhancements`** (for the task
-model, `#later`, and tag filters), and **`task-age`** (for `last_edited`).
+model, `#later`, and tag filters), and **`planning-skills`**, whose
+`project-list` capability defines a project's tasks, latest date, last
+review, and `no-next` warning for `meta-notes projects`. `project brief`
+reuses those definitions and their code for one project instead of
+restating them. It reads no git history, `git blame`, or file mtimes;
+`task-age` is deferred.
+
+The `project-review` skill revision that calls this command is in
+`project-review-skill`, which depends on this change.
 
 ## What Changes
 
 - Add `meta-notes project brief <path> [--json]` for a note project
   (`project/foo.md`) or a folder project (`project/foo/`).
 - It returns:
-  - **Index note and frontmatter:** for a folder, `index.md`, else the note
-    named after the folder; for a single note, the note itself. Frontmatter
-    is simple `key: value` pairs, with inline `# comments` stripped. It is
-    read-only.
-  - **Files:** each with size and last change date, the most recent commit
-    touching it (following renames), or today if it has uncommitted
-    changes.
-  - **Open tasks inside the project**, each with `last_edited`
-  - **Open tasks elsewhere** that link to `[[<project path>` or carry the
-    frontmatter `tag:`
+  - **Home note and fields:** for a folder, `Home.md`; for a single note,
+    the note itself. The fields are the `key: value` items (`status`,
+    `tag`, `archived`) in the first list after the home note's title.
+    `status` defaults to `active`; a project with no `tag` has no
+    associated tag. See "Project model" in `docs/planning-system.md` and
+    the `project-fields` spec. No frontmatter is read.
+  - **Files:** each with its size
+  - **Project tasks:** every task in the project's note or folder, plus
+    every task anywhere carrying the project's `tag`, open and completed.
+    Completed tasks carry their completion date (✅, or the due date
+    without one). Checklist lines without `📅` or `🛫` are not tasks and
+    are not reported.
+  - **Latest date:** as `project-list` defines it: the latest
+    `YYYY-MM-DD` on or before today in the project's file names, its
+    markdown headings (for example `## Notes 2026-09-25`), and its
+    project tasks other than `#review` tasks, so a review doesn't make a
+    stale project look active.
   - **`#later` tasks**, listed separately
+  - **Last review:** the latest completion date on a completed `#review`
+    task anywhere in the project, or none if never reviewed
+  - **`#deadline` tasks and scheduled `#review` tasks**, open, with their
+    dates
   - **`has_next`:** whether an open `#next` task exists (a warning if not,
     never an error)
-  - **Last ✅ date** on a task inside the project
-  - **Last logged:** the most recent daily note whose time log (Log section
-    or Actual column) mentions the tag or a link to the project
-  - **Last touched:** the latest of the last change, last ✅, and last
-    logged dates, as defined in `docs/planning-system.md`
-- The CLI makes no git writes, so moves and link rewrites committed with the
-  day's edits count as changes. A filter for link-only and header-only diffs
-  is a possible follow-up.
+- The caller, not the command, assesses the project from these tasks.
+- Only projects are accepted; areas are out of scope.
 
 ## Capabilities
 
 ### New Capabilities
 - `project-brief`: the project summary returned by `meta-notes project
-  brief`, including index-note selection, derived dates, and related tasks.
+  brief`: home-note selection, project fields, files, and project tasks,
+  with dates as defined by `project-list`.
 
 ### Modified Capabilities
 
@@ -52,22 +68,15 @@ model, `#later`, and tag filters), and **`task-age`** (for `last_edited`).
 
 ## Open Questions
 
-- Canonical note for folder projects: `index.md`, falling back to the
-  folder-named note (the skill's rule), or `index.md` only? This is still
-  open in the planning doc.
-- Tag matching against time logs: apply the aliases and groups in
-  `scripts/time_tracking.py`?
-- Should `project brief` also accept areas (`area/<name>`)?
-- Interaction with `time-log-hhmm-format`, which changes time-log parsing
-  that "last logged" reuses
+- How far back to list completed tasks: all of them, or a recent window
+  (for example 90 days) to keep the output small?
 
 ## Impact
 
-- `scripts/meta_notes/`: `project brief` subcommand, frontmatter reader,
-  and git history helpers (read-only `git log` and `git status`)
-- `scripts/time_tracking.py`: reused for Log and Actual parsing
-- `test/unit/`: fixture notes repo with git history (renames, uncommitted
-  edits, time logs, `#later` and `#next` tasks)
-- `skills/project-review/SKILL.md`: step 2 becomes one
-  `meta-notes project brief --json` call
+- `scripts/meta_notes/`: `project brief` subcommand, reusing the field
+  parser in `project.py` (from `archive-project-status`) and the
+  per-project tasks, latest date, and last review in `projects.py` (from
+  `planning-skills`)
+- `test/unit/`: fixture notes root (note and folder projects, tagged tasks
+  elsewhere, dated headings, `#later`, `#next`, and `#review` tasks)
 - `doc/meta-notes.txt`: command reference

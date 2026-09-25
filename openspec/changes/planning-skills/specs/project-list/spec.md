@@ -38,15 +38,23 @@ A project's tasks SHALL be every task in its note or folder, plus every task any
 - **THEN** its tasks SHALL be only those in its note or folder
 
 ### Requirement: Latest date
-A project's latest date SHALL be the latest valid `YYYY-MM-DD` date, on or before today, that appears in the names or contents of the files in its note or folder, or in the text of a task anywhere that carries the project's tag. Dates after today SHALL NOT count. A project with no such date SHALL have no latest date. Git history and file modification times SHALL NOT be used.
+A project's latest date SHALL be the latest valid `YYYY-MM-DD` date, on or before today, that appears in the name of a file in its note or folder, in a markdown heading line in one of those files, or in the text of one of the project's tasks. Tasks tagged `#review` SHALL NOT count, so recording a review does not make a project look active. Dates elsewhere in a file's contents, including the field list, SHALL NOT count. Dates after today SHALL NOT count. A project with no such date SHALL have no latest date. Git history and file modification times SHALL NOT be used.
 
 #### Scenario: Dated meeting note
 - **WHEN** today is 2026-09-25 and `project/kitchen/` has `Home.md` and `meetings/2026-09-18.md`, and no later date appears in the project
 - **THEN** the project's latest date SHALL be 2026-09-18
 
 #### Scenario: Future due date ignored
-- **WHEN** today is 2026-09-25 and a project's only dates are `2026-03-02` in its notes and a task due 2026-12-01
+- **WHEN** today is 2026-09-25 and a project's only dates are a `## Notes 2026-03-02` heading and a task due 2026-12-01
 - **THEN** the project's latest date SHALL be 2026-03-02
+
+#### Scenario: Dated heading
+- **WHEN** today is 2026-09-25 and `project/make-bread.md` has a `## Notes 2026-09-10` heading and no later date in its file name, headings, or tasks
+- **THEN** the project's latest date SHALL be 2026-09-10
+
+#### Scenario: Body text and reviews ignored
+- **WHEN** today is 2026-09-25, a project's only heading date is `## Notes 2026-04-01`, a paragraph in its home note mentions 2026-09-01, and its home note has `- [x] project #review 📅 ✅ 2026-09-20`
+- **THEN** the project's latest date SHALL be 2026-04-01
 
 #### Scenario: Tagged task elsewhere counts
 - **WHEN** a project has tag `make-bread`, its own files' latest date is 2026-05-01, and a daily note has `- [x] #make-bread order flour 📅 2026-09-20`

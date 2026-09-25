@@ -1,19 +1,19 @@
 ## Purpose
 
-Specifies the shipped planning skills (daily shutdown, daily planning, weekly review, weekly planning, task cleanup, and project review): what each reads and writes, how it hands off to the next ceremony, and the rules every skill follows so ceremonies stay short and edits stay safe.
+Specifies the shipped planning skills (daily shutdown, daily planning, weekly review, weekly planning, and task cleanup): what each reads and writes, how it hands off to the next ceremony, and the rules every skill follows so ceremonies stay short and edits stay safe.
 
 ## ADDED Requirements
 
 ### Requirement: Shipped skills
-The plugin SHALL ship `daily-shutdown`, `daily-plan`, `weekly-review`, `weekly-plan`, `task-cleanup`, and `project-review` as `skills/<name>/SKILL.md`, installed into a notes root by `meta-notes init`. Each skill's description SHALL name when to use it, and SHALL NOT trigger on another skill's ceremony; in particular, `project-review` SHALL NOT trigger on task cleanup.
+The plugin SHALL ship `daily-shutdown`, `daily-plan`, `weekly-review`, `weekly-plan`, and `task-cleanup` as `skills/<name>/SKILL.md`, installed into a notes root by `meta-notes init`. Each skill's description SHALL name when to use it, and SHALL NOT trigger on another skill's ceremony.
 
 #### Scenario: Skills installed
 - **WHEN** the user runs `meta-notes init` in a notes root
-- **THEN** `.claude/skills/` SHALL contain all six skills
+- **THEN** `.claude/skills/` SHALL contain all five skills
 
 #### Scenario: Task cleanup request
 - **WHEN** the user asks the agent to clean up stale tasks
-- **THEN** the `task-cleanup` skill SHALL match the request and `project-review` SHALL NOT
+- **THEN** the `task-cleanup` skill SHALL match the request
 
 ### Requirement: Skills start from the CLI
 Every skill SHALL start by running `meta-notes conventions` and SHALL follow the conventions it prints. When `meta-notes` is not on `PATH`, the skill SHALL stop and tell the user how to install it, without reading or editing notes. Skills SHALL read notes through focused CLI queries (tags, folders, date ranges) and SHALL NOT read whole folders to find tasks.
@@ -30,7 +30,7 @@ Skills SHALL change task lines only with `meta-notes task update`, using the `fi
 - **THEN** the skill SHALL re-query that task before editing it again, and SHALL NOT rewrite the line by hand
 
 #### Scenario: Structural change
-- **WHEN** the user chooses to archive a project during a review
+- **WHEN** the user asks a skill to archive a note
 - **THEN** the skill SHALL show the `meta-notes archive` command and run it only after the user confirms
 
 ### Requirement: Carrying a task forward
@@ -112,18 +112,3 @@ A skill that completes its ceremony SHALL check its marker with `meta-notes task
 #### Scenario: Later all
 - **WHEN** the user chooses later all for a batch of five tasks from one query
 - **THEN** the skill SHALL run five `task update --add-tag later` calls with the lines and text from that query
-
-### Requirement: Project review
-`project-review` SHALL review one project per run, in 5–10 minutes, and SHALL NOT propose other projects to review. With no project named, it SHALL pick the project with the oldest last review, preferring never-reviewed projects. It SHALL show the project's files and tasks, open and completed, and give its state in about ten lines. It SHALL ask for a disposition: continue, pause, done, convert to area, split, or merge. Pause and done SHALL set the `status` field; archiving and converting SHALL use `meta-notes archive` or `move`. It SHALL ask for a next action when there is no open `#next`, accepting none as an answer. It SHALL NOT walk through the project's stale tasks one by one; it leaves that to `task-cleanup`. It SHALL record the review as a completed `#review` task in the home note: by checking off an open `#review` task when one exists, or by adding `- [ ] project #review 📅` and checking it off with `task update --status x`. A review stopped early SHALL still be recorded, and SHALL add an open `#review` task dated the next workday to finish it.
-
-#### Scenario: Review recorded
-- **WHEN** a review of `project/make-bread.md` finishes on 2026-09-25 and the note has no open `#review` task
-- **THEN** the note SHALL gain the line `- [x] project #review 📅 ✅ 2026-09-25`
-
-#### Scenario: Scheduled review completed
-- **WHEN** the home note has `- [ ] project #review 📅 2026-09-25` and the review finishes that day
-- **THEN** that line SHALL be checked off, and no new `#review` line SHALL be added
-
-#### Scenario: Pause
-- **WHEN** the user pauses the project
-- **THEN** the home note's `status` field SHALL become `paused`, and the skill SHALL offer to add a dated `#review` task for when to reconsider it

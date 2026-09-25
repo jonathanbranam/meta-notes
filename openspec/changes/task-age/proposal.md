@@ -1,3 +1,7 @@
+> **Deferred (2026-09-25).** Planning works from dates already written in
+> the notes; no current change needs git history or `git blame`. Revisit
+> only if date-based staleness proves insufficient.
+
 ## Why
 
 Planning needs to know how long a task has sat untouched. Daily planning

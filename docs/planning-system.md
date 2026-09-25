@@ -127,8 +127,9 @@ project's note or folder, plus every task anywhere carrying the project's
 `tag`, both open and completed. Completed tasks and their ✅ dates show
 recent progress; open tasks and their dates (see Task age) show what's
 waiting. A project's **latest date** is the latest `YYYY-MM-DD` up to today
-in its file names and contents and its tagged tasks; an active project has
-recent meeting notes and updates. Skills read this list and assess the project from it. There is no
+in its file names, its markdown headings (`## Notes 2026-09-25`), and its
+project tasks other than `#review` tasks; an active project has recent
+meeting notes and updates. Skills read this list and assess the project from it. There is no
 separate "last touched" date.
 
 ### Reorganizing

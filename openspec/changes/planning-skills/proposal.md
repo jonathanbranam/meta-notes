@@ -22,11 +22,12 @@ for each ceremony and adds the scripts they depend on.
 - **`time-report-enhancements`**: `meta-notes time --date START..END` for
   time-log totals in the weekly review.
 - **`task-update`**: skills edit task lines through `meta-notes task update`,
-  not by rewriting lines themselves. That change also switches
-  `project-review` step 7 to the command; the revision here builds on that
-  version.
-- **`project-brief`**: the project list used for weekly-review warnings is
-  built from the same per-project data.
+  not by rewriting lines themselves.
+- **`archive-project-status`**: `scripts/meta_notes/project.py` provides the
+  home-note and field parsing that `meta-notes projects` reuses.
+
+The `project-review` revision moved to `project-review-skill`, which
+depends on `project-brief`; nothing here does.
 
 The skills are written after the CLI commands they call exist, against
 their real output, rather than drafted against today's tools (see
@@ -74,9 +75,6 @@ design.md).
   done. Bulk "cancel all" or "later all" is one `task update` call per line
   from the same query; line numbers from one query stay valid across
   updates, so no batch command is needed.
-- **`project-review`** (revised): refocused on dead and dormant projects and
-  run monthly. Its stale-task walk is removed in favor of
-  `task-cleanup`, and its description no longer triggers on task cleanup.
 - Every skill has a stated time budget, supports stopping early, and uses
   focused CLI queries instead of reading whole folders. Shared syntax and
   conventions are defined once, in `meta-notes conventions`, not copied
@@ -138,7 +136,7 @@ design.md).
 ## Capabilities
 
 ### New Capabilities
-- `ceremony-skills`: the six shipped skills, with each skill's inputs,
+- `ceremony-skills`: the five new shipped skills, with each skill's inputs,
   outputs, handoffs, time budget, and stop-early behavior
 - `ceremony-status`: ceremony markers in notes and how their status is read
 - `project-list`: the project overview with warnings
@@ -152,7 +150,7 @@ design.md).
 
 ## Impact
 
-- `skills/`: five new skills, and `project-review` revised
+- `skills/`: five new skills
 - `scripts/meta_notes/`: new `ceremony`, `conventions`, and `projects`
   subcommands, and the conventions markdown file
 - Plugin template files (from `cli-init`): `daily.md` and `weekly.md` updated

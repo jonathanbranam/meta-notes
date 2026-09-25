@@ -17,9 +17,13 @@ The pieces this change builds on:
 - `scripts/period.py`: `parse_period` for the shared `--date` syntax.
 - `scripts/meta_notes/note.py`: `periodic_note(kind, day)` gives the daily
   and weekly note paths; weeks start on Monday (`template.week_start`).
-- `task-update` is archived (0.4.0). `project-brief` (home note and field
-  parsing) is not yet implemented. `task-age` is deferred: nothing here
+- `scripts/meta_notes/project.py` (from the archived
+  `archive-project-status`): `project_for`, `home_note`, `read_fields`, and
+  `set_fields`.
+- `task-update` is archived (0.4.0). `task-age` is deferred: nothing here
   reads git history, `git blame`, or file mtimes.
+- The `project-review` revision is in `project-review-skill`, which waits
+  for `project-brief`.
 
 See proposal.md for motivation and the specs for behavior.
 
@@ -76,21 +80,25 @@ fields, then parses every task in the root once with
 and by canonical tag. Last review and `no-next` come from that pass.
 
 The latest date comes from a date scan: a `\d{4}-\d{2}-\d{2}` search over
-each project file's path and contents, plus the text of the project's
-tagged tasks, keeping matches that `date.fromisoformat` accepts and that
-are on or before today. Abandoned projects are months or years stale, so
-dates written in the notes (meeting notes, task dates, ✅ dates, daily-note
-links) separate them from active ones without git history.
+each project file's path and its markdown heading lines (for example
+`## Notes 2026-09-25`), plus the text of the project's tasks other than
+`#review` tasks, keeping matches that `date.fromisoformat` accepts and
+that are on or before today. Body text is left out because it mentions
+dates for many reasons, and `#review` tasks are left out so a review
+doesn't make a stale project look active. Abandoned projects are months
+or years stale, so dates written in the notes (dated meeting notes and
+headings, task dates, ✅ dates) separate them from active ones without git
+history.
 
 *Alternative:* git history or file mtimes. History needs blame and log
 per file and is deferred with `task-age`; mtimes change on moves and link
 rewrites, which touch files nobody worked on.
 
 Field parsing (home note, first list after the title, `key: value`) lives
-in `scripts/meta_notes/project.py`, shared with `project-brief` and
-`archive-project-status`. `archive-project-status` created it with
-`project_for`, `home_note`, `read_fields`, and `set_fields`; this change
-reuses it (see `openspec/specs/project-fields`).
+in `scripts/meta_notes/project.py`, which `archive-project-status` created
+with `project_for`, `home_note`, `read_fields`, and `set_fields`. This
+change reuses it (see `openspec/specs/project-fields`), as `project-brief`
+will.
 
 *Alternative:* call `project brief` per project. That repeats the full
 task parse once per project.
@@ -110,17 +118,18 @@ and command blocks are for notes; plain markers keep the file readable.
 
 ### Skills share a fixed shape
 
-Each `SKILL.md` has frontmatter (`name`, a `description` saying when to
-use it and, for `project-review`, that task cleanup is not it) and then,
+Each `SKILL.md` has frontmatter (`name` and a `description` saying when
+to use it) and then,
 in order: time budget, "run `meta-notes conventions` first", hard rules,
 numbered steps with the CLI call for each, and a stop section. Steps name
 exact commands (for example `meta-notes tasks --tag wait --json`) so the
-agent doesn't improvise queries. The six skills are written after the CLI
-commands exist, against the real output.
+agent doesn't improvise queries. The five skills are written after the CLI
+commands exist, against the real output. `project-review-skill` revises
+`project-review` to the same shape.
 
 *Alternative:* draft skills first against today's tools. Every dependency
-except `project-brief` is now in, so writing them once against the final
-commands avoids a rewrite.
+is now in, so writing them once against the final commands avoids a
+rewrite.
 
 ### Template sections
 
@@ -154,12 +163,10 @@ entries now total under `#wait`, which is the intent.
 
 ## Migration Plan
 
-1. Wait for `project-brief` (and ideally `archive-project-status`) to be
-   archived; `projects` reuses the shared field parser.
-2. Land the CLI pieces (alias, conventions, ceremony status, projects)
+1. Land the CLI pieces (alias, conventions, ceremony status, projects)
    with tests, then the templates, then the skills.
-3. After updating, the user re-runs `meta-notes init` so the five new
+2. After updating, the user re-runs `meta-notes init` so the five new
    skills are linked into the notes root. Existing templates are left
    alone; `init --force` or a manual edit brings in the new sections.
-4. MINOR version bump on archive. Rollback is reverting the change; no
+3. MINOR version bump on archive. Rollback is reverting the change; no
    note content is migrated.

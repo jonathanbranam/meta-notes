@@ -1,6 +1,6 @@
 ## 1. Shared rules
 
-- [ ] 1.1 Confirm `project-brief` is archived and `scripts/meta_notes/project.py` provides home-note and field parsing; if it isn't, stop and implement `project-brief` first; verify by importing the module and running its tests
+- [ ] 1.1 Confirm `scripts/meta_notes/project.py` (from `archive-project-status`) provides `home_note` and `read_fields`; verify by importing the module and running `pipenv run pytest test/unit/test_project.py`
 - [ ] 1.2 Add `#waiting` → `#wait` to `TAG_ALIASES` in `scripts/tags.py`; verify with `test/unit/test_tags.py` and `test_find_tasks.py` tests for the "Waiting alias" scenario (`--tag wait` and `--tag waiting` both select `#waiting`), and a `test_time_tracking.py` test that `#waiting` time totals under `#wait`
 - [ ] 1.3 Rename `tasks._char_to_status` to public `char_to_status` and add a module-level status table (character → meaning) beside `DUE_EMOJIS`; verify `pipenv run pytest test/unit/` passes unchanged
 
@@ -34,17 +34,16 @@
 - [ ] 6.3 Write `skills/weekly-review/SKILL.md`: the Monday–Friday period, completed tasks and time report for that range, daily notes and Follow up lists, plan versus actual, commitments, `meta-notes projects --warnings`, the `#later` scan with `task update`, the two-part manager summary in `## Review` with no next-week plan, marker, and the weekly-plan reminder; verify by reading it against "Weekly review" and its scenarios
 - [ ] 6.4 Write `skills/weekly-plan/SKILL.md`: review and calendar screenshot, capacity (90-minute gaps, shorter gaps listed separately), meetings to schedule, `#deadline` and due dates, 3–5 priorities on days, next week's `## Plan` via `meta-notes note weekly`, and marker; verify by reading it against "Weekly planning"
 - [ ] 6.5 Write `skills/task-cleanup/SKILL.md`: overdue tasks oldest due first, then undated tasks by note, batches sized to the time given, per-task choices and cancel all / later all through `task update`, and stopping early; verify by reading it against "Task cleanup" and the "Later all" scenario
-- [ ] 6.6 Revise `skills/project-review/SKILL.md`: `meta-notes conventions` first, `meta-notes project brief` for state, oldest or missing `#review` selection, dispositions setting the `status` field, `meta-notes archive`/`move` after confirmation, no stale-task walk, recording the review as a completed `#review` task, early stop, and a description that doesn't trigger on task cleanup; verify by reading it against "Project review" and its scenarios
-- [ ] 6.7 Check every skill against the shared requirements ("Shipped skills", "Skills start from the CLI", "Edits go through the CLI", "Carrying a task forward"): no direct task-line rewrites, no git history or mtime use, tags before dates, lines within 80 columns; verify by reading all six and fixing any gaps
+- [ ] 6.6 Check every skill against the shared requirements ("Shipped skills", "Skills start from the CLI", "Edits go through the CLI", "Carrying a task forward"): no direct task-line rewrites, no git history or mtime use, tags before dates, lines within 80 columns; verify by reading all five and fixing any gaps
 
 ## 7. Docs
 
-- [ ] 7.1 Add `conventions`, `ceremony status`, and `projects` to `doc/meta-notes.txt` (with `*meta-notes-cli-...*` tags, options, and JSON fields) and to README's Command Line examples, and list the six skills in README; verify `:helptags doc` succeeds and each new tag resolves
+- [ ] 7.1 Add `conventions`, `ceremony status`, and `projects` to `doc/meta-notes.txt` (with `*meta-notes-cli-...*` tags, options, and JSON fields) and to README's Command Line examples, and list the five new skills in README; verify `:helptags doc` succeeds and each new tag resolves
 - [ ] 7.2 Update `docs/planning-system.md` so the ceremonies, skills, and CLI sections match the shipped behavior (marker names, `meta-notes conventions`, the `projects` warnings); verify by reading it against the specs
 
 ## 8. Verification
 
 - [ ] 8.1 Run `pipenv run pytest test/unit/` and `./run_tests.sh --quiet` and verify both pass
-- [ ] 8.2 In a scratch notes root with fixture projects, daily notes, and a weekly note, run `meta-notes init` and verify `.claude/skills/` links all six skills; then run each command (`conventions`, `ceremony status`, `projects --warnings`) and verify the output matches the fixtures
+- [ ] 8.2 In a scratch notes root with fixture projects, daily notes, and a weekly note, run `meta-notes init` and verify `.claude/skills/` links all five new skills; then run each command (`conventions`, `ceremony status`, `projects --warnings`) and verify the output matches the fixtures
 - [ ] 8.3 Walk through `daily-shutdown` and `weekly-review` in that scratch root with a fixed date and verify every edit went through `meta-notes task update` or a confirmed command and the markers read as done in `ceremony status`
 - [ ] 8.4 Run `openspec validate planning-skills --strict` and verify it passes
