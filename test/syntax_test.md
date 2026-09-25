@@ -7,16 +7,16 @@ This file demonstrates the syntax highlighting for time tracking features.
 ### Log
 
 - arrived:
-  * end:   2026-02-15 Sun 08:00
+  * end:   08:00
 - check #email
-  * start: 2026-02-15 Sun 08:00
-  * end:   2026-02-15 Sun 08:45
+  * start: 08:00
+  * end:   8:45am
 - #standup #mtg
-  * start: 2026-02-15 Sun 08:45
-  * end:   2026-02-15 Sun 09:12
+  * start: 8:45 am
+  * end:   09:12
 - coding on #feat #dev
-  * start: 2026-02-15 Sun 09:12
-  * end:   2026-02-15 Sun 10:06
+  * start: 09:12
+  * end:   2026-02-15 10:06
 - lunch #break
   * start: 2026-02-15 Sun 10:06
   * end:   2026-02-15 Sun 10:44
@@ -49,4 +49,5 @@ Different tag types should have different colors:
 - Normal text with [break] entry
 - Off-plan entry: ~this was not planned~
 - Time stamps: 8:00 am, 2:30 pm, 12:00 pm
+- Not a time log entry, so not highlighted: 14:30
 - Arrived: - arrived: 8:05 am

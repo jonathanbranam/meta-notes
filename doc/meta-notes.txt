@@ -366,6 +366,37 @@ time log entries.
 The report is only available when editing a daily note
 (`plan/daily/YY-QN/YYYY-MM-DD ddd.md`).
 
+Time log format ~
+                                                *meta-notes-time-log*
+Entries live under a `### Log` heading and end at the next heading. Each
+entry is an activity line starting with `-`, optionally with tags, followed
+by indented `*` detail lines: >
+    ### Log
+
+    - email review #admin
+      * start: 08:15
+      * end:   09:00
+    - standup #mtg
+      * start: 9:00am
+      * end:   9:20am
+      * any other detail line is a note
+<
+`start:` and `end:` accept these timestamp formats, which may be mixed
+within a note and within an entry:
+
+    `09:10`                  bare 24-hour time
+    `3:20pm`, `3:20 pm`      bare 12-hour time
+    `2026-02-14 08:00`       full date
+    `2026-02-14 Sat 08:00`   full date with day abbreviation
+
+A bare time takes its date from the `YYYY-MM-DD` in the note's filename, so
+bare times only work in notes named with a date. A full date uses its own
+date, which lets an entry end after midnight: `* end: 2026-02-15 01:30`. The
+day abbreviation is not checked against the date.
+
+A timestamp in any other form, such as the template's `HH:MM` placeholder,
+leaves that time unset. The entry is kept but has no duration.
+
 ==============================================================================
 8. WIKI LINKS                                   *meta-notes-wiki-links*
 

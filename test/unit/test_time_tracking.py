@@ -23,6 +23,7 @@ from time_tracking import (
     parse_tags_from_text,
     _parse_time,
     _parse_bare_time_24h,
+    _parse_datetime,
     _parse_entry_time,
     _extract_date_from_filepath,
     _parse_time_block_row,
@@ -161,6 +162,46 @@ def test_parse_entry_time_bare_without_date():
     """Test that bare time without file date returns None."""
     result = _parse_entry_time("09:10", None)
     assert result is None
+
+
+def test_parse_entry_time_full_date_without_day_abbr():
+    """Test parsing a full date without a day abbreviation."""
+    from datetime import datetime
+    result = _parse_entry_time("2026-02-14 08:00", None)
+    assert result == datetime(2026, 2, 14, 8, 0)
+
+
+def test_parse_entry_time_full_date_without_day_abbr_ignores_file_date():
+    """Test that a full date's own date wins over the file date."""
+    from datetime import datetime, date
+    result = _parse_entry_time("2026-02-15 01:30", date(2026, 2, 14))
+    assert result == datetime(2026, 2, 15, 1, 30)
+
+
+# Tests for _parse_datetime function
+
+def test_parse_datetime_with_day_abbr():
+    """Test parsing a full date with a day abbreviation."""
+    from datetime import datetime
+    assert _parse_datetime("2026-02-14 Sat 08:00") == datetime(2026, 2, 14, 8, 0)
+
+
+def test_parse_datetime_without_day_abbr():
+    """Test parsing a full date without a day abbreviation."""
+    from datetime import datetime
+    assert _parse_datetime("2026-02-14 08:00") == datetime(2026, 2, 14, 8, 0)
+
+
+def test_parse_datetime_rejects_single_digit_hour():
+    """Test that a full date requires a two-digit hour."""
+    assert _parse_datetime("2026-02-14 8:00") is None
+    assert _parse_entry_time("2026-02-14 8:00", date(2026, 2, 14)) is None
+
+
+def test_parse_datetime_rejects_invalid_date():
+    """Test that an impossible date is rejected."""
+    assert _parse_datetime("2026-02-30 08:00") is None
+    assert _parse_datetime("2026-02-30 Mon 08:00") is None
 
 
 # Tests for _extract_date_from_filepath function
@@ -424,6 +465,77 @@ def test_parse_time_log_lines_bare_12h_times():
     assert len(entries) == 1
     assert entries[0].start_time == datetime(2026, 2, 14, 15, 20)
     assert entries[0].end_time == datetime(2026, 2, 14, 16, 0)
+
+
+def test_parse_time_log_lines_mixed_formats():
+    """Test that each start/end value is parsed independently."""
+    from datetime import datetime, date
+    lines = [
+        "### Log\n",
+        "\n",
+        "- email #admin\n",
+        "  * start: 2026-02-14 Sat 08:00\n",
+        "  * end:   09:00\n",
+        "- coding #dev\n",
+        "  * start: 09:00\n",
+        "  * end:   2026-02-14 10:15\n",
+    ]
+
+    entries = _parse_time_log_lines(lines, "test.md", date(2026, 2, 14))
+
+    assert len(entries) == 2
+    assert entries[0].start_time == datetime(2026, 2, 14, 8, 0)
+    assert entries[0].end_time == datetime(2026, 2, 14, 9, 0)
+    assert entries[1].start_time == datetime(2026, 2, 14, 9, 0)
+    assert entries[1].end_time == datetime(2026, 2, 14, 10, 15)
+
+
+def test_parse_time_log_lines_full_date_overrides_file_date():
+    """Test that a full date on an end line is used over the file date."""
+    from datetime import datetime, date
+    lines = [
+        "### Log\n",
+        "- late night #dev\n",
+        "  * start: 23:00\n",
+        "  * end: 2026-02-15 01:30\n",
+    ]
+
+    entries = _parse_time_log_lines(lines, "test.md", date(2026, 2, 14))
+
+    assert entries[0].start_time == datetime(2026, 2, 14, 23, 0)
+    assert entries[0].end_time == datetime(2026, 2, 15, 1, 30)
+
+
+def test_parse_time_log_lines_mismatched_day_abbr():
+    """Test that the day abbreviation is not checked against the date."""
+    from datetime import datetime
+    lines = [
+        "### Log\n",
+        "- email #admin\n",
+        "  * start: 2026-02-14 Mon 08:00\n",
+    ]
+
+    entries = _parse_time_log_lines(lines, "test.md")
+
+    assert entries[0].start_time == datetime(2026, 2, 14, 8, 0)
+
+
+def test_parse_time_log_lines_placeholder_leaves_time_unset():
+    """Test that a leftover HH:MM placeholder keeps the entry with no time."""
+    from datetime import date
+    lines = [
+        "### Log\n",
+        "- start of day\n",
+        "  * start: HH:MM\n",
+        "  * end:   HH:MM\n",
+    ]
+
+    entries = _parse_time_log_lines(lines, "test.md", date(2026, 2, 14))
+
+    assert len(entries) == 1
+    assert entries[0].activity == "start of day"
+    assert entries[0].start_time is None
+    assert entries[0].end_time is None
 
 
 def test_find_time_log_entries_bare_times_from_filename(tmp_path):

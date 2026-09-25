@@ -42,6 +42,9 @@ syntax region metaNotesOffPlan start=/\~/ end=/\~/
 " Time entries in time log: HH:MM am/pm
 syntax match metaNotesTime /\d\{1,2}:\d\{2}\s*\(am\|pm\)/
 
+" Time on a time log start:/end: line: HH:MM, H:MM am/pm, or after a full date
+syntax match metaNotesTime /\(^\s*\*\s*\(start\|end\):.*\)\@<=\<\d\{1,2}:\d\{2}\(\s*\(am\|pm\)\)\?/
+
 " Arrived entry
 syntax match metaNotesArrived /^-\s*arrived:/
 

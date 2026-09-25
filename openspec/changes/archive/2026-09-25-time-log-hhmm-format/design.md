@@ -28,11 +28,13 @@ Syntax highlighting (`after/syntax/markdown.vim`) has one time pattern, `metaNot
 
 **Keep the parse order in `_parse_entry_time`.** Full date first, then bare 24-hour, then bare 12-hour. The formats can't overlap (a full date starts with `YYYY-`, bare 24-hour has no am/pm), so the order only matters for speed, and the existing order is already correct.
 
-**Highlight only times on `start:` / `end:` lines.** Add a second `metaNotesTime` match, anchored to those lines, that picks out the trailing `H:MM` / `HH:MM` with an optional am/pm:
+**Highlight only times on `start:` / `end:` lines.** Add a second `metaNotesTime` match that picks out an `H:MM` / `HH:MM` with an optional am/pm, using a lookbehind to require a `start:` / `end:` line:
 
 ```vim
-syntax match metaNotesTime /^\s*\*\s*\(start\|end\):.\{-}\zs\d\{1,2}:\d\{2}\(\s*\(am\|pm\)\)\?/
+syntax match metaNotesTime /\(^\s*\*\s*\(start\|end\):.*\)\@<=\<\d\{1,2}:\d\{2}\(\s*\(am\|pm\)\)\?/
 ```
+
+A pattern anchored with `^ ... \zs` was tried first and never matched: the match then starts at column 0, where markdown's list-marker item claims the `*` first. The lookbehind makes the match start at the time itself.
 
 A bare `\d\{1,2}:\d\{2}` pattern anywhere was rejected. It would also highlight ratios, Bible-style references and `HH:MM` inside prose or code. The existing 12-hour pattern stays as it is, so time block and prose highlighting don't change.
 

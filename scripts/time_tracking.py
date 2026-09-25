@@ -136,10 +136,13 @@ def _parse_entry_time(time_str: str, file_date: Optional[date]) -> Optional[date
     """
     Parse a time string for a log entry, supporting multiple formats.
 
-    Tries in order:
-    1. Full datetime: '2026-02-14 Sat 08:00'
-    2. Bare 24-hour time: '09:10' (combined with file_date)
-    3. Bare 12-hour time: '3:20pm' (combined with file_date)
+    Accepted formats:
+    - Bare 24-hour time: '09:10' (combined with file_date)
+    - Bare 12-hour time: '3:20pm' (combined with file_date)
+    - Full date: '2026-02-14 08:00' or '2026-02-14 Sat 08:00'
+
+    A full date is tried first and its own date is used even when file_date
+    differs.
 
     Args:
         time_str: Time string to parse.
@@ -211,18 +214,21 @@ def _parse_time(time_str: str) -> Optional[time]:
 
 def _parse_datetime(datetime_str: str) -> Optional[datetime]:
     """
-    Parse a datetime string in format: YYYY-MM-DD DDD HH:MM
+    Parse a full-date string: YYYY-MM-DD HH:MM or YYYY-MM-DD DDD HH:MM.
+
+    The day abbreviation (DDD) is optional and not checked against the date.
 
     Args:
-        datetime_str: Datetime string to parse (e.g., '2026-02-14 Sat 08:00').
+        datetime_str: Datetime string to parse (e.g., '2026-02-14 08:00' or
+            '2026-02-14 Sat 08:00').
 
     Returns:
         A datetime object if successfully parsed, None otherwise.
     """
     datetime_str = datetime_str.strip()
 
-    # Pattern: YYYY-MM-DD DDD HH:MM (DDD is day abbreviation like Mon, Tue, etc.)
-    pattern = re.compile(r'^(\d{4})-(\d{2})-(\d{2})\s+\w{3}\s+(\d{2}):(\d{2})$')
+    # Pattern: YYYY-MM-DD [DDD] HH:MM (DDD is day abbreviation like Mon, Tue, etc.)
+    pattern = re.compile(r'^(\d{4})-(\d{2})-(\d{2})(?:\s+\w{3})?\s+(\d{2}):(\d{2})$')
     match = pattern.match(datetime_str)
 
     if not match:
@@ -311,15 +317,17 @@ def _parse_time_log_lines(lines: list[str], filepath: str,
     Parse time log entries from a list of lines.
 
     Looks for entries under a '### Log' section.
-    New format uses multi-line entries:
+    Entries are multi-line:
     - activity name #tag-1 #tag-2
-      * start: 2026-02-14 Sat 08:00
-      * end:   2026-02-14 Sat 09:00
+      * start: 08:00
+      * end:   09:00
       * optional notes
 
-    Start/end times also support bare time formats when file_date is provided:
-      * start: 09:10    (24-hour)
-      * start: 9:10am   (12-hour)
+    Start/end times accept bare times, which need file_date, or full dates:
+      * start: 09:10                  (24-hour)
+      * start: 9:10am                 (12-hour)
+      * start: 2026-02-14 08:00       (full date)
+      * start: 2026-02-14 Sat 08:00   (full date with day abbreviation)
 
     Args:
         lines: Lines of text to parse.

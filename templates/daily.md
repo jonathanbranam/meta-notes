@@ -3,7 +3,7 @@ filename_pattern: "plan/daily/{{date:%y}}-{{date:Q{{((date.month-1)//3)+1}}}}/{{
 ---
 # Daily Note - {{date}}
 
-Week Plan: [[plan/week/{{week_start:%y}}-{{quarter}}/{{week_start:%Y-%m-%d}}]]
+Week Plan: [[plan/week/{{week_start:%y}}-{{week_quarter}}/{{week_start:%Y-%m-%d}}]]
 
 ## Tasks Due Today
 
@@ -18,8 +18,8 @@ Week Plan: [[plan/week/{{week_start:%y}}-{{quarter}}/{{week_start:%Y-%m-%d}}]]
 ### Log
 
 - start of day
-  * start: {{date}} HH:MM
-  * end:   {{date}} HH:MM
+  * start: HH:MM
+  * end:   HH:MM
 
 ### Time Block
 
