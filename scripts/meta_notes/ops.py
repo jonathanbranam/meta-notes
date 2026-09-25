@@ -10,8 +10,10 @@ import glob
 import os
 import shutil
 from dataclasses import dataclass, field
+from datetime import date
 
 import update_links
+from meta_notes import project
 
 ARCHIVABLE_FOLDERS = ("project", "area", "resource")
 
@@ -40,6 +42,20 @@ class ArchiveItem:
     is_file: bool = False
     archive_path: str = ""
     result: MoveResult | None = None
+    fields_written: bool = False
+    home: str | None = None
+    warnings: list[str] = field(default_factory=list)
+
+
+class ArchiveError(OpError):
+    """Archiving failed; carries the project fields written before the move."""
+
+    def __init__(self, message: str, fields_written: bool = False,
+                 home: str | None = None, warnings: list[str] | None = None):
+        super().__init__(message)
+        self.fields_written = fields_written
+        self.home = home
+        self.warnings = warnings or []
 
 
 def _relpath(path: str) -> str:
@@ -179,18 +195,49 @@ def rename(source: str, new_name: str) -> MoveResult:
     return move(source, new_path)
 
 
-def archive_item(path: str) -> ArchiveItem:
+def _write_archive_fields(source: str, today: date,
+                          warnings: list[str]) -> str | None:
+    """
+    Mark a project archived in its home note, before it moves.
+
+    Returns:
+        The home note path if the fields were written, else None. A missing
+        home note or a failed write adds a warning.
+    """
+    proj = project.project_for(source)
+    if proj is None:
+        return None
+    home = project.home_note(proj)
+    if home is None:
+        warnings.append(f"No {project.HOME_NOTE} in {proj}; "
+                        "archive fields not written")
+        return None
+    try:
+        project.set_fields(home, {"status": "archived",
+                                  "archived": today.isoformat()})
+    except OSError as e:
+        warnings.append(f"Failed to write archive fields to {home} ({e})")
+        return None
+    return home
+
+
+def archive_item(path: str, today: date | None = None) -> ArchiveItem:
     """
     Archive one note or folder from project/, area/, or resource/.
 
+    A project (a note or folder directly in project/) is first marked
+    `status: archived` with an `archived:` date in its home note. The fields
+    stay written even if the move then fails.
+
     Args:
         path: Note path (with or without `.md`) or folder path.
+        today: Date for the `archived` field (default: date.today()).
 
     Returns:
         ArchiveItem describing the archived item.
 
     Raises:
-        OpError: If the path is missing, not archivable, or the move fails.
+        ArchiveError: If the path is missing, not archivable, or the move fails.
     """
     path_no_ext = _strip_md(path)
     is_file = os.path.isfile(path)
@@ -201,20 +248,34 @@ def archive_item(path: str) -> ArchiveItem:
             path = path_no_ext + ".md"
             is_file = True
         else:
-            raise OpError(f"Path not found: {path}")
+            raise ArchiveError(f"Path not found: {path}")
 
     parts = [p for p in path_no_ext.split("/") if p]
     if not parts:
-        raise OpError(f"Invalid path: {path}")
+        raise ArchiveError(f"Invalid path: {path}")
 
     if parts[0] not in ARCHIVABLE_FOLDERS:
-        raise OpError(
+        raise ArchiveError(
             "Can only archive items from project/, area/, or resource/ folders")
 
     archive_path = "archive/" + path_no_ext
     source = path if is_file else path_no_ext
 
-    result = move(source, archive_path)
+    warnings: list[str] = []
+    home = _write_archive_fields(source, today or date.today(), warnings)
+
+    try:
+        result = move(source, archive_path)
+    except OpError as e:
+        message = str(e)
+        if home:
+            message += f" ({home} marked archived but not moved)"
+        raise ArchiveError(message, fields_written=bool(home), home=home,
+                           warnings=warnings)
+
+    archived_home = None
+    if home:
+        archived_home = "archive/" + home
 
     if len(result.moves) > 1:
         message = (f"Archived: {path_no_ext} → {archive_path} "
@@ -222,16 +283,20 @@ def archive_item(path: str) -> ArchiveItem:
     else:
         message = (f"Archived: {path} → {archive_path}"
                    + (".md" if is_file else ""))
+    if home:
+        message += " (status: archived)"
 
     return ArchiveItem(path=source, ok=True, message=message, is_file=is_file,
-                       archive_path=result.dest, result=result)
+                       archive_path=result.dest, result=result,
+                       fields_written=bool(home), home=archived_home,
+                       warnings=warnings)
 
 
 def has_wildcard(path: str) -> bool:
     return "*" in path or "?" in path
 
 
-def archive(paths: list[str]) -> list[ArchiveItem]:
+def archive(paths: list[str], today: date | None = None) -> list[ArchiveItem]:
     """
     Archive each path, expanding `*` and `?`.
 
@@ -242,7 +307,7 @@ def archive(paths: list[str]) -> list[ArchiveItem]:
         OpError: For a single-path failure, or a pattern matching nothing.
     """
     if len(paths) == 1 and not has_wildcard(paths[0]):
-        return [archive_item(paths[0])]
+        return [archive_item(paths[0], today)]
 
     items: list[str] = []
     for path in paths:
@@ -257,11 +322,13 @@ def archive(paths: list[str]) -> list[ArchiveItem]:
     results: list[ArchiveItem] = []
     for item in items:
         try:
-            results.append(archive_item(item))
-        except OpError as e:
+            results.append(archive_item(item, today))
+        except ArchiveError as e:
             results.append(ArchiveItem(
                 path=item, ok=False, error=str(e),
-                message=f"Failed to archive: {item} ({e})"))
+                message=f"Failed to archive: {item} ({e})",
+                fields_written=e.fields_written, home=e.home,
+                warnings=e.warnings))
     return results
 
 

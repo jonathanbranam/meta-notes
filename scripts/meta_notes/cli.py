@@ -140,6 +140,10 @@ def cmd_archive(args, root: str) -> Output:
     paths = [to_root_relative(p, root) for p in args.paths]
     try:
         items = ops.archive(paths)
+    except ops.ArchiveError as e:
+        # A project may be marked archived even though it didn't move
+        return Output({"fields_written": e.fields_written, "home": e.home},
+                      warnings=e.warnings, error=str(e))
     except ops.OpError as e:
         raise CliError(str(e))
 
@@ -149,7 +153,9 @@ def cmd_archive(args, root: str) -> Output:
     links: list[str] = []
     item_data = []
     for item in items:
-        data = {"path": item.path, "ok": item.ok, "message": item.message}
+        data = {"path": item.path, "ok": item.ok, "message": item.message,
+                "fields_written": item.fields_written, "home": item.home}
+        out.warnings.extend(item.warnings)
         if item.ok:
             data.update(is_file=item.is_file, archive_path=item.archive_path,
                         **_move_data(item.result))

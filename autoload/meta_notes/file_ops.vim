@@ -50,6 +50,9 @@ function! meta_notes#file_ops#Archive(...) abort
 
   " Without items the whole command failed (bad path, no wildcard matches)
   if !has_key(l:cli, 'items')
+    " A project may have been marked archived before its move failed
+    silent! checktime
+    call meta_notes#cli#ShowWarnings(l:cli)
     echoerr l:cli.error
     return
   endif

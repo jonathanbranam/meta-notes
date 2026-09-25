@@ -9,6 +9,7 @@ import json
 import shutil
 import subprocess
 import sys
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -88,7 +89,8 @@ def test_archive_single_item_result(root):
     assert item.is_file
     assert item.path == 'project/note.md'
     assert item.archive_path == 'archive/project/note.md'
-    assert item.message == 'Archived: project/note.md → archive/project/note.md'
+    assert item.message == ('Archived: project/note.md → archive/project/note.md'
+                            ' (status: archived)')
 
 
 def test_archive_folder_message_counts_files(root):
@@ -153,9 +155,11 @@ def test_archive_wildcard_continues_past_failures(root):
 
     assert [(i.path, i.ok) for i in items] == [('project/a.md', False),
                                                ('project/b.md', True)]
-    assert items[0].error == 'Target file already exists: archive/project/a.md'
+    assert items[0].error == ('Target file already exists: archive/project/a.md'
+                              ' (project/a.md marked archived but not moved)')
     assert items[0].message == ('Failed to archive: project/a.md '
-                                '(Target file already exists: archive/project/a.md)')
+                                '(Target file already exists: archive/project/a.md'
+                                ' (project/a.md marked archived but not moved))')
     assert ops.archive_summary(items) == 'Archived 1 item(s) (1 failed)'
     assert Path('archive/project/b.md').is_file()
 
@@ -212,7 +216,7 @@ def test_archive_file_without_md_extension(root):
     assert Path('archive/project/test-no-ext-file.md').is_file()
     assert not Path('project/test-no-ext-file.md').exists()
     assert item.message == ('Archived: project/test-no-ext-file.md → '
-                            'archive/project/test-no-ext-file.md')
+                            'archive/project/test-no-ext-file.md (status: archived)')
 
 
 def test_archive_file_with_spaces(root):
@@ -514,6 +518,165 @@ def test_move_links_updated_deduplicated(root):
     assert read_lines('resource/index.md') == ['[[area/f]] [[area/f/a]]']
 
 
+# Tests for archive project fields (openspec/specs/archive)
+
+TODAY = date(2026, 9, 25)
+
+
+def test_archive_note_project_writes_fields(root):
+    write('project/make-bread.md', '# Make Bread', '', '- status: active',
+          '- tag: make-bread', '', '- [ ] Buy flour')
+
+    [item] = ops.archive(['project/make-bread.md'], TODAY)
+
+    assert read_lines('archive/project/make-bread.md') == [
+        '# Make Bread', '', '- status: archived', '- tag: make-bread',
+        '- archived: 2026-09-25', '', '- [ ] Buy flour']
+    assert item.fields_written
+    assert item.home == 'archive/project/make-bread.md'
+    assert item.warnings == []
+
+
+def test_archive_folder_project_writes_home_fields(root):
+    write('project/kitchen/Home.md', '# project/kitchen/Home', '', 'Notes.')
+    write('project/kitchen/Tasks.md', '# Tasks', '', '- [ ] tile')
+
+    [item] = ops.archive(['project/kitchen'], TODAY)
+
+    assert read_lines('archive/project/kitchen/Home.md') == [
+        '# archive/project/kitchen/Home', '', '- status: archived',
+        '- archived: 2026-09-25', '', 'Notes.']
+    assert read_lines('archive/project/kitchen/Tasks.md') == ['# Tasks', '', '- [ ] tile']
+    assert item.home == 'archive/project/kitchen/Home.md'
+    assert item.message.endswith('(status: archived)')
+
+
+def test_archive_folder_project_without_home_warns(root):
+    write('project/trip/Packing.md', '# Packing')
+
+    [item] = ops.archive(['project/trip'], TODAY)
+
+    assert item.ok
+    assert not item.fields_written
+    assert item.home is None
+    assert not Path('archive/project/trip/Home.md').exists()
+    assert read_lines('archive/project/trip/Packing.md') == ['# Packing']
+    assert item.warnings == ['No Home.md in project/trip; archive fields not written']
+
+
+def test_archive_area_writes_no_fields(root):
+    write('area/health/Home.md', '# Health', '', '- status: active')
+
+    [item] = ops.archive(['area/health'], TODAY)
+
+    assert read_lines('archive/area/health/Home.md') == ['# Health', '', '- status: active']
+    assert not item.fields_written
+    assert item.warnings == []
+
+
+def test_archive_note_nested_in_project_writes_no_fields(root):
+    write('project/kitchen/Home.md', '# Kitchen')
+    write('project/kitchen/Tasks.md', '# Tasks')
+
+    [item] = ops.archive(['project/kitchen/Tasks.md'], TODAY)
+
+    assert read_lines('archive/project/kitchen/Tasks.md') == ['# Tasks']
+    assert read_lines('project/kitchen/Home.md') == ['# Kitchen']
+    assert not item.fields_written
+
+
+def test_archive_project_move_fails_keeps_fields(root):
+    write('project/make-bread.md', '# Make Bread')
+    write('archive/project/make-bread.md', '# existing')
+
+    with pytest.raises(ops.ArchiveError) as exc:
+        ops.archive(['project/make-bread.md'], TODAY)
+
+    assert str(exc.value) == ('Target file already exists: archive/project/make-bread.md'
+                              ' (project/make-bread.md marked archived but not moved)')
+    assert exc.value.fields_written
+    assert exc.value.home == 'project/make-bread.md'
+    assert read_lines('project/make-bread.md') == [
+        '# Make Bread', '', '- status: archived', '- archived: 2026-09-25']
+
+
+def test_archive_batch_project_move_fails_keeps_fields(root):
+    write('project/a.md', '# A')
+    write('project/b.md', '# B')
+    write('archive/project/a.md', '# existing')
+
+    items = ops.archive(['project/*.md'], TODAY)
+
+    assert [(i.ok, i.fields_written) for i in items] == [(False, True), (True, True)]
+    assert items[0].home == 'project/a.md'
+    assert read_lines('project/a.md')[2] == '- status: archived'
+    assert Path('archive/project/b.md').is_file()
+
+
+def test_archive_unwritable_home_still_moves(root):
+    write('project/locked.md', '# Locked')
+    Path('project/locked.md').chmod(0o444)
+
+    [item] = ops.archive(['project/locked.md'], TODAY)
+
+    assert item.ok
+    assert not item.fields_written
+    assert Path('archive/project/locked.md').is_file()
+    assert read_lines('archive/project/locked.md') == ['# Locked']
+    assert len(item.warnings) == 1
+    assert item.warnings[0].startswith(
+        'Failed to write archive fields to project/locked.md')
+
+
+def test_cli_archive_json_project_fields(root, capsys):
+    write('project/make-bread.md', '# Make Bread')
+
+    code = cli.main(['--root', str(root), '--json', 'archive', 'project/make-bread'])
+    out = json.loads(capsys.readouterr().out)
+
+    assert code == 0
+    [item] = out['items']
+    assert item['fields_written'] is True
+    assert item['home'] == 'archive/project/make-bread.md'
+    assert item['message'].endswith(' (status: archived)')
+
+
+def test_cli_archive_json_resource_no_fields(root, capsys):
+    write('resource/recipes/Home.md', '# Recipes')
+
+    code = cli.main(['--root', str(root), '--json', 'archive', 'resource/recipes'])
+    out = json.loads(capsys.readouterr().out)
+
+    assert code == 0
+    [item] = out['items']
+    assert item['fields_written'] is False
+    assert item['home'] is None
+
+
+def test_cli_archive_json_missing_home_warns(root, capsys):
+    write('project/trip/Packing.md', '# Packing')
+
+    cli.main(['--root', str(root), '--json', 'archive', 'project/trip'])
+    out = json.loads(capsys.readouterr().out)
+
+    assert out['ok'] is True
+    assert out['warnings'] == ['No Home.md in project/trip; archive fields not written']
+
+
+def test_cli_archive_json_project_move_fails(root, capsys):
+    write('project/make-bread.md', '# Make Bread')
+    write('archive/project/make-bread.md', '# existing')
+
+    code = cli.main(['--root', str(root), '--json', 'archive', 'project/make-bread.md'])
+    out = json.loads(capsys.readouterr().out)
+
+    assert code == 1
+    assert out['ok'] is False
+    assert out['error'].endswith('(project/make-bread.md marked archived but not moved)')
+    assert out['fields_written'] is True
+    assert out['home'] == 'project/make-bread.md'
+
+
 # Tests for CLI file commands
 
 def test_cli_archive_json_batch(root, capsys, monkeypatch):
@@ -549,7 +712,11 @@ def test_cli_archive_json_partial_failure(root, capsys):
     assert out['ok'] is False
     assert out['error'] == '1 of 2 item(s) failed to archive'
     assert [i['ok'] for i in out['items']] == [False, True]
-    assert out['items'][0]['error'] == 'Target file already exists: archive/project/a.md'
+    assert out['items'][0]['error'] == (
+        'Target file already exists: archive/project/a.md'
+        ' (project/a.md marked archived but not moved)')
+    assert out['items'][0]['fields_written'] is True
+    assert out['items'][0]['home'] == 'project/a.md'
 
 
 def test_cli_archive_multiple_paths(root, capsys):
@@ -561,7 +728,7 @@ def test_cli_archive_multiple_paths(root, capsys):
 
     assert code == 0
     assert capsys.readouterr().out == (
-        'Archived: project/a.md → archive/project/a.md\n'
+        'Archived: project/a.md → archive/project/a.md (status: archived)\n'
         'Archived: area/b.md → archive/area/b.md\n'
         'Archived 2 item(s)\n')
 

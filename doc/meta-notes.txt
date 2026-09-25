@@ -164,6 +164,18 @@ FILE OPERATIONS ~
     Also updates all wiki-links and file headers across the notes directory.
     If the current buffer is the archived file, switches to the new location.
 
+    Archiving a project (a note or folder directly in `project/`) first
+    marks it archived in its home note, the note itself or the folder's
+    `Home.md`: >
+        - status: archived
+        - archived: 2026-09-25
+<   These go in the field list, the first `key: value` list after the
+    note's title; an existing `status` or `archived` item is replaced, and a
+    note with no field list gets one after its title. The fields stay even
+    if the move then fails. A folder with no `Home.md` is archived with a
+    warning. Areas, resources, and notes inside a project folder get no
+    fields.
+
     Only works on items in `project/`, `area/`, or `resource/`.
 
     Examples: >
@@ -547,7 +559,9 @@ Commands ~
 `meta-notes archive {path} ...`
     Same as |:MetaNotesArchive|. Quote wildcards (`'project/2024-*'`) so the
     CLI expands them; each match is archived independently and failures are
-    reported per item.
+    reported per item. Projects get `status: archived` and `archived:`
+    fields (see |:MetaNotesArchive|); with `--json`, each item has
+    `fields_written` and `home`, the project's home note or null.
 
 `meta-notes note daily|weekly|quarterly|yearly [{date}] [--render]`
 `meta-notes note new {path} [--template {name}] [--render]`
