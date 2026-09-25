@@ -9,6 +9,7 @@ import os
 import re
 import subprocess
 import sys
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -673,3 +674,140 @@ def test_shim_version_outside_notes_root(tmp_path):
     assert proc.returncode == 0
     assert re.match(r'meta-notes \d+\.\d+\.\d+', proc.stdout)
     assert proc.stderr == ''
+
+
+# Tests for the task update subcommand
+
+@pytest.fixture
+def task_note(notes_root):
+    """project/foo.md with a task on line 3."""
+    path = notes_root / 'project' / 'foo.md'
+    path.write_text('# project/foo\n\n- [ ] call Sam 📅 2026-09-22\n')
+    return path
+
+
+TASK = '- [ ] call Sam 📅 2026-09-22'
+
+
+@pytest.mark.parametrize('args, message', [
+    ([], 'at least one of'),
+    (['--status', 'done'], 'invalid choice'),
+    (['--due', '2026-02-30'], 'invalid value'),
+    (['--due', '20260930'], 'invalid value'),
+    (['--due', 'someday'], 'invalid value'),
+    (['--start', 'undated'], 'invalid value'),
+    (['--add-tag', 'two words'], 'invalid tag'),
+    (['--remove-tag', '#a.b'], 'invalid tag'),
+    (['--add-tag', 'later', '--remove-tag', '#Later'], 'both'),
+    (['--add-tag', 'mtg', '--remove-tag', 'meeting'], 'both'),
+])
+def test_task_update_usage_errors(task_note, capsys, args, message):
+    """Invalid options fail before the file is read, and nothing is written."""
+    before = task_note.read_bytes()
+    code, out, _ = run_json(
+        capsys, ['task', 'update', 'project/foo.md:3', '--expect', TASK] + args)
+    assert code == 1
+    assert out['ok'] is False
+    assert message in out['error']
+    assert task_note.read_bytes() == before
+
+
+def test_task_update_expect_required(task_note, capsys):
+    code, out, _ = run_json(capsys, ['task', 'update', 'project/foo.md:3',
+                                     '--status', 'x'])
+    assert code == 1
+    assert '--expect' in out['error']
+
+
+@pytest.mark.parametrize('target', ['project/foo.md', 'project/foo.md:',
+                                    'project/foo.md:x', ':3'])
+def test_task_update_bad_target(task_note, capsys, target):
+    code, out, _ = run_json(capsys, ['task', 'update', target,
+                                     '--expect', TASK, '--status', 'x'])
+    assert code == 1
+    assert '<file>:<line>' in out['error']
+
+
+def test_task_update_target_split_on_last_colon(notes_root, capsys):
+    """A path containing : is split at the last one."""
+    path = notes_root / 'project' / 'a:b.md'
+    path.write_text(TASK + '\n')
+    code, out, _ = run_json(capsys, ['task', 'update', 'project/a:b.md:1',
+                                     '--expect', TASK, '--status', '-'])
+    assert code == 0
+    assert out['file'] == 'project/a:b.md'
+    assert path.read_text() == '- [-] call Sam 📅 2026-09-22\n'
+
+
+def test_task_update_absolute_path(task_note, notes_root, capsys):
+    code, out, _ = run_json(capsys, ['task', 'update', f'{task_note}:3',
+                                     '--expect', TASK, '--status', '-'])
+    assert code == 0
+    assert out['file'] == 'project/foo.md'
+
+
+def test_task_update_json_success(notes_root, capsys):
+    path = notes_root / 'project' / 'foo.md'
+    path.write_text('# project/foo\n\n- [ ] call Sam 📅 2000-01-01\n')
+    code, out, _ = run_json(capsys, ['task', 'update', 'project/foo.md:3',
+                                     '--expect', '- [ ] call Sam 📅 2000-01-01',
+                                     '--status', 'x'])
+    assert code == 0
+    assert out == {
+        'ok': True, 'file': 'project/foo.md', 'line': 3,
+        'old': '- [ ] call Sam 📅 2000-01-01',
+        'new': f'- [x] call Sam 📅 2000-01-01 ✅ {date.today().isoformat()}',
+        'changed': True, 'warnings': []}
+    assert path.read_text().splitlines()[2] == out['new']
+
+
+def test_task_update_json_mismatch(task_note, capsys):
+    before = task_note.read_bytes()
+    code, out, _ = run_json(capsys, ['task', 'update', 'project/foo.md:3',
+                                     '--expect', '- [ ] call Sam 📅 2026-09-21',
+                                     '--status', 'x'])
+    assert code == 1
+    assert out['ok'] is False
+    assert out['current'] == TASK
+    assert task_note.read_bytes() == before
+
+
+def test_task_update_json_warning(task_note, capsys):
+    code, out, _ = run_json(capsys, ['task', 'update', 'project/foo.md:3',
+                                     '--expect', TASK, '--due', 'none'])
+    assert code == 0
+    assert out['new'] == '- [ ] call Sam'
+    assert any('no longer a task' in w for w in out['warnings'])
+
+
+def test_task_update_text_output(task_note, capsys):
+    code = cli.main(['task', 'update', 'project/foo.md:3', '--expect', TASK,
+                     '--status', '-'])
+    captured = capsys.readouterr()
+    assert code == 0
+    assert captured.out.splitlines() == [
+        'project/foo.md:3', f'- {TASK}', '+ - [-] call Sam 📅 2026-09-22']
+
+
+def test_task_update_text_unchanged(task_note, capsys):
+    code = cli.main(['task', 'update', 'project/foo.md:3', '--expect', TASK,
+                     '--status', ' '])
+    captured = capsys.readouterr()
+    assert code == 0
+    assert captured.out == 'project/foo.md:3 unchanged\n'
+
+
+def test_task_update_text_mismatch(task_note, capsys):
+    code = cli.main(['task', 'update', 'project/foo.md:3', '--expect', 'x',
+                     '--status', '-'])
+    captured = capsys.readouterr()
+    assert code == 1
+    assert TASK in captured.err
+
+
+def test_task_update_not_a_checkbox(task_note, capsys):
+    code, out, _ = run_json(capsys, ['task', 'update', 'project/foo.md:1',
+                                     '--expect', '# project/foo', '--status', 'x'])
+    assert code == 1
+    assert 'not a checkbox' in out['error']
+    assert 'current' not in out

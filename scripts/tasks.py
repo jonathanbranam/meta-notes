@@ -21,6 +21,10 @@ DUE_EMOJIS = ('📅', '📆', '🗓')
 _DUE_DATE_PATTERN = re.compile(
     '(?:' + '|'.join(DUE_EMOJIS) + r')\ufe0f?\s*(\d{4}-\d{2}-\d{2})')
 
+# A checkbox line: optional indentation, a bullet (-, *, +), whitespace, and
+# a single status character in square brackets
+CHECKBOX_PATTERN = re.compile(r'^\s*[-*+]\s+\[(.)\]')
+
 
 class TaskStatus(Enum):
     """Enum representing the status of a task."""
@@ -111,6 +115,23 @@ def _has_due_emoji(text: str) -> bool:
     return any(emoji in text for emoji in DUE_EMOJIS)
 
 
+def is_task(text: str) -> bool:
+    """
+    Whether a checkbox line counts as a task.
+
+    A checkbox line is a task only when it contains a due emoji (with or
+    without a date) or a start date (🛫 YYYY-MM-DD). Other checkbox lines
+    are checklist items.
+
+    Args:
+        text: The line's text.
+
+    Returns:
+        True if the line has a due emoji or a valid start date.
+    """
+    return _has_due_emoji(text) or _extract_date(text, '🛫') is not None
+
+
 def _char_to_status(status_char: str) -> TaskStatus:
     """
     Convert a status character to a TaskStatus enum.
@@ -137,9 +158,7 @@ def find_tasks_in_file(filepath: str) -> list[Task]:
     """
     Find all task lines in a markdown file.
 
-    A checkbox line is a task only when it contains a due emoji (with or
-    without a date) or a start date (🛫 YYYY-MM-DD). Other checkbox lines
-    are checklist items and are skipped.
+    Checkbox lines that aren't tasks (see is_task) are skipped.
 
     Args:
         filepath: Path to the markdown file to search.
@@ -148,21 +167,18 @@ def find_tasks_in_file(filepath: str) -> list[Task]:
         A list of Task objects found in the file.
     """
     tasks: list[Task] = []
-    # Pattern: line starts with optional whitespace, bullet (-, *, +),
-    # then space(s), then square brackets with a single character
-    task_pattern = re.compile(r'^\s*[-*+]\s+\[(.)\]')
 
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             for line_num, line in enumerate(f, 1):
-                match = task_pattern.match(line)
+                match = CHECKBOX_PATTERN.match(line)
                 if not match:
                     continue
                 text = line.rstrip()
+                if not is_task(text):
+                    continue
                 start_date, due_date, completed_date = _parse_task_dates(text)
                 has_due_emoji = _has_due_emoji(text)
-                if not has_due_emoji and start_date is None:
-                    continue
                 tasks.append(Task(
                     text=text,
                     status=_char_to_status(match.group(1)),

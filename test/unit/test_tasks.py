@@ -470,6 +470,36 @@ def test_parse_task_dates_prefers_first_due_date_emoji():
     assert due == date(2026, 2, 28)
 
 
+# Tests for is_task function
+
+def test_is_task_due_date():
+    """A due emoji with a date makes a task."""
+    assert tasks_module.is_task("- [ ] call Sam 📅 2026-10-01")
+
+
+def test_is_task_bare_due_emoji():
+    """A bare due emoji (an undated task) makes a task, for each due emoji."""
+    for emoji in ('📅', '📆', '🗓'):
+        assert tasks_module.is_task(f"- [ ] someday {emoji}")
+
+
+def test_is_task_start_date():
+    """A start date alone makes a task."""
+    assert tasks_module.is_task("- [ ] draft 🛫 2026-10-05")
+
+
+def test_is_task_bare_start_emoji_not_task():
+    """🛫 without a valid date doesn't make a task."""
+    assert not tasks_module.is_task("- [ ] draft 🛫")
+    assert not tasks_module.is_task("- [ ] draft 🛫 2026-02-30")
+
+
+def test_is_task_plain_checkbox():
+    """A checkbox with no date markers is a checklist item, not a task."""
+    assert not tasks_module.is_task("- [ ] buy milk")
+    assert not tasks_module.is_task("- [x] buy milk ✅ 2026-09-25")
+
+
 # Tests for _char_to_status function
 
 def test_char_to_status_completed_lowercase():

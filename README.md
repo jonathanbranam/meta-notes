@@ -87,6 +87,7 @@ meta-notes/
 │   │   ├── query.py             # Task query
 │   │   ├── time.py              # Time report
 │   │   ├── root.py              # Sentinel search for the notes root
+│   │   ├── task_update.py       # Task line edits
 │   │   └── template.py          # Template discovery and rendering
 │   ├── find_tasks.py        # Task selection and report
 │   ├── notes.py             # Note utilities
@@ -109,6 +110,7 @@ meta-notes/
 │   │   ├── test_query.py
 │   │   ├── test_root.py
 │   │   ├── test_tags.py
+│   │   ├── test_task_update.py
 │   │   ├── test_tasks.py
 │   │   ├── test_template.py
 │   │   ├── test_time_report.py
@@ -152,7 +154,7 @@ This structure is compatible with vim-plug, Vundle, and Pathogen.
 
 `bin/meta-notes` performs the plugin's setup (`init`), note creation from
 templates (`note`), file operations (`move`, `rename`, `archive`), task
-query (`tasks`), and time reports (`time`) outside Vim, for shells, agents, and other tools. The Vim
+query (`tasks`), task edits (`task update`), and time reports (`time`) outside Vim, for shells, agents, and other tools. The Vim
 commands call it. Every command accepts `--json`. It needs Python 3.10 or newer as `python3`. See
 `:help meta-notes-cli`.
 
@@ -182,6 +184,7 @@ bin/meta-notes move project/foo area/foo --json
 bin/meta-notes tasks --all --folder project --status all
 meta-notes tasks --overdue --due          # overdue and due today
 meta-notes tasks --scheduled --date 2026-11 --group-by tag
+meta-notes task update project/foo.md:3 --expect '- [ ] call Sam 📅 2026-09-22' --status x
 meta-notes time                           # today's time report
 meta-notes time --date 2026-09 --json     # a month's time summary
 ```

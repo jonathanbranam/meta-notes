@@ -12,12 +12,15 @@ import contextlib
 import io
 import json
 import os
+import re
 import subprocess
 import sys
 from dataclasses import dataclass, field
+from datetime import date
 
 import find_tasks
-from meta_notes import __version__, init, note, ops, query, time
+from tags import canonical_tag
+from meta_notes import __version__, init, note, ops, query, task_update, time
 from meta_notes.root import SENTINEL, find_root
 
 
@@ -217,6 +220,84 @@ def cmd_note(args, root: str) -> Output:
     return out
 
 
+STATUS_CHARS = (" ", "x", "X", ">", "-", ".", "o", "O")
+
+
+def _date_value(value: str, keywords: tuple[str, ...]) -> str:
+    """Check a --due or --start value: YYYY-MM-DD or one of keywords."""
+    if value in keywords:
+        return value
+    # fromisoformat alone also accepts forms such as 20261001
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+        try:
+            date.fromisoformat(value)
+            return value
+        except ValueError:
+            pass
+    raise argparse.ArgumentTypeError(
+        f"invalid value: {value!r} (expected YYYY-MM-DD or "
+        f"{' or '.join(keywords)})")
+
+
+def _due_value(value: str) -> str:
+    return _date_value(value, ("undated", "none"))
+
+
+def _start_value(value: str) -> str:
+    return _date_value(value, ("none",))
+
+
+def _tag_value(value: str) -> str:
+    """Check a tag name, with or without #; return it without #."""
+    bare = value.removeprefix("#")
+    if not re.fullmatch(r"[\w-]+", bare):
+        raise argparse.ArgumentTypeError(
+            f"invalid tag: {value!r} (letters, digits, _, or - after an "
+            "optional #)")
+    return bare
+
+
+def cmd_task_update(args, root: str) -> Output:
+    prog = "meta-notes task update"
+    path, sep, line = args.target.rpartition(":")
+    if not sep or not path or not line.isdigit():
+        raise CliError(f"{prog}: target must be <file>:<line>, got "
+                       f"{args.target!r}")
+    path = to_root_relative(path, root)
+    line_no = int(line)
+
+    add_tags, remove_tags = args.add_tags or [], args.remove_tags or []
+    both = ({canonical_tag(t).lower() for t in add_tags}
+            & {canonical_tag(t).lower() for t in remove_tags})
+    if both:
+        raise CliError(f"{prog}: tag given to both --add-tag and --remove-tag: "
+                       f"{', '.join(sorted(both))}")
+    if (args.status is None and args.due is None and args.start is None
+            and not add_tags and not remove_tags):
+        raise CliError(f"{prog}: give at least one of --status, --add-tag, "
+                       "--remove-tag, --due, or --start")
+
+    try:
+        result = task_update.update(
+            path, line_no, args.expect, status=args.status, add_tags=add_tags,
+            remove_tags=remove_tags, due=args.due, start=args.start,
+            no_completed=args.no_completed)
+    except task_update.TaskUpdateError as e:
+        if e.current is None:
+            raise CliError(str(e))
+        return Output({"file": path, "line": line_no, "current": e.current},
+                      error=str(e))
+
+    out = Output({"file": path, "line": line_no, "old": result.old,
+                  "new": result.new, "changed": result.changed},
+                 warnings=result.warnings)
+    if result.changed:
+        out.text = [f"{path}:{line_no}", f"- {result.old}", f"+ {result.new}"]
+    else:
+        out.text = [f"{path}:{line_no} unchanged"]
+    return out
+
+
 INIT_MESSAGES = {
     ("folder", "created"): "Created directory: {}",
     ("folder", "exists"): "Directory already exists: {}",
@@ -377,6 +458,36 @@ def build_parser() -> argparse.ArgumentParser:
                    help="use resource/template/NAME.md instead of "
                         "template discovery")
     p.set_defaults(handler=cmd_note)
+
+    p = sub.add_parser("task", parents=[common],
+                       help="edit a task line in place")
+    kinds = p.add_subparsers(dest="kind", metavar="KIND", parser_class=_Parser)
+    kinds.required = True
+    k = kinds.add_parser("update", parents=[common],
+                         help="edit one checkbox line's status, tags, and dates")
+    k.add_argument("target", metavar="FILE:LINE",
+                   help="the note, relative to the notes root, and the line "
+                        "number (from 1)")
+    k.add_argument("--expect", required=True, metavar="TEXT",
+                   help="the line as last read; nothing is written if it "
+                        "differs (ignoring trailing whitespace)")
+    k.add_argument("--status", choices=STATUS_CHARS, metavar="CHAR",
+                   help="set the status character: ' ', x, X, >, -, ., o, "
+                        "or O")
+    k.add_argument("--add-tag", dest="add_tags", action="append",
+                   type=_tag_value, metavar="TAG",
+                   help="add a tag before the first date (repeatable)")
+    k.add_argument("--remove-tag", dest="remove_tags", action="append",
+                   type=_tag_value, metavar="TAG",
+                   help="remove a tag, ignoring case and applying aliases "
+                        "(repeatable)")
+    k.add_argument("--due", type=_due_value, metavar="DATE",
+                   help="YYYY-MM-DD, undated (a bare due emoji), or none")
+    k.add_argument("--start", type=_start_value, metavar="DATE",
+                   help="YYYY-MM-DD or none")
+    k.add_argument("--no-completed", action="store_true",
+                   help="don't add a ✅ date when marking the task done")
+    p.set_defaults(handler=cmd_task_update)
 
     return parser
 

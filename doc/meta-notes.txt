@@ -501,7 +501,8 @@ updated automatically across the entire notes directory.
 9. COMMAND LINE                                 *meta-notes-cli*
 
 `bin/meta-notes` runs the same file operations and task query as the plugin,
-so notes can be reorganized from a shell, by an agent, or by other tools. The
+and edits task lines, so notes can be reorganized from a shell, by an agent,
+or by other tools. The
 plugin's |:MetaNotesArchive|, |:MetaNotesRename|, and |:MetaNotesMoveItem|
 commands call it, |:MetaNotesInit| calls `meta-notes init`, and
 |:MetaNotesDaily|, |:MetaNotesWeekPlan|, |:MetaNotesQuarterPlan|,
@@ -668,6 +669,68 @@ Commands ~
     `--overdue --date {{date:%Y-%m-%d}}`, or run `meta-notes init --force`
     if you haven't edited the templates.
 
+`meta-notes task update {file}:{line} --expect {text} [options]`
+                                                *meta-notes-cli-task-update*
+    Edit one checkbox line in place: its status, tags, and dates. {file} is
+    relative to the notes root (or an absolute path inside it), and {line}
+    counts from 1; the target is split at its last `:`. Any checkbox line
+    (|meta-notes-tasks-model|) can be edited, including a plain checkbox that
+    queries ignore, so `--due undated` turns a checklist item into a task. A
+    line that isn't a checkbox, a missing file, or a line out of range is an
+    error, and nothing is written.
+
+    `--expect` is required: the line's text as last read, such as the
+    `text` of `meta-notes tasks --json`. If the line now differs (ignoring
+    trailing whitespace), nothing is written and the command fails,
+    reporting the current line so you can query again. Only the target line
+    changes; line endings, the final newline, and the number of lines are
+    kept, so line numbers from one query stay valid across several updates.
+    Give at least one of:
+
+    --status {char}     Set the status character: ` `, `x`, `X`, `>`, `-`,
+                        `.`, `o`, or `O`.
+    --add-tag {tag}     Add a tag (with or without `#`), before the first
+                        🛫, due, or ✅ date emoji, or at the end of the
+                        line. Repeatable. A tag already on the line is
+                        left alone.
+    --remove-tag {tag}  Remove every occurrence of a tag. Repeatable.
+                        Tags match as queries match them, ignoring case
+                        and applying aliases (|meta-notes-task-tags|), so
+                        `--remove-tag meeting` removes `#mtg`.
+    --due {value}       `YYYY-MM-DD` sets the due date, `undated` leaves a
+                        bare due emoji, and `none` removes every due emoji
+                        and its date. The line's due emoji (📅, 📆, or 🗓)
+                        is kept; a new one is 📅, placed after any 🛫 date
+                        and before any ✅ date.
+    --start {value}     `YYYY-MM-DD` sets the 🛫 date, and `none` removes
+                        it. A new 🛫 goes before the due and ✅ dates.
+    --no-completed      Don't add a ✅ date when marking the task done.
+
+    Marking a task done (`x` or `X`) from another status appends
+    `✅ {today}`, unless the line already has a ✅ date, its due date (after
+    this call's `--due`) is today, or `--no-completed` is given; queries use
+    the due date for a completed task without ✅. Setting a done task done
+    again changes nothing. Any other status, including `-` (canceled) and
+    `>` (rescheduled), removes every ✅ date: the task wasn't done.
+
+    Changing a date doesn't reschedule a task: `--due` and `--start` edit
+    the task where it lives. `>` is for a copy of a task, such as one in a
+    daily note, that was planned but not done there. `--status '>'` only
+    sets the character; write any copy of the task yourself.
+
+    Removing a line's last due emoji and 🛫 date makes the edit with a
+    warning that the line is no longer a task. Everything else on the line
+    keeps its order and spacing. The output is `{file}:{line}` followed by
+    the old line after `- ` and the new line after `+ `, or
+    `{file}:{line} unchanged`, in which case the file isn't written.
+
+    Example: >
+        meta-notes task update project/foo.md:3 \
+            --expect '- [ ] call Sam 📅 2026-09-22' --status x
+        meta-notes task update project/foo.md:4 \
+            --expect '- [ ] #later read book 📅' \
+            --remove-tag later --add-tag next --due 2026-10-08
+<
 `meta-notes time [--date {period}]`             *meta-notes-cli-time*
     Print the time report (|meta-notes-time-report|). For a single day
     (the default is today), prints that day's report, and fails if the
@@ -748,7 +811,10 @@ and `links_updated` (files whose wiki-links were rewritten). `archive` adds
 `file`, `line`, `text`, `status`, `start`, `due`, `completed`, `tags`
 (canonical names without `#`), and `section` (the section it is listed in:
 `overdue`, `due`, `scheduled`, `ready`, `future`, or `undated`), in report
-order. A task under several tags with `--group-by tag` appears once. `note` returns `path`, `exists` (whether the
+order. A task under several tags with `--group-by tag` appears once.
+`task update` returns `file`, `line`, `old` and `new` (the line before and
+after), and `changed`; when the line didn't match `--expect`, it fails with
+`file`, `line`, and `current`, the line's current text. `note` returns `path`, `exists` (whether the
 note existed before), `created` (whether this command wrote it), and
 `template` (the template used, or null); with `--render` and a new note, it
 also returns `content`, the rendered note. `--version` returns `version`,

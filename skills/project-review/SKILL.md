@@ -11,8 +11,7 @@ ask one thing at a time, and save progress whenever the user stops.
 
 This draft uses the tools that exist today (the `meta-notes` CLI, git,
 grep). `meta-notes` is on `PATH`; run it from anywhere in the notes root.
-When `meta-notes project brief` and `meta-notes task update` land, replace
-steps 2 and 7 with those commands.
+When `meta-notes project brief` lands, replace step 2 with that command.
 
 ## Hard rules
 
@@ -29,7 +28,8 @@ steps 2 and 7 with those commands.
 - Task: a checklist line with `📅` (dated or bare) or `🛫 YYYY-MM-DD`
 - Status: space open, `x` done, `>` rescheduled, `-` canceled; `.`, `o`, `O`
   partial
-- Completion: append `✅ YYYY-MM-DD` when marking done, never when canceling
+- Completion: `✅ YYYY-MM-DD`; `meta-notes task update --status x` adds it
+  when needed and removes it for any other status
 - `#later`: someday/maybe, excluded from active lists
 - `#next`: the project's next action
 - Links: `[[path/without/extension]]`, relative to the notes root
@@ -100,7 +100,17 @@ the walk when the user signals time is short.
 
 ### 7. Apply
 
-- Edit task lines directly: status character, tags, dates, ✅ date.
+- Edit existing task lines only with `meta-notes task update`, one call per
+  line, never by rewriting the line yourself. Take `file`, `line`, and
+  `text` from `meta-notes tasks --json` (or from `grep -n` for tasks found
+  elsewhere) and pass `text` as `--expect`:
+  `meta-notes task update <file>:<line> --expect '<text>' <options>`.
+  Combine options in one call: `--status x` (done; the ✅ date is handled),
+  `--status -` (cancel), `--add-tag later`, `--remove-tag later`,
+  `--add-tag next`, `--due <date>`, `--due undated`, `--start <date>`.
+  Line numbers stay valid across updates, so several edits can use one
+  query. If a call fails because the line changed, re-run the query and
+  use the current `text`; never retry with a guessed line.
 - New tasks go in the project's index note unless the user says otherwise.
 - Frontmatter: set whatever changed (`status`, `revisit`, `outcome`) and
   stamp `reviewed: <today>`. Add frontmatter if the note has none.
@@ -108,7 +118,7 @@ the walk when the user signals time is short.
   command now, for example `meta-notes move project/x area/x` or
   `meta-notes archive project/x`. If the user would rather wait, add a task
   to the index note instead, for example
-  `- [ ] Convert to area: meta-notes move project/x area/x 📅 <date> #next`.
+  `- [ ] Convert to area: meta-notes move project/x area/x #next 📅 <date>`.
   Run structural commands last, after the other edits in this step.
 
 ### 8. Close
