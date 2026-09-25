@@ -67,47 +67,69 @@ No new syntax beyond a bare 📅.
 
 ### Task age
 
-The age of an open task is the date its line was last edited, taken from
-`git blame` at day granularity (notes are committed daily). A task untouched
-for a long time is the signal that it's being put off. No created-date
-syntax is needed.
+Age comes from dates already written in the notes, not from git history
+or file mtimes. A stale task has an old due date or sits in a note whose
+dates are all old; abandoned tasks and projects are months or years stale,
+so this is enough. A `git blame` last-edited date (`task-age`) is deferred.
+No created-date syntax is needed.
 
-### Commitments (open)
+### Commitments
 
-Things I owe someone and things I'm waiting on need to be queryable, and so
-do PR reviews. Candidate tags: `#owe`, `#wait`, `#pr`. Whether to mark people
-(`@name` or a `#tag`) is undecided; the preference is not to add syntax.
+Things I'm waiting on are tasks tagged `#wait`. `#waiting` is accepted as an
+alias and normalized to `#wait`. Things I owe someone are ordinary tasks,
+with no tag of their own. `#pr` is not a commitment tag; it already means
+something else. Whether to mark people (`@name` or a `#tag`) is undecided;
+the preference is not to add syntax.
 
 ## Project model
 
-Project notes may carry optional frontmatter. For folder projects, the
-canonical note is `index.md` (to confirm).
+A project is either a single note (`project/make-bread.md`) or a folder
+whose home note is `Home.md` (`project/make-bread/Home.md`). Project data
+is plain markdown, parsed the way tasks are. There is no frontmatter.
 
 ```markdown
----
-status: active        # active | paused | waiting | done
-outcome: One sentence describing done
-deadline: 2026-10-30
-tag: feature-store    # the tag used in time logs and tasks
-revisit: 2026-10-01   # come back to this
-reviewed: 2026-09-21  # stamped by the project review
----
+# Make Bread
+
+- status: active
+- tag: make-bread
+
+- [x] project #review 📅 ✅ 2026-09-03
+- [ ] Buy a banneton #next 📅 2026-09-27
+- [ ] Bake for the party #deadline 📅 2026-10-30
 ```
 
-**Last touched** is derived, never authored. A project was touched on the
-most recent of:
+**Fields.** They are `key: value` items in the first list after the home
+note's title:
 
-- the last day its tag or a `[[project/...]]` link appears in a daily note's
-  Log or Actual column
-- the last ✅ date on a task inside it
-- the last meaningful change to its files (see below)
+- `status`: `active`, `paused`, `waiting`, `done`, or `archived`; `active`
+  when missing.
+- `tag`: the tag used in time logs and tasks for this project. A project
+  without one has no associated tag.
+- `archived`: the date the project was archived, added with
+  `status: archived` when it moves to `archive/project/`.
 
-File mtime is not used, because link rewrites touch unrelated files.
+**Tagged tasks** carry everything else, anywhere in the project:
 
-**Meaningful change** means the most recent commit touching a file,
-following renames. The CLI never commits; moves and link rewrites land in
-the daily commit and count as changes for now. A filter for diffs that only
-change `[[link]]` targets or headers is a possible follow-up.
+- `#review`: the tag names the work to do, a project review. A completed
+  `#review` task records one, and the latest ✅ date among them is the last
+  review; a project with none has never been reviewed. The bare 📅 makes
+  the line a task, so `meta-notes tasks --status completed --tag review`
+  finds it. Reviews are usually suggested, not scheduled: a project is due
+  for one when it has no recent activity or hasn't been reviewed in a
+  long time. A `#review` task with a
+  due date schedules one when that's wanted, which is the uncommon case,
+  for example the date to reconsider a paused project.
+- `#deadline`: a date the project must meet.
+- `#next`: the project's next action (see Task model).
+
+**Project tasks** are the signal of work on a project: every task in the
+project's note or folder, plus every task anywhere carrying the project's
+`tag`, both open and completed. Completed tasks and their ✅ dates show
+recent progress; open tasks and their dates (see Task age) show what's
+waiting. A project's **latest date** is the latest `YYYY-MM-DD` up to today
+in its file names and contents and its tagged tasks; an active project has
+recent meeting notes and updates. Skills read this list and assess the project from it. There is no
+separate "last touched" date.
 
 ### Reorganizing
 
@@ -120,7 +142,10 @@ change `[[link]]` targets or headers is a possible follow-up.
 
 ### Archive tiers
 
-- `archive` stamps `archived: YYYY-MM-DD` in frontmatter.
+- Archiving always moves the item into `archive/`. An archived project
+  also gets `status: archived` and an `archived: YYYY-MM-DD` field in its
+  home note. For other items, the archive date is the date of the commit
+  that moved them.
 - Search and task queries skip items archived more than about 12 months
   ago by default, with a flag to include them.
 - The CLI regenerates a `.ignore` file that ripgrep respects, so Vim grep
@@ -141,7 +166,7 @@ natural successor ends by offering it, never by running it.
 | Weekly review | weekly-review | Friday morning, by 11:00 | weekly-plan (reminder) |
 | Weekly planning | weekly-plan | Friday afternoon | — |
 | Task cleanup | task-cleanup | Anytime, 5–10 minutes | — |
-| Project review | project-review | Monthly or quarterly | — |
+| Project review | project-review | Monthly | — |
 
 ### Daily shutdown (end of day, about 15 minutes)
 
@@ -157,7 +182,9 @@ Closes out today's note. It does not plan tomorrow.
 2. **PR check.** Reviews requested from me, plus the repos I own. Each open
    PR becomes a task dated for the next workday.
 3. **Projects touched today.** Write the next step for each.
-4. **Time log.** Backfill today from memory. A rough log beats none.
+4. **Time log.** Run today's time report and look for gaps and for large
+   stretches that don't clearly map to a project or work item. Ask about
+   each, then update the log from the answers. A rough log beats none.
 5. **Follow up.** Write a short list in today's note of what to pick up on
    the next workday: unfinished work, promised replies, the first thing to
    do. This survives even if planning is skipped.
@@ -178,30 +205,28 @@ One skill whether run in the evening after shutdown or the next morning.
    day is a Monday, also read the weekly plan.
 3. **Gather:** meetings (calendar screenshot), due and overdue tasks, PR
    tasks, and open commitments due soon.
-4. **Surface the 2–3 oldest untouched open tasks** (not `#later`). For
-   each: do that day, date it, `#later` it, or cancel it.
-5. **Write the plan:** create the target day's note if needed, fill the
+4. **Write the plan:** create the target day's note if needed, fill the
    Time Block Plan column, and pick a concrete first block.
-6. Mark `- [x] plan complete`. In the morning, the goal is the first block
+5. Mark `- [x] plan complete`. In the morning, the goal is the first block
    started by 8:15, not a polished plan.
 
 ### Weekly review (Friday, about 9:00–10:30)
 
 The output is a written summary in the weekly note by 11:00, suitable for
-sharing with my manager. The agent drafts it from:
+sharing with my manager. It covers Monday through Friday; weekend work,
+which is rare, isn't reviewed. The agent drafts it from:
 
 - tasks completed this week (✅ dates)
 - the week's time report
-- meaningful file changes
 - daily notes and their Follow up lists
 
 Then:
 
 1. Plan versus actual for the week.
 2. Commitments in both directions.
-3. Warnings only: projects untouched for a long time or with no open
-   `#next`, and a reminder to run project review when the oldest
-   `reviewed:` date is more than about 30 days old.
+3. Warnings only: projects with no recent activity or no open
+   `#next`, and a reminder to run project review when any project's last
+   `#review` is more than 30 days old or missing.
 4. Scan `#later` for anything that has become live.
 5. Mark the review complete and remind me that weekly planning is next,
    usually scheduled for Friday afternoon.
@@ -218,27 +243,29 @@ Then:
 ### Task cleanup (anytime, 5–10 minutes)
 
 Works down the backlog of stale tasks across all notes, independent of
-projects.
+projects. This is the only ceremony that works through old tasks; daily
+planning and project review leave it to this skill.
 
-- Lists open tasks oldest first (by last edited), plus undated 📅 tasks,
+- Lists overdue tasks oldest due date first, plus undated 📅 tasks,
   in batches sized to the time available.
 - For each: keep, date it, `#later`, cancel, or done. Bulk "cancel all" or
   "later all" for very old batches.
 - Stopping early is fine; the next run picks up the oldest again.
 
-### Project review (monthly or quarterly, 5–10 minutes per project)
+### Project review (monthly, 5–10 minutes per project)
 
 Cleans up dead and dormant projects. One project per session. See
 `skills/project-review/SKILL.md`.
 
 - With no argument, it picks the project with the oldest (or missing)
-  `reviewed:` date. The first pass works through the whole backlog; after
-  that it runs monthly or quarterly.
-- It shows the files, open tasks inside and outside the project folder, and
-  the last meaningful change. It gives the project state in about ten lines.
+  `#review`. The first pass works through the whole backlog; after that it
+  runs monthly.
+- It shows the files and the project tasks, open and completed. It gives
+  the project state in about ten lines.
 - It asks for a disposition: continue, pause, done, convert to area, split,
   or merge.
-- It asks for a next action, applies the edits, and stamps `reviewed:`.
+- It asks for a next action, applies the edits, and adds
+  `- [x] project #review 📅 ✅ <today>` to the home note.
   Stopping early saves partial progress. Task-by-task cleanup is left to
   task cleanup.
 
@@ -257,11 +284,13 @@ Specified across several openspec changes, in this order:
   ported from today's code without behavior changes (no git commits; the
   CLI only reads git), and JSON output on every command
 - `find-tasks-enhancements`: the task model (📅 or 🛫 required, bare 📅
-  undated), `#later`, tag and date-range filters, a last-edited date, and
-  an untouched-days filter
+  undated), `#later`, and tag and date-range filters. A last-edited date
+  and untouched-days filter (`task-age`) are deferred.
 - `task-update`: change status, tags, or date on a specific line, with a
   guard against stale line numbers
 - `project-brief`: everything the project review needs in one call
+- `archive-project-status`: `archive` sets `status: archived` and
+  `archived:` on a project's home note
 - `cli-init`: `meta-notes init`, including skill install
 - `note-create`: `meta-notes note`, creating daily, weekly, and other notes
   from templates, with template rendering moved to Python
@@ -310,7 +339,7 @@ creating events, which would sync back to Google.
 
 1. CLI core: move, rename, archive, and tasks, ported unchanged.
 2. find_tasks enhancements: the work-side changes (`#later`, tag filters,
-   date ranges, trimmed output), the task model, and task age.
+   date ranges, trimmed output) and the task model.
 3. Task update, then project brief.
 4. Project review skill, then work through the backlog one project at a
    time.
@@ -323,9 +352,7 @@ creating events, which would sync back to Google.
 
 ## Open questions
 
-- Commitment tags, and whether to mark people.
-- Canonical note name for folder projects (`index.md`?).
+- Whether to mark people in commitments.
 - Whether the calendar options 2 and 3 are acceptable under work policy.
-- A filter for link-only and header-only diffs in last-change dates.
-- The age threshold for "untouched" in daily planning and task cleanup
-  (proposed: 30 days).
+- The threshold for "no recent activity" on a project (proposed: 30 days
+  since its latest date).
