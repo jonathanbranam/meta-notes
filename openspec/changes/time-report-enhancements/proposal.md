@@ -49,12 +49,10 @@ task half of that document is in `find-tasks-enhancements`.
 - **Weekly time by tag.** The week summary gains the total time per tag for
   the whole week, sorted alphabetically. Above it is a short list of
   highlighted tags with display labels, showing only tags that have time. The
-  highlighted list is configurable rather than hard-coded. The work copy's
-  list is `meeting` → "all meetings", `recruiting`, `agile`, `fence`,
+  highlighted list is hard-coded to the work copy's list: `meeting` → "all meetings", `recruiting`, `agile`, `fence`,
   `iceberg`, `code`, `integr-test`, `axe`, `off-task`.
 - The 2-minute gap and 10-minute missing-time thresholds are the local
-  script's values. They are hard-coded unless open question 2 decides
-  otherwise.
+  script's values. They are hard-coded.
 
 ### Out of scope
 
@@ -73,32 +71,25 @@ task half of that document is in `find-tasks-enhancements`.
 ### Modified Capabilities
 - `cli`: adds the `time` subcommand.
 
-## Open Questions
+## Resolved Questions
 
-**Please resolve these before design and specs are written.**
-
-1. **Highlighted-tag config.** Where does the highlighted-tag list live?
-   Options: a `[time]` section in the `.meta-notes` sentinel, a separate file
-   in the notes root, or a Vim global passed to the script. The Vim global
-   wouldn't reach `meta-notes time`.
-2. **Thresholds.** Are the fixed 2-minute gap and 10-minute missing-time
-   thresholds fine, or should they be configurable alongside the tag list?
-3. **Week span and totals.** The plugin's week summary covers Mon–Fri and
-   reports "hours worked" with its work-window rules (leading and trailing
-   `#personal` stripped, `#break` and `#off-task` not counted). The work copy
-   covers Mon–Sun and reports "work duration" and "total duration". Which
-   span and definitions win? Should the weekly tag totals and the day
-   listing's missing time both use the plugin's work window?
-4. **Report layout.** The work copy prints the day log followed by the week
-   summary. The plugin prints time by tag, work vs. non-work, plan
-   adherence, and the week summary. Where does the day log listing go, and
-   do any existing sections drop?
-5. **Tag aliases in weekly totals.** The plugin expands `#mtg` → `#meeting`
-   and `#pers`/`#per` → `#personal`, and groups tags (`TAG_GROUPS`). Should
-   the weekly per-tag totals use the expanded tags, and should highlighted
-   tags be able to name a group (for example "all meetings")?
-6. **Vim command.** Should `:MetaNotesTimeReport` switch to `meta-notes time`
-   (passing the note's date), like the other commands that now call the CLI?
+1. **Highlighted-tag config.** The list is hard-coded to the work copy's
+   list for now. Making it configurable is left for later.
+2. **Thresholds.** The 2-minute gap and 10-minute missing-time thresholds
+   are fixed.
+3. **Week span and totals.** The week runs Mon–Sun and reports both `work
+   duration` (the plugin's work window: leading and trailing `#personal`
+   stripped, `#break`, `#off-task`, and `#personal` not counted) and `total
+   duration` (all logged time). Per-tag totals and missing time use all
+   logged time.
+4. **Report layout.** The day log listing and its Total Time come first,
+   followed by the existing sections (time by tag, work vs. non-work, plan
+   adherence) and then the week summary. No section is dropped.
+5. **Tag aliases.** Per-tag totals use canonical (alias-expanded) tags. A
+   highlighted item can name a `TAG_GROUPS` group ("all meetings" is the
+   `Meeting` group).
+6. **Vim command.** `:MetaNotesTimeReport` calls `meta-notes time --date
+   <note date>`.
 
 ## Impact
 
