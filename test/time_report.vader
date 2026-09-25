@@ -1,0 +1,63 @@
+" Tests for MetaNotesTimeReport command
+
+Execute (Setup - Create temporary test directory):
+  let g:test_dir = tempname()
+  call mkdir(g:test_dir, 'p')
+  let g:original_dir = getcwd()
+  execute 'cd' g:test_dir
+  call writefile(['# meta-notes notes root'], '.meta-notes')
+  call mkdir('plan/daily/26-Q3', 'p')
+  call mkdir('project', 'p')
+  let g:test_note = g:test_dir . '/plan/daily/26-Q3/2026-09-22 Tue.md'
+  call writefile([
+        \ '# 2026-09-22', '',
+        \ '### Log', '',
+        \ '- June DMC Connect #meeting',
+        \ '  * start: 15:00',
+        \ '  * end:   15:50',
+        \ '- Tanul & Melissa',
+        \ '  * start: 16:00',
+        \ '  * end:   16:40',
+        \ ], g:test_note)
+  call writefile(['# Project'], 'project/foo.md')
+
+Execute (MetaNotesTimeReport shows the CLI report for the note's date):
+  execute 'edit' fnameescape(g:test_note)
+  MetaNotesTimeReport
+
+  AssertEqual 'Time Report', bufname('%')
+  let expected = meta_notes#cli#Run(['time', '--date', '2026-09-22']).report
+  AssertEqual split(expected, "\n", 1), getline(1, '$')
+  Assert index(getline(1, '$'), '- *GAP of 10 min*') >= 0
+  Assert index(getline(1, '$'), '## Summary for 2026-09-21 to 2026-09-27') >= 0
+  Assert !&modifiable
+
+  execute 'bwipeout!' bufnr('Time Report')
+  execute 'bwipeout!' bufnr(g:test_note)
+
+Execute (MetaNotesTimeReport is only available in daily notes):
+  edit project/foo.md
+  AssertThrows MetaNotesTimeReport
+  Assert g:vader_exception =~# 'only available in daily notes', g:vader_exception
+  AssertEqual -1, bufnr('Time Report')
+
+  bwipeout!
+
+Execute (MetaNotesTimeReport reports a CLI failure without an exception):
+  " From project/, the CLI's notes root has no daily note for the date
+  execute 'edit' fnameescape(g:test_note)
+  cd project
+  let output = execute('MetaNotesTimeReport')
+  cd ..
+
+  Assert output =~# 'Error generating time report: Daily note not found', output
+  AssertEqual -1, bufnr('Time Report')
+
+  bwipeout!
+
+Execute (Cleanup):
+  execute 'cd' g:original_dir
+  call delete(g:test_dir, 'rf')
+  unlet g:test_dir
+  unlet g:test_note
+  unlet g:original_dir

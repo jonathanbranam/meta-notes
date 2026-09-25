@@ -713,8 +713,6 @@ PERSONAL_BOUNDARY_TAGS: frozenset[str] = frozenset({'#personal'})
 # Uses canonical forms; #off-task is distinct from #personal (non-boundary, non-work).
 NON_WORK_TAGS: frozenset[str] = frozenset({'#personal', '#off-task', '#break'})
 
-_DAY_ABBREVS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-
 
 def _has_any_tag(entry: TimeLogEntry, tag_set: frozenset) -> bool:
     """Return True if the entry has any tag from the given set."""
@@ -793,37 +791,201 @@ def analyze_work_day(entries: list[TimeLogEntry]) -> Optional[dict]:
     }
 
 
-def format_week_summary(days: list[tuple[date, Optional[dict]]]) -> str:
+# A gap between consecutive log entries is listed only above this many minutes.
+GAP_THRESHOLD_MINUTES = 2
+
+# Unlogged time in a day's span is reported only above this many minutes.
+MISSING_THRESHOLD_MINUTES = 10
+
+# Tags shown with display labels in a period's Total Time, in this order.
+# A name that is a TAG_GROUPS key totals that group; any other name is a tag.
+HIGHLIGHTED_TAGS: list[tuple[str, str]] = [
+    ('all meetings', 'Meeting'),
+    ('recruiting', 'recruiting'),
+    ('agile', 'agile'),
+    ('fence', 'fence'),
+    ('iceberg', 'iceberg'),
+    ('code', 'code'),
+    ('integr-test', 'integr-test'),
+    ('axe', 'axe'),
+    ('off-task', 'off-task'),
+]
+
+
+def duration_minutes(duration: timedelta) -> int:
+    """Return a duration in whole minutes, truncated toward zero."""
+    return int(duration.total_seconds() / 60)
+
+
+def _hhmm(value: Optional[datetime]) -> Optional[str]:
+    return value.strftime('%H:%M') if value is not None else None
+
+
+def entry_gap_minutes(prev: TimeLogEntry, nxt: TimeLogEntry) -> Optional[int]:
     """
-    Format a Mon-Fri week summary as a markdown indented list.
+    Return the time between one entry's end and the next entry's start.
 
     Args:
-        days: List of (date, analysis_or_None) for each day of the week.
+        prev: The earlier entry.
+        nxt: The entry that follows it.
 
     Returns:
-        Formatted markdown string.
+        Whole minutes from prev's end to nxt's start: positive for a gap,
+        negative for an overlap. None if prev has no end or nxt no start.
     """
-    lines = []
-    total_worked = timedelta()
+    if prev.end_time is None or nxt.start_time is None:
+        return None
+    return duration_minutes(nxt.start_time - prev.end_time)
 
-    for d, analysis in days:
-        day_abbrev = _DAY_ABBREVS[d.weekday()]
-        lines.append(f"- {d.strftime('%Y-%m-%d')} {day_abbrev}")
 
-        if analysis is None:
-            lines.append("  * (no data)")
+def _entry_item(entry: TimeLogEntry) -> dict:
+    minutes = None
+    if entry.start_time is not None and entry.end_time is not None:
+        minutes = duration_minutes(calculate_duration(entry.start_time, entry.end_time))
+    text = entry.text.strip()
+    if text.startswith('-'):
+        text = text[1:].strip()
+    tags: list[str] = []
+    for tag in entry.tags:
+        name = tag.text[1:]
+        if name.lower() not in (t.lower() for t in tags):
+            tags.append(name)
+    return {
+        'kind': 'entry',
+        'line': entry.line_no,
+        'text': text,
+        'start': _hhmm(entry.start_time),
+        'end': _hhmm(entry.end_time),
+        'minutes': minutes,
+        'tags': tags,
+    }
+
+
+def day_log_items(entries: list[TimeLogEntry]) -> list[dict]:
+    """
+    List a day's entries in file order, with the gaps and overlaps between them.
+
+    Args:
+        entries: The day's time log entries, in file order.
+
+    Returns:
+        Dicts of kind 'entry' (line, text, start, end, minutes, tags), with
+        a 'gap' or 'overlap' dict (minutes, start, end) between two entries
+        whose gap is more than GAP_THRESHOLD_MINUTES or negative. A gap's or
+        overlap's start is the earlier entry's end and its end the later
+        entry's start. Times are HH:MM or None.
+    """
+    items: list[dict] = []
+    for i, entry in enumerate(entries):
+        if i > 0:
+            gap = entry_gap_minutes(entries[i - 1], entry)
+            if gap is not None and (gap > GAP_THRESHOLD_MINUTES or gap < 0):
+                items.append({
+                    'kind': 'gap' if gap > 0 else 'overlap',
+                    'minutes': abs(gap),
+                    'start': _hhmm(entries[i - 1].end_time),
+                    'end': _hhmm(entry.start_time),
+                })
+        items.append(_entry_item(entry))
+    return items
+
+
+def day_totals(entries: list[TimeLogEntry]) -> dict:
+    """
+    Total a day's time log.
+
+    Args:
+        entries: The day's time log entries.
+
+    Returns:
+        Dict with 'work_minutes' (hours worked in the work window, see
+        analyze_work_day), 'total_minutes' (all complete entries),
+        'earliest' and 'latest' (HH:MM over every start and end present, or
+        None), 'span_minutes' (earliest to latest, or None), and
+        'missing_minutes' (span minus total when above
+        MISSING_THRESHOLD_MINUTES, otherwise None).
+    """
+    analysis = analyze_work_day(entries)
+    work = analysis['hours_worked'] if analysis else timedelta()
+
+    total = timedelta()
+    times: list[datetime] = []
+    for entry in entries:
+        if entry.start_time is not None and entry.end_time is not None:
+            total += calculate_duration(entry.start_time, entry.end_time)
+        times.extend(t for t in (entry.start_time, entry.end_time) if t is not None)
+
+    earliest = min(times) if times else None
+    latest = max(times) if times else None
+    span = duration_minutes(latest - earliest) if times else None
+    total_minutes = duration_minutes(total)
+    missing = None
+    if span is not None and span - total_minutes > MISSING_THRESHOLD_MINUTES:
+        missing = span - total_minutes
+
+    return {
+        'work_minutes': duration_minutes(work),
+        'total_minutes': total_minutes,
+        'earliest': _hhmm(earliest),
+        'latest': _hhmm(latest),
+        'span_minutes': span,
+        'missing_minutes': missing,
+    }
+
+
+def tag_totals(entries: list[TimeLogEntry]) -> dict[str, timedelta]:
+    """
+    Calculate total time per canonical tag.
+
+    Tags are compared ignoring case and shown as first seen. An entry
+    counts once toward each of its tags, however often a tag repeats.
+
+    Args:
+        entries: Time log entries.
+
+    Returns:
+        Dict mapping tag name (without #) to total duration, in order of
+        first appearance.
+    """
+    totals: dict[str, timedelta] = {}
+    names: dict[str, str] = {}
+    for entry in entries:
+        if entry.start_time is None or entry.end_time is None:
+            continue
+        duration = calculate_duration(entry.start_time, entry.end_time)
+        seen: set[str] = set()
+        for tag in entry.tags:
+            key = tag.text[1:].lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            name = names.setdefault(key, tag.text[1:])
+            totals[name] = totals.get(name, timedelta()) + duration
+    return totals
+
+
+def highlighted_totals(entries: list[TimeLogEntry]) -> list[tuple[str, timedelta]]:
+    """
+    Total the HIGHLIGHTED_TAGS.
+
+    Args:
+        entries: Time log entries.
+
+    Returns:
+        (label, duration) pairs in HIGHLIGHTED_TAGS order, leaving out
+        items with no time.
+    """
+    groups = calculate_time_by_group(entries)
+    tags = {name.lower(): d for name, d in tag_totals(entries).items()}
+    result = []
+    for label, name in HIGHLIGHTED_TAGS:
+        if name in TAG_GROUPS:
+            duration = groups.get(name, timedelta())
         else:
-            start_str = analysis['start'].strftime('%H:%M')
-            end_str = analysis['end'].strftime('%H:%M')
-            lines.append(f"  * time tracked:   {start_str} - {end_str}")
-            lines.append(f"  * hours worked:   {format_duration_long(analysis['hours_worked'])}")
-            lines.append(f"  * total time:     {format_duration_long(analysis['total_time'])}")
-            total_worked += analysis['hours_worked']
-
-    lines.append("")
-    lines.append(f"Weekly total worked: {format_duration_long(total_worked)}")
-
-    return "\n".join(lines)
+            duration = tags.get(name.lower(), timedelta())
+        if duration > timedelta():
+            result.append((label, duration))
+    return result
 
 
 def is_off_plan(block: 'TimeBlockEntry') -> bool:

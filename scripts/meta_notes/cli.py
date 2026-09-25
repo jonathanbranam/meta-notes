@@ -17,7 +17,7 @@ import sys
 from dataclasses import dataclass, field
 
 import find_tasks
-from meta_notes import __version__, init, note, ops, query
+from meta_notes import __version__, init, note, ops, query, time
 from meta_notes.root import SENTINEL, find_root
 
 
@@ -183,6 +183,14 @@ def cmd_tasks(args, root: str) -> Output:
     return Output({"tasks": tasks}, lines)
 
 
+def cmd_time(args, root: str) -> Output:
+    try:
+        lines, data = time.run(".", args.date)
+    except ValueError as e:
+        raise CliError(str(e))
+    return Output(data | {"report": "\n".join(lines)}, lines)
+
+
 def cmd_note(args, root: str) -> Output:
     if args.kind == "new":
         value = to_root_relative(args.path, root)
@@ -338,6 +346,15 @@ def build_parser() -> argparse.ArgumentParser:
                        help="list tasks (same options and output as find_tasks.py)")
     find_tasks.add_query_arguments(p)
     p.set_defaults(handler=cmd_tasks)
+
+    p = sub.add_parser("time", parents=[common],
+                       help="time report for a day or period (same output as "
+                            "time_report.py --date)")
+    p.add_argument("--date", metavar="DATE",
+                   help="YYYY-MM-DD for a day report; YYYY-MM-DD..YYYY-MM-DD, "
+                        "YYYY-MM, YYYY-Qn, or YYYY for a period report "
+                        "(default: today)")
+    p.set_defaults(handler=cmd_time)
 
     p = sub.add_parser("note", parents=[common],
                        help="create a note from its template, unless it exists; "

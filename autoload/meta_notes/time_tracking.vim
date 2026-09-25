@@ -27,19 +27,22 @@ function! meta_notes#time_tracking#ShowReport() abort
     return
   endif
 
-  " Execute the Python script
-  let l:result = meta_notes#template#ExecutePythonScript('time_report.py', [l:filepath])
-
-  " Check for errors
-  if !l:result.success
-    echoerr 'Error generating time report: ' . l:result.error
-    if !empty(l:result.output)
-      echoerr l:result.output
-    endif
+  let l:date = matchstr(expand('%:t'), '\d\{4}-\d\{2}-\d\{2}')
+  if empty(l:date)
+    echoerr 'TimeReport command needs a daily note named YYYY-MM-DD Ddd.md'
     return
   endif
 
-  let l:output = l:result.output
+  let l:result = meta_notes#cli#Run(['time', '--date', l:date])
+  if !l:result.ok
+    echohl ErrorMsg
+    echo 'Error generating time report: ' . l:result.error
+    echohl None
+    return
+  endif
+  call meta_notes#cli#ShowWarnings(l:result)
+
+  let l:output = l:result.report
 
   " Create a new split window for the report
   " Check if a time report buffer already exists

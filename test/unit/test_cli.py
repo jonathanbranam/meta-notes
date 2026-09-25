@@ -356,6 +356,148 @@ def test_note_json_command_output_only_in_content(notes_root):
     assert out['content'] == '# T\n{"ok": false}\nto-stderr\n\nfrom python\n\n'
 
 
+# Tests for the time subcommand
+
+TIME_LOG = """# 2026-09-22
+
+### Log
+
+- June DMC Connect #meeting
+  * start: 15:00
+  * end:   15:50
+- Tanul & Melissa
+  * start: 16:00
+  * end:   16:40
+- review #horz position paper
+  * start: 16:40
+
+### Notes
+"""
+
+
+@pytest.fixture
+def daily_note(notes_root):
+    """The notes root with a 2026-09-22 daily note that has a time log."""
+    folder = notes_root / 'plan' / 'daily' / '26-Q3'
+    folder.mkdir(parents=True)
+    (folder / '2026-09-22 Tue.md').write_text(TIME_LOG)
+    return notes_root
+
+
+def snapshot(root):
+    """Every file under root with its contents and modification time."""
+    return {p: (p.read_bytes(), p.stat().st_mtime_ns)
+            for p in root.rglob('*') if p.is_file()}
+
+
+def test_time_from_subfolder(daily_note, monkeypatch, capsys):
+    """The day report is found from a subfolder of the notes root."""
+    sub = daily_note / 'project' / 'foo'
+    sub.mkdir()
+    monkeypatch.chdir(sub)
+
+    code = cli.main(['time', '--date', '2026-09-22'])
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert 'File: 2026-09-22 Tue.md' in out
+    assert '## Summary for 2026-09-21 to 2026-09-27' in out
+
+
+def test_time_json_entry_fields(daily_note, capsys):
+    """The first entry has its line, text, times, minutes, and tags."""
+    code, data, _ = run_json(capsys, ['time', '--date', '2026-09-22'])
+
+    assert code == 0
+    assert data['ok'] is True
+    assert data['kind'] == 'day'
+    assert (data['start'], data['end']) == ('2026-09-22', '2026-09-22')
+    assert data['file'] == 'plan/daily/26-Q3/2026-09-22 Tue.md'
+    assert data['entries'][0] == {'kind': 'entry', 'line': 5,
+                                  'text': 'June DMC Connect #meeting',
+                                  'start': '15:00', 'end': '15:50',
+                                  'minutes': 50, 'tags': ['meeting']}
+    assert data['warnings'] == []
+
+
+def test_time_json_gap(daily_note, capsys):
+    """A 10-minute gap sits between its two entries."""
+    _, data, _ = run_json(capsys, ['time', '--date', '2026-09-22'])
+
+    assert data['entries'][1] == {'kind': 'gap', 'minutes': 10,
+                                  'start': '15:50', 'end': '16:00'}
+    assert data['entries'][2]['text'] == 'Tanul & Melissa'
+
+
+def test_time_json_missing_times_null(daily_note, capsys):
+    """An entry without an end has null end and minutes."""
+    _, data, _ = run_json(capsys, ['time', '--date', '2026-09-22'])
+
+    last = data['entries'][-1]
+    assert last['end'] is None
+    assert last['minutes'] is None
+
+
+def test_time_json_report_matches_text(daily_note, capsys):
+    """report is the text output without its trailing newline."""
+    cli.main(['time', '--date', '2026-09-22'])
+    text = capsys.readouterr().out
+    _, data, _ = run_json(capsys, ['time', '--date', '2026-09-22'])
+
+    assert data['report'] == text.removesuffix('\n')
+
+
+def test_time_json_period(daily_note, capsys):
+    """A month is the period report."""
+    code, data, _ = run_json(capsys, ['time', '--date', '2026-09'])
+
+    assert code == 0
+    assert data['kind'] == 'period'
+    assert len(data['days']) == 30
+    assert data['by_tag'] == {'meeting': 50}
+    assert data['report'].startswith('# Time Tracking Report\n\n'
+                                     '## Summary for 2026-09-01 to 2026-09-30')
+
+
+def test_time_json_invalid_date(notes_root, capsys):
+    """An invalid --date is one JSON error object naming the value."""
+    code, data, err = run_json(capsys, ['time', '--date', 'next-week'])
+
+    assert code == 1
+    assert data['ok'] is False
+    assert 'next-week' in data['error']
+    assert err == ''
+
+
+def test_time_missing_note(notes_root, capsys):
+    """A day without a daily note fails with its path."""
+    code = cli.main(['time', '--date', '2026-09-22'])
+
+    assert code == 1
+    assert ('Daily note not found: plan/daily/26-Q3/2026-09-22 Tue.md'
+            in capsys.readouterr().err)
+
+
+def test_time_read_only(daily_note, capsys):
+    """The time report changes no file in the notes root."""
+    before = snapshot(daily_note)
+
+    cli.main(['time', '--date', '2026-09-22'])
+    capsys.readouterr()
+    run_json(capsys, ['time', '--date', '2026-09'])
+
+    assert snapshot(daily_note) == before
+
+
+def test_time_shim(daily_note):
+    """The shim runs the time report."""
+    proc = subprocess.run([str(SHIM), '--json', 'time', '--date', '2026-09-22'],
+                          capture_output=True, text=True, cwd=str(daily_note))
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert json.loads(proc.stdout)['entries'][0]['minutes'] == 50
+
+
 # Tests for git_commit function
 
 def git(cwd, *args):

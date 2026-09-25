@@ -129,7 +129,7 @@ resolves the root.
 
 ```
 day report:    {start, end, kind: "day", file,
-                items: [entry | gap | overlap],
+                entries: [entry | gap | overlap],
                 totals: {work_minutes, total_minutes, earliest, latest,
                          span_minutes, missing_minutes},
                 by_tag: {tag: minutes}, work_vs_nonwork: {...},

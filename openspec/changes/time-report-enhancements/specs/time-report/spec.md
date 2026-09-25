@@ -105,7 +105,7 @@ A period summary SHALL cover every day from START to END. A week summary SHALL b
 
 1. **Total Time**: the period's `work duration` and `total duration` (the sums of each day's values), followed by the highlighted tags.
 2. **Time per tag**: every canonical tag that has time in the period, sorted alphabetically, with its total duration. An entry with several tags SHALL count toward each of them.
-3. **Day Summaries**: one item per day, with the date and day abbreviation. A day with time log entries SHALL show `work duration`, `earliest time`, `latest time`, and `total time`. A day with no daily note or no time log entries SHALL show `(no log)`.
+3. **Day Summaries**: one item per day, with the date and day abbreviation. A day with time log entries SHALL show `work duration`, `earliest time`, `latest time`, and `total time`. A day with no daily note, or no time log entry with a start or end time (such as a note holding only the template's `HH:MM` placeholders), SHALL show `(no log)`.
 
 Tag names SHALL be shown without `#`.
 
@@ -123,6 +123,10 @@ Tag names SHALL be shown without `#`.
 
 #### Scenario: Day with no log
 - **WHEN** a day in the period has no daily note
+- **THEN** its Day Summaries item SHALL show `(no log)`
+
+#### Scenario: Day with only placeholder entries
+- **WHEN** a day's note has time log entries but none has a parseable start or end time
 - **THEN** its Day Summaries item SHALL show `(no log)`
 
 #### Scenario: Month period

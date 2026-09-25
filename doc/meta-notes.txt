@@ -197,9 +197,12 @@ TIME TRACKING ~
 
                                                 *:MetaNotesTimeReport*
 :MetaNotesTimeReport
-    Generate and display a time tracking report for the current daily note.
-    Must be run from within a daily note buffer.
-    See |meta-notes-time-tracking|.
+    Show the time report for the current daily note's date in a `Time
+    Report` window. Must be run from within a saved daily note buffer. It
+    runs `meta-notes time --date {note date}` (|meta-notes-cli-time|), so
+    the notes root is Vim's current directory; a CLI error, such as no
+    daily note for that date under the current directory, is shown as an
+    error message. See |meta-notes-time-report|.
 
 ------------------------------------------------------------------------------
 VERSION ~
@@ -377,11 +380,9 @@ and `meta-notes note` reports a warning. An unknown type is replaced with
 7. TIME TRACKING                                *meta-notes-time-tracking*
 
 Daily notes support a time log format for tracking how time is spent. Use
-|:MetaNotesTimeReport| to generate a report from the current daily note's
-time log entries.
-
-The report is only available when editing a daily note
-(`plan/daily/YY-QN/YYYY-MM-DD ddd.md`).
+|:MetaNotesTimeReport| in a daily note, or `meta-notes time`
+(|meta-notes-cli-time|) from a shell, to report on the time log entries of
+a day or a longer period (|meta-notes-time-report|).
 
 Time log format ~
                                                 *meta-notes-time-log*
@@ -413,6 +414,68 @@ day abbreviation is not checked against the date.
 
 A timestamp in any other form, such as the template's `HH:MM` placeholder,
 leaves that time unset. The entry is kept but has no duration.
+
+Time report ~
+                                                *meta-notes-time-report*
+The report for one day has these sections, in order:
+
+  `## Time Log`         Each entry in note order: its activity line as
+                        written, then `start`, `end`, `time` (`H hr M min`,
+                        or `M min` under an hour), and `tags`. A missing
+                        time shows `*MISSING START TIME*` or
+                        `*MISSING END TIME*` and the entry has no `time`.
+                        Between two entries, a gap of more than 2 minutes
+                        is listed as `*GAP of N min*`, and an entry that
+                        starts before the previous one ends as
+                        `*Overlap of N min*`, each with `start` set to the
+                        earlier entry's end and `end` to the later entry's
+                        start. No gap is computed across a missing time.
+  `### Total Time`      `work duration`, `total duration`, `earliest time`,
+                        `latest time`, `total time`, and `*missing time*`
+                        (see below).
+  `## Time Log Summary` `### Time by Tag` (most time first) and
+                        `### Work vs Non-Work`.
+  `## Plan Adherence`   Counts of on-plan, off-plan, and unplanned time
+                        blocks.
+  `## Summary for ...`  The period summary for the Monday-Sunday week
+                        containing the day.
+
+A note with no time log entries says so under `## Time Log` and still
+gets the plan adherence and week summary sections.
+
+                                                *meta-notes-time-totals*
+`work duration` is the time in the work window: from the first to the last
+entry not tagged `#personal`, so leading and trailing `#personal` entries
+are left out, and not counting `#break`, `#off-task`, or `#personal`
+entries inside it. `total duration` is the sum of every entry's duration.
+`earliest time` and `latest time` are the earliest and latest start or end
+of any entry, and `total time` is the span between them. When `total time`
+exceeds `total duration` by more than 10 minutes, the difference is shown
+as `*missing time*`: time that wasn't logged. Tags are compared by their
+canonical names (|meta-notes-task-tags|), so `#pers` counts as
+`#personal`.
+
+                                                *meta-notes-time-period*
+A period summary is headed `## Summary for START to END` and has:
+
+  `### Total Time`      The period's `work duration` and `total duration`
+                        (each day's summed), then these highlighted tags,
+                        in this order, when they have time:
+                        `all meetings` (the `#meeting` tag group, counting
+                        each entry once), `recruiting`, `agile`, `fence`,
+                        `iceberg`, `code`, `integr-test`, `axe`, and
+                        `off-task`.
+  `### Time per tag`    Every tag with time in the period, alphabetically,
+                        without `#`. An entry counts toward each of its
+                        tags.
+  `### Day Summaries`   Each day with its `work duration`, `earliest time`,
+                        `latest time`, and `total time`, or `(no log)` for
+                        a day with no daily note or no entry with a start
+                        or end time.
+
+The week summary replaces the Monday-Friday list of `hours worked` and
+`Weekly total worked` in earlier versions: `work duration` is the old
+`hours worked`, and the week now runs Monday through Sunday.
 
 ==============================================================================
 8. WIKI LINKS                                   *meta-notes-wiki-links*
@@ -604,6 +667,44 @@ Commands ~
     and `--due-by {{date-1:%Y-%m-%d}}` with
     `--overdue --date {{date:%Y-%m-%d}}`, or run `meta-notes init --force`
     if you haven't edited the templates.
+
+`meta-notes time [--date {period}]`             *meta-notes-cli-time*
+    Print the time report (|meta-notes-time-report|). For a single day
+    (the default is today), prints that day's report, and fails if the
+    day has no daily note, naming the expected path. For a longer period,
+    prints the period summary (|meta-notes-time-period|) for START..END.
+    `--date` takes the forms in |meta-notes-date|. Reads notes only.
+    `scripts/time_report.py` takes the same `--date`, using the current
+    directory as the notes root, or a daily note's path instead.
+
+    Example: >
+        meta-notes time
+        meta-notes time --date 2026-09-22
+        meta-notes time --date 2026-09-21..2026-09-27
+        meta-notes time --date 2026-09 --json
+<
+    With `--json`, the object has `start`, `end`, `kind` (`day` or
+    `period`), and `report`, the text report. Times are `HH:MM` (null
+    when missing), dates `YYYY-MM-DD`, durations whole minutes, and tags
+    canonical names without `#`. A day report also has:
+
+        file                the note, relative to the notes root
+        entries             the listing, in order: `{kind: "entry", line,
+                            text, start, end, minutes, tags}`, with
+                            `{kind: "gap"|"overlap", minutes, start, end}`
+                            items between entries
+        totals              `work_minutes`, `total_minutes`, `earliest`,
+                            `latest`, `span_minutes`, `missing_minutes`
+        by_tag              `{tag: minutes}`
+        work_vs_nonwork     `work_minutes`, `nonwork_minutes`,
+                            `total_minutes`, `work_percent`
+        plan_adherence      the block counts and percentages, or null
+        week                the week's period summary
+
+    A period summary (the period report itself, or `week`) has
+    `work_minutes`, `total_minutes`, `highlighted` (`[{label, minutes}]`),
+    `by_tag`, and `days` (`[{date, weekday, logged, work_minutes,
+    earliest, latest, span_minutes}]`).
 
 `meta-notes --version`                          *meta-notes-cli-version*
     Print `meta-notes {version}`, where {version} is MAJOR.MINOR.PATCH.

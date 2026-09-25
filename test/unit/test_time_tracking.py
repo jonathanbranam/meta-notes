@@ -37,7 +37,14 @@ from time_tracking import (
     format_duration,
     format_duration_long,
     analyze_work_day,
-    format_week_summary,
+    GAP_THRESHOLD_MINUTES,
+    MISSING_THRESHOLD_MINUTES,
+    HIGHLIGHTED_TAGS,
+    entry_gap_minutes,
+    day_log_items,
+    day_totals,
+    tag_totals,
+    highlighted_totals,
     is_off_plan,
     compare_plan_vs_actual,
     calculate_plan_adherence
@@ -1331,37 +1338,214 @@ def test_analyze_work_day_all_personal():
     assert analyze_work_day(entries) is None
 
 
-# Tests for format_week_summary function
-
-def test_format_week_summary_with_data():
-    """Test formatting a week summary with data for some days."""
+def _entry(start, end, tags=(), text='- entry', line=1, d=date(2026, 9, 22)):
+    """Helper to build a TimeLogEntry from 'HH:MM' strings (None for missing)."""
     from datetime import datetime
-    days = [
-        (date(2026, 2, 16), {
-            'start': datetime(2026, 2, 16, 8, 20),
-            'end': datetime(2026, 2, 16, 17, 0),
-            'total_time': timedelta(hours=8, minutes=40),
-            'hours_worked': timedelta(hours=7, minutes=46),
-        }),
-        (date(2026, 2, 17), None),
+
+    def at(hhmm):
+        if hhmm is None:
+            return None
+        h, m = hhmm.split(':')
+        return datetime(d.year, d.month, d.day, int(h), int(m))
+
+    return TimeLogEntry(text, "test.md", line, at(start), at(end), "entry",
+                        [Tag(t) for t in tags])
+
+
+# Tests for entry_gap_minutes function
+
+def test_entry_gap_minutes_gap():
+    """A later start after the earlier end is a positive gap."""
+    assert entry_gap_minutes(_entry('15:00', '15:50'), _entry('16:00', '16:40')) == 10
+
+
+def test_entry_gap_minutes_overlap():
+    """A later start before the earlier end is a negative gap."""
+    assert entry_gap_minutes(_entry('14:00', '14:39'), _entry('14:30', '15:00')) == -9
+
+
+def test_entry_gap_minutes_zero():
+    """Back-to-back entries have no gap."""
+    assert entry_gap_minutes(_entry('09:00', '10:00'), _entry('10:00', '11:00')) == 0
+
+
+def test_entry_gap_minutes_missing_end():
+    """No gap without the earlier entry's end."""
+    assert entry_gap_minutes(_entry('09:00', None), _entry('10:00', '11:00')) is None
+
+
+def test_entry_gap_minutes_missing_start():
+    """No gap without the later entry's start."""
+    assert entry_gap_minutes(_entry('09:00', '10:00'), _entry(None, '11:00')) is None
+
+
+def test_thresholds():
+    """The gap and missing-time thresholds are the work copy's values."""
+    assert GAP_THRESHOLD_MINUTES == 2
+    assert MISSING_THRESHOLD_MINUTES == 10
+
+
+# Tests for day_log_items function
+
+def test_day_log_items_gap():
+    """A 10-minute gap is listed between the two entries."""
+    items = day_log_items([
+        _entry('15:00', '15:50', ['#meeting'], '- June DMC Connect #meeting', 5),
+        _entry('16:00', '16:40', [], '- Tanul & Melissa', 9),
+    ])
+
+    assert [i['kind'] for i in items] == ['entry', 'gap', 'entry']
+    assert items[1] == {'kind': 'gap', 'minutes': 10, 'start': '15:50', 'end': '16:00'}
+
+
+def test_day_log_items_entry_fields():
+    """An entry item has its line, activity text, times, minutes, and tags."""
+    items = day_log_items([
+        _entry('15:00', '15:50', ['#mtg'], '  - June DMC Connect #mtg', 5),
+    ])
+
+    assert items == [{'kind': 'entry', 'line': 5, 'text': 'June DMC Connect #mtg',
+                      'start': '15:00', 'end': '15:50', 'minutes': 50,
+                      'tags': ['meeting']}]
+
+
+def test_day_log_items_small_gap_ignored():
+    """A 2-minute gap is not listed."""
+    items = day_log_items([_entry('09:00', '10:00'), _entry('10:02', '11:00')])
+
+    assert [i['kind'] for i in items] == ['entry', 'entry']
+
+
+def test_day_log_items_overlap():
+    """A negative gap is an overlap, earlier end first."""
+    items = day_log_items([_entry('14:00', '14:39'), _entry('14:30', '15:00')])
+
+    assert items[1] == {'kind': 'overlap', 'minutes': 9, 'start': '14:39', 'end': '14:30'}
+
+
+def test_day_log_items_missing_end_breaks_chain():
+    """No gap or overlap is computed across a missing end time."""
+    items = day_log_items([_entry('14:00', None), _entry('14:30', '15:00')])
+
+    assert [i['kind'] for i in items] == ['entry', 'entry']
+    assert items[0]['end'] is None
+    assert items[0]['minutes'] is None
+
+
+def test_day_log_items_keeps_file_order():
+    """Entries stay in file order even when out of time order."""
+    items = day_log_items([_entry('10:00', '11:00', line=1),
+                           _entry('08:00', '09:00', line=5)])
+
+    assert [i.get('line') for i in items] == [1, None, 5]
+    assert items[1]['kind'] == 'overlap'
+    assert items[1]['minutes'] == 180
+
+
+# Tests for day_totals function
+
+def test_day_totals_missing_time():
+    """Unlogged time above the threshold is reported."""
+    entries = [
+        _entry('07:08', '12:00'),       # 4 hr 52 min
+        _entry('13:37', '17:51'),       # 4 hr 14 min -> 9 hr 6 min total
+    ]
+    totals = day_totals(entries)
+
+    assert totals['earliest'] == '07:08'
+    assert totals['latest'] == '17:51'
+    assert totals['total_minutes'] == 9 * 60 + 6
+    assert totals['span_minutes'] == 10 * 60 + 43
+    assert totals['missing_minutes'] == 60 + 37
+
+
+def test_day_totals_missing_time_under_threshold():
+    """Unlogged time of 10 minutes or less is not reported."""
+    totals = day_totals([_entry('09:00', '10:00'), _entry('10:10', '11:00')])
+
+    assert totals['span_minutes'] - totals['total_minutes'] == 10
+    assert totals['missing_minutes'] is None
+
+
+def test_day_totals_personal_at_edges():
+    """Personal time at the edges counts in total but not work duration."""
+    entries = [
+        _entry('07:00', '08:00', ['#pers']),
+        _entry('08:00', '10:00'),
+        _entry('18:00', '19:00', ['#personal']),
+    ]
+    totals = day_totals(entries)
+
+    assert totals['work_minutes'] == 120
+    assert totals['total_minutes'] == 240
+
+
+def test_day_totals_one_sided_entries_extend_span():
+    """Earliest and latest include starts and ends of incomplete entries."""
+    totals = day_totals([_entry('07:00', None), _entry('08:00', '09:00'),
+                         _entry(None, '12:00')])
+
+    assert totals['earliest'] == '07:00'
+    assert totals['latest'] == '12:00'
+    assert totals['total_minutes'] == 60
+    assert totals['span_minutes'] == 300
+
+
+def test_day_totals_no_entries():
+    """An empty day has zero totals and no times."""
+    assert day_totals([]) == {'work_minutes': 0, 'total_minutes': 0,
+                              'earliest': None, 'latest': None,
+                              'span_minutes': None, 'missing_minutes': None}
+
+
+# Tests for tag_totals function
+
+def test_tag_totals_aliases_combined():
+    """#mtg and #meeting total under meeting, without #."""
+    totals = tag_totals([_entry('09:00', '09:30', ['#mtg']),
+                         _entry('10:00', '11:00', ['#meeting'])])
+
+    assert totals == {'meeting': timedelta(hours=1, minutes=30)}
+
+
+def test_tag_totals_each_tag_once_per_entry():
+    """A tag repeated on one entry counts once; each distinct tag counts."""
+    totals = tag_totals([_entry('09:00', '09:30', ['#mtg', '#meeting', '#code'])])
+
+    assert totals == {'meeting': timedelta(minutes=30), 'code': timedelta(minutes=30)}
+
+
+def test_tag_totals_skips_incomplete_entries():
+    """Entries without both times add nothing."""
+    assert tag_totals([_entry('09:00', None, ['#code'])]) == {}
+
+
+# Tests for highlighted_totals function
+
+def test_highlighted_totals_order_and_filtering():
+    """Only highlighted items with time are shown, in list order."""
+    entries = [
+        _entry('08:00', '08:22', ['#recruiting']),
+        _entry('09:00', '11:25', ['#meeting']),
+        _entry('12:00', '13:00', ['#horz']),
     ]
 
-    result = format_week_summary(days)
-
-    assert '2026-02-16 Mon' in result
-    assert 'time tracked:   08:20 - 17:00' in result
-    assert 'hours worked:   7 hr 46 min' in result
-    assert 'total time:     8 hr 40 min' in result
-    assert '2026-02-17 Tue' in result
-    assert '(no data)' in result
-    assert 'Weekly total worked: 7 hr 46 min' in result
+    assert highlighted_totals(entries) == [
+        ('all meetings', timedelta(hours=2, minutes=25)),
+        ('recruiting', timedelta(minutes=22)),
+    ]
 
 
-def test_format_week_summary_no_data():
-    """Test formatting a week summary with no data for any day."""
-    days = [(date(2026, 2, 16 + i), None) for i in range(5)]
+def test_highlighted_totals_group_counts_entry_once():
+    """An entry with two tags in the Meeting group adds its time once."""
+    entries = [_entry('09:00', '09:30', ['#meeting', '#mtg'])]
 
-    result = format_week_summary(days)
+    assert highlighted_totals(entries) == [('all meetings', timedelta(minutes=30))]
 
-    assert result.count('(no data)') == 5
-    assert 'Weekly total worked: 0 min' in result
+
+def test_highlighted_tags_list():
+    """The highlighted list is the work copy's list."""
+    assert [label for label, _ in HIGHLIGHTED_TAGS] == [
+        'all meetings', 'recruiting', 'agile', 'fence', 'iceberg', 'code',
+        'integr-test', 'axe', 'off-task']
+    assert HIGHLIGHTED_TAGS[0][1] in TAG_GROUPS
