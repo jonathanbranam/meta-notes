@@ -2,7 +2,7 @@
 
 Task queries can't tell a live task from a someday item or a plain
 checklist, can't filter by tag, and can't say how long a task has sat
-untouched. The rituals in `docs/planning-system.md` (morning surface,
+untouched. The ceremonies in `docs/planning-system.md` (daily planning,
 project review, weekly review) depend on all of these. Some of this already
 exists on the work copy of meta-notes and needs porting back so both copies
 share one implementation.

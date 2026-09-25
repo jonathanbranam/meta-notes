@@ -9,7 +9,7 @@ neither I nor an agent can plan a day against them. The first hour at the
 desk goes to re-deciding priorities, reading the calendar, and building a
 time block from scratch.
 
-The fix is a set of rituals, supported by skills and tooling, that keep the
+The fix is a set of ceremonies, supported by skills and tooling, that keep the
 notes current enough to plan against. The file format changes as little as
 possible.
 
@@ -20,8 +20,8 @@ possible.
 - **One implementation.** Every operation (move, rename, archive, task
   edits, queries) lives in a Python CLI (stdlib only). The Vim plugin, the
   agent, and the local server all call it.
-- **Rituals over structure.** A field or convention exists only if a ritual
-  uses it.
+- **Ceremonies over structure.** A field or convention exists only if a
+  ceremony uses it.
 - **Warn, don't enforce.** Missing next actions, stale projects, and skipped
   reviews are surfaced, never blocking.
 - **Small units of review.** Any review can be done in 5–10 minutes between
@@ -128,22 +128,24 @@ change `[[link]]` targets or headers is a possible follow-up.
 - Old material stays in the tree so links keep resolving. Nothing moves out
   of the notes root.
 
-## Rituals
+## Ceremonies
 
-Each ritual is an agent skill with a template section and a completion
-marker that reminders and the dashboard can check.
+Each ceremony is an agent skill with a template section and a completion
+marker that reminders and the dashboard can check. A ceremony that has a
+natural successor ends by offering it, never by running it.
 
-### Morning (8:00, about 10 minutes)
+| Ceremony | Skill | When | Offers next |
+|---|---|---|---|
+| Daily shutdown | daily-shutdown | End of each workday | daily-plan |
+| Daily planning | daily-plan | After shutdown, or next morning | — |
+| Weekly review | weekly-review | Friday morning, by 11:00 | weekly-plan (reminder) |
+| Weekly planning | weekly-plan | Friday afternoon | — |
+| Task cleanup | task-cleanup | Anytime, 5–10 minutes | — |
+| Project review | project-review | Monthly or quarterly | — |
 
-Starts from the plan made at the previous shutdown.
+### Daily shutdown (end of day, about 15 minutes)
 
-1. Open today's note and adjust blocks for anything new: meetings, fires.
-2. Surface the 2–3 oldest untouched open tasks (not `#later`). For each:
-   do today, date it, `#later` it, or cancel it.
-3. Start the first block by 8:15. It should be a concrete task chosen the
-   night before, not "plan the day".
-
-### Shutdown (end of day, about 15 minutes)
+Closes out today's note. It does not plan tomorrow.
 
 1. **Collect.** Notes are the only inbox.
    - Starred email: each becomes a task, then unstar.
@@ -153,12 +155,35 @@ Starts from the plan made at the previous shutdown.
    - Anything else promised or thought of today.
    - The agent turns pasted messages into task lines in the right note.
 2. **PR check.** Reviews requested from me, plus the repos I own. Each open
-   PR becomes a task dated tomorrow. The review itself gets a morning block.
+   PR becomes a task dated for the next workday.
 3. **Projects touched today.** Write the next step for each.
 4. **Time log.** Backfill today from memory. A rough log beats none.
-5. **Tomorrow.** Create tomorrow's note with a first-pass time block and a
-   short list. On Friday, "tomorrow" is Monday.
-6. **Commit.** Mark done with `- [x] shutdown complete`.
+5. **Follow up.** Write a short list in today's note of what to pick up on
+   the next workday: unfinished work, promised replies, the first thing to
+   do. This survives even if planning is skipped.
+6. **Commit** and mark `- [x] shutdown complete`.
+7. **Offer daily planning** for the next workday. Declining is normal on a
+   busy day; planning then happens the next morning.
+
+Friday's shutdown is the same as any other day's.
+
+### Daily planning (about 10–15 minutes)
+
+One skill whether run in the evening after shutdown or the next morning.
+
+1. **Pick the target day.** If today's note has no plan, plan today.
+   Otherwise plan the next workday. State the choice in one line.
+2. **Read the previous workday's note**, always: its Follow up list, its
+   unfinished blocks, and whether shutdown was completed. When the target
+   day is a Monday, also read the weekly plan.
+3. **Gather:** meetings (calendar screenshot), due and overdue tasks, PR
+   tasks, and open commitments due soon.
+4. **Surface the 2–3 oldest untouched open tasks** (not `#later`). For
+   each: do that day, date it, `#later` it, or cancel it.
+5. **Write the plan:** create the target day's note if needed, fill the
+   Time Block Plan column, and pick a concrete first block.
+6. Mark `- [x] plan complete`. In the morning, the goal is the first block
+   started by 8:15, not a polished plan.
 
 ### Weekly review (Friday, about 9:00–10:30)
 
@@ -168,53 +193,61 @@ sharing with my manager. The agent drafts it from:
 - tasks completed this week (✅ dates)
 - the week's time report
 - meaningful file changes
-- daily notes
+- daily notes and their Follow up lists
 
 Then:
 
 1. Plan versus actual for the week.
-2. Commitments in both directions, and all tasks untouched for more than 30
-   days.
-3. Undated 📆 tasks: date each or `#later` it.
-4. Project review on the 2–3 projects next in the queue.
-5. Scan `#later` for anything that has become live.
+2. Commitments in both directions.
+3. Warnings only: projects untouched for a long time or with no open
+   `#next`, and a reminder to run project review when the oldest
+   `reviewed:` date is more than about 30 days old.
+4. Scan `#later` for anything that has become live.
+5. Mark the review complete and remind me that weekly planning is next,
+   usually scheduled for Friday afternoon.
 
-### Week plan (Friday afternoon)
+### Weekly planning (Friday afternoon)
 
-1. Read next week's calendar.
+1. Read the weekly review and next week's calendar.
 2. **Capacity.** Productive hours are free gaps of 90 minutes or more.
    Shorter gaps are listed separately.
 3. Meetings to schedule, and deadlines landing next week.
 4. Choose 3–5 priorities and place them roughly on days.
-5. Friday's shutdown creates Monday's note with a first-pass time block.
+5. Write the plan into next week's note. Monday's daily planning reads it.
 
-### Project review (anytime, 5–10 minutes)
+### Task cleanup (anytime, 5–10 minutes)
 
-One project per session. See `skills/project-review/SKILL.md`.
+Works down the backlog of stale tasks across all notes, independent of
+projects.
+
+- Lists open tasks oldest first (by last edited), plus undated 📆 tasks,
+  in batches sized to the time available.
+- For each: keep, date it, `#later`, cancel, or done. Bulk "cancel all" or
+  "later all" for very old batches.
+- Stopping early is fine; the next run picks up the oldest again.
+
+### Project review (monthly or quarterly, 5–10 minutes per project)
+
+Cleans up dead and dormant projects. One project per session. See
+`skills/project-review/SKILL.md`.
 
 - With no argument, it picks the project with the oldest (or missing)
-  `reviewed:` date. Repeated sessions work through the whole backlog.
+  `reviewed:` date. The first pass works through the whole backlog; after
+  that it runs monthly or quarterly.
 - It shows the files, open tasks inside and outside the project folder, and
   the last meaningful change. It gives the project state in about ten lines.
 - It asks for a disposition: continue, pause, done, convert to area, split,
   or merge.
-- It walks stale tasks oldest first, in batches sized to the time available.
-- It asks for a next action and new tasks, applies the edits, and stamps
-  `reviewed:`. Stopping early saves partial progress.
+- It asks for a next action, applies the edits, and stamps `reviewed:`.
+  Stopping early saves partial progress. Task-by-task cleanup is left to
+  task cleanup.
 
 ## Skills
 
-| Skill | When | Output |
-|---|---|---|
-| project-review | Anytime | One project reconciled, `reviewed:` stamped |
-| shutdown | End of day | Inboxes cleared, tasks captured, tomorrow planned, commit |
-| morning | 8:00 | Adjusted blocks |
-| weekly-review | Friday morning | Weekly summary |
-| week-plan | Friday afternoon | Next week's note, Monday's note |
-
-Skills ship in `skills/` in this repo and are installed into the agent's
-skill directory by symlink. They call the CLI for all reads and edits, using
-focused queries (tags, date ranges, folders) to keep agent context small.
+Skills ship in `skills/` in this repo and are installed into the notes
+root's `.claude/skills/` by `meta-notes init`. They call the CLI for all
+reads and edits, using focused queries (tags, date ranges, folders) to keep
+agent context small. See the `planning-skills` change.
 
 ## CLI
 
@@ -230,6 +263,9 @@ Specified across several openspec changes, in this order:
   guard against stale line numbers
 - `project-brief`: everything the project review needs in one call
 - `cli-init`: `meta-notes init`, including skill install
+- `note-create`: `meta-notes note`, creating daily, weekly, and other notes
+  from templates, with template rendering moved to Python
+- `planning-skills`: the ceremony skills and the queries they need
 
 The Vim plugin becomes a thin caller. Read-only task buffers gain mappings
 that edit the source line through `task update`.
@@ -278,11 +314,12 @@ creating events, which would sync back to Google.
 3. Task update, then project brief.
 4. Project review skill, then work through the backlog one project at a
    time.
-5. Shutdown skill.
-6. Weekly review and week plan skills.
-7. Morning skill.
-8. Dashboard with time logging and reminders.
-9. Archive tiers.
+5. Note creation in the CLI (`note-create`).
+6. Planning skills (`planning-skills`): daily shutdown, daily planning,
+   weekly review, weekly planning, and task cleanup, with the supporting
+   scripts.
+7. Dashboard with time logging and reminders.
+8. Archive tiers.
 
 ## Open questions
 
@@ -290,5 +327,5 @@ creating events, which would sync back to Google.
 - Canonical note name for folder projects (`index.md`?).
 - Whether the calendar options 2 and 3 are acceptable under work policy.
 - A filter for link-only and header-only diffs in last-change dates.
-- The age threshold for "untouched" in the morning surface (proposed: 30
-  days).
+- The age threshold for "untouched" in daily planning and task cleanup
+  (proposed: 30 days).
