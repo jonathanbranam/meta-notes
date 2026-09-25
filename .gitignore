@@ -5,3 +5,4 @@
 *.swn
 __pycache__/
 *.pyc
+doc/tags
