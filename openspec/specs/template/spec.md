@@ -152,8 +152,8 @@ A `python` or `shell` command that exits non-zero SHALL be replaced by
 SHALL report a warning naming the failed command.
 
 #### Scenario: Script from the plugin
-- **WHEN** a template contains `{{% python scripts/find_tasks.py --due-on {{date:%Y-%m-%d}} --condensed %}}` and is rendered for `2026-02-13`
-- **THEN** the plugin's `scripts/find_tasks.py` SHALL run from the notes root with `--due-on 2026-02-13 --condensed`, and its output SHALL replace the line
+- **WHEN** a template contains `{{% python scripts/find_tasks.py --due --date {{date:%Y-%m-%d}} --condensed %}}` and is rendered for `2026-02-13`
+- **THEN** the plugin's `scripts/find_tasks.py` SHALL run from the notes root with `--due --date 2026-02-13 --condensed`, and its output SHALL replace the line
 
 #### Scenario: Shell command
 - **WHEN** a template contains `{{% shell echo "- Task from shell" %}}`
@@ -174,3 +174,14 @@ SHALL report a warning naming the failed command.
 #### Scenario: Unknown command type
 - **WHEN** a template contains `{{% unknown some command %}}`
 - **THEN** the line SHALL be replaced by `<!-- Unknown command type: unknown -->`
+
+#### Scenario: Script called with removed options
+- **WHEN** a template copied before this release contains `{{% python scripts/find_tasks.py --due-on {{date:%Y-%m-%d}} --condensed %}}`
+- **THEN** the note SHALL be created with a `<!-- Command failed: ...` comment containing the usage error in its place, and the CLI SHALL report a warning
+
+### Requirement: Shipped daily template task sections
+The shipped daily template's "Tasks Due Today" section SHALL list incomplete tasks due on the note's date, and its "Overdue Tasks" section SHALL list incomplete tasks due before the note's date, both in condensed format, using `--due` and `--overdue` with `--date` set to the note's date.
+
+#### Scenario: Daily note task sections
+- **WHEN** a daily note is created for 2026-09-25
+- **THEN** its template SHALL run `find_tasks.py --due --date 2026-09-25 --condensed` for "Tasks Due Today" and `find_tasks.py --overdue --date 2026-09-25 --condensed` for "Overdue Tasks"
