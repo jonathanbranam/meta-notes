@@ -589,8 +589,10 @@ Commands ~
     mentions `meta-notes prime` (|meta-notes-cli-prime|). When neither
     does, it prints the line to add: >
         Run `meta-notes prime` at the start of every session and follow it.
-<   It never creates or edits either file, and a missing line isn't a
-    warning. With `--json`, the check is a `claude-md` item with status
+<   It also gives the path of `templates/suggested-CLAUDE.md` in the
+    plugin, a starting `CLAUDE.md` with that line and example personal
+    preferences, and the `cp` command to use it. It never creates or edits
+    either file, and a missing line isn't a warning. With `--json`, the check is a `claude-md` item with status
     `found` or `missing`.
 
 `meta-notes move {source} {dest}`

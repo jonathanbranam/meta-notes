@@ -141,7 +141,7 @@ meta-notes/
 │       └── templates/           # Vim renderings of the shipped templates
 ├── doc/                 # Vim documentation
 ├── skills/              # Claude Code skills, linked into notes roots by init
-├── templates/           # Planning templates and the cache README, copied by init
+├── templates/           # Planning templates, the cache README, and a suggested CLAUDE.md
 ├── requirements.txt     # Pinned libraries for calendar, installed into .venv by init
 ├── run_tests.sh         # Test runner script
 └── README.md
@@ -214,8 +214,9 @@ support isn't available. Re-running is safe and leaves an existing `.venv`
 alone; `init --force` rebuilds it.
 
 init also checks that the root's `CLAUDE.md` loads the agent guide (see
-[Agents](#agents)) and prints the line to add when it doesn't. It never
-edits `CLAUDE.md`.
+[Agents](#agents)). When it doesn't, init prints the line to add and the
+`cp` command for `templates/suggested-CLAUDE.md`, a starting `CLAUDE.md`.
+It never edits `CLAUDE.md`.
 
 ```bash
 mkdir notes && cd notes && git init && touch .gitignore
@@ -281,7 +282,8 @@ Run `meta-notes prime` at the start of every session and follow it.
 ```
 
 Keep your personal preferences (routines, habits, other working hours)
-in `CLAUDE.md` too; they override the guide. See
+in `CLAUDE.md` too; they override the guide. `templates/suggested-CLAUDE.md`
+is a starting point with the line and example preferences. See
 `:help meta-notes-cli-prime`.
 
 ## Planning Skills

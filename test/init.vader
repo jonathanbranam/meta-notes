@@ -192,6 +192,8 @@ Execute (MetaNotesInit shows the CLAUDE.md line to add):
         \ 'init should say what to add to CLAUDE.md'
   Assert output =~# 'Run `meta-notes prime` at the start of every session and follow it.',
         \ 'init should give the exact line'
+  Assert output =~# 'templates/suggested-CLAUDE.md'' CLAUDE.md',
+        \ 'init should give the cp command for the suggested CLAUDE.md'
   Assert !filereadable('CLAUDE.md'), 'init should not create CLAUDE.md'
 
 Execute (Cleanup - Remove temporary test directory):

@@ -1,10 +1,10 @@
-# Work notes
+# Notes
 
 Run `meta-notes prime` at the start of every session and follow it.
 
-This is my work notes root. `meta-notes prime` describes the folders,
-notes, tasks, and commands. This file holds only my own preferences; they
-override the guide where they differ.
+This is my notes root. `meta-notes prime` describes the folders, notes,
+tasks, and commands. This file holds only my own preferences; they
+override the guide where they differ. Edit them to match how you work.
 
 ## My day
 

@@ -57,6 +57,8 @@ GITIGNORE = ".gitignore"
 IGNORED = (".venv", ".meta-notes-cache")
 CLAUDE_MD_FILES = ("CLAUDE.md", ".claude/CLAUDE.md")
 PRIME_LINE = "Run `meta-notes prime` at the start of every session and follow it."
+# A starting CLAUDE.md for a notes root; init points to it but never copies it
+SUGGESTED_CLAUDE_MD = TEMPLATES_DIR / "suggested-CLAUDE.md"
 
 SENTINEL_CONTENT = (
     "# meta-notes notes root. Created by `meta-notes init`; keep and commit it.\n")

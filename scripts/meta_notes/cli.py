@@ -13,6 +13,7 @@ import io
 import json
 import os
 import re
+import shlex
 import subprocess
 import sys
 from dataclasses import dataclass, field
@@ -395,7 +396,9 @@ INIT_MESSAGES = {
     ("claude-md", "found"): "Agents load the notes guide: {}",
     ("claude-md", "missing"):
         "Add this line to {} so agents load the notes guide:\n    "
-        + init.PRIME_LINE,
+        + init.PRIME_LINE + "\nOr start from the suggested CLAUDE.md:\n    cp "
+        + shlex.quote(str(init.SUGGESTED_CLAUDE_MD)).replace("{", "{{")
+        .replace("}", "}}") + " CLAUDE.md",
     ("gitignore", "created"): "Added to .gitignore: {}",
     ("gitignore", "exists"): "Already in .gitignore: {}",
     ("venv", "created"): "Created virtualenv: {}",

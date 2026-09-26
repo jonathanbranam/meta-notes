@@ -753,6 +753,28 @@ def test_cli_init_text_gives_prime_line(tmp_path, skills, capsys):
     assert code == 0
     assert 'Add this line to CLAUDE.md so agents load the notes guide:' in out
     assert init.PRIME_LINE in out
+    assert f'cp {init.SUGGESTED_CLAUDE_MD} CLAUDE.md' in out
+
+
+def test_cli_init_text_found_has_no_suggestion(tmp_path, skills, capsys):
+    """With the line present, init doesn't point to the suggested file."""
+    (tmp_path / 'n').mkdir()
+    (tmp_path / 'n' / 'CLAUDE.md').write_text(init.PRIME_LINE + '\n')
+
+    cli.main(['init', '--root', str(tmp_path / 'n')])
+    out = capsys.readouterr().out
+
+    assert 'Agents load the notes guide: CLAUDE.md' in out
+    assert 'suggested-CLAUDE.md' not in out
+
+
+def test_suggested_claude_md_starts_with_prime_line():
+    """The shipped suggestion exists and its first instruction is the prime line."""
+    lines = [line for line in
+             init.SUGGESTED_CLAUDE_MD.read_text(encoding='utf-8').splitlines()
+             if line.strip() and not line.startswith('#')]
+
+    assert lines[0] == init.PRIME_LINE
 
 
 def test_cli_init_skipped_skill_is_warning(tmp_path, skills, capsys):

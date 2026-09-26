@@ -355,7 +355,8 @@ let s:init_messages = {
       \ 'cache-readme/overwritten': 'Overwrote cache README: %s',
       \ 'cache-readme/exists': 'Cache README already exists: %s',
       \ 'claude-md/found': 'Agents load the notes guide: %s',
-      \ 'claude-md/missing': 'Add this line to %s so agents load the notes guide: Run `meta-notes prime` at the start of every session and follow it.',
+      \ 'claude-md/missing': 'Add this line to %s so agents load the notes guide: Run `meta-notes prime` at the start of every session and follow it. Or start from the suggested CLAUDE.md: cp '
+      \   . escape(shellescape(meta_notes#template#GetPluginRoot() . '/templates/suggested-CLAUDE.md'), '%') . ' CLAUDE.md',
       \ 'gitignore/created': 'Added to .gitignore: %s',
       \ 'gitignore/exists': 'Already in .gitignore: %s',
       \ 'venv/created': 'Created virtualenv: %s',
