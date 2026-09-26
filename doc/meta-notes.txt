@@ -869,7 +869,7 @@ Commands ~
     fails if `git` isn't available, the notes root isn't a git
     repository, or the notes root isn't the top level of its repository.
 
-`meta-notes calendar [--date {period}] [--ics {path}]`
+`meta-notes calendar [--date {period}] [--ics {path}] [filters]`
                                                 *meta-notes-cli-calendar*
     Print a day-by-day agenda for {period} (default today, in the
     |meta-notes-date| forms) from your latest Google Calendar export. The
@@ -943,6 +943,31 @@ Commands ~
                         or null)
     Attendance needs `email`; without it, `mine` is false and `response`
     null.
+
+    Filters: `--with {name}` keeps only events whose organizer or an
+    attendee who is a person matches {name}, checking every attendee, not
+    only the 20 in `attendees`. Names and email addresses are split into
+    words (runs of letters and digits), and every word of {name} must
+    start one of the person's words, in any order, ignoring case: `zach`
+    matches `Zachary Kim`, `"Loan Bui"` matches `bui.loan@example.com`,
+    and `ann` doesn't match `Joanna`. A {name} without letters or digits
+    is an error. `--search {text}` keeps only events whose title,
+    location, or description contains {text}, ignoring case, as typed
+    (`1:1` works). Both repeat, and an event must match every one: >
+        meta-notes calendar --date 2026-09-28..2026-10-02 --with zach
+        meta-notes calendar --with zach --search 1:1 --json
+<   With a filter, only days with a matching event are listed, each with
+    only those events; with none, the output is `No matching events.` (and
+    an empty `days`). In `--json`, each event also has `matches`:
+        with            one entry per `--with`: `name`, and `people`,
+                        each organizer or attendee that matched (`name`,
+                        `email`, `response`; null `response` for an
+                        organizer who isn't an attendee)
+        search          one entry per `--search`: `text`, and `fields`,
+                        where it matched (`title`, `location`,
+                        `description`)
+    Descriptions are searched but never shown. Without a filter, events
+    have no `matches`.
 
     Cache: each export is parsed once into `.meta-notes-cache/calendar/`,
     keyed by the export's name, size, and modification time and the loaded
@@ -1148,10 +1173,10 @@ before or after the command name.
 
 The plugin ships Claude Code skills in `skills/`, linked into a notes root's
 `.claude/skills/` by |meta-notes-cli-init|. Re-run `meta-notes init` after
-updating the plugin to link new ones. Each skill states a time budget,
-starts by running |meta-notes-cli-conventions|, reads notes through focused
-CLI queries, edits task lines only with |meta-notes-cli-task-update|, and
-can be stopped at any point.
+updating the plugin to link new ones. Each planning skill states a time
+budget, starts by running |meta-notes-cli-conventions|, reads notes through
+focused CLI queries, edits task lines only with |meta-notes-cli-task-update|,
+and can be stopped at any point.
 
     daily-shutdown  End of each workday, about 15 minutes: collect loose
                     items into tasks, PR check, a next step per project
@@ -1172,6 +1197,11 @@ can be stopped at any point.
     task-cleanup    Anytime, 5-10 minutes: overdue and undated tasks,
                     oldest first, in batches.
     project-review  One project at a time.
+    calendar        Anytime: answers questions about your meetings
+                    (with someone, about a topic, a 1-1, free time)
+                    with |meta-notes-cli-calendar| `--with` and
+                    `--search`. Read-only, with no time budget, and it
+                    doesn't run |meta-notes-cli-conventions|.
 
 Ceremony markers ~
                                                 *meta-notes-ceremonies*

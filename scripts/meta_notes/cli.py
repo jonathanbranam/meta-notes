@@ -213,7 +213,9 @@ def cmd_changes(args, root: str) -> Output:
 
 def cmd_calendar(args, root: str) -> Output:
     try:
-        lines, data, warnings = calendar.run(root, args.date, args.ics)
+        lines, data, warnings = calendar.run(root, args.date, args.ics,
+                                              names=args.with_names,
+                                              searches=args.search)
     except ValueError as e:
         raise CliError(str(e))
     return Output(data, lines, warnings,
@@ -531,6 +533,13 @@ def build_parser() -> argparse.ArgumentParser:
                         "or YYYY (default: today)")
     p.add_argument("--ics", metavar="PATH",
                    help="read this .zip or .ics export instead")
+    p.add_argument("--with", dest="with_names", metavar="NAME",
+                   action="append", default=[],
+                   help="only events with this organizer or attendee, by "
+                        "word starts of name or email (repeatable)")
+    p.add_argument("--search", metavar="TEXT", action="append", default=[],
+                   help="only events whose title, location, or description "
+                        "contains TEXT (repeatable)")
     p.set_defaults(handler=cmd_calendar)
 
     p = sub.add_parser("cache", parents=[common],

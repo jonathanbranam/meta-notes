@@ -378,6 +378,11 @@ def test_init_shipped_skills_includes_project_review():
     assert 'project-review' in init.shipped_skills()
 
 
+def test_init_shipped_skills_includes_calendar():
+    """The real plugin ships calendar."""
+    assert 'calendar' in init.shipped_skills()
+
+
 # Tests for init function: cache folder
 
 def test_init_cache_folders_created(tmp_path, skills):

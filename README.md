@@ -230,6 +230,7 @@ meta-notes project brief project/kitchen/  # one project's files, tasks, dates
 meta-notes ceremony status --date 2026-09-25
 meta-notes calendar --date 2026-09-28..2026-10-02  # agenda from the latest export
 meta-notes calendar --ics ~/Downloads/export.zip --json
+meta-notes calendar --date 2026-09 --with zach --search 1:1  # filtered
 meta-notes cache clear                    # delete parsed calendars, keep exports
 meta-notes conventions                    # syntax and rules the skills follow
 ```
@@ -263,7 +264,8 @@ See `:help meta-notes-cli-calendar` and `:help meta-notes-config`.
 The Claude Code skills in `skills/` run the planning ceremonies in
 `docs/planning-system.md`. `meta-notes init` links them into a notes root;
 re-run it after updating the plugin to link new ones. Each starts from
-`meta-notes conventions` and edits notes only through the CLI.
+`meta-notes conventions` and edits notes only through the CLI. The
+`calendar` skill answers questions about your meetings and is read-only.
 
 | Skill | When |
 |-------|------|
@@ -273,6 +275,7 @@ re-run it after updating the plugin to link new ones. Each starts from
 | `weekly-plan` | Friday afternoon; next week's priorities |
 | `task-cleanup` | Anytime, 5–10 minutes of stale tasks |
 | `project-review` | One project at a time |
+| `calendar` | Anytime: meetings with someone, about a topic, or free time |
 
 Daily notes carry `- [ ] plan complete` and `- [ ] shutdown complete`,
 weekly notes `- [ ] review complete` and `- [ ] plan complete`. The skills

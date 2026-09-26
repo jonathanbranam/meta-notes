@@ -501,26 +501,30 @@ def _declined(event, email: str | None) -> bool:
                for a in _as_list(event.get("ATTENDEE")))
 
 
-def attendance(event, email: str | None, calendar_name: str) -> dict:
+def _people(event) -> list[dict]:
+    """Every attendee who is a person (not a room or resource)."""
+    return [{"name": _param(a, "CN") or None, "email": _address(a),
+             "response": RESPONSES.get(_param(a, "PARTSTAT").upper())}
+            for a in _as_list(event.get("ATTENDEE"))
+            if _param(a, "CUTYPE").upper() not in NOT_PEOPLE]
+
+
+def attendance(event, email: str | None, calendar_name: str,
+               everyone: list[dict]) -> dict:
     """
     The organizer, whether the event is the user's own, the user's
-    response, and the attendees who are people (the first MAX_ATTENDEES).
+    response, and the attendees who are people (everyone, from _people(),
+    capped at the first MAX_ATTENDEES).
     """
     organizer = event.get("ORGANIZER")
     attendees = _as_list(event.get("ATTENDEE"))
     me = email.lower() if email else None
 
     response = None
-    people = []
     for attendee in attendees:
-        address = _address(attendee)
         answer = RESPONSES.get(_param(attendee, "PARTSTAT").upper())
-        if me and address.lower() == me and answer != "no":
+        if me and _address(attendee).lower() == me and answer != "no":
             response = answer
-        if _param(attendee, "CUTYPE").upper() in NOT_PEOPLE:
-            continue
-        people.append({"name": _param(attendee, "CN") or None,
-                       "email": address, "response": answer})
 
     if organizer is not None:
         mine = bool(me) and _address(organizer).lower() == me
@@ -530,8 +534,67 @@ def attendance(event, email: str | None, calendar_name: str) -> dict:
         mine = bool(me) and not attendees and calendar_name.lower() == me
 
     return {"mine": mine, "organizer": organizer, "response": response,
-            "attendee_count": len(people),
-            "attendees": people[:MAX_ATTENDEES]}
+            "attendee_count": len(everyone),
+            "attendees": everyone[:MAX_ATTENDEES]}
+
+
+# Filters
+
+_WORD = re.compile(r"[^\W_]+")
+
+
+def words(text: str | None) -> list[str]:
+    """Runs of letters and digits, lowercased."""
+    return _WORD.findall((text or "").lower())
+
+
+def check_names(names: list[str]) -> None:
+    """
+    Raises:
+        ValueError: If a --with NAME has no letters or digits.
+    """
+    for name in names:
+        if not words(name):
+            raise ValueError(f"--with needs a name with letters or digits: {name!r}")
+
+
+def _is_named(person: dict, name_words: list[str]) -> bool:
+    """Whether every word of a name starts a word of the person's name or email."""
+    theirs = words(person["name"]) + words(person["email"])
+    return all(any(w.startswith(n) for w in theirs) for n in name_words)
+
+
+def match(event, organizer: dict | None, everyone: list[dict],
+          names: list[str], searches: list[str]) -> dict | None:
+    """
+    The event's matches for every --with NAME and --search TEXT, or None
+    when one of them doesn't match. The organizer is checked as a person,
+    with the response they gave as an attendee (None when they aren't one).
+    """
+    candidates = list(everyone)
+    if organizer is not None:
+        email = organizer["email"].lower()
+        if not any(p["email"].lower() == email for p in everyone):
+            candidates.insert(0, {**organizer, "response": None})
+
+    found = {"with": [], "search": []}
+    for name in names:
+        name_words = words(name)
+        matched = [p for p in candidates if _is_named(p, name_words)]
+        if not matched:
+            return None
+        found["with"].append({"name": name, "people": matched})
+
+    fields = {"title": str(event.get("SUMMARY") or ""),
+              "location": str(event.get("LOCATION") or ""),
+              "description": str(event.get("DESCRIPTION") or "")}
+    for text in searches:
+        needle = text.lower()
+        matched = [f for f, value in fields.items() if needle in value.lower()]
+        if not matched:
+            return None
+        found["search"].append({"text": text, "fields": matched})
+    return found
 
 
 def _local(value, tz: tzinfo) -> datetime:
@@ -541,14 +604,20 @@ def _local(value, tz: tzinfo) -> datetime:
 
 
 def agenda(rie, calendars: list[tuple], start: date, end: date, tz: tzinfo,
-           email: str | None) -> dict[date, list[dict]]:
+           email: str | None, names: list[str] = (),
+           searches: list[str] = ()) -> dict[date, list[dict]]:
     """
     Occurrences overlapping each day from start to end in tz, leaving out
     cancelled and declined events. All-day events appear on each day they
     cover; timed events on the day they start (or the first day, when they
     started earlier). All-day first, then by start time. Each event
     carries its attendance (see attendance()).
+
+    With names (--with) or searches (--search), only events that match
+    all of them are kept, each with its matches (see match()), and only
+    days with such an event.
     """
+    filtered = bool(names or searches)
     days = {start + timedelta(days=n): [] for n in range((end - start).days + 1)}
     low = datetime.combine(start, time(), tz)
     high = datetime.combine(end + timedelta(days=1), time(), tz)
@@ -565,7 +634,14 @@ def agenda(rie, calendars: list[tuple], start: date, end: date, tz: tzinfo,
                 continue
             title = str(event.get("SUMMARY") or "").strip() or "(no title)"
             location = str(event.get("LOCATION") or "").strip() or None
-            people = attendance(event, email, name)
+            everyone = _people(event)
+            people = attendance(event, email, name, everyone)
+            if filtered:
+                found = match(event, people["organizer"], everyone,
+                              names, searches)
+                if found is None:
+                    continue
+                people = people | {"matches": found}
             first = event["DTSTART"].dt
             last = _event_end(event)
 
@@ -597,7 +673,7 @@ def agenda(rie, calendars: list[tuple], start: date, end: date, tz: tzinfo,
     for events in days.values():
         events.sort(key=lambda e: e["_sort"])
     return {day: [{k: v for k, v in e.items() if k != "_sort"} for e in events]
-            for day, events in days.items()}
+            for day, events in days.items() if events or not filtered}
 
 
 def agenda_lines(days: dict[date, list[dict]], multiple: bool) -> list[str]:
@@ -625,7 +701,8 @@ def agenda_lines(days: dict[date, list[dict]], multiple: bool) -> list[str]:
 # The command
 
 def run(root: str, period: str | None = None, ics: str | None = None,
-        today: date | None = None) -> tuple[list[str], dict, list[str]]:
+        today: date | None = None, names: list[str] = (),
+        searches: list[str] = ()) -> tuple[list[str], dict, list[str]]:
     """
     Build the agenda for a period.
 
@@ -634,14 +711,18 @@ def run(root: str, period: str | None = None, ics: str | None = None,
         period: A --date value; None for today.
         ics: An export to read instead of the newest in ics/.
         today: Today's date in the display timezone (default: now).
+        names: --with NAMEs; only events with all of them are listed.
+        searches: --search TEXTs; only events with all of them are listed.
 
     Returns:
         (text lines, JSON fields: days, source, pruned; warnings)
 
     Raises:
-        ValueError: On invalid config or period, a missing or unreadable
-            export, an unknown calendar name, or missing libraries.
+        ValueError: On invalid config, period, or NAME, a missing or
+            unreadable export, an unknown calendar name, or missing
+            libraries.
     """
+    check_names(names)
     settings = load_settings(root)
     tz = settings.tz
     today = today or datetime.now(tz).date()
@@ -722,16 +803,18 @@ def run(root: str, period: str | None = None, ics: str | None = None,
 
     pruned = prune(root, exports, settings.calendars, used)
 
-    days = agenda(rie, loaded, start, end, tz, settings.email)
-    names = [name for name, _ in loaded]
-    lines = agenda_lines(days, len(names) > 1)
+    days = agenda(rie, loaded, start, end, tz, settings.email, names, searches)
+    loaded_names = [name for name, _ in loaded]
+    lines = agenda_lines(days, len(loaded_names) > 1)
+    if (names or searches) and not days:
+        lines = ["No matching events."]
     data = {
         "days": [{"date": day.isoformat(), "events": events}
                  for day, events in days.items()],
         "source": {"path": source_path,
                    "exported": exported.isoformat(timespec="seconds"),
                    "age_days": age, "cached": cached,
-                   "available": available, "loaded": names},
+                   "available": available, "loaded": loaded_names},
         "pruned": pruned,
     }
     return lines, data, warnings

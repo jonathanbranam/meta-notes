@@ -150,8 +150,9 @@ def set_config(root, extra):
     (root / '.meta-notes').write_text(CONFIG + extra)
 
 
-def run(root, period=None, ics=None, today=TODAY):
-    return calendar.run(str(root), period, ics, today=today)
+def run(root, period=None, ics=None, today=TODAY, names=(), searches=()):
+    return calendar.run(str(root), period, ics, today=today, names=names,
+                        searches=searches)
 
 
 def titles(data, day):
@@ -1117,6 +1118,227 @@ def test_calendar_cache_clear_without_libraries(root, monkeypatch, capsys):
         'Deleted 1 cached calendar file(s) from .meta-notes-cache/calendar/\n'
 
 
+# Tests for the --with and --search filters
+
+ZACH = attendee('zkim@example.com', 'ACCEPTED', cn='Zachary Kim')
+SAPNA = attendee('sapna@example.com', 'ACCEPTED', cn='Sapna Rao')
+ME = attendee('me@example.com', 'ACCEPTED')
+
+
+def filtered(root, events, period=None, names=(), searches=()):
+    """Run with events in one calendar and filters; return JSON data."""
+    one_calendar(root, events)
+    _, data, _ = run(root, period, names=names, searches=searches)
+    return data
+
+
+def all_titles(data):
+    return [e['title'] for d in data['days'] for e in d['events']]
+
+
+def test_calendar_with_first_name_prefix(root):
+    """--with zach finds Zachary Kim."""
+    data = filtered(root, [
+        vevent('a', '20260928T090000', '20260928T093000', 'Sync',
+               extra=[ORGANIZER_SAM, ZACH, ME]),
+        vevent('b', '20260928T100000', '20260928T103000', 'Other',
+               extra=[ORGANIZER_SAM, ME])], names=['zach'])
+
+    assert all_titles(data) == ['Sync']
+
+
+def test_calendar_with_name_in_email(root):
+    """--with "Loan Bui" finds bui.loan@ with no name, words in any order."""
+    data = filtered(root, [
+        vevent('a', '20260928T090000', '20260928T093000', 'Sync',
+               extra=[ORGANIZER_SAM, attendee('bui.loan@example.com')])],
+        names=['Loan Bui'])
+
+    assert all_titles(data) == ['Sync']
+    assert data['days'][0]['events'][0]['matches']['with'][0]['people'] == [
+        {'name': None, 'email': 'bui.loan@example.com', 'response': None}]
+
+
+def test_calendar_with_attendee_past_cap(root):
+    """Sapna as the 25th of 30 attendees matches and is in matches."""
+    people = [attendee(f'p{n}@example.com') for n in range(24)]
+    people.append(SAPNA)
+    people += [attendee(f'q{n}@example.com') for n in range(5)]
+    data = filtered(root, [vevent('a', '20260928T090000', '20260928T100000',
+                                  'All hands', extra=[ORGANIZER_SAM, *people])],
+                    names=['sapna'])
+
+    event = data['days'][0]['events'][0]
+    assert event['attendee_count'] == 30
+    assert 'sapna@example.com' not in [a['email'] for a in event['attendees']]
+    assert event['matches']['with'][0]['people'] == [
+        {'name': 'Sapna Rao', 'email': 'sapna@example.com', 'response': 'yes'}]
+
+
+def test_calendar_with_two_names(root):
+    """Every --with NAME must match."""
+    data = filtered(root, [
+        vevent('a', '20260928T090000', '20260928T093000', 'Zach only',
+               extra=[ORGANIZER_SAM, ZACH]),
+        vevent('b', '20260928T100000', '20260928T103000', 'Both',
+               extra=[ORGANIZER_SAM, ZACH, SAPNA])],
+        names=['zach', 'sapna'])
+
+    assert all_titles(data) == ['Both']
+    assert [m['name'] for m in data['days'][0]['events'][0]['matches']['with']] \
+        == ['zach', 'sapna']
+
+
+def test_calendar_with_word_start_only(root):
+    """--with ann doesn't find Joanna Smith <jsmith@>."""
+    data = filtered(root, [
+        vevent('a', '20260928T090000', '20260928T093000', 'Sync',
+               extra=[ORGANIZER_SAM,
+                      attendee('jsmith@example.com', cn='Joanna Smith')])],
+        names=['ann'])
+
+    assert data['days'] == []
+
+
+def test_calendar_with_organizer_only(root):
+    """An organizer who isn't an attendee matches, with a null response."""
+    data = filtered(root, [
+        vevent('a', '20260928T090000', '20260928T093000', 'Sync',
+               extra=[ORGANIZER_SAM, ME])], names=['sam'])
+
+    assert data['days'][0]['events'][0]['matches']['with'][0]['people'] == [
+        {'name': 'Sam Lee', 'email': 'sam@example.com', 'response': None}]
+
+
+def test_calendar_with_organizer_also_attendee_listed_once(root):
+    """An organizer listed as an attendee matches once, with their response."""
+    data = filtered(root, [
+        vevent('a', '20260928T090000', '20260928T093000', 'Sync',
+               extra=[ORGANIZER_SAM, attendee('sam@example.com', 'ACCEPTED',
+                                              cn='Sam Lee')])],
+        names=['sam'])
+
+    assert data['days'][0]['events'][0]['matches']['with'][0]['people'] == [
+        {'name': 'Sam Lee', 'email': 'sam@example.com', 'response': 'yes'}]
+
+
+def test_calendar_with_rooms_ignored(root):
+    """A room's name doesn't match --with."""
+    data = filtered(root, [
+        vevent('a', '20260928T090000', '20260928T093000', 'Sync',
+               extra=[ORGANIZER_SAM, attendee('r@resource.example.com',
+                                              cn='Zach Room', cutype='ROOM')])],
+        names=['zach'])
+
+    assert data['days'] == []
+
+
+def test_calendar_search_topic_in_description(root):
+    """--search efp finds EFP in a description, case ignored."""
+    data = filtered(root, [
+        vevent('a', '20260928T090000', '20260928T093000', 'Quarterly sync',
+               extra=['DESCRIPTION:Agenda: EFP rollout']),
+        vevent('b', '20260928T100000', '20260928T103000', 'Other')],
+        searches=['efp'])
+
+    assert all_titles(data) == ['Quarterly sync']
+    assert data['days'][0]['events'][0]['matches'] == {
+        'with': [], 'search': [{'text': 'efp', 'fields': ['description']}]}
+
+
+def test_calendar_search_title_and_location(root):
+    """--search lists every field it matched, as typed (no word splitting)."""
+    data = filtered(root, [
+        vevent('a', '20260928T090000', '20260928T093000', 'Zach 1:1',
+               extra=['LOCATION:1:1 room'])], searches=['1:1'])
+
+    assert data['days'][0]['events'][0]['matches']['search'] == [
+        {'text': '1:1', 'fields': ['title', 'location']}]
+
+
+def test_calendar_filters_combined(root):
+    """--with and --search together keep only events matching both."""
+    data = filtered(root, [
+        vevent('a', '20260928T090000', '20260928T093000', 'Zach 1:1',
+               extra=[ORGANIZER_SAM, ZACH]),
+        vevent('b', '20260928T100000', '20260928T103000', 'Platform sync',
+               extra=[ORGANIZER_SAM, ZACH]),
+        vevent('c', '20260928T110000', '20260928T113000', 'Sapna 1:1',
+               extra=[ORGANIZER_SAM, SAPNA])],
+        names=['zach'], searches=['1:1'])
+
+    assert all_titles(data) == ['Zach 1:1']
+
+
+def test_calendar_filter_only_matching_days(root):
+    """A filtered week lists only days with a matching event."""
+    one_calendar(root, [
+        vevent('a', '20260928T090000', '20260928T093000', 'Standup'),
+        vevent('b', '20260930T090000', '20260930T093000', 'Zach sync',
+               extra=[ORGANIZER_SAM, ZACH]),
+        vevent('c', '20260930T100000', '20260930T103000', 'Other')])
+
+    lines, data, _ = run(root, '2026-09-28..2026-10-02', names=['zach'])
+
+    assert [d['date'] for d in data['days']] == ['2026-09-30']
+    assert all_titles(data) == ['Zach sync']
+    assert lines == ['## 2026-09-30 Wed', '09:00-09:30  Zach sync']
+
+
+def test_calendar_filter_recurring_occurrences(root):
+    """Each occurrence of a series is filtered, over every day it falls on."""
+    one_calendar(root, [
+        vevent('a', '20260928T090000', '20260928T093000', 'Zach weekly',
+               extra=['RRULE:FREQ=WEEKLY', ORGANIZER_SAM, ZACH])])
+
+    _, data, _ = run(root, '2026-09-28..2026-10-12', names=['zach'])
+
+    assert [d['date'] for d in data['days']] == [
+        '2026-09-28', '2026-10-05', '2026-10-12']
+
+
+def test_calendar_filter_no_matches(root):
+    """No matches: text says so and days is empty."""
+    one_calendar(root, [vevent('a', '20260928T090000', '20260928T093000',
+                               'Standup', extra=[ORGANIZER_SAM, ZACH])])
+
+    lines, data, _ = run(root, '2026-09-28..2026-10-02', names=['nobody'])
+
+    assert lines == ['No matching events.']
+    assert data['days'] == []
+
+
+def test_calendar_filter_matches_json(root):
+    """The matches object for an accepted Zachary Kim is exact."""
+    data = filtered(root, [
+        vevent('a', '20260928T090000', '20260928T093000', 'Sync',
+               extra=[ORGANIZER_SAM, ZACH])], names=['zach'])
+
+    assert data['days'][0]['events'][0]['matches']['with'] == [
+        {'name': 'zach', 'people': [{'name': 'Zachary Kim',
+                                     'email': 'zkim@example.com',
+                                     'response': 'yes'}]}]
+
+
+def test_calendar_unfiltered_has_no_matches(root):
+    """Without a filter, every day is listed and events have no matches."""
+    data = filtered(root, [vevent('a', '20260928T090000', '20260928T093000',
+                                  'Sync', extra=[ORGANIZER_SAM, ZACH])],
+                    '2026-09-28..2026-09-29')
+
+    assert [d['date'] for d in data['days']] == ['2026-09-28', '2026-09-29']
+    assert 'matches' not in data['days'][0]['events'][0]
+
+
+@pytest.mark.parametrize('name', ['', '  ', '--', '.'])
+def test_calendar_with_name_without_letters(root, name):
+    """A NAME with no letters or digits is an error."""
+    one_calendar(root, [])
+
+    with pytest.raises(ValueError, match='--with'):
+        run(root, names=[name])
+
+
 # Tests for the calendar command
 
 def fresh_export(root):
@@ -1185,3 +1407,44 @@ def test_cli_calendar_invalid_date(root, capsys):
 
     assert code == 1
     assert 'Invalid date' in out['error']
+
+
+def test_cli_calendar_with_and_search(root, capsys):
+    """--with and --search are repeatable and reach the filter."""
+    path = ics_dir(root) / 'me.ics'
+    path.write_text(vcalendar([
+        vevent('a', '20260928T090000', '20260928T093000', 'Zach 1:1',
+               extra=[ORGANIZER_SAM, ZACH, SAPNA, 'DESCRIPTION:EFP']),
+        vevent('b', '20260928T100000', '20260928T103000', 'Zach sync',
+               extra=[ORGANIZER_SAM, ZACH])], name='me@example.com'))
+
+    code, out, _ = run_json(capsys, [
+        'calendar', '--date', '2026-09-28', '--with', 'zach', '--with', 'sapna',
+        '--search', '1:1', '--search', 'efp'])
+
+    assert code == 0
+    assert [e['title'] for e in out['days'][0]['events']] == ['Zach 1:1']
+    matches = out['days'][0]['events'][0]['matches']
+    assert [m['name'] for m in matches['with']] == ['zach', 'sapna']
+    assert matches['search'] == [{'text': '1:1', 'fields': ['title']},
+                                 {'text': 'efp', 'fields': ['description']}]
+
+
+def test_cli_calendar_no_matches_text(root, capsys):
+    """No matches prints the line and exits 0."""
+    fresh_export(root)
+
+    code = cli.main(['calendar', '--date', '2026-09-28', '--search', 'nothing'])
+
+    assert code == 0
+    assert capsys.readouterr().out == 'No matching events.\n'
+
+
+def test_cli_calendar_with_invalid_name(root, capsys):
+    """A NAME without letters or digits is an error."""
+    fresh_export(root)
+
+    code, out, _ = run_json(capsys, ['calendar', '--with', '...'])
+
+    assert code == 1
+    assert '--with' in out['error']
