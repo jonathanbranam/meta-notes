@@ -63,4 +63,4 @@
 
 ## 10. Integration
 
-- [ ] 10.1 In a scratch notes root with a `.gitignore`, run `meta-notes init` and confirm `.venv`, the cache folders and README, and the `.gitignore` lines; save a real Google export zip into `.meta-notes-cache/ics/`, set `[calendar]` in `.meta-notes`, run `meta-notes calendar --date <next MON..FRI>` twice (the second from cache) with and without `--json`, compare against Google Calendar, add six more exports to check pruning, and run `meta-notes cache clear`; then run `pipenv run pytest test/unit/` and `./run_tests.sh`
+- [x] 10.1 In a scratch notes root with a `.gitignore`, run `meta-notes init` and confirm `.venv`, the cache folders and README, and the `.gitignore` lines; save a real Google export zip into `.meta-notes-cache/ics/`, set `[calendar]` in `.meta-notes`, run `meta-notes calendar --date <next MON..FRI>` twice (the second from cache) with and without `--json`, compare against Google Calendar, add six more exports to check pruning, and run `meta-notes cache clear`; then run `pipenv run pytest test/unit/` and `./run_tests.sh`

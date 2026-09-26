@@ -71,7 +71,7 @@ A skill that completes its ceremony SHALL check its marker with `meta-notes task
 - **THEN** the skill SHALL ask which project or work item it belongs to and update the entry
 
 ### Requirement: Daily planning
-`daily-plan` SHALL plan one day in about 10–15 minutes. It SHALL plan today when today's daily note has no completed `plan complete` marker, and the next workday (Monday to Friday) otherwise, and SHALL state the choice. It SHALL always read the previous workday's note (its Follow up list, unfinished time blocks, and shutdown status), and for a Monday also the weekly plan. It SHALL gather meetings from a calendar screenshot the user provides, and due and overdue tasks and open `#wait` tasks from the CLI. It SHALL create the target day's note with `meta-notes note daily` if needed, fill the Plan column of the Time Block table, name a concrete first block, and mark `plan complete`. A Follow up item the user wants tracked SHALL become a task in place with `task update --due`. It SHALL NOT work through old tasks.
+`daily-plan` SHALL plan one day in about 10–15 minutes. It SHALL plan today when today's daily note has no completed `plan complete` marker, and the next workday (Monday to Friday) otherwise, and SHALL state the choice. It SHALL always read the previous workday's note (its Follow up list, unfinished time blocks, and shutdown status), and for a Monday also the weekly plan. It SHALL gather meetings for the target day as "Calendar from the export" requires, and due and overdue tasks and open `#wait` tasks from the CLI. It SHALL create the target day's note with `meta-notes note daily` if needed, fill the Plan column of the Time Block table, name a concrete first block, and mark `plan complete`. A Follow up item the user wants tracked SHALL become a task in place with `task update --due`. It SHALL NOT work through old tasks.
 
 #### Scenario: Evening run after shutdown
 - **WHEN** it is Thursday evening and Thursday's note has `- [x] plan complete`
@@ -84,6 +84,10 @@ A skill that completes its ceremony SHALL check its marker with `meta-notes task
 #### Scenario: Follow up item tracked
 - **WHEN** the user wants the Follow up item `- [ ] reply to Sam` tracked for Monday 2026-09-28
 - **THEN** the skill SHALL run `task update` on that line with `--due 2026-09-28`
+
+#### Scenario: Meetings from the export
+- **WHEN** the skill plans Monday 2026-09-28 and a current export exists
+- **THEN** the skill SHALL run `meta-notes calendar --date 2026-09-28 --json` and use its meetings without asking for a screenshot
 
 ### Requirement: Weekly review
 `weekly-review` SHALL review the workweek, Monday to Friday of the current week; weekend work is not covered. It SHALL draft from the week's completed tasks, time report, daily notes with their Follow up lists, and the notes changed that week from `meta-notes changes --date <Monday>..<Friday>`. From the change list it SHALL skip rename-only entries and daily and weekly plan notes, and SHALL use the remaining notes as prompts for work the other inputs missed, asking the user about any it can't place; it SHALL NOT match changed notes against tasks or time entries. The skill SHALL read git history only through `meta-notes changes`, and SHALL NOT run `git` or read file modification times itself. If `meta-notes changes` fails, the review SHALL continue without it. It SHALL cover plan versus actual, commitments (`#wait` tasks and things owed), project warnings from `meta-notes projects --warnings`, and a `#later` scan, where a task the user says is live gets `#later` removed and, if needed, a date. It SHALL write a summary for the user's manager in the weekly note's `## Review` section with exactly two parts: what was done this week and why it matters, then important upcoming dates and deadlines. The summary SHALL NOT include a plan for next week. The skill SHALL mark `review complete` and remind the user that weekly planning is next.
@@ -117,11 +121,15 @@ A skill that completes its ceremony SHALL check its marker with `meta-notes task
 - **THEN** the skill SHALL run `task update` with `--remove-tag later --due 2026-10-02`
 
 ### Requirement: Weekly planning
-`weekly-plan` SHALL plan the next workweek, Monday to Friday, from the weekly review and a calendar screenshot of that week. It SHALL work out capacity as free gaps of 90 minutes or more, listing shorter gaps separately, and SHALL list meetings to schedule and deadlines (`#deadline` tasks and due dates) landing in that week. It SHALL help the user choose 3–5 priorities, place them roughly on days, write the result in the next week's `## Plan` section (creating the note with `meta-notes note weekly` if needed), and mark that week's `plan complete`.
+`weekly-plan` SHALL plan the next workweek, Monday to Friday, from the weekly review and that week's calendar, gathered as "Calendar from the export" requires. It SHALL work out capacity as free gaps of 90 minutes or more, listing shorter gaps separately, and SHALL list meetings to schedule and deadlines (`#deadline` tasks and due dates) landing in that week. It SHALL help the user choose 3–5 priorities, place them roughly on days, write the result in the next week's `## Plan` section (creating the note with `meta-notes note weekly` if needed), and mark that week's `plan complete`.
 
 #### Scenario: Capacity
 - **WHEN** Tuesday's calendar has free gaps of 2 hours and 45 minutes
 - **THEN** the 2-hour gap SHALL count toward capacity and the 45-minute gap SHALL be listed separately
+
+#### Scenario: Week from the export
+- **WHEN** the skill plans the week of 2026-09-28 and a current export exists
+- **THEN** the skill SHALL run `meta-notes calendar --date 2026-09-28..2026-10-02 --json` and use its meetings without asking for a screenshot
 
 ### Requirement: Task cleanup
 `task-cleanup` SHALL be the only skill that works through old tasks. It SHALL list overdue open tasks across all notes, oldest due date first, then undated tasks grouped by note, in batches sized to the time the user has (5–10 minutes by default). For each task, the user SHALL choose keep, date it, `#later`, cancel, or done, applied with `task update`. For a batch, the skill SHALL also offer cancel all and later all, applied as one `task update` per line from the same query. Stopping early SHALL be safe; the next run starts again from the oldest tasks. It SHALL NOT use git history or file modification times.
@@ -193,3 +201,18 @@ With no project named, `project-review` SHALL pick from `meta-notes projects --j
 #### Scenario: Stopped early
 - **WHEN** the user stops a review of `project/make-bread.md` on Friday 2026-09-25 before choosing a disposition
 - **THEN** the note SHALL gain `- [x] project #review 📅 ✅ 2026-09-25` and `- [ ] Finish project review #review 📅 2026-09-28`
+
+### Requirement: Calendar from the export
+A skill that needs meetings SHALL run `meta-notes calendar --date <period> --json` for the days it plans. When the command succeeds, the skill SHALL use its agenda, SHALL tell the user how old the export is, and SHALL pass on its warnings (a stale export, a missing export, `email` not set). When the command fails, the skill SHALL tell the user they can export from Google Calendar into the folder the error names, or provide a screenshot of the calendar for those days, and SHALL continue with whichever the user provides. It SHALL NOT ask for a screenshot when the command succeeds.
+
+#### Scenario: Stale export
+- **WHEN** the command succeeds with a warning that the export is 4 days old
+- **THEN** the skill SHALL use the agenda and tell the user the export is 4 days old
+
+#### Scenario: No export
+- **WHEN** the command fails because no export was found
+- **THEN** the skill SHALL name the `ics/` folder from the error and offer exporting there or providing a screenshot
+
+#### Scenario: Calendar support not installed
+- **WHEN** the command fails because calendar support is not installed
+- **THEN** the skill SHALL say to run `meta-notes init` and SHALL continue from a screenshot if the user provides one
