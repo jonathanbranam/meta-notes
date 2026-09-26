@@ -15,4 +15,4 @@
 
 ## 3. Integration
 
-- [ ] 3.1 In a notes root with a real export, ask Claude "do I have a 1-1 with <name> next week", "find any meetings with <name>", and "find all meetings about <topic>", and confirm each runs `meta-notes calendar --json` with the right `--date`, `--with`, or `--search` and matches Google Calendar; then run `pipenv run pytest test/unit/` and `./run_tests.sh`
+- [x] 3.1 In a notes root with a real export, ask Claude "do I have a 1-1 with <name> next week", "find any meetings with <name>", and "find all meetings about <topic>", and confirm each runs `meta-notes calendar --json` with the right `--date`, `--with`, or `--search` and matches Google Calendar; then run `pipenv run pytest test/unit/` and `./run_tests.sh`
