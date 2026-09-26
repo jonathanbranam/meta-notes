@@ -60,6 +60,12 @@ The day log listing SHALL list the day's time log entries in the order they appe
 - **WHEN** an entry has a start of 14:00 and no parseable end
 - **THEN** it SHALL show `start: 14:00` and `*MISSING END TIME*`, and no `time`
 
+#### Scenario: Tag-only entry
+- **WHEN** the log has `- email #admin` from 08:30 to 09:00, `- #proj-01 #research` from 09:00 to 10:00, and `- code review #code` from 10:00 to 10:30
+- **THEN** the listing SHALL show `- #proj-01 #research` with `start: 09:00`, `end: 10:00`, `time: 1 hr 0 min`, and tags `proj-01 research` between the other two
+- **AND** no `*GAP` line SHALL be listed
+- **AND** `total duration` SHALL be `2 hr 0 min` and no `*missing time*` line SHALL be shown
+
 ### Requirement: Gaps and overlaps between entries
 For each pair of consecutive entries in the listing where the earlier entry has an end time and the later entry has a start time, the gap SHALL be the later start minus the earlier end, in whole minutes. A gap of more than 2 minutes SHALL be listed between the two entries as `*GAP of N min*`, with `start` set to the earlier entry's end and `end` set to the later entry's start. A negative gap SHALL be listed as `*Overlap of N min*`, where N is the size of the overlap, with `start` set to the earlier entry's end and `end` set to the later entry's start. A gap from 0 to 2 minutes SHALL NOT be listed. No gap or overlap SHALL be computed across an entry that is missing the needed time.
 

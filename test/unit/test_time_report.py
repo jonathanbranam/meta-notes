@@ -246,6 +246,28 @@ def test_format_day_report_overlap_and_long_entry(tmp_path):
     assert "  * start: *MISSING START TIME*\n  * end:   10:00" in text
 
 
+def test_format_day_report_tag_only_entry(tmp_path):
+    """An entry with only tags is listed as written, with no gap in its place."""
+    path = write_note(tmp_path, TUESDAY,
+                      entry("email #admin", "08:30", "09:00")
+                      + entry("#proj-01 #research", "09:00", "10:00")
+                      + entry("code review #code", "10:00", "10:30"))
+
+    lines = format_day_report(build_day_report(str(tmp_path), TUESDAY, str(path)))
+    i = lines.index("- #proj-01 #research")
+
+    assert lines[i - 5] == "- email #admin"
+    assert lines[i:i + 6] == ["- #proj-01 #research",
+                              "  * start: 09:00",
+                              "  * end:   10:00",
+                              "  * time:  1 hr 0 min",
+                              "  * tags:  proj-01 research",
+                              "- code review #code"]
+    assert not any(line.startswith("- *GAP") for line in lines)
+    assert "- total duration:   2 hr 0 min" in lines
+    assert not any("*missing time*" in line for line in lines)
+
+
 def test_format_day_report_missing_time(tmp_path):
     """Unlogged time above 10 minutes is reported in Total Time."""
     path = write_note(tmp_path, TUESDAY,

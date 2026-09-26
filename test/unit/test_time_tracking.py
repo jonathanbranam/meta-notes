@@ -10,7 +10,7 @@ import os
 # Add scripts directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../scripts'))
 
-from datetime import date
+from datetime import date, datetime
 
 from time_tracking import (
     TimeLogEntry,
@@ -412,6 +412,72 @@ def test_parse_time_log_lines_empty_log_section():
 
     entries = _parse_time_log_lines(lines, "test.md")
     assert len(entries) == 0
+
+
+def test_parse_time_log_lines_tag_only_entry():
+    """An entry with only tags is recorded with empty activity text."""
+    lines = [
+        "### Log\n",
+        "- #proj-01 #research\n",
+        "  * start: 09:00\n",
+        "  * end:   10:00\n",
+    ]
+
+    entries = _parse_time_log_lines(lines, "test.md", date(2026, 9, 25))
+
+    assert len(entries) == 1
+    assert entries[0].activity == ""
+    assert [t.text for t in entries[0].tags] == ["#proj-01", "#research"]
+    assert entries[0].start_time == datetime(2026, 9, 25, 9, 0)
+    assert entries[0].end_time == datetime(2026, 9, 25, 10, 0)
+
+
+def test_parse_time_log_lines_empty_activity_with_times():
+    """A bare bullet with a start or end line is recorded."""
+    lines = [
+        "### Log\n",
+        "-\n",
+        "  * start: 09:30\n",
+        "  * end:   10:00\n",
+    ]
+
+    entries = _parse_time_log_lines(lines, "test.md", date(2026, 9, 25))
+
+    assert len(entries) == 1
+    assert entries[0].activity == ""
+    assert entries[0].tags == []
+    assert entries[0].start_time == datetime(2026, 9, 25, 9, 30)
+
+
+def test_parse_time_log_lines_stray_empty_bullet():
+    """A bare bullet with no tags and no start or end line is ignored."""
+    lines = [
+        "### Log\n",
+        "- email #admin\n",
+        "  * start: 09:00\n",
+        "  * end:   09:30\n",
+        "-\n",
+        "\n",
+    ]
+
+    entries = _parse_time_log_lines(lines, "test.md", date(2026, 9, 25))
+
+    assert [e.activity for e in entries] == ["email"]
+
+
+def test_parse_time_log_lines_tag_only_entry_counted():
+    """A tag-only entry's time counts by tag and as work."""
+    lines = [
+        "### Log\n",
+        "- #proj-01 #code\n",
+        "  * start: 09:00\n",
+        "  * end:   10:00\n",
+    ]
+
+    entries = _parse_time_log_lines(lines, "test.md", date(2026, 9, 25))
+
+    assert calculate_total_time_by_tag(entries)["#proj-01"] == timedelta(hours=1)
+    assert calculate_work_vs_nonwork(entries) == (timedelta(hours=1), timedelta())
 
 
 def test_parse_time_log_lines_multiple_entries():

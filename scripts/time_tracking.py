@@ -371,6 +371,7 @@ def _parse_time_log_lines(lines: list[str], filepath: str,
                 'start_time': None,
                 'end_time': None,
                 'notes': None,
+                'has_time': False,
                 'line_no': line_num,
                 'text': line.rstrip()
             }
@@ -381,11 +382,13 @@ def _parse_time_log_lines(lines: list[str], filepath: str,
 
             # Parse start time
             if detail_line.startswith('start:'):
+                current_entry_data['has_time'] = True
                 time_str = detail_line[6:].strip()
                 current_entry_data['start_time'] = _parse_entry_time(time_str, file_date)
 
             # Parse end time
             elif detail_line.startswith('end:'):
+                current_entry_data['has_time'] = True
                 time_str = detail_line[4:].strip()
                 current_entry_data['end_time'] = _parse_entry_time(time_str, file_date)
 
@@ -434,9 +437,12 @@ def _create_time_log_entry(entry_data: dict, filepath: str) -> Optional[TimeLogE
         filepath: Source file path.
 
     Returns:
-        TimeLogEntry if data is valid, None otherwise.
+        TimeLogEntry if the entry has activity text, tags, or a start or end
+        line; None for a bare bullet with none of these. A tag-only entry's
+        activity is ''.
     """
-    if not entry_data.get('activity'):
+    if not (entry_data.get('activity') or entry_data.get('tags')
+            or entry_data.get('has_time')):
         return None
 
     # Extract additional tags from notes if present
