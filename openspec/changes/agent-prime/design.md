@@ -48,18 +48,14 @@ without its hook, which the work sandbox doesn't allow.
 ### 2. Prose in `prime.md`, generated blocks from code
 
 `prime.py` mirrors `conventions.py`: `prime.md` holds the prose with
-markers `today-paths`, `daily-sections`, `weekly-sections`, `tag-groups`,
-`skills`, and `conventions`. The `conventions` marker expands to
+markers `today-paths`, `tag-groups`, `skills`, and `conventions`. The `conventions` marker expands to
 `conventions.run()` unchanged, its `# meta-notes conventions` heading
 included, so the guide contains exactly what `meta-notes conventions`
 prints (the spec's "Conventions included" scenario). Unknown markers
 raise, as in `conventions.render`.
 
 Today's paths reuse `note.py`'s path function for each kind rather than
-repeating the patterns. Template sections are the `##`/`###` headings of
-the root's template, or the shipped template, with front matter and
-`{{% %}}` blocks ignored; a missing or unreadable root template falls
-back to the shipped one.
+repeating the patterns.
 
 ### 3. Root optional
 
@@ -110,14 +106,25 @@ this so an agent doesn't trim the table or fill 17:00–18:00 with work.
 A root's `CLAUDE.md` can override the hours; a config setting waits
 until a root actually needs different ones.
 
+### 7. Short over complete
+
+The first version was about 12,000 characters, with template section
+lists, every accepted time format, all three due emoji, and tables. It
+now stays under 10,000 characters with no tables: plan note sections are
+left out (the agent reads the note), times are `HH:MM` only, only `📅` is
+named, and the status characters, tag aliases, and ceremony markers are
+one sentence each. The CLI still accepts everything it did; the guide
+names only what to write. `conventions` shrinks too, since the guide
+includes it and skills read it.
+
 ## Risks / Trade-offs
 
 - [The agent skips the `CLAUDE.md` instruction] → The line is short and
   imperative; `CLAUDE.md` is reloaded after compaction. Hooks aren't an
   option at work, so if this proves unreliable, the skills can run
   `prime` instead of `conventions` as their first step.
-- [Guide grows past the budget] → A test asserts the size in a root with
-  every shipped skill; the budget is in the spec.
+- [Guide grows past the budget] → A test asserts the 10,000-character
+  budget and the no-tables rule; both are in the spec.
 - [Hand-written prose drifts from specs for projects and archive] →
   Prose states rules the specs already fix (fields, archive path), and
   tests assert the key phrases (`meta-notes archive`,

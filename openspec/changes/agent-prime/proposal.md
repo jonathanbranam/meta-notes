@@ -23,9 +23,8 @@ for the whole notes root.
   an agent to read at the start of a session:
   - the PPARA folders and what goes in each; folder names lowercase with
     dashes, note names Title Case with spaces
-  - the plan notes: where each kind lives, with today's daily, weekly,
-    quarterly, and yearly paths filled in, what sections each has, and
-    how to create one
+  - the plan notes: today's daily, weekly, quarterly, and yearly paths,
+    and how to create one
   - projects: a single note or a folder with `Home.md`, the common
     project files (`Tasks.md`, `Meetings & Notes.md` with dated headings,
     newest first), fields and status, `#next`, `#review`, `#deadline`,
@@ -67,6 +66,9 @@ for the whole notes root.
   size, behavior outside a notes root
 
 ### Modified Capabilities
+- `conventions`: shorter: only 📅 is named as the due emoji, and the
+  status characters, tag aliases, and ceremony markers are sentences,
+  not tables
 - `init`: checks the root's `CLAUDE.md` for the `meta-notes prime` line
   and reports it
 
@@ -81,5 +83,6 @@ for the whole notes root.
   `test/unit/test_cli.py`
 - `doc/meta-notes.txt`, `README.md`: the command and the `CLAUDE.md` line
 - `skills/calendar/SKILL.md`: workday hours
+- `scripts/meta_notes/conventions.md`, `conventions.py`: shorter text
 - `docs/work-notes-claude.md`: trimmed to personal preferences
 - `scripts/meta_notes/__init__.py`: MINOR version bump on archive

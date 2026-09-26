@@ -25,27 +25,40 @@ def test_run_replaces_every_marker():
     assert '<!-- generated' not in text
 
 
+def unwrapped():
+    """The conventions with line breaks inside paragraphs joined."""
+    return " ".join(conventions.run().split())
+
+
 def test_run_lists_every_tag_alias():
-    text = conventions.run()
+    text = unwrapped()
 
     for alias, target in TAG_ALIASES.items():
-        assert f"| `{alias}` | `{target}` |" in text
-    assert "| `#waiting` | `#wait` |" in text
+        assert f"`{alias}` for `{target}`" in text
+    assert "`#waiting` for `#wait`" in text
 
 
-def test_run_lists_due_emoji_with_one_to_write():
+def test_run_names_only_the_due_emoji_to_write():
     text = conventions.run()
 
-    assert "- `📅`: the one to write" in text
-    assert "- `📆`: also read as a due date" in text
-    assert "- `🗓`: also read as a due date" in text
+    assert "`📅 YYYY-MM-DD`" in text
+    assert "📆" not in text
+    assert "🗓" not in text
 
 
 def test_run_lists_every_status_character():
-    text = conventions.run()
+    text = unwrapped()
 
     for char, meaning in tasks.STATUS_CHARS.items():
-        assert f"| `- [{char}]` | {meaning} |" in text
+        assert f"`{char}`" in text
+        assert meaning in text
+    assert "`x`/`X` done" in text
+    assert "Any other character reads as open." in text
+
+
+def test_run_has_no_tables():
+    assert not any(line.startswith("|")
+                   for line in conventions.run().splitlines())
 
 
 def test_run_includes_task_update_rule():
@@ -67,8 +80,7 @@ def test_run_covers_required_topics():
 
 def test_run_lines_fit_in_80_columns():
     for line in conventions.run().splitlines():
-        if not line.startswith('|'):
-            assert len(line) <= 80, line
+        assert len(line) <= 80, line
 
 
 # Tests for render function

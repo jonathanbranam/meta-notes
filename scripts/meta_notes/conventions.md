@@ -7,41 +7,26 @@ relative to it.
 ## Tasks
 
 A checkbox line is `- [c] text`, with `-`, `*`, or `+` and one status
-character `c`. It is a **task** only when it has a due emoji (with or
-without a date) or a start date. Other checkbox lines are checklist items
-and never appear in task queries.
+character `c`. It is a **task** only when it has a due date
+(`📅 YYYY-MM-DD`, or a bare `📅` for undated) or a start date
+(`🛫 YYYY-MM-DD`). Other checkbox lines are checklist items and never
+appear in task queries. A done task gets `✅ YYYY-MM-DD`, which stands in
+for its due date in queries.
 
-| Line | Meaning |
-|---|---|
-| `- [ ] text` | Checklist item, not a task |
-| `- [ ] text 📅` | Undated task |
-| `- [ ] text 📅 YYYY-MM-DD` | Task due on that date |
-| `- [ ] text 🛫 YYYY-MM-DD` | Task that starts on that date |
-| `- [x] text 📅 ✅ YYYY-MM-DD` | Task completed on that date |
-
-Due emoji:
-
-<!-- generated: due-emoji -->
-
-Other markers:
-
-- `🛫 YYYY-MM-DD` is a start date.
-- `✅ YYYY-MM-DD` is the completion date. A completed task's ✅ date
-  stands in for its due date in queries.
-- Lines fit in 80 columns. Emoji count as two columns.
-- Links are `[[path/without/extension]]`, relative to the notes root.
-
-### Status characters
+```markdown
+- [ ] Order tiles 📅 2026-09-28
+- [x] Call the plumber 📅 ✅ 2026-09-22
+```
 
 <!-- generated: statuses -->
 
-Any other character reads as open.
+Lines fit in 80 columns; emoji count as two. Links are
+`[[path/without/extension]]`, relative to the notes root.
 
 ## Tags
 
 A tag is `#` followed by letters, digits, `_`, or `-`, anywhere in the
-line. Tags match ignoring case. These aliases are read as their target,
-in task queries, task updates, and time logs:
+line. Tags match ignoring case.
 
 <!-- generated: tag-aliases -->
 
@@ -58,7 +43,7 @@ Tags the skills use:
 
 ## Projects
 
-A project is a note directly in `project/` (`project/make-bread.md`) or a
+A project is a note directly in `project/` (`project/Make Bread.md`) or a
 folder directly in `project/` whose home note is `Home.md`
 (`project/kitchen/Home.md`). Its fields are the `key: value` items of the
 first list after the home note's title. There is no frontmatter.
@@ -122,15 +107,10 @@ Don't change the old line's dates. `task update` never copies a task.
 
 ## Ceremony markers
 
-Daily and weekly notes carry checklist lines that record whether a
-ceremony was done. They have no dates, so they aren't tasks.
-
-| Note | Marker | Ceremony |
-|---|---|---|
-| Daily | `- [ ] plan complete` | Daily planning |
-| Daily | `- [ ] shutdown complete` | Daily shutdown |
-| Weekly | `- [ ] review complete` | Weekly review |
-| Weekly | `- [ ] plan complete` | Weekly planning |
+Checklist lines record whether a ceremony was done. They have no dates,
+so they aren't tasks. Daily notes carry `- [ ] plan complete` and
+`- [ ] shutdown complete`; weekly notes carry `- [ ] review complete` and
+`- [ ] plan complete`.
 
 Check a marker with `meta-notes task update <file>:<line> --expect <text>
 --status x`, which appends `✅ <today>`, the day the ceremony was done.

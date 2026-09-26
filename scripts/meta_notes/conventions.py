@@ -7,6 +7,7 @@ tags.py, so the printed text always matches the installed CLI.
 """
 
 import re
+import textwrap
 from pathlib import Path
 
 import tasks
@@ -18,29 +19,25 @@ MARKER_PATTERN = re.compile(r"<!-- generated: ([\w-]+) -->")
 
 
 def _statuses() -> str:
-    rows = ["| Line | Status |", "|---|---|"]
-    rows += [f"| `- [{char}]` | {meaning} |"
-             for char, meaning in tasks.STATUS_CHARS.items()]
-    return "\n".join(rows)
-
-
-def _due_emoji() -> str:
-    first, *others = tasks.DUE_EMOJIS
-    items = [f"- `{first}`: the one to write"]
-    items += [f"- `{emoji}`: also read as a due date" for emoji in others]
-    return "\n".join(items)
+    # Characters with the same meaning share one entry: `x`/`X` done
+    groups: dict[str, list[str]] = {}
+    for char, meaning in tasks.STATUS_CHARS.items():
+        groups.setdefault(meaning, []).append(f"`{char}`")
+    items = [f"{'/'.join(chars)} {meaning}" for meaning, chars in groups.items()]
+    return textwrap.fill("Status characters: " + ", ".join(items)
+                         + ". Any other character reads as open.", 74,
+                         break_on_hyphens=False)
 
 
 def _tag_aliases() -> str:
-    rows = ["| Alias | Reads as |", "|---|---|"]
-    rows += [f"| `{alias}` | `{target}` |"
-             for alias, target in TAG_ALIASES.items()]
-    return "\n".join(rows)
+    items = [f"`{alias}` for `{target}`" for alias, target in TAG_ALIASES.items()]
+    return textwrap.fill("Aliases, read as their target in task queries, task "
+                         "updates, and time logs: " + ", ".join(items) + ".", 74,
+                         break_on_hyphens=False)
 
 
 GENERATORS = {
     "statuses": _statuses,
-    "due-emoji": _due_emoji,
     "tag-aliases": _tag_aliases,
 }
 

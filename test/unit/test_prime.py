@@ -69,35 +69,12 @@ def test_run_today_paths(notes_root):
     assert '`plan/year/2026.md`' in text
 
 
-def test_run_daily_sections_from_shipped_template(notes_root):
-    text = prime.run(str(notes_root), SATURDAY)
-
-    assert '- Follow Up\n- Time Tracking\n  - Log\n  - Time Block\n' in text
-
-
-def test_run_edited_template(notes_root):
-    daily = notes_root / 'resource' / 'template' / 'daily.md'
-    daily.write_text(daily.read_text() + '\n## Wins\n')
-
-    text = prime.run(str(notes_root), SATURDAY)
-
-    assert '- Wins\n' in text
-
-
-def test_run_missing_root_template_uses_shipped(notes_root):
-    (notes_root / 'resource' / 'template' / 'weekly.md').unlink()
-
-    text = prime.run(str(notes_root), SATURDAY)
-
-    assert '- Review\n- Plan\n' in text
-
-
 def test_run_lists_tag_groups():
-    text = prime.run(None, SATURDAY)
+    text = " ".join(prime.run(None, SATURDAY).split())
 
-    for group, tags in TAG_GROUPS.items():
-        line = f"- {group}: " + ", ".join(f"`{t}`" for t in sorted(tags))
-        assert line in text
+    for tags in TAG_GROUPS.values():
+        for tag in tags:
+            assert f"`{tag}`" in text
 
 
 def test_run_lists_shipped_skills(monkeypatch, tmp_path):
@@ -109,7 +86,7 @@ def test_run_lists_shipped_skills(monkeypatch, tmp_path):
 
     text = prime.run(None, SATURDAY)
 
-    assert '- `calendar`\n- `daily-plan`\n' in text
+    assert 'calendar questions: `calendar`, `daily-plan`.' in text
 
 
 def test_run_includes_conventions(notes_root):
@@ -120,30 +97,22 @@ def test_run_includes_conventions(notes_root):
 
 def test_render_unknown_marker_raises():
     with pytest.raises(KeyError):
-        prime.render('<!-- generated: nope -->', None, SATURDAY)
-
-
-# Tests for template_sections function
-
-def test_template_sections_skips_front_matter_and_title():
-    text = '---\nfilename_pattern: "# x"\n---\n# Title\n## A\n### B\n'
-
-    assert prime.template_sections(text) == [(2, 'A'), (3, 'B')]
+        prime.render('<!-- generated: nope -->', SATURDAY)
 
 
 # Tests for run function: content
 
 def test_run_covers_required_topics(notes_root):
-    text = prime.run(str(notes_root), SATURDAY)
+    text = " ".join(prime.run(str(notes_root), SATURDAY).split())
 
     for phrase in ('`plan/`', '`project/`', '`area/`', '`resource/`',
                    '`archive/`', '`resource/template/`',
-                   'lowercase, with dashes', 'Title Case',
+                   'lowercase with dashes', 'Title Case',
                    '`Home.md`', '`Tasks.md`', '`Meetings & Notes.md`',
                    'newest first', '`meta-notes projects`',
-                   '`meta-notes project brief',
+                   'meta-notes project brief',
                    'meta-notes move project/<name> area/<name>',
-                   'meta-notes note daily|weekly|quarterly|yearly',
+                   'meta-notes note daily [YYYY-MM-DD]', 'HH:MM',
                    '`archive/project/kitchen-remodel/`',
                    '`status: archived`', 'meta-notes archive <path>',
                    '08:00 to 17:00, Monday to Friday', '18:00',
@@ -158,7 +127,7 @@ def test_run_covers_required_topics(notes_root):
 def test_run_lists_finding_command(notes_root, command):
     text = prime.run(str(notes_root), SATURDAY)
 
-    assert f"| `{command}` | `meta-notes {command}" in text
+    assert f"\nmeta-notes {command} " in text
 
 
 def test_run_inside_root_has_no_no_root_line(notes_root):
