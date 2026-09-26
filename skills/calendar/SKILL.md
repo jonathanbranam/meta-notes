@@ -95,7 +95,7 @@ mention any group meetings with X that were found.
 ## Free time
 
 From an unfiltered agenda, list the gaps between timed events within the
-workday (9:00 to 17:00 unless the user says otherwise). All-day events
+workday (8:00 to 17:00 unless the user says otherwise). All-day events
 don't block time unless the title says the user is away.
 
 ## Answer

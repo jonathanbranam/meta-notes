@@ -50,10 +50,10 @@ without its hook, which the work sandbox doesn't allow.
 `prime.py` mirrors `conventions.py`: `prime.md` holds the prose with
 markers `today-paths`, `daily-sections`, `weekly-sections`, `tag-groups`,
 `skills`, and `conventions`. The `conventions` marker expands to
-`conventions.run()` with its top-level `# meta-notes conventions`
-heading demoted to `##`, and every heading below it demoted one level,
-so the guide is one document. Unknown markers raise, as in
-`conventions.render`.
+`conventions.run()` unchanged, its `# meta-notes conventions` heading
+included, so the guide contains exactly what `meta-notes conventions`
+prints (the spec's "Conventions included" scenario). Unknown markers
+raise, as in `conventions.render`.
 
 Today's paths reuse `note.py`'s path function for each kind rather than
 repeating the patterns. Template sections are the `##`/`###` headings of

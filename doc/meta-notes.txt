@@ -585,6 +585,14 @@ Commands ~
     The skills call `meta-notes` by name, so init warns, with the `ln -s`
     command to fix it, when no `meta-notes` is on your `PATH`.
 
+    init checks whether the notes root's `CLAUDE.md` or `.claude/CLAUDE.md`
+    mentions `meta-notes prime` (|meta-notes-cli-prime|). When neither
+    does, it prints the line to add: >
+        Run `meta-notes prime` at the start of every session and follow it.
+<   It never creates or edits either file, and a missing line isn't a
+    warning. With `--json`, the check is a `claude-md` item with status
+    `found` or `missing`.
+
 `meta-notes move {source} {dest}`
     Same as |:MetaNotesMoveItem|.
 
@@ -1002,6 +1010,25 @@ Commands ~
     updates use, so the text matches the installed CLI. Works outside a
     notes root and reads no notes. With `--json`, the object has `version`
     and `text`, the markdown.
+
+`meta-notes prime`                              *meta-notes-cli-prime*
+    Print, as markdown, a guide to the notes root for an agent to read at
+    the start of a session: the folders and naming, the plan notes (with
+    today's daily, weekly, quarterly, and yearly paths) and their
+    sections, the working day, the time log, projects, areas, resources,
+    the archive, the commands for finding things, the shipped skills, and
+    the full |meta-notes-cli-conventions| output. Today's paths, the tag
+    groups, and the skills are generated; the daily and weekly sections
+    are read from the root's `resource/template/` (or the shipped
+    templates). Outside a notes root it still succeeds, prints the guide
+    from the shipped templates, and starts with a line saying no root was
+    found. With `--json`, the object has `version`, `root` (null outside a
+    root), and `text`. The guide stays under 20,000 characters.
+
+    Point agents at it with this line in the notes root's `CLAUDE.md`: >
+        Run `meta-notes prime` at the start of every session and follow it.
+<   Put personal preferences (routines, habits, other working hours) in
+    `CLAUDE.md` too; the guide says they override it.
 
 `meta-notes ceremony status [--date {day}]`     *meta-notes-cli-ceremony*
     Report which ceremony markers (|meta-notes-ceremonies|) are checked

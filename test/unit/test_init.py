@@ -91,9 +91,13 @@ def statuses(result):
     return {(i.kind, i.path): i.status for i in result.items}
 
 
-def without_gitignore(items):
-    """Statuses of every item but .gitignore entries (skipped with no file)."""
-    return {s for (kind, _), s in items.items() if kind != 'gitignore'}
+def without_reports(items):
+    """
+    Statuses of every item but .gitignore entries (skipped with no file) and
+    the CLAUDE.md check (found or missing, never created).
+    """
+    return {s for (kind, _), s in items.items()
+            if kind not in ('gitignore', 'claude-md')}
 
 
 def run_json(capsys, argv):
@@ -134,7 +138,7 @@ def test_init_empty_directory(tmp_path, skills):
     assert (root / '.venv' / 'bin' / 'python3').is_file()
     assert (root / '.claude' / 'skills' / 'review').is_symlink()
     assert not (root / '.claude' / 'skills' / 'not-a-skill').exists()
-    assert without_gitignore(statuses(result)) == {'created'}
+    assert without_reports(statuses(result)) == {'created'}
 
 
 def test_init_creates_missing_target_with_parents(tmp_path, skills):
@@ -165,7 +169,7 @@ def test_init_rerun_is_all_exists(tmp_path, skills):
     """A second run creates nothing and reports everything as existing."""
     init.init(str(tmp_path / 'n'))
     result = init.init(str(tmp_path / 'n'))
-    assert without_gitignore(statuses(result)) == {'exists'}
+    assert without_reports(statuses(result)) == {'exists'}
 
 
 def test_init_existing_root_without_sentinel_unchanged(tmp_path, skills):
@@ -633,6 +637,58 @@ def test_init_gitignore_no_trailing_newline(tmp_path, skills):
     assert (root / '.gitignore').read_text() == '*.swp\n.venv/\n.meta-notes-cache/\n'
 
 
+# Tests for init function: CLAUDE.md check
+
+def test_init_claude_md_missing(tmp_path, skills):
+    """No CLAUDE.md: reported missing, none created, and no warning."""
+    root = tmp_path / 'n'
+    root.mkdir()
+    (root / '.gitignore').write_text('')
+
+    result = init.init(str(root))
+
+    assert statuses(result)[('claude-md', 'CLAUDE.md')] == 'missing'
+    assert not (root / 'CLAUDE.md').exists()
+    assert not (root / '.claude' / 'CLAUDE.md').exists()
+    assert result.warnings == []
+
+
+def test_init_claude_md_line_present(tmp_path, skills):
+    """CLAUDE.md with the prime line: reported found and left unchanged."""
+    root = tmp_path / 'n'
+    root.mkdir()
+    content = '# Notes\n\n' + init.PRIME_LINE + '\n'
+    (root / 'CLAUDE.md').write_text(content)
+
+    result = init.init(str(root), force=True)
+
+    assert statuses(result)[('claude-md', 'CLAUDE.md')] == 'found'
+    assert (root / 'CLAUDE.md').read_text() == content
+
+
+def test_init_claude_md_without_line_is_missing(tmp_path, skills):
+    """A CLAUDE.md that doesn't mention prime is reported missing, unchanged."""
+    root = tmp_path / 'n'
+    root.mkdir()
+    (root / 'CLAUDE.md').write_text('# Notes\n')
+
+    result = init.init(str(root))
+
+    assert statuses(result)[('claude-md', 'CLAUDE.md')] == 'missing'
+    assert (root / 'CLAUDE.md').read_text() == '# Notes\n'
+
+
+def test_init_claude_md_in_dot_claude(tmp_path, skills):
+    """Only .claude/CLAUDE.md mentions prime: reported found there."""
+    root = tmp_path / 'n'
+    (root / '.claude').mkdir(parents=True)
+    (root / '.claude' / 'CLAUDE.md').write_text('Run meta-notes prime first.\n')
+
+    result = init.init(str(root))
+
+    assert statuses(result)[('claude-md', '.claude/CLAUDE.md')] == 'found'
+
+
 # Tests for the init subcommand
 
 def test_cli_init_current_directory(tmp_path, skills, capsys):
@@ -683,10 +739,20 @@ def test_cli_init_json_report(tmp_path, skills, capsys):
     assert ('cache-readme', '.meta-notes-cache/README.md') in kinds
     assert ('venv', '.venv') in kinds
     assert all(i['status'] == 'created' for i in out['items']
-               if i['kind'] != 'gitignore')
+               if i['kind'] not in ('gitignore', 'claude-md'))
     # The only warning is the missing .gitignore
     assert len(out['warnings']) == 1
     assert '.gitignore' in out['warnings'][0]
+
+
+def test_cli_init_text_gives_prime_line(tmp_path, skills, capsys):
+    """Text output gives the exact line to add to CLAUDE.md."""
+    code = cli.main(['init', '--root', str(tmp_path / 'n')])
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert 'Add this line to CLAUDE.md so agents load the notes guide:' in out
+    assert init.PRIME_LINE in out
 
 
 def test_cli_init_skipped_skill_is_warning(tmp_path, skills, capsys):

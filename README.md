@@ -91,6 +91,8 @@ meta-notes/
 │   │   ├── init.py              # Notes root setup
 │   │   ├── note.py              # Note paths and creation
 │   │   ├── ops.py               # Move, rename, archive
+│   │   ├── prime.md             # Agent guide text
+│   │   ├── prime.py             # Agent guide, generated parts filled in
 │   │   ├── project.py           # Project home notes and fields
 │   │   ├── projects.py          # Project list and warnings
 │   │   ├── query.py             # Task query
@@ -124,6 +126,7 @@ meta-notes/
 │   │   ├── test_project.py
 │   │   ├── test_projects.py
 │   │   ├── test_ops.py
+│   │   ├── test_prime.py
 │   │   ├── test_query.py
 │   │   ├── test_root.py
 │   │   ├── test_shim.py
@@ -176,7 +179,8 @@ templates (`note`), file operations (`move`, `rename`, `archive`), task
 query (`tasks`), task edits (`task update`), time reports (`time`), changed
 notes (`changes`), calendar agendas (`calendar`, `cache clear`), the
 project list (`projects`), ceremony status (`ceremony status`), and the
-skills' shared conventions (`conventions`) outside Vim, for shells, agents, and other tools. The Vim
+skills' shared conventions (`conventions`), and a guide to the notes root
+for agents (`prime`) outside Vim, for shells, agents, and other tools. The Vim
 commands call it. Every command accepts `--json`. It needs Python 3.11 or newer as `python3`. See
 `:help meta-notes-cli`.
 
@@ -209,6 +213,10 @@ the virtualenv can't be built, init still succeeds and warns that calendar
 support isn't available. Re-running is safe and leaves an existing `.venv`
 alone; `init --force` rebuilds it.
 
+init also checks that the root's `CLAUDE.md` loads the agent guide (see
+[Agents](#agents)) and prints the line to add when it doesn't. It never
+edits `CLAUDE.md`.
+
 ```bash
 mkdir notes && cd notes && git init && touch .gitignore
 meta-notes init
@@ -233,6 +241,7 @@ meta-notes calendar --ics ~/Downloads/export.zip --json
 meta-notes calendar --date 2026-09 --with zach --search 1:1  # filtered
 meta-notes cache clear                    # delete parsed calendars, keep exports
 meta-notes conventions                    # syntax and rules the skills follow
+meta-notes prime                          # guide to the notes root for agents
 ```
 
 Other commands find the notes root by walking up from the current directory
@@ -258,6 +267,22 @@ calendars = ["me@example.com"]  # zip calendars to load (default: all)
 ```
 
 See `:help meta-notes-cli-calendar` and `:help meta-notes-config`.
+
+### Agents
+
+`meta-notes prime` prints a guide to the notes root for an agent: the
+folders and naming, where the plan notes are (with today's paths), the
+working day, projects, the archive, the commands for finding things, the
+skills, and the conventions. Add this line to the notes root's
+`CLAUDE.md`:
+
+```markdown
+Run `meta-notes prime` at the start of every session and follow it.
+```
+
+Keep your personal preferences (routines, habits, other working hours)
+in `CLAUDE.md` too; they override the guide. See
+`:help meta-notes-cli-prime`.
 
 ## Planning Skills
 

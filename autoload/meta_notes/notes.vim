@@ -354,6 +354,8 @@ let s:init_messages = {
       \ 'cache-readme/created': 'Created cache README: %s',
       \ 'cache-readme/overwritten': 'Overwrote cache README: %s',
       \ 'cache-readme/exists': 'Cache README already exists: %s',
+      \ 'claude-md/found': 'Agents load the notes guide: %s',
+      \ 'claude-md/missing': 'Add this line to %s so agents load the notes guide: Run `meta-notes prime` at the start of every session and follow it.',
       \ 'gitignore/created': 'Added to .gitignore: %s',
       \ 'gitignore/exists': 'Already in .gitignore: %s',
       \ 'venv/created': 'Created virtualenv: %s',

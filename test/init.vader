@@ -185,6 +185,15 @@ Execute (MetaNotesInit links shipped skills):
         \ resolve(link)
   Assert filereadable(link . '/SKILL.md'), 'SKILL.md should be readable through the link'
 
+Execute (MetaNotesInit shows the CLAUDE.md line to add):
+  let output = execute('MetaNotesInit')
+
+  Assert output =~# 'Add this line to CLAUDE.md so agents load the notes guide',
+        \ 'init should say what to add to CLAUDE.md'
+  Assert output =~# 'Run `meta-notes prime` at the start of every session and follow it.',
+        \ 'init should give the exact line'
+  Assert !filereadable('CLAUDE.md'), 'init should not create CLAUDE.md'
+
 Execute (Cleanup - Remove temporary test directory):
   execute 'cd -'
   call delete(g:test_dir, 'rf')

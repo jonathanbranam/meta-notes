@@ -22,8 +22,8 @@ import find_tasks
 import tasks as task_model
 from tags import canonical_tag
 from meta_notes import (__version__, brief, calendar, ceremony, changes,
-                        conventions, init, note, ops, projects, query,
-                        task_update, time)
+                        conventions, init, note, ops, prime, projects,
+                        query, task_update, time)
 from meta_notes.root import SENTINEL, find_root
 
 
@@ -364,6 +364,19 @@ def cmd_conventions(args, root: None) -> Output:
                   [text.removesuffix("\n")])
 
 
+def cmd_prime(args, root: None) -> Output:
+    # Works outside a notes root: an explicit --root or META_NOTES_ROOT must
+    # still be valid, but finding no root by search isn't an error
+    explicit = getattr(args, "root", None) or os.environ.get("META_NOTES_ROOT")
+    if explicit:
+        found = resolve_root(explicit, None, os.getcwd())
+    else:
+        found = find_root(os.getcwd(), os.environ.get("HOME"))
+    text = prime.run(found)
+    return Output({"version": __version__, "root": found, "text": text},
+                  [text.removesuffix("\n")])
+
+
 INIT_MESSAGES = {
     ("folder", "created"): "Created directory: {}",
     ("folder", "exists"): "Directory already exists: {}",
@@ -379,6 +392,10 @@ INIT_MESSAGES = {
     ("cache-readme", "created"): "Created cache README: {}",
     ("cache-readme", "overwritten"): "Overwrote cache README: {}",
     ("cache-readme", "exists"): "Cache README already exists: {}",
+    ("claude-md", "found"): "Agents load the notes guide: {}",
+    ("claude-md", "missing"):
+        "Add this line to {} so agents load the notes guide:\n    "
+        + init.PRIME_LINE,
     ("gitignore", "created"): "Added to .gitignore: {}",
     ("gitignore", "exists"): "Already in .gitignore: {}",
     ("venv", "created"): "Created virtualenv: {}",
@@ -640,6 +657,12 @@ def build_parser() -> argparse.ArgumentParser:
                        help="print the note syntax and editing conventions "
                             "skills follow, as markdown")
     p.set_defaults(handler=cmd_conventions, resolves_root=False)
+
+    p = sub.add_parser("prime", parents=[common],
+                       help="print a guide to the notes root for an agent: "
+                            "structure, plan notes, projects, archive, "
+                            "commands, and conventions")
+    p.set_defaults(handler=cmd_prime, resolves_root=False)
 
     return parser
 

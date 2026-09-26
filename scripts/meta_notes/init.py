@@ -1,6 +1,8 @@
 """
 Initialize a notes root: PPARA folders, templates, sentinel, skills, the
-cache folder, .gitignore entries, and the virtualenv.
+cache folder, .gitignore entries, and the virtualenv. Also reports whether
+the root's CLAUDE.md tells agents to run `meta-notes prime`, without ever
+writing it.
 
 Replaces meta_notes#notes#Init in autoload/meta_notes/notes.vim. Templates
 ship in the plugin's templates/ and are copied byte for byte. Skills ship in
@@ -53,6 +55,8 @@ VENV_PYTHON = ".venv/bin/python3"
 MIN_PYTHON = (3, 11)
 GITIGNORE = ".gitignore"
 IGNORED = (".venv", ".meta-notes-cache")
+CLAUDE_MD_FILES = ("CLAUDE.md", ".claude/CLAUDE.md")
+PRIME_LINE = "Run `meta-notes prime` at the start of every session and follow it."
 
 SENTINEL_CONTENT = (
     "# meta-notes notes root. Created by `meta-notes init`; keep and commit it.\n")
@@ -66,10 +70,10 @@ class InitError(Exception):
 class Item:
     """One thing init created or checked."""
     kind: str    # folder, template, sentinel, skill, cache-readme, venv,
-                 # gitignore
+                 # gitignore, claude-md
     path: str    # relative to the notes root; for gitignore, the entry
     status: str  # created, exists, overwritten, repointed, skipped,
-                 # replaced, rebuilt
+                 # replaced, rebuilt, found, missing
 
 
 @dataclass
@@ -280,6 +284,19 @@ def cli_on_path() -> bool:
     return shutil.which("meta-notes") is not None
 
 
+def _check_claude_md(result: InitResult) -> None:
+    """Report whether CLAUDE.md tells agents to run `meta-notes prime`. Never writes."""
+    for name in CLAUDE_MD_FILES:
+        try:
+            text = Path(name).read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        if "meta-notes prime" in text:
+            result.items.append(Item("claude-md", name, "found"))
+            return
+    result.items.append(Item("claude-md", CLAUDE_MD_FILES[0], "missing"))
+
+
 def init(target: str, force: bool = False, home: str | None = None,
          python: str | None = None) -> InitResult:
     """
@@ -334,6 +351,7 @@ def init(target: str, force: bool = False, home: str | None = None,
         _copy_shipped("cache-readme", CACHE_README_SOURCE, CACHE_README, force,
                       result)
         _update_gitignore(result)
+        _check_claude_md(result)
         _setup_venv(python, force, result)
     except OSError as e:
         where = f": {e.filename}" if e.filename else ""
