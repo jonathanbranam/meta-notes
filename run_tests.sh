@@ -112,34 +112,37 @@ if [[ "$DEBUG" == "true" ]]; then
     # Show full vim debug output
     "$VIM_CMD" -es -Nu <(cat << EOF
 filetype off
+set runtimepath=\$VIMRUNTIME packpath=\$VIMRUNTIME
 set rtp+=$VADER_PATH
 set rtp+=$PLUGIN_PATH
 filetype plugin indent on
 syntax enable
 EOF
-) +${VADER_CMD} "$TEST_PATH" 2>&1
+) "+${VADER_CMD} ${TEST_PATH}" 2>&1
     EXIT_CODE=${PIPESTATUS[0]}
 elif [[ "$QUIET" == "true" ]]; then
     # Show only summary
     "$VIM_CMD" -es -Nu <(cat << EOF
 filetype off
+set runtimepath=\$VIMRUNTIME packpath=\$VIMRUNTIME
 set rtp+=$VADER_PATH
 set rtp+=$PLUGIN_PATH
 filetype plugin indent on
 syntax enable
 EOF
-) +${VADER_CMD} "$TEST_PATH" 2>&1 | grep -E "(Starting Vader|Success|Elapsed)"
+) "+${VADER_CMD} ${TEST_PATH}" 2>&1 | grep -E "(Starting Vader|Success|Elapsed)"
     EXIT_CODE=${PIPESTATUS[0]}
 else
     # Default: Hide vim startup noise, show test output
     "$VIM_CMD" -es -Nu <(cat << EOF
 filetype off
+set runtimepath=\$VIMRUNTIME packpath=\$VIMRUNTIME
 set rtp+=$VADER_PATH
 set rtp+=$PLUGIN_PATH
 filetype plugin indent on
 syntax enable
 EOF
-) +${VADER_CMD} "$TEST_PATH" 2>&1 | sed -n '/^Starting Vader/,$p'
+) "+${VADER_CMD} ${TEST_PATH}" 2>&1 | sed -n '/^Starting Vader/,$p'
     EXIT_CODE=${PIPESTATUS[0]}
 fi
 

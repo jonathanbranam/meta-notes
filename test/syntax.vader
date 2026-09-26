@@ -28,7 +28,9 @@ Execute (Time log times stay highlighted after the buffer is reloaded):
   AssertEqual 'metaNotesTime', TimeGroup(3)
 
 Execute (Cleanup):
-  bwipeout!
+  " Wipe the test note by name: a bare bwipeout! here would wipe Vader's
+  " workbench, the current buffer at the start of each block.
+  execute 'bwipeout!' bufnr(g:test_dir . '/daily.md')
   delfunction TimeGroup
   let &runtimepath = g:original_rtp
   execute 'cd' g:original_dir
