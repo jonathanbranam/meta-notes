@@ -520,29 +520,64 @@ plugin's |:MetaNotesArchive|, |:MetaNotesRename|, and |:MetaNotesMoveItem|
 commands call it, |:MetaNotesInit| calls `meta-notes init`, and
 |:MetaNotesDaily|, |:MetaNotesWeekPlan|, |:MetaNotesQuarterPlan|,
 |:MetaNotesYearPlan|, and |:MetaNotesOpen| call `meta-notes note`. It needs
-Python 3.10 or newer as `python3` on your `PATH`.
+Python 3.11 or newer as `python3` on your `PATH`.
 
 Put it on your `PATH`; the Claude Code skills call it by name. Link it into
 any directory on your `PATH`: >
     ln -s /path/to/meta-notes/bin/meta-notes ~/bin/meta-notes
 <The script follows the link back to the plugin, so the link keeps working
 when a plugin manager updates the plugin.
+
+The script runs the CLI with the notes root's virtualenv,
+`<root>/.venv/bin/python3`, when that file exists and is executable, and
+falls back to `python3` on your `PATH` otherwise (no `.venv`, or one whose
+base Python was removed). It finds the root the way the CLI does
+(|meta-notes-cli-root|); the choice never changes which root a command uses.
+`meta-notes init` always runs on `python3`. Only |meta-notes-cli-calendar|
+needs the virtualenv; every other command works on either.
 Commands ~
                                                 *meta-notes-cli-commands*
-`meta-notes init [--root {dir}] [--force]`      *meta-notes-cli-init*
+`meta-notes init [--root {dir}] [--force] [--python {path}]`
+                                                *meta-notes-cli-init*
     Initialize a notes root: the PARA folders, the templates in
-    `resource/template/`, the `.meta-notes` sentinel, and a link in
-    `.claude/skills/` to each skill the plugin ships in `skills/`, so
-    updating the plugin updates the skills. Initializes `--root` if given,
-    creating it if missing, otherwise the current directory. It ignores
+    `resource/template/`, the `.meta-notes` sentinel, a link in
+    `.claude/skills/` to each skill the plugin ships in `skills/` (so
+    updating the plugin updates the skills), the cache folder, `.gitignore`
+    entries, and the virtualenv. Initializes `--root` if given, creating it
+    if missing, otherwise the current directory. It ignores
     `META_NOTES_ROOT`. Run it in the top-level directory of the notes root,
     for example right after `git init`.
 
-    Re-running is safe: existing folders, templates, notes, and the sentinel
-    are kept. A skill link to the right place is kept, and a broken or
-    foreign one is repointed. A real file or directory at a skill's link path
-    is left alone with a warning. With `--force`, templates are overwritten
-    and those skill targets are replaced.
+    The cache folder, `.meta-notes-cache/`, holds `ics/`, where you save
+    calendar exports for |meta-notes-cli-calendar|, `calendar/`, the parsed
+    calendars built from them, and a short `README.md` saying so.
+
+    The virtualenv, `.venv/`, holds the libraries in the plugin's
+    `requirements.txt`, which |meta-notes-cli-calendar| needs. When `.venv`
+    doesn't exist, init runs `{python} -m venv --prompt meta-notes .venv`,
+    where {python} is `--python {path}` or `python3` on your `PATH`, then
+    `.venv/bin/python3 -m pip install -r requirements.txt`. {python} must be
+    Python 3.11 or newer. When the interpreter is missing or too old, or
+    venv or pip fails, init still succeeds and warns that calendar support
+    isn't available, with the failing command and its output; every other
+    command works without the virtualenv. After a failed install, fix the
+    problem and run `meta-notes init --force`.
+
+    init appends `.venv/` and `.meta-notes-cache/` to the notes root's
+    `.gitignore` when no line there already ignores them (`.venv`, `.venv/`,
+    `/.venv`, or `/.venv/`, and likewise for `.meta-notes-cache`), so the
+    virtualenv and your calendar data aren't committed. With no
+    `.gitignore`, it creates none and warns you to ignore them yourself.
+
+    Re-running is safe: existing folders, templates, notes, the sentinel
+    (your |meta-notes-config|), the cache README, exports, and `.venv` are
+    kept; an existing `.venv` is reported as left alone, even with
+    `--python`. A skill link to the right place is kept, and a broken or
+    foreign one is repointed. A real file or directory at a skill's link
+    path is left alone with a warning. With `--force`, templates and the
+    cache README are overwritten, those skill targets are replaced, and
+    `.venv` is deleted and built again; the sentinel, notes, exports, and
+    cached calendars are still kept.
 
     Notes roots never nest: init fails if a directory above the target is a
     notes root (found the same way as |meta-notes-cli-root|).
@@ -834,6 +869,83 @@ Commands ~
     fails if `git` isn't available, the notes root isn't a git
     repository, or the notes root isn't the top level of its repository.
 
+`meta-notes calendar [--date {period}] [--ics {path}]`
+                                                *meta-notes-cli-calendar*
+    Print a day-by-day agenda for {period} (default today, in the
+    |meta-notes-date| forms) from your latest Google Calendar export. The
+    planning skills use it instead of a calendar screenshot. It needs the
+    notes root's virtualenv (|meta-notes-cli-init|); without it, it fails
+    and says to run `meta-notes init` (or `init --force` when `.venv`
+    exists). Other commands never need it.
+
+    Exporting: in Google Calendar, open Settings, Import & export, Export.
+    Save the downloaded `.zip` into `.meta-notes-cache/ics/` in the notes
+    root. Nothing else is needed: each run reads the newest `.ics` or
+    `.zip` directly in that folder, by modification time, or the file given
+    with `--ics {path}` (relative to the notes root, `~` expanded). The
+    export's age is its modification time, so save a new one when the
+    calendar changes.
+
+    Zip calendars: a Google export is a zip of one `.ics` per calendar
+    (yours, shared calendars, holidays, birthdays), read without
+    extracting. A calendar is named by its `X-WR-CALNAME`, or its file name
+    without `.ics`. Set `calendars` in |meta-notes-config| to load only some
+    of them, matching either name, ignoring case; an unknown name is an
+    error listing the available ones. Unset, all are loaded. A plain
+    `.ics` is one calendar, and `calendars` doesn't apply to it.
+
+    Settings, in the `[calendar]` table of `.meta-notes`:
+        email           your address; events you declined are left out.
+                        Unset: none are, with a warning.
+        timezone        IANA name for showing times and dividing days,
+                        such as `America/New_York`. Unset: the system's.
+        stale_days      warn when the export is older than this many
+                        days. Unset: 3.
+        calendars       names of the zip calendars to load. Unset: all.
+
+    Every occurrence overlapping a day in {period} is listed, with
+    recurrence rules, excluded dates, and moved or changed occurrences
+    applied. Cancelled events, events you declined, and older copies of an
+    occurrence the export records more than once are left out. A timed
+    event is listed on the day it starts; an all-day event on each day it
+    covers. Output, one heading per day, including empty days: >
+        ## 2026-09-28 Mon
+        all day  Company holiday
+        09:00-09:30  Standup [Room 4]
+        13:00-14:00  Design review
+<   With more than one calendar loaded, each event line ends with
+    `(<calendar>)`. Warnings (a stale or missing export, `email` unset) go
+    to stderr.
+
+    With `--json`: `days` (each with `date` and `events`; each event has
+    `start` and `end` in ISO form, `all_day`, `title`, `location`, and
+    `calendar`; an all-day event's `end` is its last day), `source`
+    (`path`, `exported` time, `age_days`, `cached`, and the `available` and
+    `loaded` calendar names), `pruned`, and `warnings`.
+
+    Cache: each export is parsed once into `.meta-notes-cache/calendar/`,
+    keyed by the export's name, size, and modification time and the loaded
+    calendars, and reused while they're unchanged. The cached copy leaves
+    out events that ended more than 30 days before it was built, so a
+    {period} starting earlier is read from the export itself. When no
+    export is left in `ics/`, the newest cached calendar is used, with a
+    warning that its export is missing (and that earlier events may be
+    missing for such a period). With no export and no cache, the command
+    fails and names the `ics/` folder to export into.
+
+    Pruning: every run keeps the 5 newest exports in `ics/` and deletes
+    older ones, and keeps only cached calendars built from those exports
+    with the current `calendars` setting (with no exports, only the newest
+    one), plus the one it used. It deletes only `.ics` and `.zip` files
+    directly in `ics/` and files in `calendar/`, and lists each deleted
+    path in `pruned`, or on stderr without `--json`.
+
+`meta-notes cache clear`                        *meta-notes-cli-cache-clear*
+    Delete every file in `.meta-notes-cache/calendar/` and report how many.
+    It never deletes exports in `ics/` or the cache README, and a missing
+    `calendar/` isn't an error. `--json` returns `deleted` (the paths) and
+    `count`. It doesn't need the virtualenv.
+
 `meta-notes conventions`                        *meta-notes-cli-conventions*
     Print, as markdown, the note syntax and editing rules the shipped
     skills follow (|meta-notes-skills|): the task model, status
@@ -960,6 +1072,27 @@ write, and enter. If it finds nothing, the command fails and suggests running
 
 The plugin always passes `--root` with Vim's current directory.
 
+Config ~
+                                                *meta-notes-config*
+The `.meta-notes` sentinel is also the notes root's config, read as TOML.
+The comment line `init` writes is valid, empty config, so every setting has
+its default until you add one. Settings are grouped in tables named for the
+command that uses them; unknown tables and keys are ignored. Commit the file
+with your notes. `init` never changes it, even with `--force`.
+
+Only commands that use settings read it. When it isn't valid TOML, those
+commands fail with an error naming `.meta-notes` and the line of the error;
+other commands, and finding the notes root, are unaffected.
+
+The settings for |meta-notes-cli-calendar|: >
+    # meta-notes notes root. Created by `meta-notes init`; keep and commit it.
+
+    [calendar]
+    email = "me@example.com"        # whose declines to hide; unset: none hidden, warning
+    timezone = "America/New_York"   # display timezone; unset: system local
+    stale_days = 3                  # unset: 3
+    calendars = ["me@example.com"]  # zip members to load; unset: all
+<
 Output ~
                                                 *meta-notes-cli-json*
 Output is human-readable text by default, with errors and warnings on stderr.
@@ -983,8 +1116,8 @@ note existed before), `created` (whether this command wrote it), and
 also returns `content`, the rendered note. `--version` returns `version`,
 `commit` (the short hash, or null), and `dirty`. Output from template commands
 appears only in `content` or the written note, never on stdout.
-`conventions`, `ceremony status`, and `projects` return the fields listed
-under each command above.
+`calendar`, `cache clear`, `conventions`, `ceremony status`, and `projects`
+return the fields listed under each command above.
 
 The exit status is non-zero on failure. `--root` and `--json` may come
 before or after the command name.
@@ -1011,8 +1144,10 @@ can be stopped at any point.
                     for your manager in the weekly note's `## Review`,
                     commitments, project warnings, and a `#later` scan.
                     Reminds you that weekly-plan is next.
-    weekly-plan     Friday afternoon: capacity from a calendar screenshot,
-                    deadlines, and 3-5 priorities in next week's `## Plan`.
+    weekly-plan     Friday afternoon: capacity from next week's calendar
+                    (|meta-notes-cli-calendar|, or a screenshot when
+                    there's no export), deadlines, and 3-5 priorities in
+                    next week's `## Plan`.
     task-cleanup    Anytime, 5-10 minutes: overdue and undated tasks,
                     oldest first, in batches.
     project-review  One project at a time.

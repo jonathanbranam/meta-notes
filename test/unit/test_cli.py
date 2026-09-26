@@ -7,6 +7,7 @@ Tests notes root resolution and output conventions.
 import json
 import os
 import re
+import runpy
 import shutil
 import subprocess
 import sys
@@ -92,6 +93,17 @@ def test_resolve_root_no_root_error_suggests_init(tmp_path):
 
 
 # Tests for main function
+
+def test_main_invalid_config_other_commands_unaffected(notes_root, capsys):
+    """A .meta-notes that isn't valid TOML doesn't affect tasks."""
+    (notes_root / '.meta-notes').write_text('[calendar\n')
+    (notes_root / 'project' / 'foo.md').write_text('- [ ] Task\n')
+
+    code, out, _ = run_json(capsys, ['tasks', '--all'])
+
+    assert code == 0
+    assert out['ok'] is True
+
 
 def test_main_changes_into_root(notes_root, monkeypatch, capsys):
     """Paths are relative to the root even when run from a subfolder."""
@@ -629,6 +641,24 @@ def test_version_with_subcommand(notes_root, monkeypatch, capsys):
 def test_version_matches_semver():
     """The version is MAJOR.MINOR.PATCH."""
     assert re.fullmatch(r'\d+\.\d+\.\d+', cli.__version__)
+
+
+# Tests for the Python version check in __main__.py
+
+def test_main_python_too_old_json(monkeypatch, capsys):
+    """On Python 3.10, --json gets one JSON object naming 3.11 and 3.10."""
+    monkeypatch.setattr(sys, 'version_info', (3, 10, 7, 'final', 0))
+    monkeypatch.setattr(sys, 'argv', ['meta-notes', 'tasks', '--json'])
+
+    with pytest.raises(SystemExit) as exc:
+        runpy.run_path(str(scripts_dir / 'meta_notes' / '__main__.py'),
+                       run_name='__main__')
+
+    assert exc.value.code == 1
+    out = json.loads(capsys.readouterr().out)
+    assert out['ok'] is False
+    assert '3.11' in out['error']
+    assert '3.10' in out['error']
 
 
 # Tests for bin/meta-notes shim

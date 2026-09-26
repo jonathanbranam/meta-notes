@@ -336,8 +336,9 @@ function! meta_notes#notes#Init(...) abort
   echo 'Meta-notes initialization complete!'
 endfunction
 
-" Messages for `meta-notes init` items, keyed by kind/status. Skipped skills
-" are reported through the CLI's warnings instead.
+" Messages for `meta-notes init` items, keyed by kind/status. Skipped skills,
+" .gitignore entries, and virtualenvs are reported through the CLI's warnings
+" instead.
 let s:init_messages = {
       \ 'folder/created': 'Created directory: %s',
       \ 'folder/exists': 'Directory already exists: %s',
@@ -350,4 +351,12 @@ let s:init_messages = {
       \ 'skill/exists': 'Skill already linked: %s',
       \ 'skill/repointed': 'Relinked skill: %s',
       \ 'skill/replaced': 'Replaced with skill link: %s',
+      \ 'cache-readme/created': 'Created cache README: %s',
+      \ 'cache-readme/overwritten': 'Overwrote cache README: %s',
+      \ 'cache-readme/exists': 'Cache README already exists: %s',
+      \ 'gitignore/created': 'Added to .gitignore: %s',
+      \ 'gitignore/exists': 'Already in .gitignore: %s',
+      \ 'venv/created': 'Created virtualenv: %s',
+      \ 'venv/rebuilt': 'Rebuilt virtualenv: %s',
+      \ 'venv/exists': 'Virtualenv already exists, left alone (--force rebuilds it): %s',
       \ }

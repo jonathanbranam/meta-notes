@@ -21,8 +21,9 @@ from datetime import date
 import find_tasks
 import tasks as task_model
 from tags import canonical_tag
-from meta_notes import (__version__, brief, ceremony, changes, conventions,
-                        init, note, ops, projects, query, task_update, time)
+from meta_notes import (__version__, brief, calendar, ceremony, changes,
+                        conventions, init, note, ops, projects, query,
+                        task_update, time)
 from meta_notes.root import SENTINEL, find_root
 
 
@@ -210,6 +211,23 @@ def cmd_changes(args, root: str) -> Output:
     return Output(data, lines)
 
 
+def cmd_calendar(args, root: str) -> Output:
+    try:
+        lines, data, warnings = calendar.run(root, args.date, args.ics)
+    except ValueError as e:
+        raise CliError(str(e))
+    return Output(data, lines, warnings,
+                  notices=[f"Deleted: {path}" for path in data["pruned"]])
+
+
+def cmd_cache_clear(args, root: str) -> Output:
+    deleted = calendar.clear(root)
+    count = len(deleted)
+    return Output({"deleted": deleted, "count": count},
+                  [f"Deleted {count} cached calendar file(s) from "
+                   f"{calendar.CALENDAR_DIR}/"])
+
+
 def cmd_note(args, root: str) -> Output:
     if args.kind == "new":
         value = to_root_relative(args.path, root)
@@ -356,6 +374,15 @@ INIT_MESSAGES = {
     ("skill", "exists"): "Skill already linked: {}",
     ("skill", "repointed"): "Relinked skill: {}",
     ("skill", "replaced"): "Replaced with skill link: {}",
+    ("cache-readme", "created"): "Created cache README: {}",
+    ("cache-readme", "overwritten"): "Overwrote cache README: {}",
+    ("cache-readme", "exists"): "Cache README already exists: {}",
+    ("gitignore", "created"): "Added to .gitignore: {}",
+    ("gitignore", "exists"): "Already in .gitignore: {}",
+    ("venv", "created"): "Created virtualenv: {}",
+    ("venv", "rebuilt"): "Rebuilt virtualenv: {}",
+    ("venv", "exists"):
+        "Virtualenv already exists, left alone (--force rebuilds it): {}",
 }
 
 
@@ -364,7 +391,8 @@ def cmd_init(args, root: None) -> Output:
     # directory, and ignores META_NOTES_ROOT
     target = getattr(args, "root", None) or os.getcwd()
     try:
-        result = init.init(target, force=args.force, home=os.environ.get("HOME"))
+        result = init.init(target, force=args.force, home=os.environ.get("HOME"),
+                           python=args.python)
     except init.InitError as e:
         raise CliError(str(e))
 
@@ -445,10 +473,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("init", parents=[common],
                        help="set up a notes root (--root or the current "
-                            "directory): folders, templates, sentinel, skills")
+                            "directory): folders, templates, sentinel, skills, "
+                            "cache, .gitignore, and .venv")
     p.add_argument("--force", action="store_true",
-                   help="overwrite templates and replace skill targets "
-                        "that aren't links")
+                   help="overwrite templates and the cache README, replace "
+                        "skill targets that aren't links, and rebuild .venv")
+    p.add_argument("--python", metavar="PATH",
+                   help="interpreter to build .venv with (default: python3 "
+                        "on PATH); ignored when .venv exists, without --force")
     p.set_defaults(handler=cmd_init, resolves_root=False)
 
     p = sub.add_parser("move", parents=[common],
@@ -490,6 +522,25 @@ def build_parser() -> argparse.ArgumentParser:
                    help="YYYY-MM-DD, YYYY-MM-DD..YYYY-MM-DD, YYYY-MM, YYYY-Qn, "
                         "or YYYY (default: today)")
     p.set_defaults(handler=cmd_changes)
+
+    p = sub.add_parser("calendar", parents=[common],
+                       help="agenda for a period from the newest Google "
+                            "Calendar export in .meta-notes-cache/ics/")
+    p.add_argument("--date", metavar="PERIOD",
+                   help="YYYY-MM-DD, YYYY-MM-DD..YYYY-MM-DD, YYYY-MM, YYYY-Qn, "
+                        "or YYYY (default: today)")
+    p.add_argument("--ics", metavar="PATH",
+                   help="read this .zip or .ics export instead")
+    p.set_defaults(handler=cmd_calendar)
+
+    p = sub.add_parser("cache", parents=[common],
+                       help="manage .meta-notes-cache/")
+    kinds = p.add_subparsers(dest="kind", metavar="KIND", parser_class=_Parser)
+    kinds.required = True
+    kinds.add_parser("clear", parents=[common],
+                     help="delete the parsed calendars in "
+                          ".meta-notes-cache/calendar/ (never the exports)")
+    p.set_defaults(handler=cmd_cache_clear)
 
     p = sub.add_parser("note", parents=[common],
                        help="create a note from its template, unless it exists; "

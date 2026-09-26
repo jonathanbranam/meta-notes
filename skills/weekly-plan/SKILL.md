@@ -1,6 +1,6 @@
 ---
 name: weekly-plan
-description: Plan next workweek (Monday–Friday) in a meta-notes notes root, usually Friday afternoon, about 30 minutes. Use when the user says "weekly plan", "plan next week", or follows the reminder at the end of weekly-review. Works out capacity from a calendar screenshot, lists deadlines and meetings to schedule, and writes 3–5 priorities into next week's note. It does not review this week (that is weekly-review).
+description: Plan next workweek (Monday–Friday) in a meta-notes notes root, usually Friday afternoon, about 30 minutes. Use when the user says "weekly plan", "plan next week", or follows the reminder at the end of weekly-review. Works out capacity from next week's calendar, lists deadlines and meetings to schedule, and writes 3–5 priorities into next week's note. It does not review this week (that is weekly-review).
 ---
 
 # Weekly Plan
@@ -42,8 +42,24 @@ week's weekly note (the `weekly-review` entry's `note`).
 
 ### 2. Calendar and capacity
 
-Ask for a screenshot of next week's calendar. Ask for working hours if
-you don't know them (assume 8:00–17:00 otherwise). For each day, list:
+Run `meta-notes calendar --date NEXT_MON..NEXT_FRI --json`.
+
+- `ok` true: use its `days` as next week's meetings. Tell the user in one
+  line how old the export is (`source.age_days`) and pass on each of its
+  `warnings` (a stale or missing export, `email` not set). Don't ask for a
+  screenshot.
+- `ok` false because calendar support isn't installed: tell the user to
+  run `meta-notes init` in the notes root (the error names the exact
+  command), and offer to continue from a screenshot of next week's
+  calendar.
+- `ok` false otherwise (for example, no export): tell the user they can
+  export from Google Calendar (Settings, Import & export, Export) and save
+  the `.zip` into the `ics/` folder the error names, then you'll re-run
+  the command, or provide a screenshot of next week's calendar. Continue
+  with whichever they provide.
+
+Ask for working hours if you don't know them (assume 8:00–17:00
+otherwise). For each day, list:
 
 - meetings
 - free gaps of 90 minutes or more: these are capacity

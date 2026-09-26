@@ -6,8 +6,11 @@ This is a life management solution that works in vim / neovim and uses plain
 text markdown files to manage all aspects of personal organization.
 
 Scripts should generally be written in vimscript for compatibility. Larger, more
-complicated work can be written in Python and executed by the shell. Avoid using
-Python libraries.
+complicated work can be written in Python and executed by the shell. Python
+needs 3.11 or newer and uses only the standard library, except commands whose
+spec needs more. Those libraries are pinned in `requirements.txt`, installed
+only in the notes root's `.venv` (by `meta-notes init`), and imported only by
+the commands that need them.
 
 ## Issue Tracking
 

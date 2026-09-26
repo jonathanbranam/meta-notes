@@ -1,11 +1,14 @@
 """
 Unit tests for scripts/meta_notes/init.py and the `init` subcommand
 
-Tests folders, templates, the sentinel, skill install, re-runs, and nesting.
+Tests folders, templates, the sentinel, skill install, re-runs, nesting, the
+cache folder, .gitignore entries, and the virtualenv. Interpreter and pip
+calls are stubbed (the `commands` fixture); no test builds a real virtualenv.
 """
 
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -25,6 +28,37 @@ TEMPLATE_NAMES = ('daily.md', 'weekly.md', 'quarterly.md', 'yearly.md')
 REAL_CLI_ON_PATH = init.cli_on_path
 
 
+class FakeCommands:
+    """
+    Stands in for init.run_command. Records each argv and answers like a
+    working Python 3.11 with venv and pip, unless told otherwise: `version`
+    is what the version check prints, `missing` is a set of executables
+    that don't exist, and `fail` maps 'venv' or 'pip' to output for a
+    failing run.
+    """
+
+    def __init__(self):
+        self.calls = []
+        self.version = '3.11'
+        self.missing = set()
+        self.fail = {}
+
+    def __call__(self, argv):
+        self.calls.append(argv)
+        if argv[0] in self.missing:
+            raise FileNotFoundError(2, 'No such file or directory', argv[0])
+        if argv[1] == '-c':
+            return subprocess.CompletedProcess(argv, 0, self.version + '\n')
+        step = 'venv' if argv[1:3] == ['-m', 'venv'] else 'pip'
+        if step == 'venv':
+            python = Path(argv[-1]) / 'bin' / 'python3'
+            python.parent.mkdir(parents=True, exist_ok=True)
+            python.write_text(f'python from {argv[0]}\n')
+        if step in self.fail:
+            return subprocess.CompletedProcess(argv, 1, self.fail[step])
+        return subprocess.CompletedProcess(argv, 0, '')
+
+
 @pytest.fixture(autouse=True)
 def env(tmp_path, monkeypatch):
     """Isolate HOME and META_NOTES_ROOT, restore the cwd, and stub the PATH check."""
@@ -32,6 +66,14 @@ def env(tmp_path, monkeypatch):
     monkeypatch.delenv('META_NOTES_ROOT', raising=False)
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(init, 'cli_on_path', lambda: True)
+
+
+@pytest.fixture(autouse=True)
+def commands(monkeypatch):
+    """Stub the interpreter and pip calls init makes."""
+    fake = FakeCommands()
+    monkeypatch.setattr(init, 'run_command', fake)
+    return fake
 
 
 @pytest.fixture
@@ -47,6 +89,11 @@ def skills(tmp_path, monkeypatch):
 
 def statuses(result):
     return {(i.kind, i.path): i.status for i in result.items}
+
+
+def without_gitignore(items):
+    """Statuses of every item but .gitignore entries (skipped with no file)."""
+    return {s for (kind, _), s in items.items() if kind != 'gitignore'}
 
 
 def run_json(capsys, argv):
@@ -82,9 +129,12 @@ def test_init_empty_directory(tmp_path, skills):
         assert (root / 'resource' / 'template' / name).read_bytes() == \
             (FIXTURES / name).read_bytes()
     assert (root / '.meta-notes').is_file()
+    assert (root / '.meta-notes-cache' / 'README.md').read_bytes() == \
+        (init.TEMPLATES_DIR / 'cache-README.md').read_bytes()
+    assert (root / '.venv' / 'bin' / 'python3').is_file()
     assert (root / '.claude' / 'skills' / 'review').is_symlink()
     assert not (root / '.claude' / 'skills' / 'not-a-skill').exists()
-    assert set(statuses(result).values()) == {'created'}
+    assert without_gitignore(statuses(result)) == {'created'}
 
 
 def test_init_creates_missing_target_with_parents(tmp_path, skills):
@@ -115,7 +165,7 @@ def test_init_rerun_is_all_exists(tmp_path, skills):
     """A second run creates nothing and reports everything as existing."""
     init.init(str(tmp_path / 'n'))
     result = init.init(str(tmp_path / 'n'))
-    assert set(statuses(result).values()) == {'exists'}
+    assert without_gitignore(statuses(result)) == {'exists'}
 
 
 def test_init_existing_root_without_sentinel_unchanged(tmp_path, skills):
@@ -302,6 +352,8 @@ def test_init_skill_force_replaces_real_file(tmp_path, skills):
 def test_init_warns_when_cli_not_on_path(tmp_path, skills, monkeypatch):
     """Init succeeds but warns, with the link command, if meta-notes isn't on PATH."""
     monkeypatch.setattr(init, 'cli_on_path', lambda: False)
+    (tmp_path / 'n').mkdir()
+    (tmp_path / 'n' / '.gitignore').write_text('')
 
     result = init.init(str(tmp_path / 'n'))
 
@@ -324,6 +376,256 @@ def test_cli_on_path_finds_command(tmp_path, monkeypatch):
 def test_init_shipped_skills_includes_project_review():
     """The real plugin ships project-review."""
     assert 'project-review' in init.shipped_skills()
+
+
+# Tests for init function: cache folder
+
+def test_init_cache_folders_created(tmp_path, skills):
+    """The cache folder, ics/, and calendar/ are created and reported."""
+    root = tmp_path / 'n'
+
+    result = init.init(str(root))
+
+    for folder in ('.meta-notes-cache', '.meta-notes-cache/ics',
+                   '.meta-notes-cache/calendar'):
+        assert (root / folder).is_dir()
+        assert statuses(result)[('folder', folder)] == 'created'
+    assert statuses(result)[('cache-readme', '.meta-notes-cache/README.md')] == 'created'
+
+
+def test_init_force_keeps_exports(tmp_path, skills):
+    """--force leaves exports and cached calendars alone."""
+    root = tmp_path / 'n'
+    init.init(str(root))
+    export = root / '.meta-notes-cache' / 'ics' / 'export.zip'
+    export.write_bytes(b'zip data')
+    cached = root / '.meta-notes-cache' / 'calendar' / 'abc.ics'
+    cached.write_text('BEGIN:VCALENDAR\n')
+
+    init.init(str(root), force=True)
+
+    assert export.read_bytes() == b'zip data'
+    assert cached.read_text() == 'BEGIN:VCALENDAR\n'
+
+
+def test_init_cache_readme_edit_kept_then_restored(tmp_path, skills):
+    """An edited cache README is kept without --force and restored with it."""
+    root = tmp_path / 'n'
+    init.init(str(root))
+    readme = root / '.meta-notes-cache' / 'README.md'
+    readme.write_text('mine\n')
+
+    result = init.init(str(root))
+    assert readme.read_text() == 'mine\n'
+    assert statuses(result)[('cache-readme', '.meta-notes-cache/README.md')] == 'exists'
+
+    result = init.init(str(root), force=True)
+    assert readme.read_bytes() == (init.TEMPLATES_DIR / 'cache-README.md').read_bytes()
+    assert statuses(result)[('cache-readme', '.meta-notes-cache/README.md')] == 'overwritten'
+
+
+def test_init_force_keeps_config(tmp_path, skills):
+    """--force doesn't change a .meta-notes with settings."""
+    root = tmp_path / 'n'
+    init.init(str(root))
+    config = init.SENTINEL_CONTENT + '\n[calendar]\nemail = "me@example.com"\n'
+    (root / '.meta-notes').write_text(config)
+
+    init.init(str(root), force=True)
+
+    assert (root / '.meta-notes').read_text() == config
+
+
+# Tests for init function: virtualenv
+
+def test_init_venv_first_init(tmp_path, skills, commands):
+    """Without .venv, python3 builds it and pip installs requirements.txt."""
+    root = tmp_path / 'n'
+
+    result = init.init(str(root))
+
+    assert statuses(result)[('venv', '.venv')] == 'created'
+    assert commands.calls == [
+        ['python3', '-c', "import sys; print('%d.%d' % sys.version_info[:2])"],
+        ['python3', '-m', 'venv', '--prompt', 'meta-notes', '.venv'],
+        ['.venv/bin/python3', '-m', 'pip', 'install', '-r',
+         str(init.REQUIREMENTS)],
+    ]
+    assert (root / '.venv' / 'bin' / 'python3').is_file()
+    assert not [w for w in result.warnings if 'Calendar' in w]
+
+
+def test_init_venv_explicit_interpreter(tmp_path, skills, commands):
+    """--python builds .venv with the given interpreter."""
+    root = tmp_path / 'n'
+
+    init.init(str(root), python='/opt/python3.12/bin/python3')
+
+    assert commands.calls[1][0] == '/opt/python3.12/bin/python3'
+    assert (root / '.venv' / 'bin' / 'python3').read_text() == \
+        'python from /opt/python3.12/bin/python3\n'
+
+
+def test_init_venv_existing_left_alone(tmp_path, skills, commands):
+    """An existing .venv is left alone, even with --python."""
+    root = tmp_path / 'n'
+    (root / '.venv' / 'bin').mkdir(parents=True)
+    (root / '.venv' / 'bin' / 'python3').write_text('old\n')
+
+    result = init.init(str(root), python='/opt/python3.12/bin/python3')
+
+    assert statuses(result)[('venv', '.venv')] == 'exists'
+    assert commands.calls == []
+    assert (root / '.venv' / 'bin' / 'python3').read_text() == 'old\n'
+
+
+def test_init_venv_force_rebuild(tmp_path, skills, commands):
+    """--force deletes .venv and builds it again."""
+    root = tmp_path / 'n'
+    (root / '.venv' / 'lib').mkdir(parents=True)
+    (root / '.venv' / 'lib' / 'stale').write_text('stale\n')
+
+    result = init.init(str(root), force=True)
+
+    assert statuses(result)[('venv', '.venv')] == 'rebuilt'
+    assert not (root / '.venv' / 'lib' / 'stale').exists()
+    assert (root / '.venv' / 'bin' / 'python3').is_file()
+    assert len(commands.calls) == 3
+
+
+def test_init_venv_python_too_old(tmp_path, skills, commands):
+    """Python 3.10 creates no .venv and warns that 3.11 is required."""
+    commands.version = '3.10'
+    root = tmp_path / 'n'
+
+    result = init.init(str(root))
+
+    assert not (root / '.venv').exists()
+    assert statuses(result)[('venv', '.venv')] == 'skipped'
+    assert (root / '.meta-notes').is_file()
+    warning = [w for w in result.warnings if 'Calendar support' in w]
+    assert len(warning) == 1
+    assert '3.11 or newer is required' in warning[0]
+    assert 'Python 3.10' in warning[0]
+
+
+def test_init_venv_force_with_old_python_keeps_venv(tmp_path, skills, commands):
+    """--force doesn't delete .venv when the interpreter is too old to rebuild it."""
+    commands.version = '3.10'
+    root = tmp_path / 'n'
+    (root / '.venv' / 'bin').mkdir(parents=True)
+
+    init.init(str(root), force=True)
+
+    assert (root / '.venv' / 'bin').is_dir()
+
+
+def test_init_venv_missing_interpreter(tmp_path, skills, commands):
+    """A missing interpreter is a warning naming it, not an error."""
+    commands.missing = {'/nope/python3'}
+    root = tmp_path / 'n'
+
+    result = init.init(str(root), python='/nope/python3')
+
+    assert not (root / '.venv').exists()
+    warning = [w for w in result.warnings if 'Calendar support' in w]
+    assert len(warning) == 1
+    assert '/nope/python3' in warning[0]
+
+
+def test_init_venv_create_fails(tmp_path, skills, commands):
+    """A failed venv build warns with the command and its output, and leaves no .venv."""
+    commands.fail['venv'] = 'Error: ensurepip is not available\n'
+    root = tmp_path / 'n'
+
+    result = init.init(str(root))
+
+    assert not (root / '.venv').exists()
+    warning = [w for w in result.warnings if 'Calendar support' in w]
+    assert '-m venv --prompt meta-notes .venv' in warning[0]
+    assert 'ensurepip is not available' in warning[0]
+
+
+def test_init_venv_install_fails(tmp_path, skills, commands):
+    """A failed pip install keeps .venv and says to run init --force."""
+    commands.fail['pip'] = 'ERROR: No matching distribution found for icalendar\n'
+    root = tmp_path / 'n'
+
+    result = init.init(str(root))
+
+    assert (root / '.venv' / 'bin' / 'python3').is_file()
+    warning = [w for w in result.warnings if 'Calendar support' in w]
+    assert len(warning) == 1
+    assert 'No matching distribution found for icalendar' in warning[0]
+    assert 'meta-notes init --force' in warning[0]
+
+
+# Tests for init function: .gitignore
+
+def test_init_gitignore_entries_appended(tmp_path, skills):
+    """Missing entries are appended, keeping existing lines."""
+    root = tmp_path / 'n'
+    root.mkdir()
+    (root / '.gitignore').write_text('*.swp\n')
+
+    result = init.init(str(root))
+
+    assert (root / '.gitignore').read_text() == '*.swp\n.venv/\n.meta-notes-cache/\n'
+    assert statuses(result)[('gitignore', '.venv/')] == 'created'
+    assert statuses(result)[('gitignore', '.meta-notes-cache/')] == 'created'
+    assert not [w for w in result.warnings if '.gitignore' in w]
+
+
+@pytest.mark.parametrize('line', ['.venv', '.venv/', '/.venv', '/.venv/',
+                                  '  /.venv  '])
+def test_init_gitignore_existing_entry_recognized(tmp_path, skills, line):
+    """An existing .venv line in any form is recognized."""
+    root = tmp_path / 'n'
+    root.mkdir()
+    (root / '.gitignore').write_text(f'{line}\n')
+
+    result = init.init(str(root))
+
+    assert (root / '.gitignore').read_text() == f'{line}\n.meta-notes-cache/\n'
+    assert statuses(result)[('gitignore', '.venv/')] == 'exists'
+
+
+def test_init_gitignore_rerun_adds_nothing(tmp_path, skills):
+    """A second run leaves .gitignore as the first run did."""
+    root = tmp_path / 'n'
+    root.mkdir()
+    (root / '.gitignore').write_text('*.swp\n')
+    init.init(str(root))
+    after_first = (root / '.gitignore').read_text()
+
+    result = init.init(str(root))
+
+    assert (root / '.gitignore').read_text() == after_first
+    assert statuses(result)[('gitignore', '.meta-notes-cache/')] == 'exists'
+
+
+def test_init_gitignore_missing(tmp_path, skills):
+    """With no .gitignore, none is created and a warning names both entries."""
+    root = tmp_path / 'n'
+
+    result = init.init(str(root))
+
+    assert not (root / '.gitignore').exists()
+    warning = [w for w in result.warnings if '.gitignore' in w]
+    assert len(warning) == 1
+    assert '.venv/' in warning[0] and '.meta-notes-cache/' in warning[0]
+    assert statuses(result)[('gitignore', '.venv/')] == 'skipped'
+
+
+def test_init_gitignore_no_trailing_newline(tmp_path, skills):
+    """A newline is added before the entries when the file lacks one."""
+    root = tmp_path / 'n'
+    root.mkdir()
+    (root / '.gitignore').write_text('*.swp')
+
+    init.init(str(root))
+
+    assert (root / '.gitignore').read_text() == '*.swp\n.venv/\n.meta-notes-cache/\n'
 
 
 # Tests for the init subcommand
@@ -373,13 +675,19 @@ def test_cli_init_json_report(tmp_path, skills, capsys):
     assert {('folder', f) for f in init.FOLDERS} <= kinds
     assert ('sentinel', '.meta-notes') in kinds
     assert ('skill', '.claude/skills/review') in kinds
-    assert all(i['status'] == 'created' for i in out['items'])
-    assert out['warnings'] == []
+    assert ('cache-readme', '.meta-notes-cache/README.md') in kinds
+    assert ('venv', '.venv') in kinds
+    assert all(i['status'] == 'created' for i in out['items']
+               if i['kind'] != 'gitignore')
+    # The only warning is the missing .gitignore
+    assert len(out['warnings']) == 1
+    assert '.gitignore' in out['warnings'][0]
 
 
 def test_cli_init_skipped_skill_is_warning(tmp_path, skills, capsys):
     """A skipped skill is a warning, and the command succeeds."""
     (tmp_path / 'n' / '.claude' / 'skills' / 'review').mkdir(parents=True)
+    (tmp_path / 'n' / '.gitignore').write_text('')
 
     code, out, _ = run_json(capsys, ['init', '--root', str(tmp_path / 'n')])
 
@@ -407,7 +715,31 @@ def test_cli_init_text_output(tmp_path, skills, capsys):
     assert 'Created template: resource/template/daily.md' in out
     assert 'Created notes root marker: .meta-notes' in out
     assert 'Linked skill: .claude/skills/review' in out
+    assert 'Created cache README: .meta-notes-cache/README.md' in out
+    assert 'Created virtualenv: .venv' in out
     assert out[-1] == 'Meta-notes initialization complete!'
+
+
+def test_cli_init_text_output_existing_venv(tmp_path, skills, capsys):
+    """An existing .venv is reported as left alone, with --force to rebuild."""
+    (tmp_path / '.venv').mkdir()
+    (tmp_path / '.gitignore').write_text('')
+
+    code = cli.main(['init'])
+    out = capsys.readouterr().out.splitlines()
+
+    assert code == 0
+    assert ('Virtualenv already exists, left alone (--force rebuilds it): .venv'
+            in out)
+    assert 'Added to .gitignore: .venv/' in out
+
+
+def test_cli_init_python_option(tmp_path, skills, commands, capsys):
+    """--python is passed through to the virtualenv build."""
+    code, _, _ = run_json(capsys, ['init', '--python', '/opt/py/bin/python3'])
+
+    assert code == 0
+    assert commands.calls[0][0] == '/opt/py/bin/python3'
 
 
 def test_cli_other_commands_find_initialized_root(tmp_path, skills, monkeypatch, capsys):

@@ -2,6 +2,9 @@ Execute (Setup - Create temporary test directory):
   let g:test_dir = tempname()
   call mkdir(g:test_dir, 'p')
   execute 'cd' g:test_dir
+  " An existing .venv is left alone, so no test builds a real virtualenv
+  call mkdir('.venv', 'p')
+  call writefile([], '.gitignore')
 
 Execute (MetaNotesInit creates all PARA directories):
   MetaNotesInit
@@ -164,6 +167,14 @@ Execute (MetaNotesInit creates the notes root sentinel):
   MetaNotesInit
 
   Assert filereadable('.meta-notes'), '.meta-notes sentinel should exist'
+
+Execute (MetaNotesInit creates the cache folder and ignores it in git):
+  MetaNotesInit
+
+  Assert isdirectory('.meta-notes-cache/ics'), '.meta-notes-cache/ics/ should exist'
+  Assert isdirectory('.meta-notes-cache/calendar'), '.meta-notes-cache/calendar/ should exist'
+  Assert filereadable('.meta-notes-cache/README.md'), 'cache README should exist'
+  AssertEqual ['.venv/', '.meta-notes-cache/'], readfile('.gitignore')
 
 Execute (MetaNotesInit links shipped skills):
   MetaNotesInit

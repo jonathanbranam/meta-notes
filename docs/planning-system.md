@@ -36,7 +36,8 @@ possible.
 - No external services and no Google API access, including for the agent.
 - AI use happens inside interactive agent sessions (Claude Code). A single
   `claude -p` is acceptable; scripted or scheduled agent automation is not.
-- Calendar details may be shared with the agent manually (e.g. screenshot).
+- Calendar details may be shared with the agent manually (a Google Calendar
+  export saved into the notes root, or a screenshot as a fallback).
 - macOS only. Local server on 127.0.0.1 is fine.
 
 ### Personal
@@ -217,8 +218,10 @@ One skill whether run in the evening after shutdown or the next morning.
    shutdown is mentioned, not run). When the target day is a Monday, also
    read the weekly plan. A Follow up item worth tracking becomes a task in
    place with `task update --due`.
-3. **Gather:** meetings (calendar screenshot), due and overdue tasks, PR
-   tasks, and open commitments due soon.
+3. **Gather:** meetings (`meta-notes calendar` for the target day, from
+   the latest Google Calendar export; a screenshot when there's no
+   export), due and overdue tasks, PR tasks, and open commitments due
+   soon.
 4. **Write the plan:** create the target day's note if needed, fill the
    Time Block Plan column, and pick a concrete first block.
 5. Mark `- [x] plan complete`. In the morning, the goal is the first block
@@ -258,7 +261,8 @@ Then:
 
 ### Weekly planning (Friday afternoon)
 
-1. Read the weekly review and next week's calendar.
+1. Read the weekly review and next week's calendar (`meta-notes calendar
+   --date MON..FRI`; a screenshot when there's no export).
 2. **Capacity.** Productive hours are free gaps of 90 minutes or more.
    Shorter gaps are listed separately.
 3. Meetings to schedule, and deadlines landing next week.
@@ -364,7 +368,12 @@ that edit the source line through `task update`.
 
 Options in order of setup effort:
 
-1. **Screenshot to the agent.** Allowed today and used first.
+1. **Google Calendar export.** Used today. Export from Google Calendar
+   (Settings, Import & export, Export) and save the `.zip` into
+   `.meta-notes-cache/ics/`; `meta-notes calendar` turns the newest into
+   a day-by-day agenda for the planning skills, and warns when it's
+   stale. A screenshot to the agent remains the fallback when there's no
+   export.
 2. **AppleScript through Calendar.app**, which already syncs the Google
    subscription locally. Slow at querying events, so it must be limited to
    one calendar and one week.

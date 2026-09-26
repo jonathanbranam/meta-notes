@@ -9,7 +9,7 @@ parseable by old Pythons so the version check below can report clearly.
 import os
 import sys
 
-MIN_VERSION = (3, 10)
+MIN_VERSION = (3, 11)
 
 if sys.version_info < MIN_VERSION:
     message = "meta-notes requires Python %d.%d or newer (found %d.%d)" % (

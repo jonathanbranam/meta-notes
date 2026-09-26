@@ -82,8 +82,10 @@ meta-notes/
 │   │   ├── __main__.py          # Entry point (Python version check)
 │   │   ├── brief.py             # Project brief
 │   │   ├── ceremony.py          # Ceremony status
+│   │   ├── calendar.py          # Agenda from a Google Calendar export
 │   │   ├── changes.py           # Notes changed in a period, from git
 │   │   ├── cli.py               # Subcommands, root resolution, output
+│   │   ├── config.py            # .meta-notes read as TOML config
 │   │   ├── conventions.md       # Conventions text for skills
 │   │   ├── conventions.py       # Conventions, generated parts filled in
 │   │   ├── init.py              # Notes root setup
@@ -108,9 +110,11 @@ meta-notes/
 │   ├── *.vader              # Vimscript integration tests
 │   ├── unit/                # Python unit tests
 │   │   ├── test_brief.py
+│   │   ├── test_calendar.py
 │   │   ├── test_ceremony.py
 │   │   ├── test_changes.py
 │   │   ├── test_cli.py
+│   │   ├── test_config.py
 │   │   ├── test_conventions.py
 │   │   ├── test_find_tasks.py
 │   │   ├── test_init.py
@@ -122,6 +126,7 @@ meta-notes/
 │   │   ├── test_ops.py
 │   │   ├── test_query.py
 │   │   ├── test_root.py
+│   │   ├── test_shim.py
 │   │   ├── test_tags.py
 │   │   ├── test_task_update.py
 │   │   ├── test_tasks.py
@@ -133,7 +138,8 @@ meta-notes/
 │       └── templates/           # Vim renderings of the shipped templates
 ├── doc/                 # Vim documentation
 ├── skills/              # Claude Code skills, linked into notes roots by init
-├── templates/           # Planning templates copied into notes roots by init
+├── templates/           # Planning templates and the cache README, copied by init
+├── requirements.txt     # Pinned libraries for calendar, installed into .venv by init
 ├── run_tests.sh         # Test runner script
 └── README.md
 ```
@@ -168,11 +174,17 @@ This structure is compatible with vim-plug, Vundle, and Pathogen.
 `bin/meta-notes` performs the plugin's setup (`init`), note creation from
 templates (`note`), file operations (`move`, `rename`, `archive`), task
 query (`tasks`), task edits (`task update`), time reports (`time`), changed
-notes (`changes`), the
+notes (`changes`), calendar agendas (`calendar`, `cache clear`), the
 project list (`projects`), ceremony status (`ceremony status`), and the
 skills' shared conventions (`conventions`) outside Vim, for shells, agents, and other tools. The Vim
-commands call it. Every command accepts `--json`. It needs Python 3.10 or newer as `python3`. See
+commands call it. Every command accepts `--json`. It needs Python 3.11 or newer as `python3`. See
 `:help meta-notes-cli`.
+
+`bin/meta-notes` runs the CLI with the notes root's virtualenv,
+`<root>/.venv/bin/python3`, when it's executable, and falls back to the
+`python3` on `PATH` otherwise. `meta-notes init` builds the virtualenv and
+always runs on `python3` itself. Only `calendar` needs the virtualenv; every
+other command works on either.
 
 `meta-notes --version` (or `:MetaNotesVersion` in Vim) shows the installed
 version and, for a git checkout, its commit.
@@ -187,11 +199,20 @@ ln -s ~/.vim/bundle/meta-notes/bin/meta-notes ~/bin/meta-notes
 
 Set up a notes root by running `init` in its top-level directory. It creates
 the PPARA folders, templates, a `.meta-notes` sentinel, and links the shipped
-Claude Code skills into `.claude/skills/`. Re-running is safe.
+Claude Code skills into `.claude/skills/`. It also creates
+`.meta-notes-cache/` (with `ics/` for calendar exports, `calendar/` for
+parsed calendars, and a README), adds `.venv/` and `.meta-notes-cache/` to
+the root's `.gitignore` (or warns when there isn't one), and builds `.venv`
+with `python3 -m venv` and `pip install -r requirements.txt`. Pass
+`--python PATH` to build it with another interpreter (3.11 or newer). If
+the virtualenv can't be built, init still succeeds and warns that calendar
+support isn't available. Re-running is safe and leaves an existing `.venv`
+alone; `init --force` rebuilds it.
 
 ```bash
-mkdir notes && cd notes && git init
+mkdir notes && cd notes && git init && touch .gitignore
 meta-notes init
+meta-notes init --python ~/.pyenv/versions/3.12.4/bin/python3  # another interpreter
 meta-notes note daily                    # create today's daily note, print its path
 meta-notes note weekly 2026-04-02 --render --json
 meta-notes note new "project/trip/Packing" --template checklist
@@ -207,6 +228,9 @@ meta-notes changes --date 2026-09-21..2026-09-25  # notes changed this week
 meta-notes projects --warnings            # stalled or unreviewed projects
 meta-notes project brief project/kitchen/  # one project's files, tasks, dates
 meta-notes ceremony status --date 2026-09-25
+meta-notes calendar --date 2026-09-28..2026-10-02  # agenda from the latest export
+meta-notes calendar --ics ~/Downloads/export.zip --json
+meta-notes cache clear                    # delete parsed calendars, keep exports
 meta-notes conventions                    # syntax and rules the skills follow
 ```
 
@@ -215,6 +239,24 @@ to the nearest `.meta-notes`, stopping after `$HOME`. Notes roots created
 before the sentinel existed need `meta-notes init` run once (and the new
 `.meta-notes` committed); until then, pass `--root` or set
 `META_NOTES_ROOT`.
+
+### Calendar
+
+`meta-notes calendar` reads meetings from a Google Calendar export (Settings,
+Import & export, Export). Save the downloaded `.zip` into
+`.meta-notes-cache/ics/`; each run uses the newest, keeps the latest 5, and
+caches what it parses in `.meta-notes-cache/calendar/`. Settings go in a
+`[calendar]` table in `.meta-notes`, which is read as TOML:
+
+```toml
+[calendar]
+email = "me@example.com"        # hide events you declined
+timezone = "America/New_York"   # display timezone (default: system)
+stale_days = 3                  # warn when the export is older
+calendars = ["me@example.com"]  # zip calendars to load (default: all)
+```
+
+See `:help meta-notes-cli-calendar` and `:help meta-notes-config`.
 
 ## Planning Skills
 

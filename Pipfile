@@ -5,6 +5,8 @@ name = "pypi"
 
 [packages]
 pytest = "*"
+icalendar = "==7.3.0"
+recurring-ical-events = "==3.8.2"
 
 [dev-packages]
 

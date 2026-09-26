@@ -5,7 +5,7 @@ context: |
 
   Languages:
   - Vimscript — all plugin logic (plugin/meta_notes.vim, autoload/meta_notes/*.vim, after/syntax/markdown.vim)
-  - Python (stdlib only, no third-party libs) — helper scripts invoked by the plugin via shell (scripts/*.py)
+  - Python (standard library only, except commands whose spec needs more; those libraries are installed only in the notes root's .venv and imported only by those commands) — helper scripts invoked by the plugin via shell (scripts/*.py)
   - Pipenv manages the Python environment (Pipfile)
 
   Architecture:

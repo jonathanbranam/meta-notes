@@ -61,7 +61,20 @@ weekly note (the `weekly-plan` entry's `note` in
 
 ### 3. Gather
 
-- Ask for a screenshot of TARGET's calendar and list its meetings.
+- Meetings: run `meta-notes calendar --date <TARGET> --json`.
+  - `ok` true: use its `days[0].events` as TARGET's meetings. Tell the
+    user in one line how old the export is (`source.age_days`) and pass
+    on each of its `warnings` (a stale or missing export, `email` not
+    set). Don't ask for a screenshot.
+  - `ok` false because calendar support isn't installed: tell the user
+    to run `meta-notes init` in the notes root (the error names the exact
+    command), and offer to continue from a screenshot of TARGET's
+    calendar.
+  - `ok` false otherwise (for example, no export): tell the user they can
+    export from Google Calendar (Settings, Import & export, Export) and
+    save the `.zip` into the `ics/` folder the error names, then you'll
+    re-run the command, or provide a screenshot of TARGET's calendar.
+    Continue with whichever they provide.
 - Due: `meta-notes tasks --due --date <TARGET> --json`
 - Overdue: `meta-notes tasks --overdue --date <TARGET> --json` (count and
   the few that matter today; nothing more)
