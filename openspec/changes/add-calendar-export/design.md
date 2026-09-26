@@ -220,17 +220,18 @@ Text output, one heading per day in the range, including empty days:
 ```
 ## 2026-09-28 Mon
 all day  Company holiday
-09:00-09:30  Standup [yes]
+09:00-09:30  Standup
 10:00-11:00  Vendor demo [maybe]
-13:00-14:00  Design review [mine]
-15:00-16:00  Focus
+11:00-11:30  Budget review [no-reply]
+13:00-14:00  Design review
 ```
 
-The text shows only the user's own attendance: `[mine]` for events they
-organized (or personal events with no organizer or attendees in the
-calendar named by `email`), otherwise `[yes]`, `[maybe]`, or
-`[no-reply]` from their `PARTSTAT`. Locations and other attendees are
-JSON only, to keep the text short. With more than one calendar loaded,
+The text marks only the responses that matter for planning, `[maybe]`
+and `[no-reply]`, on events the user didn't organize. Accepted
+responses, whether the event is the user's own (`mine`: organized by
+them, or a personal event with no organizer or attendees in the calendar
+named by `email`), locations, and other attendees are JSON only, to keep
+the text short. With more than one calendar loaded,
 each line ends with `(<calendar>)`.
 
 The JSON object has `days` (each with `date` and `events`: `start`,

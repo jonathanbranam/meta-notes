@@ -613,9 +613,8 @@ def agenda_lines(days: dict[date, list[dict]], multiple: bool) -> list[str]:
                 when = (f"{datetime.fromisoformat(event['start']):%H:%M}-"
                         f"{datetime.fromisoformat(event['end']):%H:%M}")
             line = f"{when}  {event['title']}"
-            if event["mine"]:
-                line += " [mine]"
-            elif event["response"]:
+            # Only responses that matter for planning; the rest is in JSON
+            if not event["mine"] and event["response"] in ("maybe", "no-reply"):
                 line += f" [{event['response']}]"
             if multiple:
                 line += f" ({event['calendar']})"

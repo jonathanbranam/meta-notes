@@ -348,7 +348,7 @@ def test_calendar_all_calendars(root):
     assert sorted(titles(data, '2026-09-28')) == ['Holiday', 'Sam birthday', 'Standup']
     assert len(data['source']['available']) == 3
     assert len(data['source']['loaded']) == 3
-    assert '09:00-09:30  Standup [mine] (me@example.com)' in lines
+    assert '09:00-09:30  Standup (me@example.com)' in lines
 
 
 def test_calendar_name_from_file_stem(root):
@@ -371,7 +371,7 @@ def test_calendar_calendars_ignored_for_plain_ics(root):
     lines, data, _ = run(root)
 
     assert titles(data, '2026-09-28') == ['Mine']
-    assert '09:00-10:00  Mine [mine]' in lines
+    assert '09:00-10:00  Mine' in lines
 
 
 # Tests for events in the agenda
@@ -388,7 +388,7 @@ def test_calendar_timezone_conversion(root):
 
     lines, _, _ = run(root)
 
-    assert '11:00-12:00  Remote [mine]' in lines
+    assert '11:00-12:00  Remote' in lines
 
 
 def test_calendar_utc_times_converted(root):
@@ -397,7 +397,7 @@ def test_calendar_utc_times_converted(root):
 
     lines, _, _ = run(root)
 
-    assert '09:00-10:00  UTC [mine]' in lines
+    assert '09:00-10:00  UTC' in lines
 
 
 def test_calendar_declined_meeting_hidden(root):
@@ -490,7 +490,7 @@ def test_calendar_moved_occurrence(root):
 
     assert titles(data, '2026-09-29') == []
     assert titles(data, '2026-09-30') == ['Weekly']
-    assert '14:00-15:00  Weekly [mine]' in lines
+    assert '14:00-15:00  Weekly' in lines
 
 
 def test_calendar_series_split_at_edit(root):
@@ -611,7 +611,8 @@ def test_calendar_attendance_my_response(root, partstat, response):
 
     assert event['response'] == response
     assert event['mine'] is False
-    assert line == f'09:00-10:00  Meeting [{response}]'
+    marker = '' if response == 'yes' else f' [{response}]'
+    assert line == f'09:00-10:00  Meeting{marker}'
 
 
 def test_calendar_attendance_single_attendee(root):
@@ -624,7 +625,7 @@ def test_calendar_attendance_single_attendee(root):
 
 
 def test_calendar_attendance_created_by_user(root):
-    """An event the user organized is theirs and shows [mine]."""
+    """An event the user organized is theirs, with no text marker."""
     line, event = only_event(root, [
         'ORGANIZER;CN=Me:mailto:me@example.com',
         attendee('me@example.com', 'ACCEPTED', cn='Me'),
@@ -636,7 +637,16 @@ def test_calendar_attendance_created_by_user(root):
     assert event['attendees'] == [
         {'name': 'Me', 'email': 'me@example.com', 'response': 'yes'},
         {'name': 'Sam Lee', 'email': 'sam@example.com', 'response': 'no-reply'}]
-    assert line == '09:00-10:00  Meeting [mine]'
+    assert line == '09:00-10:00  Meeting'
+
+
+def test_calendar_attendance_own_event_maybe_not_marked(root):
+    """A maybe on an event the user organized isn't marked in the text."""
+    line, event = only_event(root, ['ORGANIZER:mailto:me@example.com',
+                                    attendee('me@example.com', 'TENTATIVE')])
+
+    assert event['response'] == 'maybe'
+    assert line == '09:00-10:00  Meeting'
 
 
 def test_calendar_attendance_personal_event(root):
@@ -647,7 +657,7 @@ def test_calendar_attendance_personal_event(root):
     assert event['organizer'] is None
     assert event['response'] is None
     assert event['attendee_count'] == 0
-    assert line == '09:00-10:00  Meeting [mine]'
+    assert line == '09:00-10:00  Meeting'
 
 
 def test_calendar_attendance_other_calendar_event(root):
@@ -710,7 +720,7 @@ def test_calendar_text_output(root):
     lines, _, _ = run(root)
 
     assert lines == ['## 2026-09-28 Mon', 'all day  Holiday',
-                     '09:00-09:30  Standup [yes]']
+                     '09:00-09:30  Standup']
 
 
 def test_calendar_empty_day(root):
@@ -1126,7 +1136,7 @@ def test_cli_calendar_text(root, capsys):
     captured = capsys.readouterr()
 
     assert code == 0
-    assert captured.out == '## 2026-09-28 Mon\n09:00-09:30  Standup [mine]\n'
+    assert captured.out == '## 2026-09-28 Mon\n09:00-09:30  Standup\n'
     assert captured.err == ''
 
 

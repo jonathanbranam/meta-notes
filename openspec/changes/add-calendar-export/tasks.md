@@ -58,7 +58,7 @@
 ## 11. Attendance
 
 - [x] 11.1 In `calendar.py`, add per-event `mine`, `organizer`, `response`, `attendee_count`, and `attendees` (people only, first 20) per the `calendar-agenda` "Attendance" requirement; verify with tests for "Maybe", "No reply", "Created by the user", "Personal event without attendees", "Large meeting", a single `ATTENDEE` value, and `email` unset (response null, mine false)
-- [x] 11.2 Change the text output to drop locations and add ` [mine]`/` [<response>]`; update "Text output" and other text tests; verify `pipenv run pytest test/unit/test_calendar.py`
+- [x] 11.2 Change the text output to drop locations and add ` [maybe]`/` [no-reply]` (not for `mine` events); update "Text output" and other text tests; verify `pipenv run pytest test/unit/test_calendar.py`
 - [x] 11.3 Update `doc/meta-notes.txt` (`*meta-notes-cli-calendar*` output and JSON fields) and README if it shows agenda text; verify `:helptags doc` reports no errors
 
 ## 10. Integration
