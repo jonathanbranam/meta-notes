@@ -348,7 +348,7 @@ def test_calendar_all_calendars(root):
     assert sorted(titles(data, '2026-09-28')) == ['Holiday', 'Sam birthday', 'Standup']
     assert len(data['source']['available']) == 3
     assert len(data['source']['loaded']) == 3
-    assert '09:00-09:30  Standup (me@example.com)' in lines
+    assert '09:00-09:30  Standup [mine] (me@example.com)' in lines
 
 
 def test_calendar_name_from_file_stem(root):
@@ -371,7 +371,7 @@ def test_calendar_calendars_ignored_for_plain_ics(root):
     lines, data, _ = run(root)
 
     assert titles(data, '2026-09-28') == ['Mine']
-    assert '09:00-10:00  Mine' in lines
+    assert '09:00-10:00  Mine [mine]' in lines
 
 
 # Tests for events in the agenda
@@ -388,7 +388,7 @@ def test_calendar_timezone_conversion(root):
 
     lines, _, _ = run(root)
 
-    assert '11:00-12:00  Remote' in lines
+    assert '11:00-12:00  Remote [mine]' in lines
 
 
 def test_calendar_utc_times_converted(root):
@@ -397,7 +397,7 @@ def test_calendar_utc_times_converted(root):
 
     lines, _, _ = run(root)
 
-    assert '09:00-10:00  UTC' in lines
+    assert '09:00-10:00  UTC [mine]' in lines
 
 
 def test_calendar_declined_meeting_hidden(root):
@@ -490,7 +490,7 @@ def test_calendar_moved_occurrence(root):
 
     assert titles(data, '2026-09-29') == []
     assert titles(data, '2026-09-30') == ['Weekly']
-    assert '14:00-15:00  Weekly' in lines
+    assert '14:00-15:00  Weekly [mine]' in lines
 
 
 def test_calendar_series_split_at_edit(root):
@@ -581,20 +581,136 @@ def test_calendar_stray_dates_filtered(root):
     assert titles(data, '2026-09-28') == ['Monday']
 
 
+# Tests for attendance
+
+ORGANIZER_SAM = 'ORGANIZER;CN=Sam Lee:mailto:sam@example.com'
+
+
+def attendee(address, partstat=None, cn=None, cutype=None):
+    params = ''.join(f';{k}={v}' for k, v in (('CN', cn), ('CUTYPE', cutype),
+                                              ('PARTSTAT', partstat)) if v)
+    return f'ATTENDEE{params}:mailto:{address}'
+
+
+def only_event(root, extra, name='me@example.com'):
+    """Run with one event carrying extra lines; return (text line, JSON event)."""
+    write_ics(ics_dir(root) / 'me.ics', vcalendar(
+        [vevent('e', '20260928T090000', '20260928T100000', 'Meeting', extra=extra)],
+        name=name))
+    lines, data, _ = run(root)
+    return lines[1], data['days'][0]['events'][0]
+
+
+@pytest.mark.parametrize('partstat, response', [
+    ('ACCEPTED', 'yes'), ('TENTATIVE', 'maybe'), ('NEEDS-ACTION', 'no-reply')])
+def test_calendar_attendance_my_response(root, partstat, response):
+    """The user's PARTSTAT is their response, in JSON and text."""
+    line, event = only_event(root, [ORGANIZER_SAM,
+                                    attendee('sam@example.com', 'ACCEPTED'),
+                                    attendee('me@example.com', partstat)])
+
+    assert event['response'] == response
+    assert event['mine'] is False
+    assert line == f'09:00-10:00  Meeting [{response}]'
+
+
+def test_calendar_attendance_single_attendee(root):
+    """A single ATTENDEE value (not a list) is read."""
+    line, event = only_event(root, [ORGANIZER_SAM,
+                                    attendee('Me@Example.com', 'TENTATIVE')])
+
+    assert event['response'] == 'maybe'
+    assert event['attendee_count'] == 1
+
+
+def test_calendar_attendance_created_by_user(root):
+    """An event the user organized is theirs and shows [mine]."""
+    line, event = only_event(root, [
+        'ORGANIZER;CN=Me:mailto:me@example.com',
+        attendee('me@example.com', 'ACCEPTED', cn='Me'),
+        attendee('sam@example.com', 'NEEDS-ACTION', cn='Sam Lee')])
+
+    assert event['mine'] is True
+    assert event['organizer'] == {'name': 'Me', 'email': 'me@example.com'}
+    assert event['response'] == 'yes'
+    assert event['attendees'] == [
+        {'name': 'Me', 'email': 'me@example.com', 'response': 'yes'},
+        {'name': 'Sam Lee', 'email': 'sam@example.com', 'response': 'no-reply'}]
+    assert line == '09:00-10:00  Meeting [mine]'
+
+
+def test_calendar_attendance_personal_event(root):
+    """No organizer or attendees in the user's calendar: mine, no response."""
+    line, event = only_event(root, [])
+
+    assert event['mine'] is True
+    assert event['organizer'] is None
+    assert event['response'] is None
+    assert event['attendee_count'] == 0
+    assert line == '09:00-10:00  Meeting [mine]'
+
+
+def test_calendar_attendance_other_calendar_event(root):
+    """No organizer or attendees in another calendar: not mine, no marker."""
+    line, event = only_event(root, [], name='Team')
+
+    assert event['mine'] is False
+    assert line == '09:00-10:00  Meeting'
+
+
+def test_calendar_attendance_not_invited(root):
+    """Someone else's meeting without the user: no response, no marker."""
+    line, event = only_event(root, [ORGANIZER_SAM,
+                                    attendee('sam@example.com', 'ACCEPTED')])
+
+    assert event['mine'] is False
+    assert event['response'] is None
+    assert event['organizer'] == {'name': 'Sam Lee', 'email': 'sam@example.com'}
+    assert line == '09:00-10:00  Meeting'
+
+
+def test_calendar_attendance_large_meeting(root):
+    """30 people and a room: count 30, the first 20 listed, room left out."""
+    people = [attendee(f'p{n}@example.com', 'DECLINED' if n == 1 else None)
+              for n in range(30)]
+    room = attendee('room4@resource.example.com', 'ACCEPTED', cn='Room 4',
+                    cutype='ROOM')
+    _, event = only_event(root, [ORGANIZER_SAM, room, *people])
+
+    assert event['attendee_count'] == 30
+    assert [a['email'] for a in event['attendees']] == \
+        [f'p{n}@example.com' for n in range(20)]
+    assert event['attendees'][1]['response'] == 'no'
+    assert event['attendees'][0]['response'] is None
+
+
+def test_calendar_attendance_email_unset(root):
+    """Without email, nothing is mine and there's no response."""
+    (root / '.meta-notes').write_text(
+        SENTINEL + '[calendar]\ntimezone = "America/New_York"\n')
+    line, event = only_event(root, [
+        'ORGANIZER:mailto:me@example.com', attendee('me@example.com', 'TENTATIVE')])
+
+    assert event['mine'] is False
+    assert event['response'] is None
+    assert line == '09:00-10:00  Meeting'
+
+
 # Tests for agenda output
 
 def test_calendar_text_output(root):
-    """Headings, all-day lines, and timed lines with locations."""
-    one_calendar(root, [
+    """Headings, all-day lines, and timed lines with attendance, no location."""
+    write_ics(ics_dir(root) / 'team.ics', vcalendar([
         vevent('s', '20260928T090000', '20260928T093000', 'Standup',
-               extra=['LOCATION:Room 4']),
+               extra=['LOCATION:Room 4', ORGANIZER_SAM,
+                      'ATTENDEE;PARTSTAT=ACCEPTED:mailto:me@example.com']),
         vevent('h', date(2026, 9, 28), date(2026, 9, 29), 'Holiday'),
-    ])
+    ], name='Team'))
 
     lines, _, _ = run(root)
 
     assert lines == ['## 2026-09-28 Mon', 'all day  Holiday',
-                     '09:00-09:30  Standup [Room 4]']
+                     '09:00-09:30  Standup [yes]']
 
 
 def test_calendar_empty_day(root):
@@ -639,7 +755,8 @@ def test_calendar_json_shape(root):
     assert data['days'] == [{'date': '2026-09-28', 'events': [{
         'start': '2026-09-28T09:00:00-04:00', 'end': '2026-09-28T09:30:00-04:00',
         'all_day': False, 'title': 'Standup', 'location': 'Room 4',
-        'calendar': 'me@example.com'}]}]
+        'calendar': 'me@example.com', 'mine': True, 'organizer': None,
+        'response': None, 'attendee_count': 0, 'attendees': []}]}]
     source = data['source']
     assert source['path'] == str(ics_dir(root) / 'me.ics')
     assert source['exported'] == '2026-09-27T12:00:00-04:00'
@@ -1009,7 +1126,7 @@ def test_cli_calendar_text(root, capsys):
     captured = capsys.readouterr()
 
     assert code == 0
-    assert captured.out == '## 2026-09-28 Mon\n09:00-09:30  Standup [Room 4]\n'
+    assert captured.out == '## 2026-09-28 Mon\n09:00-09:30  Standup [mine]\n'
     assert captured.err == ''
 
 

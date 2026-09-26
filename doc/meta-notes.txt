@@ -911,17 +911,38 @@ Commands ~
     covers. Output, one heading per day, including empty days: >
         ## 2026-09-28 Mon
         all day  Company holiday
-        09:00-09:30  Standup [Room 4]
-        13:00-14:00  Design review
-<   With more than one calendar loaded, each event line ends with
-    `(<calendar>)`. Warnings (a stale or missing export, `email` unset) go
-    to stderr.
+        09:00-09:30  Standup [yes]
+        10:00-11:00  Vendor demo [maybe]
+        11:00-11:30  Budget review [no-reply]
+        13:00-14:00  Design review [mine]
+        15:00-16:00  Team offsite planning
+<   The bracket is your own attendance: `[mine]` for events you organized
+    (and personal events with no organizer or attendees in the calendar
+    named by your `email`), otherwise your response, `[yes]`, `[maybe]`,
+    or `[no-reply]`. No bracket means you aren't listed as an attendee.
+    Locations and other attendees are only in `--json`. With more than one
+    calendar loaded, each event line ends with `(<calendar>)`. Warnings (a
+    stale or missing export, `email` unset) go to stderr.
 
-    With `--json`: `days` (each with `date` and `events`; each event has
-    `start` and `end` in ISO form, `all_day`, `title`, `location`, and
-    `calendar`; an all-day event's `end` is its last day), `source`
+    With `--json`: `days` (each with `date` and `events`), `source`
     (`path`, `exported` time, `age_days`, `cached`, and the `available` and
-    `loaded` calendar names), `pruned`, and `warnings`.
+    `loaded` calendar names), `pruned`, and `warnings`. Each event has:
+        start, end      ISO dates or times; an all-day event's `end` is
+                        its last day
+        all_day         true or false
+        title, location the summary and location (location may be null)
+        calendar        the calendar it came from
+        mine            whether you organized it (as for `[mine]`)
+        organizer       `name` and `email`, or null
+        response        your response: `yes`, `maybe`, `no-reply`, or
+                        null
+        attendee_count  attendees who are people (rooms and resources
+                        aren't counted)
+        attendees       the first 20 of them, each with `name`, `email`,
+                        and `response` (`yes`, `maybe`, `no-reply`, `no`,
+                        or null)
+    Attendance needs `email`; without it, `mine` is false and `response`
+    null.
 
     Cache: each export is parsed once into `.meta-notes-cache/calendar/`,
     keyed by the export's name, size, and modification time and the loaded

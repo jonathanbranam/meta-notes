@@ -55,6 +55,12 @@
 - [x] 9.1 Update `skills/daily-plan/SKILL.md` and `skills/weekly-plan/SKILL.md` to gather meetings with `meta-notes calendar --date <day or MON..FRI> --json`, report the export's age and warnings, and on failure offer exporting into the named `ics/` folder or a screenshot (and `meta-notes init` when calendar support isn't installed); update `weekly-plan`'s description to drop "from a calendar screenshot"; verify by reading both skills against the `ceremony-skills` delta's scenarios
 - [x] 9.2 Update `docs/planning-system.md` (calendar input for daily and weekly planning) and the `weekly-plan` line in `doc/meta-notes.txt`; verify `grep -rn screenshot skills/ doc/ docs/planning-system.md` shows only the fallback wording
 
+## 11. Attendance
+
+- [x] 11.1 In `calendar.py`, add per-event `mine`, `organizer`, `response`, `attendee_count`, and `attendees` (people only, first 20) per the `calendar-agenda` "Attendance" requirement; verify with tests for "Maybe", "No reply", "Created by the user", "Personal event without attendees", "Large meeting", a single `ATTENDEE` value, and `email` unset (response null, mine false)
+- [x] 11.2 Change the text output to drop locations and add ` [mine]`/` [<response>]`; update "Text output" and other text tests; verify `pipenv run pytest test/unit/test_calendar.py`
+- [x] 11.3 Update `doc/meta-notes.txt` (`*meta-notes-cli-calendar*` output and JSON fields) and README if it shows agenda text; verify `:helptags doc` reports no errors
+
 ## 10. Integration
 
 - [ ] 10.1 In a scratch notes root with a `.gitignore`, run `meta-notes init` and confirm `.venv`, the cache folders and README, and the `.gitignore` lines; save a real Google export zip into `.meta-notes-cache/ics/`, set `[calendar]` in `.meta-notes`, run `meta-notes calendar --date <next MON..FRI>` twice (the second from cache) with and without `--json`, compare against Google Calendar, add six more exports to check pruning, and run `meta-notes cache clear`; then run `pipenv run pytest test/unit/` and `./run_tests.sh`

@@ -476,15 +476,62 @@ def clear(root: str) -> list[str]:
 
 # The agenda
 
+MAX_ATTENDEES = 20
+RESPONSES = {"ACCEPTED": "yes", "TENTATIVE": "maybe",
+             "NEEDS-ACTION": "no-reply", "DECLINED": "no"}
+NOT_PEOPLE = ("ROOM", "RESOURCE")
+
+
+def _address(value) -> str:
+    """An ORGANIZER or ATTENDEE address without mailto:."""
+    text = str(value).strip()
+    return text[7:] if text.lower().startswith("mailto:") else text
+
+
+def _param(value, name: str) -> str:
+    params = getattr(value, "params", None) or {}
+    return str(params.get(name, "")).strip()
+
+
 def _declined(event, email: str | None) -> bool:
     if not email:
         return False
-    for attendee in _as_list(event.get("ATTENDEE")):
-        address = str(attendee).lower().removeprefix("mailto:")
-        if (address == email.lower()
-                and str(attendee.params.get("PARTSTAT", "")).upper() == "DECLINED"):
-            return True
-    return False
+    return any(_address(a).lower() == email.lower()
+               and _param(a, "PARTSTAT").upper() == "DECLINED"
+               for a in _as_list(event.get("ATTENDEE")))
+
+
+def attendance(event, email: str | None, calendar_name: str) -> dict:
+    """
+    The organizer, whether the event is the user's own, the user's
+    response, and the attendees who are people (the first MAX_ATTENDEES).
+    """
+    organizer = event.get("ORGANIZER")
+    attendees = _as_list(event.get("ATTENDEE"))
+    me = email.lower() if email else None
+
+    response = None
+    people = []
+    for attendee in attendees:
+        address = _address(attendee)
+        answer = RESPONSES.get(_param(attendee, "PARTSTAT").upper())
+        if me and address.lower() == me and answer != "no":
+            response = answer
+        if _param(attendee, "CUTYPE").upper() in NOT_PEOPLE:
+            continue
+        people.append({"name": _param(attendee, "CN") or None,
+                       "email": address, "response": answer})
+
+    if organizer is not None:
+        mine = bool(me) and _address(organizer).lower() == me
+        organizer = {"name": _param(organizer, "CN") or None,
+                     "email": _address(organizer)}
+    else:
+        mine = bool(me) and not attendees and calendar_name.lower() == me
+
+    return {"mine": mine, "organizer": organizer, "response": response,
+            "attendee_count": len(people),
+            "attendees": people[:MAX_ATTENDEES]}
 
 
 def _local(value, tz: tzinfo) -> datetime:
@@ -499,7 +546,8 @@ def agenda(rie, calendars: list[tuple], start: date, end: date, tz: tzinfo,
     Occurrences overlapping each day from start to end in tz, leaving out
     cancelled and declined events. All-day events appear on each day they
     cover; timed events on the day they start (or the first day, when they
-    started earlier). All-day first, then by start time.
+    started earlier). All-day first, then by start time. Each event
+    carries its attendance (see attendance()).
     """
     days = {start + timedelta(days=n): [] for n in range((end - start).days + 1)}
     low = datetime.combine(start, time(), tz)
@@ -517,6 +565,7 @@ def agenda(rie, calendars: list[tuple], start: date, end: date, tz: tzinfo,
                 continue
             title = str(event.get("SUMMARY") or "").strip() or "(no title)"
             location = str(event.get("LOCATION") or "").strip() or None
+            people = attendance(event, email, name)
             first = event["DTSTART"].dt
             last = _event_end(event)
 
@@ -527,7 +576,7 @@ def agenda(rie, calendars: list[tuple], start: date, end: date, tz: tzinfo,
                 entry = {"start": first.isoformat(),
                          "end": (last - timedelta(days=1)).isoformat(),
                          "all_day": True, "title": title,
-                         "location": location, "calendar": name,
+                         "location": location, "calendar": name, **people,
                          "_sort": (0, 0.0, title)}
                 day = max(first, start)
                 while day < last and day <= end:
@@ -542,7 +591,8 @@ def agenda(rie, calendars: list[tuple], start: date, end: date, tz: tzinfo,
             days[max(first.date(), start)].append({
                 "start": first.isoformat(), "end": last.isoformat(),
                 "all_day": False, "title": title, "location": location,
-                "calendar": name, "_sort": (1, first.timestamp(), title)})
+                "calendar": name, **people,
+                "_sort": (1, first.timestamp(), title)})
 
     for events in days.values():
         events.sort(key=lambda e: e["_sort"])
@@ -563,8 +613,10 @@ def agenda_lines(days: dict[date, list[dict]], multiple: bool) -> list[str]:
                 when = (f"{datetime.fromisoformat(event['start']):%H:%M}-"
                         f"{datetime.fromisoformat(event['end']):%H:%M}")
             line = f"{when}  {event['title']}"
-            if event["location"]:
-                line += f" [{event['location']}]"
+            if event["mine"]:
+                line += " [mine]"
+            elif event["response"]:
+                line += f" [{event['response']}]"
             if multiple:
                 line += f" ({event['calendar']})"
             lines.append(line)

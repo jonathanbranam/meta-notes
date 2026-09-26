@@ -100,17 +100,47 @@ A timed event SHALL appear on the day it starts. An all-day event SHALL appear o
 - **THEN** it SHALL appear on 2026-09-29 and 2026-09-30
 
 ### Requirement: Agenda output
-Without `--json`, the command SHALL print, for each day in PERIOD including days with no events, a heading `## YYYY-MM-DD Www`, then one line per event: `all day` or `HH:MM-HH:MM` in 24-hour time, two spaces, the title, then ` [location]` when the event has a location. When more than one calendar is loaded, each event line SHALL end with ` (<calendar name>)`. Warnings SHALL go to stderr.
+Without `--json`, the command SHALL print, for each day in PERIOD including days with no events, a heading `## YYYY-MM-DD Www`, then one line per event: `all day` or `HH:MM-HH:MM` in 24-hour time, two spaces, the title, then the user's attendance as ` [mine]`, ` [yes]`, ` [maybe]`, or ` [no-reply]` when the event has one (see "Attendance"). The text SHALL NOT include locations or other attendees. When more than one calendar is loaded, each event line SHALL end with ` (<calendar name>)`. Warnings SHALL go to stderr.
 
-With `--json`, the object SHALL have `ok`, `days` (each with `date` and `events`, each event with `start`, `end`, `all_day`, `title`, `location`, and `calendar`), `source` (the export's path, its modification time, its age in days, whether a cached calendar was used, and the available and loaded calendar names), `pruned` (paths deleted by pruning), and `warnings`.
+With `--json`, the object SHALL have `ok`, `days` (each with `date` and `events`, each event with `start`, `end`, `all_day`, `title`, `location`, `calendar`, `mine`, `organizer`, `response`, `attendee_count`, and `attendees`), `source` (the export's path, its modification time, its age in days, whether a cached calendar was used, and the available and loaded calendar names), `pruned` (paths deleted by pruning), and `warnings`.
 
 #### Scenario: Text output
-- **WHEN** 2026-09-28 has an all-day event `Holiday` and a meeting `Standup` from 09:00 to 09:30 in `Room 4`, and one calendar is loaded
-- **THEN** the output SHALL include `## 2026-09-28 Mon`, then `all day  Holiday`, then `09:00-09:30  Standup [Room 4]`
+- **WHEN** 2026-09-28 has an all-day event `Holiday` and a meeting `Standup` from 09:00 to 09:30 in `Room 4` that the user accepted, and one calendar is loaded
+- **THEN** the output SHALL include `## 2026-09-28 Mon`, then `all day  Holiday`, then `09:00-09:30  Standup [yes]`
 
 #### Scenario: Empty day
 - **WHEN** 2026-09-29 has no events and is in PERIOD
 - **THEN** the output SHALL include the heading `## 2026-09-29 Tue` with no event lines after it
+
+### Requirement: Attendance
+Each event SHALL report, in the JSON output:
+- `organizer`: the organizer's `name` (its `CN`, or null) and `email`, or null when the event has no organizer
+- `mine`: true when the organizer's address matches `email`, ignoring case, or when the event has no organizer and no attendees and its calendar's name matches `email`; false otherwise
+- `response`: the user's own response, from the attendee whose address matches `email`: `yes` (`ACCEPTED`), `maybe` (`TENTATIVE`), or `no-reply` (`NEEDS-ACTION`); null when the user isn't an attendee, the response is missing or another value, or `email` is unset
+- `attendee_count`: the number of attendees who are people, leaving out rooms and resources (`CUTYPE` `ROOM` or `RESOURCE`)
+- `attendees`: the first 20 of those attendees in export order, each with `name`, `email`, and `response` (`yes`, `maybe`, `no-reply`, `no` for `DECLINED`, or null when missing or another value)
+
+The text output SHALL show ` [mine]` when `mine` is true, and otherwise ` [<response>]` when `response` is not null.
+
+#### Scenario: Maybe
+- **WHEN** the user's attendee entry has `PARTSTAT=TENTATIVE`
+- **THEN** the event's `response` SHALL be `maybe` and its text line SHALL end with ` [maybe]`
+
+#### Scenario: No reply
+- **WHEN** the user's attendee entry has `PARTSTAT=NEEDS-ACTION`
+- **THEN** the event's `response` SHALL be `no-reply` and its text line SHALL end with ` [no-reply]`
+
+#### Scenario: Created by the user
+- **WHEN** the event's `ORGANIZER` is `mailto:me@example.com` and `email = "me@example.com"`
+- **THEN** `mine` SHALL be true and the text line SHALL end with ` [mine]`
+
+#### Scenario: Personal event without attendees
+- **WHEN** an event in the calendar named `me@example.com` has no organizer and no attendees, and `email = "me@example.com"`
+- **THEN** `mine` SHALL be true, `response` null, and `attendee_count` 0
+
+#### Scenario: Large meeting
+- **WHEN** an event has 30 people and a room as attendees
+- **THEN** `attendee_count` SHALL be 30 and `attendees` SHALL list the first 20 people with their responses
 
 ### Requirement: Stale export warning
 When the export used is older than `stale_days` days, the command SHALL succeed and SHALL warn with the export's age in days. The same SHALL apply to a cached calendar used without its export, using the export's recorded modification time.

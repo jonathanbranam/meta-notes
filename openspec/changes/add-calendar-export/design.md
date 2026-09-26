@@ -219,14 +219,24 @@ Text output, one heading per day in the range, including empty days:
 
 ```
 ## 2026-09-28 Mon
-all day      Company holiday
-09:00-09:30  Standup [Room 4]
-13:00-14:00  Design review
+all day  Company holiday
+09:00-09:30  Standup [yes]
+10:00-11:00  Vendor demo [maybe]
+13:00-14:00  Design review [mine]
+15:00-16:00  Focus
 ```
 
-With more than one calendar loaded, each line ends with `(<calendar>)`.
+The text shows only the user's own attendance: `[mine]` for events they
+organized (or personal events with no organizer or attendees in the
+calendar named by `email`), otherwise `[yes]`, `[maybe]`, or
+`[no-reply]` from their `PARTSTAT`. Locations and other attendees are
+JSON only, to keep the text short. With more than one calendar loaded,
+each line ends with `(<calendar>)`.
+
 The JSON object has `days` (each with `date` and `events`: `start`,
-`end`, `all_day`, `title`, `location`, `calendar`), `source` (path,
+`end`, `all_day`, `title`, `location`, `calendar`, `mine`, `organizer`,
+`response`, `attendee_count`, and `attendees`, capped at 20; rooms and
+resources, `CUTYPE` `ROOM` or `RESOURCE`, aren't counted), `source` (path,
 `exported` time, `age_days`, `cached`, `available` and `loaded`
 calendars), `pruned`, and `warnings`.
 
