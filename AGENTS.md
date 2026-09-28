@@ -5,16 +5,32 @@
 This is a life management solution that works in vim / neovim and uses plain
 text markdown files to manage all aspects of personal organization.
 
-Scripts should generally be written in vimscript for compatibility. Larger, more
-complicated work can be written in Python and executed by the shell. Python
-needs 3.11 or newer and uses only the standard library, except commands whose
-spec needs more. Those libraries are pinned in `requirements.txt`, installed
-only in the notes root's `.venv` (by `meta-notes init`), and imported only by
-the commands that need them.
+Scripts are written in Vimscript for compatibility; larger work is in Python
+(3.11 or newer, standard library only) run by the shell. The details, and the
+exception for commands that need a pinned library, are in
+`.bridle/rules/languages.md`.
 
-## Issue Tracking
+## Layout
 
-This project previously used Beads (`br`) for issue tracking. Beads has been replaced by openspec.
+- `plugin/meta_notes.vim`: the auto-loaded entry point; defines commands and
+  `<localleader>` mappings (`.bridle/rules/key-mappings.md`).
+- `autoload/meta_notes/`: on-demand Vimscript modules (cli, file_ops, notes,
+  template, time_tracking).
+- `after/syntax/`: markdown syntax extensions.
+- `bin/meta-notes`: the CLI, which runs the `scripts/meta_notes/` package.
+  Older helpers the plugin calls are `scripts/*.py`.
+- `skills/`, `templates/`: product files installed into a notes root by
+  `meta-notes init` (`.bridle/rules/product-skills.md`).
+- `openspec/specs/<capability>/spec.md`: the behaviour specs
+  (`.bridle/rules/specs.md`). `openspec/changes/archive/` is history.
+- `doc/meta-notes.txt`: the Vim help file.
+
+## Work Tracking
+
+Work is tracked as bridle tasks (`bridle task`), run by bridle's agents on
+the `bridle-adopt` trial branch. Project settings and agent rules are in
+`.bridle/`: `config.toml`, and `rules/` for the conventions agents follow.
+Beads, and later OpenSpec's change workflow, were used before.
 
 ## Testing
 
@@ -79,106 +95,15 @@ Execute (Test case):
   AssertEqual expected, actual
 ```
 
-See existing tests in `test/` for more examples.
-
-When writing vader tests that operate on the file system, always follow this
-pattern. First create a temporary directory and cd to it. At the end of the
-test, remove the temporary directory and cd back to the project root.
-
-At the beginning of the .vader script:
-
-```vim
-Execute (Setup - Create temporary test directory):
-  let g:test_dir = tempname()
-  call mkdir(g:test_dir, 'p')
-  " Store original directory and change to test root
-  let g:original_dir = getcwd()
-  execute 'cd' g:test_dir
-```
-
-In a test use `g:test_root` and be sure to create all necessary folders before
-writing files.
-
-```vim
-Execute (Test that writes a file):
-  " Create a sample note file
-  call mkdir('note/path', 'p')
-  call writefile(['# Sample Note', '', 'This is a test note.'],
-        \ g:test_root . '/note/path/Filename.md')
-```
-
-Cleanup at the end of the vader script:
-
-```vim
-Execute (Cleanup):
-  " Restore original directory
-  execute 'cd' g:original_dir
-
-  " Clean up test files
-  call delete(g:test_root, 'rf')
-
-  " Clean up variables
-  unlet g:test_root
-  unlet g:original_dir
-```
+See existing tests in `test/` for more examples. Tests that touch the file
+system work in a temporary directory (`g:test_dir`); the setup and cleanup
+pattern is in `.bridle/rules/vader-tests.md`.
 
 ## Python Unit Testing
 
-Python scripts in the `scripts/` directory use pytest for unit testing.
-
-### Test Organization
-
-Tests are organized in `test/unit/` with one test file per module:
-- `test/unit/test_tasks.py` - Tests for `scripts/tasks.py`
-- `test/unit/test_notes.py` - Tests for `scripts/notes.py`
-- `test/unit/test_find_tasks.py` - Tests for `scripts/find_tasks.py`
-
-### Test Style
-
-**Use bare functions instead of test classes:**
-
-```python
-# Good - bare functions with descriptive names
-def test_find_tasks_in_file_simple_uncompleted_task(tmp_path):
-    """Test finding a simple uncompleted task."""
-    test_file = tmp_path / "test.md"
-    test_file.write_text("- [ ] Simple task\n")
-
-    tasks = tasks_module.find_tasks_in_file(str(test_file))
-
-    assert len(tasks) == 1
-    assert tasks[0].status == TaskStatus.PENDING
-
-# Bad - don't use test classes
-class TestFindTasksInFile:  # Avoid this
-    def test_simple_uncompleted_task(self, tmp_path):
-        ...
-```
-
-### Naming Conventions
-
-Test functions should follow this pattern:
-- `test_<module>_<function>_<scenario>`
-- Example: `test_find_tasks_in_file_with_start_date`
-
-Use comments to group related tests:
-```python
-# Tests for find_tasks_in_file function
-
-def test_find_tasks_in_file_simple_task(tmp_path):
-    ...
-
-def test_find_tasks_in_file_with_dates(tmp_path):
-    ...
-
-
-# Tests for _extract_date function
-
-def test_extract_date_valid(tmp_path):
-    ...
-```
-
-### Running Python Tests
+Python code in `scripts/` is tested with pytest in `test/unit/`, one test file
+per module, as bare functions named `test_<module>_<function>_<scenario>`
+(`.bridle/rules/python-tests.md`).
 
 ```bash
 # Run all Python unit tests
@@ -187,33 +112,13 @@ pipenv run pytest test/unit/
 # Run specific test file
 pipenv run pytest test/unit/test_tasks.py
 
-# Run with verbose output
-pipenv run pytest test/unit/ -v
-
 # Run specific test function
 pipenv run pytest test/unit/test_tasks.py::test_find_tasks_in_file_simple_uncompleted_task
 ```
 
-### Benefits of Bare Functions
-
-- **Simplicity** - No unnecessary class structure
-- **Clarity** - Function names are fully descriptive
-- **Discovery** - pytest finds all `test_*` functions automatically
-- **Flexibility** - No `self` parameter needed, cleaner fixtures
-- **Focus** - Tests are organized by file, not by class hierarchy
-
-
 ## Versioning
 
 The version lives in `scripts/meta_notes/__init__.py` (`__version__`) and is
-reported by `meta-notes --version` and `:MetaNotesVersion`. When archiving
-an openspec change that alters CLI or plugin behavior, bump it in the same
-commit:
-
-- PATCH for fixes
-- MINOR for new commands, options, or behavior
-- MAJOR for incompatible CLI changes (once past 1.0)
-
-Then tag that commit `v<version>` and push the tag (`git push origin
-v<version>`). Changes that touch only docs, tests, or openspec artifacts
-don't bump the version.
+reported by `meta-notes --version` and `:MetaNotesVersion`. Each
+behaviour change bumps it (PATCH, MINOR or MAJOR) and is tagged `v<version>`;
+who does which is in `.bridle/rules/versioning.md`.
