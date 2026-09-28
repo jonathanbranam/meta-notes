@@ -661,11 +661,11 @@ def test_calendar_attendance_personal_event(root):
     assert line == '09:00-10:00  Meeting'
 
 
-def test_calendar_attendance_other_calendar_event(root):
-    """No organizer or attendees in another calendar: not mine, no marker."""
-    line, event = only_event(root, [], name='Team')
+def test_calendar_attendance_personal_event_calendar_label(root):
+    """The calendar's name needn't be the email: WORK still counts as theirs."""
+    line, event = only_event(root, [], name='WORK')
 
-    assert event['mine'] is False
+    assert event['mine'] is True
     assert line == '09:00-10:00  Meeting'
 
 

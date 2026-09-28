@@ -509,12 +509,12 @@ def _people(event) -> list[dict]:
             if _param(a, "CUTYPE").upper() not in NOT_PEOPLE]
 
 
-def attendance(event, email: str | None, calendar_name: str,
-               everyone: list[dict]) -> dict:
+def attendance(event, email: str | None, everyone: list[dict]) -> dict:
     """
     The organizer, whether the event is the user's own, the user's
     response, and the attendees who are people (everyone, from _people(),
-    capped at the first MAX_ATTENDEES).
+    capped at the first MAX_ATTENDEES). An event with no organizer and no
+    attendees is the user's own; every loaded calendar counts as theirs.
     """
     organizer = event.get("ORGANIZER")
     attendees = _as_list(event.get("ATTENDEE"))
@@ -531,7 +531,7 @@ def attendance(event, email: str | None, calendar_name: str,
         organizer = {"name": _param(organizer, "CN") or None,
                      "email": _address(organizer)}
     else:
-        mine = bool(me) and not attendees and calendar_name.lower() == me
+        mine = bool(me) and not attendees
 
     return {"mine": mine, "organizer": organizer, "response": response,
             "attendee_count": len(everyone),
@@ -635,7 +635,7 @@ def agenda(rie, calendars: list[tuple], start: date, end: date, tz: tzinfo,
             title = str(event.get("SUMMARY") or "").strip() or "(no title)"
             location = str(event.get("LOCATION") or "").strip() or None
             everyone = _people(event)
-            people = attendance(event, email, name, everyone)
+            people = attendance(event, email, everyone)
             if filtered:
                 found = match(event, people["organizer"], everyone,
                               names, searches)

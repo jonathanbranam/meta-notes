@@ -941,8 +941,8 @@ Commands ~
         title, location the summary and location (location may be null)
         calendar        the calendar it came from
         mine            whether you organized it, or it's a personal
-                        event (no organizer or attendees) in the
-                        calendar named by your `email`
+                        event (no organizer or attendees) in any
+                        loaded calendar
         organizer       `name` and `email`, or null
         response        your response: `yes`, `maybe`, `no-reply`, or
                         null
