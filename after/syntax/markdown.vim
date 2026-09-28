@@ -30,8 +30,11 @@ syntax match metaNotesBreak /\[break\]/
 syntax match metaNotesBreak /\[lunch\]/
 syntax match metaNotesBreak /\[[^\]]*break[^\]]*\]/
 
-" Off-plan entries with strikethrough: ~text~
-syntax region metaNotesOffPlan start=/\~/ end=/\~/
+" Off-plan entries with strikethrough: ~text~, both tildes on one line, in
+" daily notes only
+if meta_notes#time_tracking#IsInDailyNote()
+  syntax match metaNotesOffPlan /\~[^~]\+\~/
+endif
 
 " Time entries in time log: HH:MM am/pm
 syntax match metaNotesTime /\d\{1,2}:\d\{2}\s*\(am\|pm\)/
