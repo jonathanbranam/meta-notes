@@ -10,3 +10,9 @@ doc/tags
 # Personal Claude Code settings. Bridle sets worker permissions per role in
 # .bridle/config.toml, so a local allow list doesn't belong in git.
 .claude/settings.local.json
+
+# bridle sync output, regenerated from the workflow layers; never committed.
+# .claude/settings.json itself is committed.
+.claude/skills/bridle-*/
+.claude/agents/
+.claude/.bridle-sync-hooks.json
