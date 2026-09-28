@@ -52,6 +52,8 @@ permission_mode   = "dontAsk"
 # Merges into bridle-adopt, pushes it, and tags releases (.bridle/rules/versioning.md).
 allowed_tools     = ["Bash(bridle *)", "Bash(git log*)", "Bash(git diff*)", "Bash(git show*)", "Bash(git status*)", "Bash(git branch*)", "Bash(git merge-base *)", "Bash(git merge --no-ff *)", "Bash(git push origin bridle-adopt)", "Bash(git tag v*)", "Bash(git push origin v*)", "Bash(git -C * status*)", "Read", "Glob", "Grep"]
 system_prompt     = ".bridle/roles/manager.md"
+# Started by the daemon itself (as agent "manager") the first time it runs.
+autostart         = true
 resume_on_restart = true
 max_budget_usd    = 50.0
 start_prompt      = """
