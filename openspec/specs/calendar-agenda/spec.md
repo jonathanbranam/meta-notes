@@ -116,7 +116,7 @@ With `--json`, the object SHALL have `ok`, `days` (each with `date` and `events`
 ### Requirement: Attendance
 Each event SHALL report, in the JSON output:
 - `organizer`: the organizer's `name` (its `CN`, or null) and `email`, or null when the event has no organizer
-- `mine`: true when the organizer's address matches `email`, ignoring case, or when the event has no organizer and no attendees and its calendar's name matches `email`; false otherwise
+- `mine`: true when the organizer's address matches `email`, ignoring case, or when the event has no organizer and no attendees (whatever its calendar is named); false otherwise. Every loaded calendar, that is every one in `calendars` (or all, when unset), is treated as the user's own; there is no owned/viewed distinction
 - `response`: the user's own response, from the attendee whose address matches `email`: `yes` (`ACCEPTED`), `maybe` (`TENTATIVE`), or `no-reply` (`NEEDS-ACTION`); null when the user isn't an attendee, the response is missing or another value, or `email` is unset
 - `attendee_count`: the number of attendees who are people, leaving out rooms and resources (`CUTYPE` `ROOM` or `RESOURCE`)
 - `attendees`: the first 20 of those attendees in export order, each with `name`, `email`, and `response` (`yes`, `maybe`, `no-reply`, `no` for `DECLINED`, or null when missing or another value)
@@ -136,7 +136,7 @@ The text output SHALL show ` [maybe]` or ` [no-reply]` when `response` is `maybe
 - **THEN** `mine` SHALL be true and the text line SHALL have no bracket
 
 #### Scenario: Personal event without attendees
-- **WHEN** an event in the calendar named `me@example.com` has no organizer and no attendees, and `email = "me@example.com"`
+- **WHEN** an event in the calendar named `WORK` has no organizer and no attendees, and `email = "me@example.com"`
 - **THEN** `mine` SHALL be true, `response` null, and `attendee_count` 0
 
 #### Scenario: Large meeting
