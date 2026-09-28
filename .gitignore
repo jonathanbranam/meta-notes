@@ -6,3 +6,7 @@
 __pycache__/
 *.pyc
 doc/tags
+
+# Personal Claude Code settings. Bridle sets worker permissions per role in
+# .bridle/config.toml, so a local allow list doesn't belong in git.
+.claude/settings.local.json
