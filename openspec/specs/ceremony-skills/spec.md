@@ -71,7 +71,7 @@ A skill that completes its ceremony SHALL check its marker with `meta-notes task
 - **THEN** the skill SHALL ask which project or work item it belongs to and update the entry
 
 ### Requirement: Daily planning
-`daily-plan` SHALL plan one day in about 10–15 minutes. It SHALL plan today when today's daily note has no completed `plan complete` marker, and the next workday (Monday to Friday) otherwise, and SHALL state the choice. It SHALL always read the previous workday's note (its Follow up list, unfinished time blocks, and shutdown status), and for a Monday also the weekly plan. It SHALL gather meetings for the target day as "Calendar from the export" requires, and due and overdue tasks and open `#wait` tasks from the CLI. It SHALL create the target day's note with `meta-notes note daily` if needed, fill the Plan column of the Time Block table, name a concrete first block, and mark `plan complete`. A Follow up item the user wants tracked SHALL become a task in place with `task update --due`. It SHALL NOT work through old tasks.
+`daily-plan` SHALL plan one day in about 10–15 minutes. It SHALL plan today when today's daily note has no completed `plan complete` marker, and the next workday (Monday to Friday) otherwise, and SHALL state the choice. It SHALL always read the previous workday's note (its Follow up list, unfinished time blocks, and shutdown status), and for a Monday also the weekly plan. It SHALL gather meetings for the target day as "Calendar from the export" requires, and due and overdue tasks and open `#wait` tasks from the CLI. It SHALL create the target day's note with `meta-notes note daily` if needed, fill the Plan column of the Time Block table (placing every meeting first, before other work), name a concrete first block, and mark `plan complete`. A Follow up item the user wants tracked SHALL become a task in place with `task update --due`. It SHALL NOT work through old tasks.
 
 #### Scenario: Evening run after shutdown
 - **WHEN** it is Thursday evening and Thursday's note has `- [x] plan complete`
@@ -84,6 +84,16 @@ A skill that completes its ceremony SHALL check its marker with `meta-notes task
 #### Scenario: Follow up item tracked
 - **WHEN** the user wants the Follow up item `- [ ] reply to Sam` tracked for Monday 2026-09-28
 - **THEN** the skill SHALL run `task update` on that line with `--due 2026-09-28`
+
+The skill SHALL write a meeting whose `response` is `yes` plainly and prefix one whose `response` is `maybe`, `no-reply`, or null with `(opt) `. When events' `start`–`end` ranges intersect, it SHALL tell the user and ask which to keep, or whether to note both, and SHALL NOT drop one silently.
+
+#### Scenario: Tentative meeting
+- **WHEN** an event for the target day has `response` `maybe`
+- **THEN** its Plan cell SHALL read `(opt) mtg: <title>`
+
+#### Scenario: Overlapping meetings
+- **WHEN** two events' time ranges intersect
+- **THEN** the skill SHALL ask the user which to keep or whether to note both before writing that range
 
 #### Scenario: Meetings from the export
 - **WHEN** the skill plans Monday 2026-09-28 and a current export exists

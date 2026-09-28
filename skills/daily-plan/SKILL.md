@@ -101,9 +101,17 @@ mark the old line `>` with `task update ... --status '>'`.
 ### 5. Write the plan
 
 1. Run `meta-notes note daily <TARGET>` to get (or create) TARGET's note.
-2. Fill the Plan column of the `### Time Block` table: meetings at their
-   times, then the most important work in the largest free blocks. Edit
-   only the Plan cells, keeping the table's column widths.
+2. Fill the Plan column of the `### Time Block` table. First place every
+   meeting from step 3's agenda at its times, before planning any other
+   work, even if the rest of the plan isn't decided. Then put the most
+   important work in the largest free blocks. Edit only the Plan cells,
+   keeping the table's column widths.
+   - An event's `response` is `yes`, `maybe`, `no-reply`, or null (see the
+     `calendar` skill, which also documents `mine`). Write `yes` meetings
+     plainly; prefix the others with `(opt) `, e.g. `(opt) mtg: X`.
+   - When events' `start`–`end` ranges intersect, tell the user and ask
+     which to keep, or whether to note both (`mtg: X / (opt) mtg: Y`).
+     Never drop one silently.
 3. Name a concrete first block (what, and the first action), and tell
    the user.
 
