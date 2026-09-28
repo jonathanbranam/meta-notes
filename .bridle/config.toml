@@ -1,0 +1,60 @@
+# meta-notes on bridle: onboarding trial (2026-09-28).
+# Reference: docs/design/agent-host/roles-and-config.md and
+# docs/design/workflow-layers.md in the bridle repo.
+#
+# There's no `project` key: bridle names the project after the repo
+# directory ("meta-notes"), and an unknown key stops the daemon from starting.
+
+# L1 base layer, from the human's bridle checkout (the interim form until
+# workflow can be a git url).
+workflow = "/Volumes/Data/work/bridle/bridle/workflow"
+
+# No packs yet. The Python (pipenv, stdlib-only) and Vim (vader) rules live
+# in this project's .bridle/rules/ for now and move into python/vim packs
+# once bridle has them.
+packs = []
+
+[tasks]
+prefix = "mn"
+
+# Trial: all work merges into bridle-adopt, never main, until the human
+# approves adopting it (workflow/base/rules/existing-projects.md).
+[branches]
+integration = "bridle-adopt"
+
+# Definition of done for a worker; substituted into the bridle-worker skill.
+[commands]
+check = "./run_tests.sh && pipenv run pytest test/unit/"
+
+# One worker at a time. (As of bridle 6t29 this caps resumes after a budget
+# pause, not spawns; the manager's prompt also says one worker.)
+[budget]
+max_workers = 1
+
+[roles.worker]
+model            = "sonnet"
+effort           = "medium"
+workdir          = "worktree"
+permission_mode  = "acceptEdits"
+allowed_tools    = ["Bash", "Read", "Edit", "Write", "Glob", "Grep"]
+# A worker merges the local bridle-adopt into its own branch; its worktree
+# can't check out bridle-adopt, and remote refs are stale (only the manager
+# pushes), so no fetching, pulling or merging from origin.
+disallowed_tools = ["Bash(git push *)", "Bash(git checkout bridle-adopt*)", "Bash(git checkout main*)", "Bash(git fetch *)", "Bash(git pull *)", "Bash(git merge origin*)"]
+system_prompt    = ".bridle/roles/worker.md"
+# A runaway guard per process, not pacing (that's the budget governor).
+max_budget_usd   = 50.0
+
+[roles.manager]
+model             = "sonnet"
+workdir           = "repo"
+permission_mode   = "dontAsk"
+# Merges into bridle-adopt, pushes it, and tags releases (.bridle/rules/versioning.md).
+allowed_tools     = ["Bash(bridle *)", "Bash(git log*)", "Bash(git diff*)", "Bash(git show*)", "Bash(git status*)", "Bash(git branch*)", "Bash(git merge-base *)", "Bash(git merge --no-ff *)", "Bash(git push origin bridle-adopt)", "Bash(git tag v*)", "Bash(git push origin v*)", "Bash(git -C * status*)", "Read", "Glob", "Grep"]
+system_prompt     = ".bridle/roles/manager.md"
+resume_on_restart = true
+max_budget_usd    = 50.0
+start_prompt      = """
+You're starting up. Run `bridle status --json`, `bridle agents --json` and \
+`bridle inbox --json`, then send the human one short line saying you're ready \
+and what, if anything, is already in flight. Then wait for work."""
