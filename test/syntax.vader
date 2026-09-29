@@ -7,8 +7,6 @@ Execute (Setup - Create temporary test directory):
   execute 'cd' g:test_dir
   let g:original_rtp = &runtimepath
   execute 'set runtimepath+=' . fnameescape(g:original_dir . '/after')
-  call writefile(['- start work:', '  * start: 08:00', '  * end:   9:30 am'],
-        \ g:test_dir . '/daily.md')
   call mkdir(g:test_dir . '/plan/daily', 'p')
   call mkdir(g:test_dir . '/project', 'p')
   let g:offplan_lines = ['~30%', 'plain', '~a~ x', 'one ~ tilde', 'next ~ line']
@@ -27,6 +25,14 @@ Execute (Setup - Create temporary test directory):
         \ '| 12:00 | ~x |', '| 12:30 | y~ |',
         \ '## Other', '| mtg: a | [b] |']
   call writefile(g:tb_lines, g:test_dir . '/plan/daily/2026-09-28.md')
+  let g:ampm_lines = ['### Time Block', '',
+        \ '| 8:00am | mtg: x | y |',
+        \ '| 9:00am | [brk] | y |',
+        \ '| 10:00am | (maybe) | y |',
+        \ '| 12:30pm | pers: y |',
+        \ '| 1:00pm | ~walk~ | y |',
+        \ '| 2:00pm | train: t | work: w |']
+  call writefile(g:ampm_lines, g:test_dir . '/plan/daily/2026-09-29.md')
   call writefile(g:tb_lines, g:test_dir . '/project/note.md')
 
   function! TB(lnum, text) abort
@@ -38,23 +44,6 @@ Execute (Setup - Create temporary test directory):
     return index(map(synstack(a:lnum, a:col), 'synIDattr(v:val, "name")'),
           \ 'metaNotesOffPlan') >= 0
   endfunction
-
-  function! TimeGroup(lnum) abort
-    let l:col = match(getline(a:lnum), '\d\{1,2}:\d\d') + 1
-    return join(map(synstack(a:lnum, l:col), 'synIDattr(v:val, "name")'), ',')
-  endfunction
-
-Execute (Time log times are highlighted):
-  edit daily.md
-  AssertEqual 'markdown', &filetype
-  AssertEqual 'metaNotesTime', TimeGroup(2)
-  AssertEqual 'metaNotesTime', TimeGroup(3)
-
-Execute (Time log times stay highlighted after the buffer is reloaded):
-  edit daily.md
-  edit!
-  AssertEqual 'metaNotesTime', TimeGroup(2)
-  AssertEqual 'metaNotesTime', TimeGroup(3)
 
 Execute (A lone tilde does not highlight the rest of a daily note):
   edit plan/daily/26-Q3/2026-09-28\ Mon.md
@@ -88,6 +77,17 @@ Execute (Each Time Block cell kind gets its group):
   Assert TB(10, 'pers:') =~# 'metaNotesTimeBlockPers'
   Assert TB(11, 'work:') =~# 'metaNotesTimeBlockWork'
 
+Execute (Cells after an am/pm time cell get their group):
+  edit plan/daily/2026-09-29.md
+  Assert TB(3, 'mtg:') =~# 'metaNotesTimeBlockMtg'
+  Assert TB(4, '[brk]') =~# 'metaNotesTimeBlockBracket'
+  Assert TB(5, '(maybe)') =~# 'metaNotesTimeBlockParen'
+  Assert TB(6, 'pers:') =~# 'metaNotesTimeBlockPers'
+  Assert TB(7, '~walk~') =~# 'metaNotesTimeBlockTilde'
+  Assert TB(8, 'train:') =~# 'metaNotesTimeBlockTrain'
+  Assert TB(8, 'work:') =~# 'metaNotesTimeBlockWork'
+  Assert TB(3, '8:00am') !~# 'TimeBlock\a'
+
 Execute (Only the cell is highlighted, not its neighbours or pipes):
   edit plan/daily/2026-09-28.md
   Assert TB(5, 'plain') !~# 'TimeBlock\a'
@@ -120,10 +120,10 @@ Execute (Cells in a non-daily note are not highlighted):
 Execute (Cleanup):
   " Wipe the test note by name: a bare bwipeout! here would wipe Vader's
   " workbench, the current buffer at the start of each block.
-  execute 'bwipeout!' bufnr(g:test_dir . '/daily.md')
   execute 'bwipeout!' bufnr(g:test_dir . '/plan/daily/2026-09-28.md')
+  execute 'bwipeout!' bufnr(g:test_dir . '/plan/daily/2026-09-29.md')
   execute 'bwipeout!' bufnr(g:test_dir . '/project/note.md')
-  delfunction TimeGroup
+  unlet g:ampm_lines
   delfunction OffPlan
   delfunction TB
   unlet g:tb_lines

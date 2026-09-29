@@ -41,7 +41,7 @@ if meta_notes#time_tracking#IsInDailyNote()
   " to the markdown heading group.
   syntax region metaNotesTimeBlock transparent keepend
         \ start=/^###\s\+Time Block\s*$/hs=e+1 end=/^#\{1,3}\s/me=s-1
-        \ contains=@metaNotesTimeBlockCells,metaNotesTagMeeting,metaNotesTagDev,metaNotesTagPersonal,metaNotesTagAdmin,metaNotesTagBreak,metaNotesTagActivity,metaNotesBreak,metaNotesOffPlan,metaNotesTime,metaNotesTableTime
+        \ contains=@metaNotesTimeBlockCells,metaNotesTagMeeting,metaNotesTagDev,metaNotesTagPersonal,metaNotesTagAdmin,metaNotesTagBreak,metaNotesTagActivity,metaNotesBreak,metaNotesOffPlan
   syntax cluster metaNotesTimeBlockCells contains=metaNotesTimeBlockMtg,metaNotesTimeBlockBracket,metaNotesTimeBlockTilde,metaNotesTimeBlockParen,metaNotesTimeBlockTrain,metaNotesTimeBlockPers,metaNotesTimeBlockWork
   syntax match metaNotesTimeBlockMtg /|\zs[^|]*mtg:[^|]*\ze|/ contained contains=TOP
   syntax match metaNotesTimeBlockBracket /|\zs[^|]*\[[^|]*\][^|]*\ze|/ contained contains=TOP
@@ -52,17 +52,8 @@ if meta_notes#time_tracking#IsInDailyNote()
   syntax match metaNotesTimeBlockWork /|\zs[^|]*work:[^|]*\ze|/ contained contains=TOP
 endif
 
-" Time entries in time log: HH:MM am/pm
-syntax match metaNotesTime /\d\{1,2}:\d\{2}\s*\(am\|pm\)/
-
-" Time on a time log start:/end: line: HH:MM, H:MM am/pm, or after a full date
-syntax match metaNotesTime /\(^\s*\*\s*\(start\|end\):.*\)\@<=\<\d\{1,2}:\d\{2}\(\s*\(am\|pm\)\)\?/
-
 " Arrived entry
 syntax match metaNotesArrived /^-\s*arrived:/
-
-" Time block table time column (e.g., "| 8:00am |")
-syntax match metaNotesTableTime /|\s*\d\{1,2}:\d\{2}\(am\|pm\)\s*|/
 
 " Color scheme definitions
 " Link to existing Vim highlight groups for consistency
@@ -80,8 +71,6 @@ highlight default link metaNotesTagActivity Tag
 " Special entries
 highlight default link metaNotesBreak Comment
 highlight default link metaNotesOffPlan Comment
-highlight default link metaNotesTime Number
-highlight default link metaNotesTableTime Number
 highlight default link metaNotesArrived Special
 
 " Make strikethrough text appear dimmed/grayed out

@@ -78,21 +78,6 @@ The shipped daily template SHALL pre-fill the time log's starter entry with bare
 - **THEN** its time log starter entry SHALL contain `* start: HH:MM` and `* end:   HH:MM`
 - **AND** SHALL NOT contain `2026-09-25` on those lines
 
-### Requirement: Time log timestamps are highlighted
-In markdown buffers, the time part of a `start:` or `end:` timestamp SHALL be highlighted as a time in every accepted format, both 24-hour and 12-hour.
-
-#### Scenario: 24-hour time highlighted
-- **WHEN** a markdown buffer contains `  * start: 09:10`
-- **THEN** `09:10` SHALL be highlighted as a time
-
-#### Scenario: 12-hour time highlighted
-- **WHEN** a markdown buffer contains `  * start: 3:20pm`
-- **THEN** `3:20pm` SHALL be highlighted as a time
-
-#### Scenario: Time in a full-date timestamp highlighted
-- **WHEN** a markdown buffer contains `  * end:   2026-02-14 Sat 09:00`
-- **THEN** `09:00` SHALL be highlighted as a time
-
 ### Requirement: Entries without activity text are recorded
 A time log entry SHALL be recorded when its activity line has activity text or at least one tag, or when the entry has a `start:` or `end:` line. An entry whose activity line has only tags, or is empty, SHALL count toward the day's totals and its tags toward time by tag, the same as any other entry. A bare `-` line with no tags and no `start:` or `end:` line SHALL be ignored.
 
