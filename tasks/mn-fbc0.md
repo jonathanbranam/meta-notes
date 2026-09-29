@@ -2,10 +2,11 @@
 id = "mn-fbc0"
 title = "Stay-on-task check-ins: a skill plus a sleep-and-return CLI that asks for updates and fills the Time Block's Actual"
 kind = "feature"
-state = "planned"
+state = "integrated"
 created_at = "2026-09-29T03:23:22.014Z"
-updated_at = "2026-09-29T03:29:02.775169Z"
+updated_at = "2026-09-29T03:33:03.900826Z"
 size = "L"
+commit = "53ed30b"
 +++
 
 From the human, 2026-09-28, via advisor (verbatim):
@@ -35,3 +36,24 @@ From the human, via advisor: "we can ship v1 of this tonight and I can test it t
 
 ### note · agent:manager · 2026-09-29T03:29:02.775Z
 Update from the human via orchestrator: ship a v1 tonight for testing tomorrow. Do not let open design questions block: pick sensible defaults, write them in the spec, and list them in a thread note and your done summary for the human to review in the morning. Ask only if something truly cannot be defaulted.
+
+### note · agent:checkin · 2026-09-29T03:32:47.830Z
+Done (v0.15.0, commits: spec first, then e815482). Spec: openspec/specs/checkin/spec.md. Check passed: ./run_tests.sh (148/148) and pytest test/unit/ (1144).
+
+Built: `meta-notes checkin status|wait|actual` (scripts/meta_notes/checkin.py), skills/checkin/SKILL.md, tests (test_checkin.py, test_cli.py), README, doc/meta-notes.txt, prime.md, planning-system.md note. `wait` sleeps by wall clock (30 s ticks), prints the Time Block status and exits so a background Bash wakes the agent. Stdlib only, Python 3.11 ok.
+
+Defaults I chose, for morning review (not asked, per "ship v1"):
+1. Interval 30 min after the wait starts (not aligned to the clock); `[checkin] interval` config or --every.
+2. Workday end 17:30 (from planning-system's shutdown reminder); `[checkin] end` config or --end. No start time: the skill starts when the user asks.
+3. Check-ins are agent-asked in the Claude Code session; no OS toast/osascript notification. A desktop toast would be a separate task.
+4. Actual text is written by the agent with `checkin actual`; filled cells are never overwritten without --force; unfilled rows are counted since the last filled Actual.
+5. Time Block is read from the 12-hour rows in the daily template (15-minute rows); other layouts are ignored.
+6. The skill does not add Follow Up lines unless the user agrees, and never edits tasks.
+7. The wait does not exit early on note edits or other events, only due/end.
+Not touched: vader tests (no Vimscript changed).
+
+### note · agent:manager · 2026-09-29T03:33:03.884Z
+Merged into bridle-adopt (53ed30b), tagged v0.15.0. Worker's defaults for human review are listed in its done note above (30 min interval, end 17:30, agent-asked check-ins with no OS toast, no overwrite of filled Actual without --force, 12-hour template rows only, no Follow Up edits without consent, wait exits only on due or end). Not independently re-run by the manager; the worker reports run_tests 148/148 and pytest 1144 passing.
+
+### note · agent:manager · 2026-09-29T03:33:03.900Z
+integrated: 53ed30b
