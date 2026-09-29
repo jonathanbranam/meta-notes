@@ -9,6 +9,16 @@ Execute (Setup - Create temporary test directory):
   execute 'set runtimepath+=' . fnameescape(g:original_dir . '/after')
   call writefile(['- start work:', '  * start: 08:00', '  * end:   9:30 am'],
         \ g:test_dir . '/daily.md')
+  call mkdir(g:test_dir . '/plan/daily', 'p')
+  call mkdir(g:test_dir . '/project', 'p')
+  let g:offplan_lines = ['~30%', 'plain', '~a~ x', 'one ~ tilde', 'next ~ line']
+  call writefile(g:offplan_lines, g:test_dir . '/plan/daily/2026-09-28.md')
+  call writefile(g:offplan_lines, g:test_dir . '/project/note.md')
+
+  function! OffPlan(lnum, col) abort
+    return index(map(synstack(a:lnum, a:col), 'synIDattr(v:val, "name")'),
+          \ 'metaNotesOffPlan') >= 0
+  endfunction
 
   function! TimeGroup(lnum) abort
     let l:col = match(getline(a:lnum), '\d\{1,2}:\d\d') + 1
@@ -27,11 +37,37 @@ Execute (Time log times stay highlighted after the buffer is reloaded):
   AssertEqual 'metaNotesTime', TimeGroup(2)
   AssertEqual 'metaNotesTime', TimeGroup(3)
 
+Execute (A lone tilde does not highlight the rest of a daily note):
+  edit plan/daily/2026-09-28.md
+  Assert !OffPlan(1, 1)
+  Assert !OffPlan(2, 1)
+
+Execute (Two tildes on one line highlight the text between them):
+  edit plan/daily/2026-09-28.md
+  Assert OffPlan(3, 1)
+  Assert OffPlan(3, 2)
+  Assert OffPlan(3, 3)
+  Assert !OffPlan(3, 5)
+
+Execute (Tildes on different lines do not match):
+  edit plan/daily/2026-09-28.md
+  Assert !OffPlan(4, 5)
+  Assert !OffPlan(5, 1)
+
+Execute (Off-plan text in a non-daily note is not highlighted):
+  edit project/note.md
+  Assert !OffPlan(3, 1)
+  Assert !OffPlan(3, 2)
+
 Execute (Cleanup):
   " Wipe the test note by name: a bare bwipeout! here would wipe Vader's
   " workbench, the current buffer at the start of each block.
   execute 'bwipeout!' bufnr(g:test_dir . '/daily.md')
+  execute 'bwipeout!' bufnr(g:test_dir . '/plan/daily/2026-09-28.md')
+  execute 'bwipeout!' bufnr(g:test_dir . '/project/note.md')
   delfunction TimeGroup
+  delfunction OffPlan
+  unlet g:offplan_lines
   let &runtimepath = g:original_rtp
   execute 'cd' g:original_dir
   call delete(g:test_dir, 'rf')
