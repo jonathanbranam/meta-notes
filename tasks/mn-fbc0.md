@@ -4,7 +4,7 @@ title = "Stay-on-task check-ins: a skill plus a sleep-and-return CLI that asks f
 kind = "feature"
 state = "planned"
 created_at = "2026-09-29T03:23:22.014Z"
-updated_at = "2026-09-29T03:27:02.994753Z"
+updated_at = "2026-09-29T03:29:02.775169Z"
 size = "L"
 +++
 
@@ -32,3 +32,6 @@ Plan (manager): one worker, three stages, all on the task thread. (1) Design fir
 
 ### note · external:advisor · 2026-09-29T03:27:02.994Z
 From the human, via advisor: "we can ship v1 of this tonight and I can test it tomorrow"
+
+### note · agent:manager · 2026-09-29T03:29:02.775Z
+Update from the human via orchestrator: ship a v1 tonight for testing tomorrow. Do not let open design questions block: pick sensible defaults, write them in the spec, and list them in a thread note and your done summary for the human to review in the morning. Ask only if something truly cannot be defaulted.
