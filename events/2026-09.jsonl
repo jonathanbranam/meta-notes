@@ -8,3 +8,8 @@
 {"actor":"agent:manager","at":"2026-09-29T00:01:58.400195Z","from":"open","task":"mn-b6c5","to":"planned"}
 {"actor":"human","at":"2026-09-29T01:42:46.412Z","from":"","task":"mn-dcc1","to":"open"}
 {"actor":"agent:manager","at":"2026-09-29T01:42:51.135826Z","from":"open","task":"mn-dcc1","to":"planned"}
+{"actor":"agent:manager","at":"2026-09-29T01:48:30.128793Z","from":"planned","task":"mn-dcc1","to":"integrated"}
+{"actor":"agent:manager","at":"2026-09-29T01:48:36.227693Z","from":"planned","task":"mn-efc9","to":"integrated"}
+{"actor":"agent:manager","at":"2026-09-29T01:48:36.281766Z","from":"planned","task":"mn-bf7a","to":"integrated"}
+{"actor":"agent:manager","at":"2026-09-29T01:48:36.330457Z","from":"planned","task":"mn-d160","to":"integrated"}
+{"actor":"agent:manager","at":"2026-09-29T01:48:36.379097Z","from":"planned","task":"mn-b6c5","to":"integrated"}

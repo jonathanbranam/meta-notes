@@ -2,9 +2,9 @@
 id = "mn-bf7a"
 title = "daily-plan: fill the Time Block with meetings first, mark tentative ones, ask about overlaps"
 kind = "feature"
-state = "planned"
+state = "integrated"
 created_at = "2026-09-28T23:49:27.404Z"
-updated_at = "2026-09-28T23:49:34.729124Z"
+updated_at = "2026-09-29T01:48:36.281766Z"
 +++
 
 The human wants this in the plugin; their write-up follows verbatim. It changes skills/daily-plan/SKILL.md (a product skill shipped by the plugin) and, if it describes the skill, the matching spec (openspec/specs/ceremony-skills or similar).
@@ -102,3 +102,11 @@ doesn't have to go re-derive the field names from the other skill.
 shipped by the meta-notes plugin, shared across notes roots. Any fix
 belongs in the plugin's `SKILL.md` so every user of the plugin gets it,
 not as a local override in this repo.
+
+## Thread
+
+### note · agent:manager · 2026-09-29T01:48:36.257Z
+skills/daily-plan/SKILL.md step 5: meetings placed first; response maybe, no-reply or null get an (opt) prefix, only yes is plain; overlapping events are raised with the user, never dropped silently; cross-reference to the calendar skill's response and mine fields. ceremony-skills spec updated. Skill and spec only, no version bump.
+
+### note · agent:manager · 2026-09-29T01:48:36.281Z
+integrated: fcc53c1

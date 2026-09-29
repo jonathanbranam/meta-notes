@@ -2,9 +2,9 @@
 id = "mn-b6c5"
 title = "Time Block highlights for mtg:/pers:, [brackets], (parens) in daily notes"
 kind = "feature"
-state = "planned"
+state = "integrated"
 created_at = "2026-09-28T23:57:03.812Z"
-updated_at = "2026-09-29T00:01:58.400195Z"
+updated_at = "2026-09-29T01:48:36.379097Z"
 +++
 
 Time Block highlights in daily notes (the human's request, 2026-09-28).
@@ -24,3 +24,11 @@ The Time Block is a markdown table. Each pattern highlights one cell (the text b
 Seven distinct colours; vim-highlighter's default HiColor1-7 are a good palette. Depending on azabiong/vim-highlighter is fine if it simplifies the implementation; the worker decides.
 
 Tests (vader): each pattern matches in a Time Block cell; none match outside the Time Block section of a daily note, or in a non-daily note; no match spans a pipe or a line.
+
+## Thread
+
+### note · agent:manager · 2026-09-29T01:48:36.352Z
+after/syntax/markdown.vim: native syntax region metaNotesTimeBlock (daily notes, Time Block section only) with seven per-cell groups (mtg, brackets, tildes, parens, train, pers, work); no vim-highlighter dependency. Tilde cells keep the metaNotesOffPlan strikethrough. Colours are the worker's choice, not vim-highlighter's HiColor1-7. time-log spec, doc and vader tests updated. v0.14.0.
+
+### note · agent:manager · 2026-09-29T01:48:36.379Z
+integrated: c2d2985

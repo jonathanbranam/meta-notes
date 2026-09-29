@@ -2,9 +2,9 @@
 id = "mn-efc9"
 title = "OOO event not detected as mine: organizer-less personal events need calendar_name == email"
 kind = "bug"
-state = "planned"
+state = "integrated"
 created_at = "2026-09-28T23:49:27.385Z"
-updated_at = "2026-09-28T23:49:34.712490Z"
+updated_at = "2026-09-29T01:48:36.227693Z"
 +++
 
 The human wants this fixed in the plugin. Their write-up follows verbatim.
@@ -98,3 +98,11 @@ user ever adds more than `WORK`) could legitimately be *not* the user's
 own (e.g. a shared team calendar they view but don't own) — if so, the
 fix needs a way to distinguish "calendars I view" from "calendars I
 own," which the current single `calendars` list may not support.
+
+## Thread
+
+### note · agent:manager · 2026-09-29T01:48:36.194Z
+attendance() in scripts/meta_notes/calendar.py no longer takes calendar_name: an event with no organizer and no attendees is mine when email is set, whichever loaded calendar it is in. Every configured calendar counts as the user's own (no owned/viewed split, stated in the spec). Spec, doc and pytest updated. v0.13.1.
+
+### note · agent:manager · 2026-09-29T01:48:36.227Z
+integrated: a30f659
