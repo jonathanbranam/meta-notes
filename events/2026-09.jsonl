@@ -13,3 +13,4 @@
 {"actor":"agent:manager","at":"2026-09-29T01:48:36.281766Z","from":"planned","task":"mn-bf7a","to":"integrated"}
 {"actor":"agent:manager","at":"2026-09-29T01:48:36.330457Z","from":"planned","task":"mn-d160","to":"integrated"}
 {"actor":"agent:manager","at":"2026-09-29T01:48:36.379097Z","from":"planned","task":"mn-b6c5","to":"integrated"}
+{"actor":"human","at":"2026-09-29T03:23:22.014Z","from":"","task":"mn-fbc0","to":"open"}
