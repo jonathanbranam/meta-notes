@@ -1158,3 +1158,72 @@ def test_changes_json_not_a_git_repository(notes_root, capsys):
     assert data['ok'] is False
     assert 'not a git repository' in data['error']
     assert err == ''
+
+
+# Tests for the checkin command
+
+CHECKIN_NOTE = """### Time Block
+
+| Time    | Plan       | Actual |
+| ------- | ---------- | ------ |
+|  9:00am | write spec |        |
+|  9:15am | write spec |        |
+"""
+
+
+def test_checkin_status_json(notes_root, capsys):
+    _write_note(notes_root, 'plan/daily/26-Q3/2026-09-25 Fri.md', CHECKIN_NOTE)
+
+    code, data, _ = run_json(capsys, ['checkin', 'status', '--date',
+                                      '2026-09-25', '--at', '9:20'])
+
+    assert code == 0
+    assert data['current'] == {'time': '9:15am', 'plan': 'write spec',
+                               'actual': ''}
+    assert data['unfilled'] == [{'time': '9:00am', 'plan': 'write spec'}]
+
+
+def test_checkin_status_bad_time_is_usage_error(notes_root, capsys):
+    code, data, _ = run_json(capsys, ['checkin', 'status', '--at', 'noon'])
+
+    assert code == 1 and data['ok'] is False
+
+
+def test_checkin_actual_writes_cell(notes_root, capsys):
+    path = 'plan/daily/26-Q3/2026-09-25 Fri.md'
+    _write_note(notes_root, path, CHECKIN_NOTE)
+
+    code, data, _ = run_json(capsys, ['checkin', 'actual', '9:00', 'outline',
+                                      '--date', '2026-09-25'])
+
+    assert code == 0 and data['written'] == ['9:00am']
+    assert '| outline |' in (notes_root / path).read_text()
+
+
+def test_checkin_actual_missing_row_fails(notes_root, capsys):
+    _write_note(notes_root, 'plan/daily/26-Q3/2026-09-25 Fri.md', CHECKIN_NOTE)
+
+    code, data, _ = run_json(capsys, ['checkin', 'actual', '7:00am', 'x',
+                                      '--date', '2026-09-25'])
+
+    assert code == 1 and 'no Time Block row' in data['error']
+
+
+def test_checkin_wait_past_end_reports_end(notes_root, capsys):
+    code, data, _ = run_json(capsys, ['checkin', 'wait', '--end', '00:00'])
+
+    assert code == 0 and data['reason'] == 'end'
+
+
+def test_checkin_wait_rejects_bad_interval(notes_root, capsys):
+    code, data, _ = run_json(capsys, ['checkin', 'wait', '--every', '0'])
+
+    assert code == 1 and 'minutes' in data['error']
+
+
+def test_checkin_wait_bad_config_interval(notes_root, capsys):
+    (notes_root / '.meta-notes').write_text('[checkin]\ninterval = "soon"\n')
+
+    code, data, _ = run_json(capsys, ['checkin', 'wait'])
+
+    assert code == 1 and 'interval' in data['error']

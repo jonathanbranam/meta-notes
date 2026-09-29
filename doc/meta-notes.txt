@@ -1064,6 +1064,32 @@ Commands ~
     `note`, `note_exists`, `marker_present`, `done`, and `completed` (the
     `✅` date or null).
 
+`meta-notes checkin status|wait|actual`         *meta-notes-cli-checkin*
+    Stay-on-task check-ins against the daily note's `### Time Block` table
+    (rows such as `|  9:15am | plan | actual |`). `status [--date {day}]
+    [--at {time}]` reports the current row (the last at or before {time},
+    24-hour `HH:MM`, default now) with its Plan and Actual, and the
+    unfilled rows: rows before it with an empty Actual, since the last
+    filled one. `wait [--every {minutes}] [--end {time}]` sleeps until a
+    check-in is due, `{minutes}` after it starts or at {time}, whichever is
+    first, then prints the `status` and exits; `reason` is `due` or `end`
+    (at once when it starts at or after {time}). Run it as a background
+    command and the agent that started it wakes when it exits; no hooks are
+    needed. `actual {time} {text} [--through {time}] [--force]` writes
+    {text} into the Actual cell of the row at {time} (`HH:MM` or `9:15am`)
+    or of every row through `--through`. A filled cell is skipped unless
+    `--force`; `|` in {text} becomes `/`. An unknown row, a missing note,
+    or empty text is an error and nothing is written. `status` and `wait`
+    write nothing. With `--json`: `status` and `wait` return `date`, `time`,
+    `note`, `note_exists`, `current` (`time`, `plan`, `actual`, or null) and
+    `unfilled` (`time`, `plan`), and `wait` adds `reason`; `actual` returns
+    `note`, `written` and `skipped`.
+
+    Settings, in the `[checkin]` table of `.meta-notes`:
+        interval        minutes between check-ins. Unset: 30.
+        end             end of the workday, `HH:MM`. Unset: `17:30`.
+    The `checkin` skill (|meta-notes-skills|) drives these commands.
+
 `meta-notes projects [--warnings]`              *meta-notes-cli-projects*
     List every project directly in `project/`: each note, and each folder,
     whose home note is its `Home.md`. Archived projects aren't listed. A
@@ -1179,6 +1205,11 @@ The settings for |meta-notes-cli-calendar|: >
     stale_days = 3                  # unset: 3
     calendars = ["me@example.com"]  # zip members to load; unset: all
 <
+The settings for |meta-notes-cli-checkin|: >
+    [checkin]
+    interval = 30                   # minutes between check-ins; unset: 30
+    end = "17:30"                   # end of the workday; unset: 17:30
+<
 Output ~
                                                 *meta-notes-cli-json*
 Output is human-readable text by default, with errors and warnings on stderr.
@@ -1202,8 +1233,8 @@ note existed before), `created` (whether this command wrote it), and
 also returns `content`, the rendered note. `--version` returns `version`,
 `commit` (the short hash, or null), and `dirty`. Output from template commands
 appears only in `content` or the written note, never on stdout.
-`calendar`, `cache clear`, `conventions`, `ceremony status`, and `projects`
-return the fields listed under each command above.
+`calendar`, `cache clear`, `conventions`, `ceremony status`, `checkin`, and
+`projects` return the fields listed under each command above.
 
 The exit status is non-zero on failure. `--root` and `--json` may come
 before or after the command name.
@@ -1237,6 +1268,11 @@ and can be stopped at any point.
     task-cleanup    Anytime, 5-10 minutes: overdue and undated tasks,
                     oldest first, in batches.
     project-review  One project at a time.
+    checkin         During the workday: runs |meta-notes-cli-checkin|
+                    `wait` in the background, and when it wakes asks what
+                    you've done and whether you're on plan, fills the Time
+                    Block's Actual column, and helps when you switch
+                    tasks. Offers daily-shutdown at the end.
     calendar        Anytime: answers questions about your meetings
                     (with someone, about a topic, a 1-1, free time)
                     with |meta-notes-cli-calendar| `--with` and

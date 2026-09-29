@@ -17,14 +17,14 @@ import shlex
 import subprocess
 import sys
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime
 
 import find_tasks
 import tasks as task_model
 from tags import canonical_tag
 from meta_notes import (__version__, brief, calendar, ceremony, changes,
-                        conventions, init, note, ops, prime, projects,
-                        query, task_update, time)
+                        checkin, config, conventions, init, note, ops, prime,
+                        projects, query, task_update, time)
 from meta_notes.root import SENTINEL, find_root
 
 
@@ -345,6 +345,72 @@ def cmd_ceremony_status(args, root: str) -> Output:
     return Output(data, lines)
 
 
+def _clock_value(value: str) -> str:
+    try:
+        checkin.parse_time(value)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(str(e))
+    return value
+
+
+def _minutes_value(value: str) -> int:
+    if not value.isdigit() or int(value) < 1:
+        raise argparse.ArgumentTypeError(
+            f"invalid minutes: {value!r}; use a positive integer")
+    return int(value)
+
+
+def _checkin_day(args) -> date:
+    return date.fromisoformat(args.date) if args.date else date.today()
+
+
+def _checkin_output(data: dict) -> Output:
+    return Output(data, checkin.format_status(data))
+
+
+def cmd_checkin_status(args, root: str) -> Output:
+    at = (checkin.parse_time(args.at) if args.at
+          else datetime.now().time().replace(second=0, microsecond=0))
+    return _checkin_output(checkin.status(_checkin_day(args), at))
+
+
+def cmd_checkin_wait(args, root: str) -> Output:
+    try:
+        settings = config.table(config.load(root), "checkin")
+    except ValueError as e:
+        raise CliError(str(e))
+    every = args.every
+    end = args.end or settings.get("end", checkin.DEFAULT_END)
+    if every is None:
+        every = settings.get("interval", checkin.DEFAULT_INTERVAL)
+    try:
+        if not isinstance(every, int) or isinstance(every, bool) or every < 1:
+            raise ValueError("[checkin] interval must be a positive integer")
+        end_time = checkin.parse_time(str(end))
+    except ValueError as e:
+        raise CliError(str(e))
+    reason = checkin.wait(datetime.now(), every, end_time)[1]
+    at = datetime.now().time().replace(second=0, microsecond=0)
+    out = _checkin_output(checkin.status(_checkin_day(args), at))
+    out.data["reason"] = reason
+    out.text.insert(0, f"check-in {reason}")
+    return out
+
+
+def cmd_checkin_actual(args, root: str) -> Output:
+    try:
+        first = checkin.parse_time(args.time)
+        last = checkin.parse_time(args.through) if args.through else first
+        data = checkin.fill_actual(_checkin_day(args), first, last,
+                                   args.text, args.force)
+    except ValueError as e:
+        raise CliError(str(e))
+    text = [f"{data['note']}: wrote {', '.join(data['written']) or 'nothing'}"]
+    if data["skipped"]:
+        text.append(f"skipped (filled): {', '.join(data['skipped'])}")
+    return Output(data, text)
+
+
 def cmd_projects(args, root: str) -> Output:
     lines, entries = projects.run(".", warnings_only=args.warnings)
     return Output({"projects": entries}, lines)
@@ -633,6 +699,44 @@ def build_parser() -> argparse.ArgumentParser:
     k.add_argument("--date", type=_day_value, metavar="DAY",
                    help="YYYY-MM-DD (default: today)")
     p.set_defaults(handler=cmd_ceremony_status)
+
+    p = sub.add_parser("checkin", parents=[common],
+                       help="stay-on-task check-ins and the Time Block's "
+                            "Actual column")
+    kinds = p.add_subparsers(dest="kind", metavar="KIND", parser_class=_Parser)
+    kinds.required = True
+    k = kinds.add_parser("status", parents=[common],
+                         help="the Time Block's current row and unfilled "
+                              "rows")
+    k.add_argument("--date", type=_day_value, metavar="DAY",
+                   help="YYYY-MM-DD (default: today)")
+    k.add_argument("--at", type=_clock_value, metavar="TIME",
+                   help="HH:MM (default: now)")
+    k.set_defaults(handler=cmd_checkin_status)
+    k = kinds.add_parser("wait", parents=[common],
+                         help="sleep until a check-in is due, then report "
+                              "the status and exit")
+    k.add_argument("--every", type=_minutes_value, metavar="MINUTES",
+                   help="minutes until the check-in (default: [checkin] "
+                        "interval, or 30)")
+    k.add_argument("--end", type=_clock_value, metavar="TIME",
+                   help="end of the workday, HH:MM (default: [checkin] "
+                        "end, or 17:30)")
+    k.add_argument("--date", type=_day_value, metavar="DAY",
+                   help="YYYY-MM-DD (default: today)")
+    k.set_defaults(handler=cmd_checkin_wait)
+    k = kinds.add_parser("actual", parents=[common],
+                         help="write text into Time Block Actual cells")
+    k.add_argument("time", type=_clock_value, metavar="TIME",
+                   help="the row, HH:MM or 9:15am")
+    k.add_argument("text", metavar="TEXT", help="what happened")
+    k.add_argument("--through", type=_clock_value, metavar="TIME",
+                   help="also fill the rows through this one")
+    k.add_argument("--force", action="store_true",
+                   help="overwrite cells that aren't empty")
+    k.add_argument("--date", type=_day_value, metavar="DAY",
+                   help="YYYY-MM-DD (default: today)")
+    k.set_defaults(handler=cmd_checkin_actual)
 
     p = sub.add_parser("projects", parents=[common],
                        help="list projects with status, latest date, last "

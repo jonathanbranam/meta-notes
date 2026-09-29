@@ -73,6 +73,7 @@ meta-notes project brief project/kitchen-remodel/
 meta-notes changes --date 2026-09-21..2026-09-25
 meta-notes calendar --date 2026-09-28 --json
 meta-notes ceremony status --date 2026-09-25
+meta-notes checkin status --json
 meta-notes time --date 2026-09 --json
 ```
 
