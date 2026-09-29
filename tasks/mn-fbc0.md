@@ -4,9 +4,10 @@ title = "Stay-on-task check-ins: a skill plus a sleep-and-return CLI that asks f
 kind = "feature"
 state = "integrated"
 created_at = "2026-09-29T03:23:22.014Z"
-updated_at = "2026-09-29T03:33:03.900826Z"
+updated_at = "2026-09-29T03:33:07.331358Z"
 size = "L"
 commit = "53ed30b"
+summary = "Added meta-notes checkin (status, wait, actual) in scripts/meta_notes/checkin.py, a checkin skill, spec openspec/specs/checkin/spec.md, docs and tests; v0.15.0, merge 53ed30b. Defaults for review: 30 min interval (--every or [checkin] interval), end 17:30, agent-asked check-ins with no OS toast, filled Actual cells never overwritten without --force, only the 12-hour template rows are read, no Follow Up edits without consent, wait exits only when due or at end."
 +++
 
 From the human, 2026-09-28, via advisor (verbatim):
