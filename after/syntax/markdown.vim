@@ -34,6 +34,22 @@ syntax match metaNotesBreak /\[[^\]]*break[^\]]*\]/
 " daily notes only
 if meta_notes#time_tracking#IsInDailyNote()
   syntax match metaNotesOffPlan /\~[^~]\+\~/
+
+  " Time Block cell highlights: the "### Time Block" section of a daily note,
+  " up to the next heading of level 3 or higher. Each highlight covers one
+  " table cell (the text between two pipes). The heading line itself is left
+  " to the markdown heading group.
+  syntax region metaNotesTimeBlock transparent keepend
+        \ start=/^###\s\+Time Block\s*$/hs=e+1 end=/^#\{1,3}\s/me=s-1
+        \ contains=@metaNotesTimeBlockCells,metaNotesTagMeeting,metaNotesTagDev,metaNotesTagPersonal,metaNotesTagAdmin,metaNotesTagBreak,metaNotesTagActivity,metaNotesBreak,metaNotesOffPlan,metaNotesTime,metaNotesTableTime
+  syntax cluster metaNotesTimeBlockCells contains=metaNotesTimeBlockMtg,metaNotesTimeBlockBracket,metaNotesTimeBlockTilde,metaNotesTimeBlockParen,metaNotesTimeBlockTrain,metaNotesTimeBlockPers,metaNotesTimeBlockWork
+  syntax match metaNotesTimeBlockMtg /|\zs[^|]*mtg:[^|]*\ze|/ contained contains=TOP
+  syntax match metaNotesTimeBlockBracket /|\zs[^|]*\[[^|]*\][^|]*\ze|/ contained contains=TOP
+  syntax match metaNotesTimeBlockTilde /|\zs[^|]*\~[^|~]\+\~[^|]*\ze|/ contained contains=TOP
+  syntax match metaNotesTimeBlockParen /|\zs[^|]*([^|]*)[^|]*\ze|/ contained contains=TOP
+  syntax match metaNotesTimeBlockTrain /|\zs[^|]*train:[^|]*\ze|/ contained contains=TOP
+  syntax match metaNotesTimeBlockPers /|\zs[^|]*pers:[^|]*\ze|/ contained contains=TOP
+  syntax match metaNotesTimeBlockWork /|\zs[^|]*work:[^|]*\ze|/ contained contains=TOP
 endif
 
 " Time entries in time log: HH:MM am/pm
@@ -70,3 +86,12 @@ highlight default link metaNotesArrived Special
 
 " Make strikethrough text appear dimmed/grayed out
 highlight default metaNotesOffPlan gui=strikethrough cterm=strikethrough ctermfg=Gray guifg=Gray
+
+" Time Block cell highlights, one background per kind of cell
+highlight default metaNotesTimeBlockMtg    ctermfg=Black ctermbg=Cyan     guifg=#000000 guibg=#7fd6e6
+highlight default metaNotesTimeBlockBracket ctermfg=Black ctermbg=Yellow  guifg=#000000 guibg=#e6d67f
+highlight default metaNotesTimeBlockTilde  ctermfg=Black ctermbg=Gray     guifg=#000000 guibg=#b0b0b0
+highlight default metaNotesTimeBlockParen  ctermfg=Black ctermbg=Magenta  guifg=#000000 guibg=#d69fe6
+highlight default metaNotesTimeBlockTrain  ctermfg=Black ctermbg=Red      guifg=#000000 guibg=#e69f9f
+highlight default metaNotesTimeBlockPers   ctermfg=Black ctermbg=Green    guifg=#000000 guibg=#9fe6a0
+highlight default metaNotesTimeBlockWork   ctermfg=Black ctermbg=Blue     guifg=#000000 guibg=#9fb8e6

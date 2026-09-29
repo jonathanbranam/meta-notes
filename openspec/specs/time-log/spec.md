@@ -107,3 +107,18 @@ A time log entry SHALL be recorded when its activity line has activity text or a
 #### Scenario: Stray empty bullet
 - **WHEN** a log contains a line `-` with no tags and no `start:` or `end:` line
 - **THEN** no entry SHALL be recorded for it
+
+### Requirement: Time Block table cells are highlighted
+In a daily note (a `.md` file under `plan/daily/`), the plugin SHALL highlight table cells in the `### Time Block` section, which ends at the next heading of level 1 to 3 or the end of the note. A cell is the text between two pipes on one line. The plugin SHALL give each kind of cell its own highlight group, `metaNotesTimeBlock` followed by `Mtg`, `Bracket`, `Tilde`, `Paren`, `Train`, `Pers` or `Work`, for a cell that contains `mtg:`, `[...]`, `~text~`, `(...)`, `train:`, `pers:` or `work:` respectively. A cell that matches several kinds SHALL take the one defined last (in the order listed, `Work` wins). The `~text~` in a cell SHALL also keep its `metaNotesOffPlan` strikethrough. Nothing outside the Time Block section, and nothing in a note that is not a daily note, SHALL get these highlights.
+
+#### Scenario: Each kind of cell is highlighted
+- **WHEN** a daily note's Time Block has cells `mtg: standup`, `[break]`, `~walk~`, `(maybe)`, `train: x`, `pers: y` and `work: z`
+- **THEN** each cell SHALL be highlighted with its group, and the pipes SHALL NOT
+
+#### Scenario: Match does not cross pipes or lines
+- **WHEN** `mtg:` and a closing `]` are in different cells, or the two `~` are in different cells or on different lines
+- **THEN** no cell SHALL be highlighted for that pair
+
+#### Scenario: Outside the Time Block
+- **WHEN** the same cells are in another section of a daily note, or in a note that is not a daily note
+- **THEN** they SHALL NOT be highlighted

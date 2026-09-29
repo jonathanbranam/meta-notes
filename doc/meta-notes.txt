@@ -217,6 +217,19 @@ TIME TRACKING ~
     daily note for that date under the current directory, is shown as an
     error message. See |meta-notes-time-report|.
 
+                                                *meta-notes-timeblock-hl*
+Time Block highlights ~
+
+In a daily note, table cells in the `### Time Block` section (up to the next
+heading of level 1 to 3) are highlighted, one cell at a time, by what they
+contain: `mtg:`, `[brackets]`, `~text~`, `(parens)`, `train:`, `pers:` or
+`work:`. The groups are `metaNotesTimeBlockMtg`, `...Bracket`, `...Tilde`,
+`...Paren`, `...Train`, `...Pers` and `...Work`; a cell that matches several
+takes the last in that order. `~text~` keeps its `metaNotesOffPlan`
+strikethrough. Other sections and other notes are not highlighted. Set your
+own colors with `:highlight metaNotesTimeBlockMtg ...`, which overrides the
+defaults.
+
 ------------------------------------------------------------------------------
 VERSION ~
 
