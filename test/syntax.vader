@@ -83,7 +83,7 @@ Execute (Each Time Block cell kind gets its group):
   Assert TB(5, 'mtg:') =~# 'metaNotesTimeBlockMtg'
   Assert TB(6, '[break]') =~# 'metaNotesTimeBlockBracket'
   Assert TB(7, '~walk~') =~# 'metaNotesTimeBlockTilde'
-  Assert TB(8, '(maybe) =~# 'metaNotesTimeBlockParen'')
+  Assert TB(8, '(maybe)') =~# 'metaNotesTimeBlockParen'
   Assert TB(9, 'train:') =~# 'metaNotesTimeBlockTrain'
   Assert TB(10, 'pers:') =~# 'metaNotesTimeBlockPers'
   Assert TB(11, 'work:') =~# 'metaNotesTimeBlockWork'
