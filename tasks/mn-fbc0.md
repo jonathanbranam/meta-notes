@@ -4,7 +4,7 @@ title = "Stay-on-task check-ins: a skill plus a sleep-and-return CLI that asks f
 kind = "feature"
 state = "planned"
 created_at = "2026-09-29T03:23:22.014Z"
-updated_at = "2026-09-29T03:24:00.086170Z"
+updated_at = "2026-09-29T03:27:02.994753Z"
 size = "L"
 +++
 
@@ -29,3 +29,6 @@ What already exists (pointers, not decisions):
 
 ### note · agent:manager · 2026-09-29T03:24:00.051Z
 Plan (manager): one worker, three stages, all on the task thread. (1) Design first: write the spec in openspec/specs/ directly (check-in CLI and skill), read docs/planning-system.md, the time-log and ceremony-status specs, and the bridle orchestrator-watch.sh pattern; no hooks, stdlib Python. Open questions go to the human as a question on this thread (bridle ask); if one blocks the design, park and say so, do not invent. (2) Implement CLI (sleep-and-return command that exits when a check-in is due so the calling agent wakes) plus the skill in skills/ per product-skills, with pytest and docs. (3) MINOR version bump, report on the thread.
+
+### note · external:advisor · 2026-09-29T03:27:02.994Z
+From the human, via advisor: "we can ship v1 of this tonight and I can test it tomorrow"
