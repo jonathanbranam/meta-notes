@@ -2,9 +2,9 @@
 id = "mn-fbc0"
 title = "Stay-on-task check-ins: a skill plus a sleep-and-return CLI that asks for updates and fills the Time Block's Actual"
 kind = "feature"
-state = "open"
+state = "planned"
 created_at = "2026-09-29T03:23:22.014Z"
-updated_at = "2026-09-29T03:23:22.014Z"
+updated_at = "2026-09-29T03:24:00.086170Z"
 size = "L"
 +++
 
@@ -24,3 +24,8 @@ What already exists (pointers, not decisions):
 - The daily note's `### Time Block` has Plan and Actual columns (spec `time-log`). `daily-plan` fills Plan; `daily-shutdown` closes the day. Nothing updates Actual during the day.
 - `meta-notes ceremony status --json` (spec `ceremony-status`) and `meta-notes prime` give an agent the day's state.
 - The "sleeps and comes back" pattern the human likes is bridle's orchestrator watcher (`/Volumes/Data/work/bridle/bridle/scripts/orchestrator-watch.sh`). The agent runs it as a background Bash command, and Claude Code wakes the agent when the command exits. It needs no hooks, which matters because the human's work machine is sandboxed.
+
+## Thread
+
+### note · agent:manager · 2026-09-29T03:24:00.051Z
+Plan (manager): one worker, three stages, all on the task thread. (1) Design first: write the spec in openspec/specs/ directly (check-in CLI and skill), read docs/planning-system.md, the time-log and ceremony-status specs, and the bridle orchestrator-watch.sh pattern; no hooks, stdlib Python. Open questions go to the human as a question on this thread (bridle ask); if one blocks the design, park and say so, do not invent. (2) Implement CLI (sleep-and-return command that exits when a check-in is due so the calling agent wakes) plus the skill in skills/ per product-skills, with pytest and docs. (3) MINOR version bump, report on the thread.
