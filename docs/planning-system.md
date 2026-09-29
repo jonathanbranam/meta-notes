@@ -397,6 +397,10 @@ creating events, which would sync back to Google.
   the tab is open. A launchd job running `osascript` notifications covers
   the rest by checking completion markers (for example, no shutdown marker by
   17:30, or no weekly summary by Friday 10:45). Reminders never block.
+- **Check-ins without a dashboard:** `meta-notes checkin wait` sleeps and
+  exits when a check-in is due; the `checkin` skill runs it in the
+  background so the agent wakes, asks for a progress update, and fills the
+  Time Block's Actual column (`checkin` spec). It needs no hooks or daemon.
 
 ## Email and Slack reset
 

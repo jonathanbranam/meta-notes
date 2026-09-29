@@ -82,6 +82,7 @@ meta-notes/
 │   │   ├── __main__.py          # Entry point (Python version check)
 │   │   ├── brief.py             # Project brief
 │   │   ├── ceremony.py          # Ceremony status
+│   │   ├── checkin.py           # Check-ins and the Time Block's Actual
 │   │   ├── calendar.py          # Agenda from a Google Calendar export
 │   │   ├── changes.py           # Notes changed in a period, from git
 │   │   ├── cli.py               # Subcommands, root resolution, output
@@ -114,6 +115,7 @@ meta-notes/
 │   │   ├── test_brief.py
 │   │   ├── test_calendar.py
 │   │   ├── test_ceremony.py
+│   │   ├── test_checkin.py
 │   │   ├── test_changes.py
 │   │   ├── test_cli.py
 │   │   ├── test_config.py
@@ -178,7 +180,7 @@ This structure is compatible with vim-plug, Vundle, and Pathogen.
 templates (`note`), file operations (`move`, `rename`, `archive`), task
 query (`tasks`), task edits (`task update`), time reports (`time`), changed
 notes (`changes`), calendar agendas (`calendar`, `cache clear`), the
-project list (`projects`), ceremony status (`ceremony status`), and the
+project list (`projects`), ceremony status (`ceremony status`), stay-on-task check-ins (`checkin`), and the
 skills' shared conventions (`conventions`), and a guide to the notes root
 for agents (`prime`) outside Vim, for shells, agents, and other tools. The Vim
 commands call it. Every command accepts `--json`. It needs Python 3.11 or newer as `python3`. See
@@ -237,6 +239,8 @@ meta-notes changes --date 2026-09-21..2026-09-25  # notes changed this week
 meta-notes projects --warnings            # stalled or unreviewed projects
 meta-notes project brief project/kitchen/  # one project's files, tasks, dates
 meta-notes ceremony status --date 2026-09-25
+meta-notes checkin wait                   # sleep, then report the Time Block
+meta-notes checkin actual 9:15 "wrote spec" --through 9:45
 meta-notes calendar --date 2026-09-28..2026-10-02  # agenda from the latest export
 meta-notes calendar --ics ~/Downloads/export.zip --json
 meta-notes calendar --date 2026-09 --with zach --search 1:1  # filtered
@@ -302,6 +306,7 @@ re-run it after updating the plugin to link new ones. Each starts from
 | `weekly-plan` | Friday afternoon; next week's priorities |
 | `task-cleanup` | Anytime, 5–10 minutes of stale tasks |
 | `project-review` | One project at a time |
+| `checkin` | During the day: progress updates, fills the Time Block's Actual |
 | `calendar` | Anytime: meetings with someone, about a topic, or free time |
 
 Daily notes carry `- [ ] plan complete` and `- [ ] shutdown complete`,
