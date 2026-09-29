@@ -12,8 +12,27 @@ Execute (Setup - Create temporary test directory):
   call mkdir(g:test_dir . '/plan/daily', 'p')
   call mkdir(g:test_dir . '/project', 'p')
   let g:offplan_lines = ['~30%', 'plain', '~a~ x', 'one ~ tilde', 'next ~ line']
-  call writefile(g:offplan_lines, g:test_dir . '/plan/daily/2026-09-28.md')
+  call mkdir(g:test_dir . '/plan/daily/26-Q3', 'p')
+  call writefile(g:offplan_lines, g:test_dir . '/plan/daily/26-Q3/2026-09-28 Mon.md')
   call writefile(g:offplan_lines, g:test_dir . '/project/note.md')
+  let g:tb_lines = ['## Notes', '| mtg: a | x |', '### Time Block', '',
+        \ '| 8:00 | mtg: standup | plain |',
+        \ '| 8:30 | [break] | plain |',
+        \ '| 9:00 | ~walk~ | plain |',
+        \ '| 9:30 | (maybe) | plain |',
+        \ '| 10:00 | train: x | plain |',
+        \ '| 10:30 | pers: y | plain |',
+        \ '| 11:00 | work: z | plain |',
+        \ '| 11:30 | mtg: a | b] | [c | ~d | e~ |',
+        \ '| 12:00 | ~x |', '| 12:30 | y~ |',
+        \ '## Other', '| mtg: a | [b] |']
+  call writefile(g:tb_lines, g:test_dir . '/plan/daily/2026-09-28.md')
+  call writefile(g:tb_lines, g:test_dir . '/project/note.md')
+
+  function! TB(lnum, text) abort
+    let l:col = stridx(getline(a:lnum), a:text) + 1
+    return join(map(synstack(a:lnum, l:col), 'synIDattr(v:val, "name")'), ',')
+  endfunction
 
   function! OffPlan(lnum, col) abort
     return index(map(synstack(a:lnum, a:col), 'synIDattr(v:val, "name")'),
@@ -38,19 +57,19 @@ Execute (Time log times stay highlighted after the buffer is reloaded):
   AssertEqual 'metaNotesTime', TimeGroup(3)
 
 Execute (A lone tilde does not highlight the rest of a daily note):
-  edit plan/daily/2026-09-28.md
+  edit plan/daily/26-Q3/2026-09-28\ Mon.md
   Assert !OffPlan(1, 1)
   Assert !OffPlan(2, 1)
 
 Execute (Two tildes on one line highlight the text between them):
-  edit plan/daily/2026-09-28.md
+  edit plan/daily/26-Q3/2026-09-28\ Mon.md
   Assert OffPlan(3, 1)
   Assert OffPlan(3, 2)
   Assert OffPlan(3, 3)
   Assert !OffPlan(3, 5)
 
 Execute (Tildes on different lines do not match):
-  edit plan/daily/2026-09-28.md
+  edit plan/daily/26-Q3/2026-09-28\ Mon.md
   Assert !OffPlan(4, 5)
   Assert !OffPlan(5, 1)
 
@@ -58,6 +77,45 @@ Execute (Off-plan text in a non-daily note is not highlighted):
   edit project/note.md
   Assert !OffPlan(3, 1)
   Assert !OffPlan(3, 2)
+
+Execute (Each Time Block cell kind gets its group):
+  edit plan/daily/2026-09-28.md
+  Assert TB(5, 'mtg:') =~# 'metaNotesTimeBlockMtg'
+  Assert TB(6, '[break]') =~# 'metaNotesTimeBlockBracket'
+  Assert TB(7, '~walk~') =~# 'metaNotesTimeBlockTilde'
+  Assert TB(8, '(maybe)') =~# 'metaNotesTimeBlockParen'
+  Assert TB(9, 'train:') =~# 'metaNotesTimeBlockTrain'
+  Assert TB(10, 'pers:') =~# 'metaNotesTimeBlockPers'
+  Assert TB(11, 'work:') =~# 'metaNotesTimeBlockWork'
+
+Execute (Only the cell is highlighted, not its neighbours or pipes):
+  edit plan/daily/2026-09-28.md
+  Assert TB(5, 'plain') !~# 'TimeBlock\a'
+  Assert TB(5, '8:00') !~# 'TimeBlock\a'
+  Assert TB(5, '|') !~# 'TimeBlock\a'
+
+Execute (A tilde cell keeps its off-plan strikethrough):
+  edit plan/daily/2026-09-28.md
+  Assert TB(7, '~walk~') =~# 'metaNotesOffPlan'
+
+Execute (Matches do not cross pipes or lines):
+  edit plan/daily/2026-09-28.md
+  Assert TB(12, 'b]') !~# 'Bracket'
+  Assert TB(12, '[c') !~# 'Bracket'
+  Assert TB(12, '~d') !~# 'Tilde'
+  Assert TB(13, '~x') !~# 'Tilde'
+  Assert TB(14, 'y~') !~# 'Tilde'
+
+Execute (Cells outside the Time Block section are not highlighted):
+  edit plan/daily/2026-09-28.md
+  Assert TB(2, 'mtg:') !~# 'TimeBlock\a'
+  Assert TB(16, 'mtg:') !~# 'TimeBlock\a'
+  Assert TB(16, '[b]') !~# 'TimeBlock\a'
+
+Execute (Cells in a non-daily note are not highlighted):
+  edit project/note.md
+  Assert TB(5, 'mtg:') !~# 'TimeBlock\a'
+  Assert TB(6, '[break]') !~# 'TimeBlock\a'
 
 Execute (Cleanup):
   " Wipe the test note by name: a bare bwipeout! here would wipe Vader's
@@ -67,6 +125,8 @@ Execute (Cleanup):
   execute 'bwipeout!' bufnr(g:test_dir . '/project/note.md')
   delfunction TimeGroup
   delfunction OffPlan
+  delfunction TB
+  unlet g:tb_lines
   unlet g:offplan_lines
   let &runtimepath = g:original_rtp
   execute 'cd' g:original_dir
