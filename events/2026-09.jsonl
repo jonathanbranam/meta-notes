@@ -5,3 +5,4 @@
 {"actor":"human","at":"2026-09-28T23:57:03.795Z","from":"","task":"mn-d160","to":"open"}
 {"actor":"human","at":"2026-09-28T23:57:03.812Z","from":"","task":"mn-b6c5","to":"open"}
 {"actor":"agent:manager","at":"2026-09-28T23:57:07.616941Z","from":"open","task":"mn-d160","to":"planned"}
+{"actor":"agent:manager","at":"2026-09-29T00:01:58.400195Z","from":"open","task":"mn-b6c5","to":"planned"}
