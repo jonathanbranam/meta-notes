@@ -186,14 +186,14 @@ def cmd_archive(args, root: str) -> Output:
 
 def cmd_tasks(args, root: str) -> Output:
     try:
-        lines, tasks = query.run(
+        lines, tasks, warnings = query.run(
             ".", period=args.date, modes=args.modes, later=args.later,
             tags=args.tags, group_by=args.group_by, folder=args.folder,
             status=args.status,
             condensed=args.condensed or args.format == "condensed")
     except ValueError as e:
         raise CliError(str(e))
-    return Output({"tasks": tasks}, lines)
+    return Output({"tasks": tasks}, lines, warnings)
 
 
 def cmd_time(args, root: str) -> Output:
@@ -288,6 +288,17 @@ def _day_value(value: str) -> str:
     return _date_value(value, ())
 
 
+def _time_value(value: str) -> str:
+    """Check a --time value: HH:MM (24-hour) or none; return HH:MM."""
+    if value == "none":
+        return value
+    match = re.fullmatch(r"(\d{1,2}):(\d{2})", value)
+    if match and int(match.group(1)) < 24 and int(match.group(2)) < 60:
+        return f"{int(match.group(1)):02d}:{match.group(2)}"
+    raise argparse.ArgumentTypeError(
+        f"invalid value: {value!r} (expected HH:MM, 00:00 to 23:59, or none)")
+
+
 def _tag_value(value: str) -> str:
     """Check a tag name, with or without #; return it without #."""
     bare = value.removeprefix("#")
@@ -314,15 +325,15 @@ def cmd_task_update(args, root: str) -> Output:
         raise CliError(f"{prog}: tag given to both --add-tag and --remove-tag: "
                        f"{', '.join(sorted(both))}")
     if (args.status is None and args.due is None and args.start is None
-            and not add_tags and not remove_tags):
+            and args.time is None and not add_tags and not remove_tags):
         raise CliError(f"{prog}: give at least one of --status, --add-tag, "
-                       "--remove-tag, --due, or --start")
+                       "--remove-tag, --due, --start, or --time")
 
     try:
         result = task_update.update(
             path, line_no, args.expect, status=args.status, add_tags=add_tags,
             remove_tags=remove_tags, due=args.due, start=args.start,
-            no_completed=args.no_completed)
+            time=args.time, no_completed=args.no_completed)
     except task_update.TaskUpdateError as e:
         if e.current is None:
             raise CliError(str(e))
@@ -685,6 +696,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="YYYY-MM-DD, undated (a bare due emoji), or none")
     k.add_argument("--start", type=_start_value, metavar="DATE",
                    help="YYYY-MM-DD or none")
+    k.add_argument("--time", type=_time_value, metavar="TIME",
+                   help="HH:MM (24-hour), written as ⏰ HH:MM, or none")
     k.add_argument("--no-completed", action="store_true",
                    help="don't add a ✅ date when marking the task done")
     p.set_defaults(handler=cmd_task_update)

@@ -172,6 +172,7 @@ def test_cli_tasks_json_fields(root, capsys):
         'status': 'incomplete',
         'start': None,
         'due': '2026-10-01',
+        'time': None,
         'completed': None,
         'tags': ['meeting'],
         'section': 'ready' if date(2026, 10, 1) <= TODAY else 'future',
@@ -200,6 +201,7 @@ def test_cli_tasks_json_dates(root, capsys):
         'status': 'completed',
         'start': None,
         'due': PAST,
+        'time': None,
         'completed': PAST,
         'tags': [],
         'section': 'ready',
@@ -220,7 +222,7 @@ def test_cli_tasks_json_group_by_tag_lists_task_once(tmp_path, capsys, monkeypat
 
 def test_query_run_tasks_appear_in_report(root):
     """The JSON tasks are the tasks in the text report, in the same order."""
-    lines, tasks = query.run('.', modes=['overdue', 'due', 'future', 'undated'])
+    lines, tasks, _ = query.run('.', modes=['overdue', 'due', 'future', 'undated'])
 
     task_lines = [line for line in lines if line.lstrip().startswith(('-', '*', '+'))]
     assert [t['text'] for t in tasks] == task_lines
@@ -228,15 +230,52 @@ def test_query_run_tasks_appear_in_report(root):
 
 
 def test_query_run_later_tasks(root):
-    _, without = query.run('.', modes=['all'])
-    _, with_later = query.run('.', modes=['all'], later=True)
+    _, without, _ = query.run('.', modes=['all'])
+    _, with_later, _ = query.run('.', modes=['all'], later=True)
 
     assert not any('Someday' in t['text'] for t in without)
     assert [t['section'] for t in with_later if 'Someday' in t['text']] == ['ready']
 
 
 def test_query_run_empty_root(tmp_path):
-    lines, tasks = query.run(str(tmp_path))
+    lines, tasks, _ = query.run(str(tmp_path))
 
     assert lines == ['No markdown files found.']
     assert tasks == []
+
+
+# Tests for time of day
+
+def test_cli_tasks_json_time_of_day(root, capsys):
+    (root / 'project' / 'timed.md').write_text(
+        '- [ ] a ⏰ 3:15pm 📅 2026-10-01\n'
+        '- [ ] b 📅 2026-10-01 08:30\n'
+        '- [ ] c 📅 2026-10-01\n')
+
+    code, out = cli_json(capsys, ['--folder', 'project', '--all'])
+
+    timed = {t['text'][6]: (t['due'], t['time']) for t in out['tasks']
+             if t['file'] == 'project/timed.md'}
+    assert timed == {'a': ('2026-10-01', '15:15'), 'b': ('2026-10-01', '08:30'),
+                     'c': ('2026-10-01', None)}
+
+
+def test_cli_tasks_json_warns_about_time_without_due_date(root, capsys):
+    (root / 'project' / 'timed.md').write_text('- [ ] a ⏰ 15:00 🛫 2026-10-01\n')
+
+    code, out = cli_json(capsys, ['--folder', 'project', '--all'])
+
+    assert code == 0
+    assert any('time without a due date' in w for w in out['warnings'])
+
+
+def test_cli_tasks_due_today_ignores_time(root, capsys):
+    (root / 'project' / 'timed.md').write_text(
+        '- [ ] early ⏰ 00:01 📅 2026-09-25\n'
+        '- [ ] late 📅 2026-09-25 23:59\n'
+        '- [ ] plain 📅 2026-09-25\n')
+
+    code, out = cli_json(capsys, ['--folder', 'project', '--due', '--date', '2026-09-25'])
+
+    assert sorted(t['text'][6:11] for t in out['tasks']) == ['early', 'late ', 'plain']
+    assert {t['section'] for t in out['tasks']} == {'due'}

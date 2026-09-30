@@ -727,6 +727,9 @@ TASK = '- [ ] call Sam 📅 2026-09-22'
     (['--due', '20260930'], 'invalid value'),
     (['--due', 'someday'], 'invalid value'),
     (['--start', 'undated'], 'invalid value'),
+    (['--time', '25:00'], 'invalid value'),
+    (['--time', '3pm'], 'invalid value'),
+    (['--time', '15:60'], 'invalid value'),
     (['--add-tag', 'two words'], 'invalid tag'),
     (['--remove-tag', '#a.b'], 'invalid tag'),
     (['--add-tag', 'later', '--remove-tag', '#Later'], 'both'),
@@ -790,6 +793,23 @@ def test_task_update_json_success(notes_root, capsys):
         'new': f'- [x] call Sam 📅 2000-01-01 ✅ {date.today().isoformat()}',
         'changed': True, 'warnings': []}
     assert path.read_text().splitlines()[2] == out['new']
+
+
+def test_task_update_time(task_note, capsys):
+    code, out, _ = run_json(capsys, ['task', 'update', 'project/foo.md:3',
+                                     '--expect', TASK, '--time', '9:05'])
+    assert code == 0
+    assert out['new'] == '- [ ] call Sam ⏰ 09:05 📅 2026-09-22'
+    assert task_note.read_text().splitlines()[2] == out['new']
+
+
+def test_task_update_time_none(task_note, capsys):
+    task_note.write_text('# project/foo\n\n- [ ] call Sam ⏰ 3:15pm 📅 2026-09-22\n')
+    code, out, _ = run_json(capsys, ['task', 'update', 'project/foo.md:3',
+                                     '--expect', '- [ ] call Sam ⏰ 3:15pm 📅 2026-09-22',
+                                     '--time', 'none'])
+    assert code == 0
+    assert out['new'] == TASK
 
 
 def test_task_update_json_mismatch(task_note, capsys):

@@ -6,7 +6,7 @@ import os
 from datetime import date
 
 import find_tasks
-from tasks import Task
+from tasks import Task, task_warnings
 
 
 def task_to_dict(task: Task, root_dir: str, section: str) -> dict:
@@ -18,6 +18,7 @@ def task_to_dict(task: Task, root_dir: str, section: str) -> dict:
         "status": task.status.value,
         "start": task.start_date.isoformat() if task.start_date else None,
         "due": task.due_date.isoformat() if task.due_date else None,
+        "time": task.due_time.strftime("%H:%M") if task.due_time else None,
         "completed": task.completed_date.isoformat() if task.completed_date else None,
         "tags": task.tags,
         "section": section,
@@ -28,7 +29,7 @@ def run(root_dir: str, period: str | None = None, modes: list[str] | None = None
         later: bool = False, tags: list[str] | None = None,
         group_by: str | None = None, folder: str | None = None,
         status: str = "incomplete", condensed: bool = False,
-        today: date | None = None) -> tuple[list[str], list[dict]]:
+        today: date | None = None) -> tuple[list[str], list[dict], list[str]]:
     """
     Run a task query with find_tasks.py semantics.
 
@@ -41,11 +42,14 @@ def run(root_dir: str, period: str | None = None, modes: list[str] | None = None
 
     Returns:
         Tuple of (text lines identical to find_tasks.py, task dicts in
-        report order, each task once).
+        report order with each task once, warnings about the selected
+        tasks' times).
 
     Raises:
         ValueError: If period is invalid.
     """
     lines, selected = find_tasks.run_query(root_dir, period, modes, later, tags,
                                            group_by, folder, status, condensed, today)
-    return lines, [task_to_dict(task, root_dir, section) for section, task in selected]
+    warnings = [w for _, task in selected for w in task_warnings(task)]
+    return (lines, [task_to_dict(task, root_dir, section) for section, task in selected],
+            warnings)

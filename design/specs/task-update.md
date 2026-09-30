@@ -173,6 +173,37 @@ A new due emoji SHALL be placed after any `🛫` date and before any `✅` date;
 - **WHEN** line 3 is `- [ ] draft outline 🛫 2026-10-05 📅 2026-10-10` and the user runs `--start none`
 - **THEN** line 3 SHALL become `- [ ] draft outline 📅 2026-10-10`
 
+### Requirement: Set the time of day  {#r-a684}
+`--time <value>` SHALL accept a 24-hour `HH:MM` (one or two digits for the hour) or `none`; any other value SHALL be a usage error. A time SHALL be written as `⏰ HH:MM`, replacing the line's existing `⏰` marker (in any form), or else placed before the first `🛫`, due, or `✅` date emoji, or at the end of the line if it has none. Setting a time SHALL remove a time written after the due date (`📅 2026-10-01 15:00`). `none` SHALL remove every `⏰` marker and the time after the due date. Changing the due date with `--due` SHALL keep a time after the date; `--due none` SHALL remove it with the date.
+
+#### Scenario: Add a time  {#s-8cf5}
+*Verification*: **non-executable**
+- **WHEN** line 3 is `- [ ] call Sam 📅 2026-10-01` and the user runs `--time 15:00`
+- **THEN** line 3 SHALL become `- [ ] call Sam ⏰ 15:00 📅 2026-10-01`
+
+#### Scenario: Replace a 12-hour time  {#s-afa1}
+*Verification*: **non-executable**
+- **WHEN** line 3 is `- [ ] call Sam ⏰ 3:15pm 📅 2026-10-01` and the user runs `--time 08:00`
+- **THEN** line 3 SHALL become `- [ ] call Sam ⏰ 08:00 📅 2026-10-01`
+
+#### Scenario: Remove the time  {#s-0bcb}
+*Verification*: **non-executable**
+- **WHEN** line 3 is `- [ ] call Sam ⏰ 15:00 📅 2026-10-01` and the user runs `--time none`
+- **THEN** line 3 SHALL become `- [ ] call Sam 📅 2026-10-01`
+
+#### Scenario: Invalid time  {#s-46a2}
+*Verification*: **non-executable**
+- **WHEN** the user runs `--time 25:00`
+- **THEN** the command SHALL exit non-zero with a usage error, and the file SHALL be unchanged
+
+### Requirement: Warning for a time without a due date  {#r-de03}
+When the edited line has a time but no valid due date, the command SHALL make the edit and report a warning that the time is ignored.
+
+#### Scenario: Time on an undated line  {#s-d6b3}
+*Verification*: **non-executable**
+- **WHEN** line 3 is `- [ ] call Sam 🛫 2026-10-01` and the user runs `--time 15:00 --json`
+- **THEN** the line SHALL gain `⏰ 15:00` and `warnings` SHALL include one saying the time has no due date
+
 ### Requirement: Warning when a line stops being a task  {#r-471c}
 When an edit removes a line's last due emoji and last `🛫` date, so that queries no longer count it as a task, the command SHALL make the edit and report a warning that the line is no longer a task.
 
