@@ -166,6 +166,24 @@ The period from `--date` (see `date-period`) SHALL set START and END. Tasks SHAL
 - **WHEN** the user runs `meta-notes tasks --all`
 - **THEN** every task with the selected status, except `#later` tasks, SHALL be listed
 
+### Requirement: Query at a time of day  {#r-6f7b}
+`meta-notes tasks` SHALL accept `--at TIME`, where TIME is `now` or a 24-hour `HH:MM`, and `--date` SHALL then name a single day (default today); a longer period or an invalid TIME SHALL be a usage error. `now` SHALL be the current time in the machine's local time zone (never UTC). On that day, a timed task due earlier than TIME SHALL be overdue, one due at TIME SHALL be due, and one due later SHALL be future and not due or ready; a task with no time SHALL be due all day, as without `--at`. Completed tasks SHALL ignore their time. `--at` SHALL NOT change `--scheduled`, `--undated`, or tasks due on other days, and without `--at` the time SHALL NOT affect selection.
+
+#### Scenario: Split by time  {#s-d373}
+*Verification*: **non-executable**
+- **WHEN** tasks are due 2026-09-25 at 09:00, at 12:00, at 15:15, and with no time, and the user runs `meta-notes tasks --overdue --due --future --date 2026-09-25 --at 12:00`
+- **THEN** the 09:00 task SHALL be overdue, the 12:00 and untimed tasks due, and the 15:15 task future
+
+#### Scenario: Ready excludes later today  {#s-fb36}
+*Verification*: **non-executable**
+- **WHEN** the same tasks exist and the user runs `meta-notes tasks --ready --date 2026-09-25 --at 12:00`
+- **THEN** the 15:15 task SHALL NOT be listed
+
+#### Scenario: Period rejected  {#s-dfac}
+*Verification*: **non-executable**
+- **WHEN** the user runs `meta-notes tasks --date 2026-09 --at now`
+- **THEN** the command SHALL fail saying `--at` needs a single day
+
 ### Requirement: Later tasks are excluded unless requested  {#r-fdff}
 A task tagged `#later` (any case) SHALL NOT be selected by any mode unless `--later` is given. With `--later`, `#later` tasks SHALL be selected by the same rules as other tasks and listed in the same sections.
 

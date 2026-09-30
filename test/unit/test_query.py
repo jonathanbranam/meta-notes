@@ -298,3 +298,91 @@ def test_cli_tasks_json_recurrence_fields_and_warning(root, capsys):
                      'b': ('every month when done', True),
                      'c': (None, False), 'd': (None, False)}
     assert any('recur.md:3' in w and '🔁' in w for w in out['warnings'])
+
+
+# Tests for --at
+
+AT_DAY = '2026-09-25'
+
+
+@pytest.fixture
+def at_root(tmp_path, monkeypatch):
+    lines = [
+        f'- [ ] early ⏰ 09:00 📅 {AT_DAY}',
+        f'- [ ] exact 📅 {AT_DAY} 12:00',
+        f'- [ ] late ⏰ 3:15pm 📅 {AT_DAY}',
+        f'- [ ] allday 📅 {AT_DAY}',
+        '- [ ] yesterday ⏰ 23:00 📅 2026-09-24',
+        '- [ ] tomorrow ⏰ 00:01 📅 2026-09-26',
+        f'- [x] finished ⏰ 09:00 📅 {AT_DAY} ✅ {AT_DAY}',
+    ]
+    (tmp_path / 'n.md').write_text('\n'.join(lines) + '\n')
+    (tmp_path / '.meta-notes').write_text('')
+    monkeypatch.chdir(tmp_path)
+    return tmp_path
+
+
+def at_sections(root, modes, at, status='incomplete', period=AT_DAY):
+    _, tasks, _ = query.run(str(root), period=period, modes=modes, at=at, status=status)
+    return {t['text'].split(']')[1].split()[0]: t['section'] for t in tasks}
+
+
+def test_query_run_at_splits_timed_tasks(at_root):
+    got = at_sections(at_root, ['overdue', 'due', 'future'], '12:00')
+    assert got == {'early': 'overdue', 'exact': 'due', 'late': 'future',
+                   'allday': 'due', 'yesterday': 'overdue', 'tomorrow': 'future'}
+
+
+def test_query_run_at_ready_leaves_out_later(at_root):
+    got = at_sections(at_root, ['ready'], '12:00')
+    assert set(got) == {'early', 'exact', 'allday', 'yesterday'}
+
+
+def test_query_run_at_due_only(at_root):
+    assert set(at_sections(at_root, ['due'], '09:30')) == {'allday'}
+    assert set(at_sections(at_root, ['due'], '09:00')) == {'early', 'allday'}
+
+
+def test_query_run_at_completed_ignores_time(at_root):
+    got = at_sections(at_root, ['due'], '08:00', status='completed')
+    assert got == {'finished': 'due'}
+
+
+def test_query_run_without_at_ignores_time(at_root):
+    got = at_sections(at_root, ['due'], None)
+    assert set(got) == {'early', 'exact', 'late', 'allday'}
+
+
+def test_query_run_at_now_uses_local_time(at_root, monkeypatch):
+    import find_tasks
+    from datetime import datetime
+
+    class Fake(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return datetime(2026, 9, 25, 12, 0, 45)
+    monkeypatch.setattr(find_tasks, 'datetime', Fake)
+    assert at_sections(at_root, ['due'], 'now')['exact'] == 'due'
+
+
+def test_query_run_at_needs_a_single_day(at_root):
+    with pytest.raises(ValueError, match='single day'):
+        query.run(str(at_root), period='2026-09', at='12:00')
+
+
+def test_query_run_at_invalid_value(at_root):
+    with pytest.raises(ValueError, match='--at'):
+        query.run(str(at_root), period=AT_DAY, at='noon')
+
+
+def test_cli_tasks_at_error_exits_1(at_root, capsys):
+    code = cli.main(['tasks', '--date', '2026-09', '--at', 'now'])
+    assert code != 0
+    assert 'single day' in capsys.readouterr().err
+
+
+def test_cli_tasks_at_json(at_root, capsys):
+    code = cli.main(['tasks', '--json', '--overdue', '--date', AT_DAY, '--at', '12:00'])
+    out = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert {t['time'] for t in out['tasks']} == {'09:00', '23:00'}

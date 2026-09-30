@@ -31,7 +31,8 @@ def run(root_dir: str, period: str | None = None, modes: list[str] | None = None
         later: bool = False, tags: list[str] | None = None,
         group_by: str | None = None, folder: str | None = None,
         status: str = "incomplete", condensed: bool = False,
-        today: date | None = None) -> tuple[list[str], list[dict], list[str]]:
+        today: date | None = None,
+        at: str | None = None) -> tuple[list[str], list[dict], list[str]]:
     """
     Run a task query with find_tasks.py semantics.
 
@@ -41,6 +42,7 @@ def run(root_dir: str, period: str | None = None, modes: list[str] | None = None
             options (see find_tasks.run_query).
         condensed: Use the condensed text format.
         today: Reference date for the default period (default: today).
+        at: --at value, 'now' or HH:MM, for a single day in period.
 
     Returns:
         Tuple of (text lines identical to find_tasks.py, task dicts in
@@ -48,10 +50,10 @@ def run(root_dir: str, period: str | None = None, modes: list[str] | None = None
         tasks' times).
 
     Raises:
-        ValueError: If period is invalid.
+        ValueError: If period or at is invalid.
     """
     lines, selected = find_tasks.run_query(root_dir, period, modes, later, tags,
-                                           group_by, folder, status, condensed, today)
+                                           group_by, folder, status, condensed, today, at)
     warnings = [w for _, task in selected for w in task_warnings(task)]
     return (lines, [task_to_dict(task, root_dir, section) for section, task in selected],
             warnings)
