@@ -189,7 +189,7 @@ def cmd_tasks(args, root: str) -> Output:
         lines, tasks, warnings = query.run(
             ".", period=args.date, modes=args.modes, later=args.later,
             tags=args.tags, group_by=args.group_by, folder=args.folder,
-            status=args.status,
+            status=args.status, at=args.at,
             condensed=args.condensed or args.format == "condensed")
     except ValueError as e:
         raise CliError(str(e))

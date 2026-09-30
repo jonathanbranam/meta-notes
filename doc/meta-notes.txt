@@ -715,6 +715,15 @@ Commands ~
     file (`## [[link]]`, or `- [[link]]` when condensed) and printed exactly
     as written. The standard format ends with a summary line.
 
+                                                *meta-notes-tasks-at*
+    `--at TIME` (`now` or 24-hour `HH:MM`) queries a time of day on a
+    single `--date` day (default today); a longer period is an error.
+    Timed tasks due that day earlier than TIME are overdue, one at TIME
+    is due, and later ones are future (not due or ready). Tasks with no
+    time are due all day. Completed tasks ignore their time. `now` is the
+    machine's local time. Without `--at`, times never affect selection.
+        meta-notes tasks --overdue --due --at now
+
                                                 *meta-notes-tasks-later*
     Every mode, including `--all`, leaves out tasks tagged `#later` (any
     case). `--later` includes them under the same rules, in the same

@@ -31,13 +31,14 @@ unless --later is given.
 import argparse
 import os
 import sys
-from datetime import date
+from datetime import date, datetime, time
 from typing import Callable
 
 from tasks import Task, TaskStatus, find_tasks_in_file, filter_tasks_by_status
 from notes import get_wiki_link, find_all_markdown_files
 from period import FORMS, parse_period
 from tags import canonical_tag
+from time_tracking import _parse_bare_time_24h
 
 # Sections in report order. A task is listed in the first selected one that
 # matches it.
@@ -57,20 +58,66 @@ def _within(day: date | None, start: date, end: date) -> bool:
     return day is not None and start <= day <= end
 
 
-def _is_ready(task: Task, start: date, end: date) -> bool:
-    return _on_or_before(task.effective_due, end) or _on_or_before(task.start_date, end)
+def _timed(task: Task, day: date, at: time | None) -> int | None:
+    """
+    Where a timed task's due time falls against --at on the query day.
+
+    Returns:
+        -1 if due earlier than `at`, 0 if at `at`, 1 if later; None when
+        there is no `at`, or the task is untimed, completed, or due on
+        another day (untimed tasks are due all day).
+    """
+    if (at is None or task.due_time is None or task.status == TaskStatus.COMPLETED
+            or task.due_date != day):
+        return None
+    return (task.due_time > at) - (task.due_time < at)
 
 
-PREDICATES: dict[str, Callable[[Task, date, date], bool]] = {
-    'overdue': lambda t, start, end: t.effective_due is not None and t.effective_due < start,
-    'due': lambda t, start, end: _within(t.effective_due, start, end),
-    'scheduled': lambda t, start, end: (_within(t.effective_due, start, end)
-                                        or _within(t.start_date, start, end)),
+def _is_ready(task: Task, start: date, end: date, at: time | None = None) -> bool:
+    due_ready = _on_or_before(task.effective_due, end) and _timed(task, end, at) != 1
+    return due_ready or _on_or_before(task.start_date, end)
+
+
+def _is_overdue(task: Task, start: date, end: date, at: time | None = None) -> bool:
+    return ((task.effective_due is not None and task.effective_due < start)
+            or _timed(task, start, at) == -1)
+
+
+def _is_due(task: Task, start: date, end: date, at: time | None = None) -> bool:
+    return _within(task.effective_due, start, end) and _timed(task, start, at) in (None, 0)
+
+
+PREDICATES: dict[str, Callable[..., bool]] = {
+    'overdue': _is_overdue,
+    'due': _is_due,
+    'scheduled': lambda t, start, end, at=None: (_within(t.effective_due, start, end)
+                                                 or _within(t.start_date, start, end)),
     'ready': _is_ready,
-    'future': lambda t, start, end: ((t.effective_due is not None or t.start_date is not None)
-                                     and not _is_ready(t, start, end)),
-    'undated': lambda t, start, end: t.undated and t.start_date is None,
+    'future': lambda t, start, end, at=None: ((t.effective_due is not None
+                                               or t.start_date is not None)
+                                              and not _is_ready(t, start, end, at)),
+    'undated': lambda t, start, end, at=None: t.undated and t.start_date is None,
 }
+
+
+def parse_at(text: str, now: datetime | None = None) -> time:
+    """
+    Resolve an --at value.
+
+    Args:
+        text: 'now' or a 24-hour time such as 15:00.
+        now: The current local time for 'now' (default: the machine's
+            local time).
+
+    Raises:
+        ValueError: If text is not 'now' or a time.
+    """
+    if text.strip().lower() == 'now':
+        return (now or datetime.now()).time().replace(second=0, microsecond=0)
+    parsed = _parse_bare_time_24h(text)
+    if parsed is None:
+        raise ValueError(f"Invalid --at '{text}': use HH:MM or now")
+    return parsed
 
 
 def filter_tasks_by_folder(tasks: list[Task], folder: str, root_dir: str) -> list[Task]:
@@ -199,7 +246,8 @@ def is_later(task: Task) -> bool:
 
 
 def select(tasks: list[Task], modes: list[str] | tuple[str, ...] | None,
-           start: date, end: date, later: bool = False) -> list[tuple[str, Task]]:
+           start: date, end: date, later: bool = False,
+           at: time | None = None) -> list[tuple[str, Task]]:
     """
     Select tasks by mode for the period START..END.
 
@@ -209,6 +257,9 @@ def select(tasks: list[Task], modes: list[str] | tuple[str, ...] | None,
         start: First day of the period.
         end: Last day of the period.
         later: Include tasks tagged #later.
+        at: Time of day on the single day START (== END). Timed tasks due
+            that day earlier than `at` are overdue, at `at` are due, and
+            later are future; untimed tasks are due all day.
 
     Returns:
         (section, task) pairs, in the order of tasks. Each task appears at
@@ -220,7 +271,7 @@ def select(tasks: list[Task], modes: list[str] | tuple[str, ...] | None,
         if not later and is_later(task):
             continue
         for section in sections:
-            if PREDICATES[section](task, start, end):
+            if PREDICATES[section](task, start, end, at):
                 selected.append((section, task))
                 break
     return selected
@@ -396,8 +447,8 @@ def run_query(root_dir: str, period: str | None = None,
               modes: list[str] | tuple[str, ...] | None = None, later: bool = False,
               tags: list[str] | None = None, group_by: str | None = None,
               folder: str | None = None, status: str = 'incomplete',
-              condensed: bool = False,
-              today: date | None = None) -> tuple[list[str], list[tuple[str, Task]]]:
+              condensed: bool = False, today: date | None = None,
+              at: str | None = None) -> tuple[list[str], list[tuple[str, Task]]]:
     """
     Run a task query.
 
@@ -412,15 +463,22 @@ def run_query(root_dir: str, period: str | None = None,
         status: Status argument ('incomplete', 'completed', 'all', ...).
         condensed: If True, use condensed format.
         today: Reference date for the default period (default: today).
+        at: --at value, 'now' or HH:MM (needs a single day in period).
 
     Returns:
         Tuple of (report lines, selected (section, task) pairs in report
         order, each task once).
 
     Raises:
-        ValueError: If period is invalid.
+        ValueError: If period or at is invalid, or at is given with a
+            period longer than one day.
     """
     start, end = parse_period(period, today)
+    at_time = None
+    if at is not None:
+        at_time = parse_at(at)
+        if start != end:
+            raise ValueError("--at needs a single day in --date")
 
     markdown_files = find_all_markdown_files(root_dir)
     if not markdown_files:
@@ -428,7 +486,7 @@ def run_query(root_dir: str, period: str | None = None,
 
     sections = resolve_modes(modes)
     tasks = collect_tasks(markdown_files, root_dir, folder, status, tags)
-    selected = sort_selection(select(tasks, sections, start, end, later))
+    selected = sort_selection(select(tasks, sections, start, end, later, at_time))
     return build_report(selected, sections, root_dir, group_by, condensed), selected
 
 
@@ -438,6 +496,14 @@ def add_query_arguments(parser: argparse.ArgumentParser) -> None:
         '--date',
         metavar='PERIOD',
         help=f'Day or period to select for (default: today): {FORMS}'
+    )
+
+    parser.add_argument(
+        '--at',
+        metavar='TIME',
+        help='Time of day, HH:MM or now (local time), on a single --date day: '
+             'timed tasks due earlier are overdue, at that time due, later '
+             'future; untimed tasks are due all day'
     )
 
     modes = parser.add_argument_group('modes (combine; default: --ready)')
@@ -547,7 +613,7 @@ Replacements for removed options:
         lines, _selected = run_query(
             args.root_dir, args.date, args.modes, args.later, args.tags,
             args.group_by, args.folder, args.status,
-            args.condensed or args.format == 'condensed')
+            args.condensed or args.format == 'condensed', at=args.at)
     except ValueError as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
