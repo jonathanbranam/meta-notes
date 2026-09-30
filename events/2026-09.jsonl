@@ -31,3 +31,4 @@
 {"actor":"external:orchestrator","at":"2026-09-30T20:00:07.541281336Z","from":"open","task":"mn-1005","to":"planned"}
 {"actor":"external:orchestrator","at":"2026-09-30T20:00:07.652762655Z","from":"open","task":"mn-8b74","to":"planned"}
 {"actor":"external:orchestrator","at":"2026-09-30T20:00:07.764283416Z","from":"open","task":"mn-5703","to":"planned"}
+{"actor":"human","at":"2026-09-30T20:03:24.659315576Z","queue":"reprioritized"}
