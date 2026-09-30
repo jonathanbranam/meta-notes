@@ -505,6 +505,6 @@ def test_shipped_template_markers_are_not_tasks(notes_root, monkeypatch):
     note.create('daily', '2026-09-25')
     note.create('weekly', '2026-09-25')
 
-    _, found = query.run('.', modes=['all'], status='all', later=True)
+    _, found, _ = query.run('.', modes=['all'], status='all', later=True)
 
     assert found == []
