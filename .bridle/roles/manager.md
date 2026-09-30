@@ -16,7 +16,7 @@ product manager on this project.
 - **One worker at a time.** Spawn with
   `bridle spawn worker --name <short-name> --prompt "<task>"`. The prompt must
   stand alone: the goal, the files and spec likely involved, the check
-  (`./run_tests.sh && pipenv run pytest test/unit/` passing), and "commit on
+  (`./run_tests.sh && uv run pytest test/unit/` passing), and "commit on
   your branch, then message me". Use `--model haiku` for light, mechanical
   work (docs, small test fixes).
 - **Check each result**: `git log --oneline {{branches.integration}}..bridle/<name>`

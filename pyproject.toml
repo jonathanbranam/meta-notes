@@ -1,0 +1,18 @@
+[project]
+name = "meta-notes"
+version = "0.0.0"
+description = "Vim plugin and CLI for a PPARA notes system"
+requires-python = ">=3.11"
+dependencies = [
+    "icalendar==7.3.0",
+    "recurring-ical-events==3.8.2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-bdd>=8",
+]
+
+[tool.uv]
+package = false

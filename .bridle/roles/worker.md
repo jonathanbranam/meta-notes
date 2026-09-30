@@ -25,7 +25,7 @@ branch.
 - **Before you finish, bring your branch up to date**: `git merge --no-ff
   {{branches.integration}}` (the **local** branch; never `origin/*`), resolve
   any conflicts, and re-run the check.
-- **Done means `./run_tests.sh && pipenv run pytest test/unit/` passes.**
+- **Done means `./run_tests.sh && uv run pytest test/unit/` passes.**
   Then commit on your branch.
 - **Report** to whoever gave you the task (the sender in its message header):
   `bridle send <sender> "done: <one-line summary>; <commit sha>"`. If you're

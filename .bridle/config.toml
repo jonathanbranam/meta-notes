@@ -9,7 +9,7 @@
 # workflow can be a git url).
 workflow = "/Volumes/Data/work/bridle/bridle/workflow"
 
-# No packs yet. The Python (pipenv, stdlib-only) and Vim (vader) rules live
+# No packs yet. The Python (uv, stdlib-only) and Vim (vader) rules live
 # in this project's .bridle/rules/ for now and move into python/vim packs
 # once bridle has them.
 packs = []
@@ -23,7 +23,7 @@ integration = "main"
 
 # Definition of done for a worker; substituted into the bridle-worker skill.
 [commands]
-check = "bridle spec check --require-ids && ./run_tests.sh && pipenv run pytest test/unit/"
+check = "bridle spec check --require-ids && ./run_tests.sh && uv run pytest test/unit/"
 
 # One worker at a time. (As of bridle 6t29 this caps resumes after a budget
 # pause, not spawns; the manager's prompt also says one worker.)

@@ -4,7 +4,7 @@ severity: must
 roles: [manager, worker]
 ---
 Python is tested with pytest in `test/unit/`, one file per module, run with
-`pipenv run pytest test/unit/` (or `pipenv run pytest test/unit/test_<x>.py`).
+`uv run pytest test/unit/` (or `uv run pytest test/unit/test_<x>.py`).
 
 - Bare test functions, no test classes.
 - Name them `test_<module>_<function>_<scenario>`, e.g.
