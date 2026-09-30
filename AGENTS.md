@@ -28,7 +28,7 @@ exception for commands that need a pinned library, are in
 ## Work Tracking
 
 Work is tracked as bridle tasks (`bridle task`), run by bridle's agents on
-the `bridle-adopt` trial branch. Project settings and agent rules are in
+the `main` branch. Project settings and agent rules are in
 `.bridle/`: `config.toml`, and `rules/` for the conventions agents follow.
 Beads, and later OpenSpec's change workflow, were used before.
 

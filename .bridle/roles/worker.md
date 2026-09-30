@@ -40,5 +40,5 @@ branch.
 - Push, fetch, pull or merge from a remote, merge your branch into anything,
   or switch branches. Merging the local `{{branches.integration}}` into your
   own branch is the one merge you do.
-- Touch `main`, create tags, or change files outside your worktree.
+- Create tags, or change files outside your worktree.
 - Commit with the check failing, or skip hooks.
