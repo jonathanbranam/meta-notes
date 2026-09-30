@@ -104,6 +104,7 @@ meta-notes/
 │   ├── find_tasks.py        # Task selection and report
 │   ├── notes.py             # Note utilities
 │   ├── period.py            # --date day and period parsing
+│   ├── recurrence.py        # Recurrence rules and next dates
 │   ├── tags.py              # Tag parsing and aliases
 │   ├── tasks.py             # Task parsing and processing
 │   ├── time_report.py       # Time tracking reports
@@ -130,6 +131,7 @@ meta-notes/
 │   │   ├── test_ops.py
 │   │   ├── test_prime.py
 │   │   ├── test_query.py
+│   │   ├── test_recurrence.py
 │   │   ├── test_root.py
 │   │   ├── test_shim.py
 │   │   ├── test_tags.py
