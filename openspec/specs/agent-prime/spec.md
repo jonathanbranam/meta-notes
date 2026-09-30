@@ -9,10 +9,12 @@ Specifies `meta-notes prime`, which prints a guide to a notes root for an agent 
 `meta-notes prime` SHALL print the guide as markdown to stdout. With `--json`, the result SHALL have `version` (the CLI version), `root` (the absolute notes root, or null), and `text` (the same markdown). The command SHALL NOT write any file.
 
 #### Scenario: Inside a notes root
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes prime` in `project/kitchen/` of a notes root
 - **THEN** the command SHALL succeed and print the guide
 
 #### Scenario: JSON result
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes prime --json` in a notes root
 - **THEN** the result SHALL have `ok` true, `version`, `root` set to the notes root, and `text`
 
@@ -20,6 +22,7 @@ Specifies `meta-notes prime`, which prints a guide to a notes root for an agent 
 When no notes root is found, `meta-notes prime` SHALL still succeed, SHALL print the guide, and SHALL begin the guide with a line saying no notes root was found and that `meta-notes init` creates one. With `--json`, `root` SHALL be null.
 
 #### Scenario: No notes root
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes prime --json` in a directory with no `.meta-notes` above it
 - **THEN** the result SHALL have `ok` true and `root` null, and `text` SHALL mention `meta-notes init`
 
@@ -40,14 +43,17 @@ The guide SHALL cover:
 - the full conventions, identical to the output of `meta-notes conventions`
 
 #### Scenario: Conventions included
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes prime`
 - **THEN** the output SHALL contain the output of `meta-notes conventions`
 
 #### Scenario: Working hours stated
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes prime`
 - **THEN** the output SHALL give the working day as 08:00 to 17:00, Monday to Friday
 
 #### Scenario: Archive rule present
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes prime`
 - **THEN** the output SHALL say that archiving is done only with `meta-notes archive` and that archived items keep their path under `archive/`
 
@@ -59,10 +65,12 @@ These parts of the guide SHALL be generated, not written by hand, so they match 
 - the names of the skills the plugin ships
 
 #### Scenario: Today's daily path
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes prime` on 2026-09-26
 - **THEN** the output SHALL contain `plan/daily/26-Q3/2026-09-26 Sat.md` and `plan/week/26-Q3/2026-09-21.md`
 
 #### Scenario: New skill listed
+*Verification*: **non-executable**
 - **WHEN** the plugin ships `skills/calendar/`
 - **THEN** the guide SHALL list `calendar`
 
@@ -70,5 +78,6 @@ These parts of the guide SHALL be generated, not written by hand, so they match 
 The guide, including the conventions, SHALL be at most 10,000 characters, so it costs little context in every session. It SHALL contain no markdown tables.
 
 #### Scenario: Size budget
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes prime` in a notes root
 - **THEN** stdout SHALL be at most 10,000 characters and no line SHALL start with `|`

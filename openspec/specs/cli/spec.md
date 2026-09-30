@@ -8,14 +8,17 @@ Specifies the `meta-notes` command-line interface, a stdlib-only Python CLI that
 The system SHALL provide a `meta-notes` command, written in Python, that implements move, rename, and archive. Commands SHALL use only the Python standard library, except where a command's own spec says it needs other libraries; those libraries SHALL be installed only in the notes root's virtualenv and imported only by the commands that need them. The Vim plugin SHALL perform these operations by invoking the CLI and SHALL NOT move files or rewrite headers or links itself.
 
 #### Scenario: Vim archive uses the CLI
+*Verification*: **non-executable**
 - **WHEN** the user runs `:MetaNotesArchive project/foo`
 - **THEN** the plugin SHALL invoke `meta-notes archive` with `--root` set to Vim's current directory and `--json`
 
 #### Scenario: Agent can archive without Vim
+*Verification*: **non-executable**
 - **WHEN** `meta-notes archive project/foo` is run from a shell in the notes root
 - **THEN** the resulting files and links SHALL be identical to running `:MetaNotesArchive project/foo` in Vim
 
 #### Scenario: Standard-library commands work without the virtualenv
+*Verification*: **non-executable**
 - **WHEN** the notes root has no `.venv` and the user runs `meta-notes tasks --json`
 - **THEN** the command SHALL succeed using the `python3` on `PATH`
 
@@ -31,26 +34,32 @@ The upward search SHALL:
 If the search stops without finding `.meta-notes`, the command SHALL fail with an error that says no notes root was found and to run `meta-notes init` in the notes root or to pass `--root`.
 
 #### Scenario: Root found by walking up
+*Verification*: **non-executable**
 - **WHEN** the CLI is run from `project/foo/` inside a notes root that contains `.meta-notes`, and neither `--root` nor `META_NOTES_ROOT` is set
 - **THEN** the notes root SHALL be the directory containing `.meta-notes`
 
 #### Scenario: Folder names alone do not make a root
+*Verification*: **non-executable**
 - **WHEN** the CLI is run without `--root` or `META_NOTES_ROOT` from a directory whose ancestor contains `plan/`, `project/`, and `area/` but no `.meta-notes`, and no other ancestor up to `$HOME` contains `.meta-notes`
 - **THEN** the CLI SHALL exit non-zero with the no-notes-root error
 
 #### Scenario: Explicit root without plan folder
+*Verification*: **non-executable**
 - **WHEN** the CLI is run with `--root <dir>` and `<dir>` has no `.meta-notes` and no `plan/` folder
 - **THEN** the CLI SHALL use `<dir>` as the notes root
 
 #### Scenario: Search stops at $HOME
+*Verification*: **non-executable**
 - **WHEN** the CLI is run from a directory under `$HOME`, and only a directory above `$HOME` contains `.meta-notes`
 - **THEN** the CLI SHALL exit non-zero with the no-notes-root error
 
 #### Scenario: Search stops at a directory without permission
+*Verification*: **non-executable**
 - **WHEN** the CLI is run from `a/b/` where `a/` contains `.meta-notes` but the user cannot write to `a/`
 - **THEN** the CLI SHALL exit non-zero with the no-notes-root error, and SHALL NOT report a permission error
 
 #### Scenario: No root found
+*Verification*: **non-executable**
 - **WHEN** no root can be resolved
 - **THEN** the CLI SHALL exit non-zero with an error that says to run `meta-notes init` or pass `--root`
 
@@ -58,10 +67,12 @@ If the search stops without finding `.meta-notes`, the command SHALL fail with a
 Every command SHALL accept `--json`. With `--json`, the command SHALL write exactly one JSON object to stdout and nothing to stderr, whether it succeeds or fails. Without `--json`, errors and warnings SHALL go to stderr.
 
 #### Scenario: Error with --json
+*Verification*: **non-executable**
 - **WHEN** a command fails with `--json`
 - **THEN** it SHALL exit non-zero and write one JSON object to stdout with `ok` set to false and an `error` message
 
 #### Scenario: Error without --json
+*Verification*: **non-executable**
 - **WHEN** a command fails without `--json`
 - **THEN** it SHALL exit non-zero and write the error to stderr
 
@@ -69,14 +80,17 @@ Every command SHALL accept `--json`. With `--json`, the command SHALL write exac
 `meta-notes move <src> <dst>` SHALL move a note, a folder, or a folder hierarchy including non-markdown files, rewrite the first line of each moved note that is exactly `# <old path>`, and rewrite every `[[old path]]` and `[[old path/...]]` wiki-link to a moved path.
 
 #### Scenario: Project converted to an area
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes move project/foo area/foo`
 - **THEN** all contents SHALL appear under `area/foo` and every link to `project/foo` or any path beneath it SHALL be rewritten to the corresponding `area/foo` path
 
 #### Scenario: Header rewritten
+*Verification*: **non-executable**
 - **WHEN** `project/foo.md` begins with `# project/foo` and is moved to `area/foo`
 - **THEN** `area/foo.md` SHALL begin with `# area/foo`
 
 #### Scenario: Target exists
+*Verification*: **non-executable**
 - **WHEN** the destination file already exists
 - **THEN** the command SHALL fail with `Target file already exists: <dst>` and make no changes
 
@@ -84,6 +98,7 @@ Every command SHALL accept `--json`. With `--json`, the command SHALL write exac
 `meta-notes rename <src> <new-name>` SHALL keep the source's directory when `<new-name>` contains no `/`, SHALL append `.md` when missing, and SHALL otherwise behave as `move`.
 
 #### Scenario: Bare name
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes rename project/foo.md bar`
 - **THEN** the note SHALL be moved to `project/bar.md` with its header and links updated
 
@@ -91,6 +106,7 @@ Every command SHALL accept `--json`. With `--json`, the command SHALL write exac
 `meta-notes archive` SHALL expand `*` and `?` in its path argument and archive each match independently, continuing past items that fail and reporting each failure.
 
 #### Scenario: Batch archive
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes archive 'project/batch/*.md'` and the folder contains three notes
 - **THEN** all three notes SHALL be moved under `archive/project/batch/`
 
@@ -98,6 +114,7 @@ Every command SHALL accept `--json`. With `--json`, the command SHALL write exac
 The CLI and the Vim plugin SHALL NOT stage or commit changes.
 
 #### Scenario: Move in a git repository
+*Verification*: **non-executable**
 - **WHEN** `meta-notes rename project/foo.md bar` runs in a notes root that is a git repository
 - **THEN** the note SHALL be renamed and links rewritten in the working tree, and the index and commit history SHALL be unchanged
 
@@ -109,26 +126,32 @@ Without `--json`, it SHALL print one line to stdout: `meta-notes <version>`. Whe
 With `--json`, it SHALL write one JSON object with `ok` set to true, `version`, `commit` (the short hash, or null), `dirty` (a boolean, false when `commit` is null), and `warnings`.
 
 #### Scenario: Version from a git checkout
+*Verification*: **non-executable**
 - **WHEN** `meta-notes --version` is run and the plugin directory is the top level of a clean git working tree
 - **THEN** it SHALL exit zero and print `meta-notes <version> (<short hash>)`
 
 #### Scenario: Version with uncommitted changes
+*Verification*: **non-executable**
 - **WHEN** `meta-notes --version` is run and the plugin's git working tree has uncommitted changes to tracked files
 - **THEN** the printed line SHALL end with `(<short hash>-dirty)`
 
 #### Scenario: Version outside a git checkout
+*Verification*: **non-executable**
 - **WHEN** `meta-notes --version` is run and the plugin directory is not the top level of a git working tree, including when it sits inside some other repository
 - **THEN** it SHALL print `meta-notes <version>` with no commit, and nothing to stderr
 
 #### Scenario: Version outside a notes root
+*Verification*: **non-executable**
 - **WHEN** `meta-notes --version` is run from a directory with no `.meta-notes` at or above it, and neither `--root` nor `META_NOTES_ROOT` is set
 - **THEN** it SHALL exit zero and report the version
 
 #### Scenario: Version as JSON
+*Verification*: **non-executable**
 - **WHEN** `meta-notes --version --json` is run
 - **THEN** it SHALL write one JSON object to stdout with `ok` true, `version`, `commit`, `dirty`, and `warnings`, and nothing to stderr
 
 #### Scenario: Version with a subcommand
+*Verification*: **non-executable**
 - **WHEN** `meta-notes archive project/foo --version` is run
 - **THEN** it SHALL report the version and SHALL NOT archive anything
 
@@ -136,10 +159,12 @@ With `--json`, it SHALL write one JSON object with `ok` set to true, `version`, 
 The plugin SHALL provide `:MetaNotesVersion`, which gets the version from the CLI's `--version --json` and echoes the same line that `meta-notes --version` prints. If the CLI fails, it SHALL show the error as an error message. It SHALL work whether or not Vim's current directory is in a notes root.
 
 #### Scenario: Show version in Vim
+*Verification*: **non-executable**
 - **WHEN** the user runs `:MetaNotesVersion`
 - **THEN** Vim SHALL echo `meta-notes <version>`, followed by ` (<commit>)` when the CLI reports a commit
 
 #### Scenario: CLI unavailable
+*Verification*: **non-executable**
 - **WHEN** the user runs `:MetaNotesVersion` and the CLI can't be run
 - **THEN** Vim SHALL show the error with the error highlight and SHALL NOT raise a Vim exception
 
@@ -147,14 +172,17 @@ The plugin SHALL provide `:MetaNotesVersion`, which gets the version from the CL
 The CLI SHALL provide `meta-notes time [--date DATE] [--json]`, which prints the time report specified in `time-report` for the notes root. It SHALL resolve the notes root like the other commands. It SHALL read notes and SHALL NOT write or change any file.
 
 #### Scenario: Time report from a subfolder
+*Verification*: **non-executable**
 - **WHEN** `meta-notes time --date 2026-09-22` is run from `project/foo/` inside a notes root
 - **THEN** it SHALL print the day report for `plan/daily/26-Q3/2026-09-22 Tue.md` in that notes root
 
 #### Scenario: Time report error as JSON
+*Verification*: **non-executable**
 - **WHEN** `meta-notes time --date next-week --json` is run
 - **THEN** it SHALL exit non-zero and write one JSON object with `ok` false and an `error` naming `next-week`
 
 #### Scenario: Read only
+*Verification*: **non-executable**
 - **WHEN** `meta-notes time` is run in a notes root
 - **THEN** no file in the notes root SHALL be created, changed, or removed
 
@@ -162,6 +190,7 @@ The CLI SHALL provide `meta-notes time [--date DATE] [--json]`, which prints the
 The CLI SHALL require Python 3.11 or newer. On an older Python, every command SHALL exit non-zero with an error that names the required and found versions; with `--json`, the error SHALL be a single JSON object with `ok` false.
 
 #### Scenario: Python 3.10
+*Verification*: **non-executable**
 - **WHEN** `meta-notes tasks --json` runs on Python 3.10
 - **THEN** stdout SHALL be one JSON object with `ok` false and an error saying Python 3.11 or newer is required and 3.10 was found
 
@@ -169,17 +198,21 @@ The CLI SHALL require Python 3.11 or newer. On an older Python, every command SH
 `bin/meta-notes` SHALL run the CLI with `<root>/.venv/bin/python3` when that file exists and is executable, and with the `python3` on `PATH` otherwise. `<root>` SHALL be found as in "Notes root resolution": the `--root` value (given as `--root DIR` or `--root=DIR`, before or after the subcommand), then `META_NOTES_ROOT`, then an upward search from the current directory for `.meta-notes` that stops after `$HOME`. `meta-notes init` SHALL always run with the `python3` on `PATH`. The interpreter choice SHALL NOT change which notes root the command uses.
 
 #### Scenario: Virtualenv present
+*Verification*: **non-executable**
 - **WHEN** the notes root has an executable `.venv/bin/python3` and the user runs `meta-notes calendar` from `project/foo/` inside it
 - **THEN** the CLI SHALL run with `<root>/.venv/bin/python3`
 
 #### Scenario: Root passed after the subcommand
+*Verification*: **non-executable**
 - **WHEN** Vim runs `bin/meta-notes calendar --root /notes --json` from a directory outside `/notes`, and `/notes/.venv/bin/python3` is executable
 - **THEN** the CLI SHALL run with `/notes/.venv/bin/python3`
 
 #### Scenario: Broken virtualenv
+*Verification*: **non-executable**
 - **WHEN** `.venv/bin/python3` is a link to an interpreter that no longer exists
 - **THEN** the CLI SHALL run with the `python3` on `PATH`
 
 #### Scenario: Init ignores the virtualenv
+*Verification*: **non-executable**
 - **WHEN** the notes root has an executable `.venv/bin/python3` and the user runs `meta-notes init --force` in it
 - **THEN** init SHALL run with the `python3` on `PATH`

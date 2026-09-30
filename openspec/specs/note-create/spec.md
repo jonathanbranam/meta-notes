@@ -24,22 +24,27 @@ note's path from `<date>`, which defaults to today and SHALL be given as
 whatever the system locale.
 
 #### Scenario: Daily note path
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes note daily 2026-02-13`
 - **THEN** the note path SHALL be `plan/daily/26-Q1/2026-02-13 Fri.md`
 
 #### Scenario: Weekly note uses the week's Monday
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes note weekly 2026-04-02` (a Thursday)
 - **THEN** the note path SHALL be `plan/week/26-Q1/2026-03-30.md`
 
 #### Scenario: Quarterly and yearly note paths
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes note quarterly 2026-08-15` and `meta-notes note yearly 2026-08-15`
 - **THEN** the note paths SHALL be `plan/quarter/2026-Q3.md` and `plan/year/2026.md`
 
 #### Scenario: Date defaults to today
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes note daily` with no date
 - **THEN** the note path SHALL be computed from today's date
 
 #### Scenario: Invalid date
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes note daily 2026-13-45`
 - **THEN** the command SHALL fail with an error naming the date and write nothing
 
@@ -51,14 +56,17 @@ first day of the quarter for `plan/quarter/2026-Q3.md`), and SHALL be today
 otherwise. A path outside the notes root SHALL be an error.
 
 #### Scenario: Extension appended
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes note new "project/lunch/Lunch Ideas"`
 - **THEN** the note path SHALL be `project/lunch/Lunch Ideas.md`
 
 #### Scenario: Date taken from a plan path
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes note new plan/year/2027` and the yearly template contains `{{date}}`
 - **THEN** `{{date}}` SHALL render as `2027-01-01 Fri`
 
 #### Scenario: Path outside the root
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes note new ../elsewhere/note`
 - **THEN** the command SHALL fail with an error and write nothing
 
@@ -78,14 +86,17 @@ SHALL be a header line followed by an empty line:
 | `new` | `# <path without .md>` |
 
 #### Scenario: Template override
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes note new project/trip/Packing --template checklist` and `resource/template/checklist.md` exists
 - **THEN** the note SHALL be rendered from `resource/template/checklist.md`, even if `project/trip/template.md` exists
 
 #### Scenario: Missing named template
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes note new project/trip/Packing --template nope` and `resource/template/nope.md` doesn't exist
 - **THEN** the command SHALL fail with `Template not found: resource/template/nope.md` and write nothing
 
 #### Scenario: No template found
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes note new area/garden/Beds` and no template applies
 - **THEN** the note content SHALL be `# area/garden/Beds` followed by an empty line
 
@@ -94,6 +105,7 @@ When the note doesn't exist, the command SHALL render it, create any missing
 parent folders, and write the file. It SHALL print the note's path.
 
 #### Scenario: New daily note
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes note daily 2026-02-13` and the note doesn't exist
 - **THEN** `plan/daily/26-Q1/2026-02-13 Fri.md` SHALL be written with the rendered daily template, and the command SHALL print that path
 
@@ -102,6 +114,7 @@ When the note already exists, the command SHALL NOT write, overwrite, or
 modify it, and SHALL report its path.
 
 #### Scenario: Note exists
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes note daily 2026-02-13` and the note already exists
 - **THEN** the file SHALL be unchanged and the command SHALL print its path and exit zero
 
@@ -114,10 +127,12 @@ When the note exists, it SHALL print nothing to stdout, SHALL report
 Command blocks SHALL still run when rendering a new note.
 
 #### Scenario: Render a new note
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes note daily 2026-02-13 --render` and the note doesn't exist
 - **THEN** the rendered content SHALL be printed, and no file or folder SHALL be created
 
 #### Scenario: Render an existing note
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes note daily 2026-02-13 --render` and the note exists
 - **THEN** nothing SHALL be printed to stdout, and the file SHALL be unchanged
 
@@ -132,14 +147,17 @@ output SHALL appear only inside `content` or the written note, never
 directly on stdout.
 
 #### Scenario: JSON for a created note
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes note daily 2026-02-13 --json` and the note doesn't exist
 - **THEN** the output SHALL be one JSON object with `ok` true, `path` `plan/daily/26-Q1/2026-02-13 Fri.md`, `exists` false, `created` true, and `template` `resource/template/daily.md`
 
 #### Scenario: JSON for a rendered note
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes note daily 2026-02-13 --render --json` and the note doesn't exist
 - **THEN** the object SHALL have `exists` false, `created` false, and a `content` string equal to what the command would write
 
 #### Scenario: JSON for an existing note
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes note daily 2026-02-13 --render --json` and the note exists
 - **THEN** the object SHALL have `exists` true, `created` false, and no `content` field
 
@@ -155,17 +173,21 @@ saved. The CLI's warnings SHALL be shown, and an error SHALL be shown
 without opening a buffer.
 
 #### Scenario: Quit without saving
+*Verification*: **non-executable**
 - **WHEN** the user runs `:MetaNotesDaily` for a day with no note and then quits the buffer without saving
 - **THEN** no daily note file SHALL exist
 
 #### Scenario: Save creates the note
+*Verification*: **non-executable**
 - **WHEN** the user runs `:MetaNotesDaily` for a day with no note and runs `:write`
 - **THEN** the daily note file SHALL contain the rendered template
 
 #### Scenario: Existing note opened
+*Verification*: **non-executable**
 - **WHEN** the user runs `:MetaNotesDaily` and today's note exists
 - **THEN** Vim SHALL open the existing file unchanged
 
 #### Scenario: Following a link to a missing note
+*Verification*: **non-executable**
 - **WHEN** the cursor is on `[[project/lunch/Lunch Ideas]]`, the note doesn't exist, and the user runs `:MetaNotesOpen`
 - **THEN** Vim SHALL open an unsaved buffer for `project/lunch/Lunch Ideas.md` with the content from `meta-notes note new`

@@ -9,10 +9,12 @@ Specifies `meta-notes conventions`, which prints the shared note syntax and edit
 `meta-notes conventions` SHALL print the conventions as markdown to stdout. With `--json`, the result SHALL have `version` (the CLI version) and `text` (the same markdown). The command SHALL work outside a notes root and SHALL NOT read or write notes.
 
 #### Scenario: Outside a notes root
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes conventions` in a directory with no `.meta-notes` above it
 - **THEN** the command SHALL succeed and print the conventions
 
 #### Scenario: JSON result
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes conventions --json`
 - **THEN** the result SHALL have `ok` true, `version`, and `text`
 
@@ -32,10 +34,12 @@ The conventions SHALL cover:
 The conventions SHALL contain no markdown tables, and every line SHALL fit in 80 columns.
 
 #### Scenario: Task edit rule present
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes conventions`
 - **THEN** the output SHALL include the `meta-notes task update <file>:<line> --expect <text>` rule
 
 #### Scenario: No tables
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes conventions`
 - **THEN** no line of the output SHALL start with `|`
 
@@ -43,13 +47,16 @@ The conventions SHALL contain no markdown tables, and every line SHALL fit in 80
 The status characters and the tag aliases in the conventions SHALL be generated from the definitions the CLI uses for task queries and task updates, not written by hand, so the printed conventions always match the installed CLI. Status characters with the same meaning SHALL be listed together (`x`/`X` done).
 
 #### Scenario: Alias shown
+*Verification*: **non-executable**
 - **WHEN** the CLI reads `#waiting` as `wait`
 - **THEN** the conventions SHALL list `#waiting` as an alias of `#wait`
 
 #### Scenario: Status characters grouped
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes conventions`
 - **THEN** the output SHALL list `x`/`X` together as done, and every status character the CLI defines
 
 #### Scenario: Due emoji shown
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes conventions`
 - **THEN** the output SHALL name 📅 as the due emoji to write and SHALL NOT list 📆 or 🗓, which the CLI still reads

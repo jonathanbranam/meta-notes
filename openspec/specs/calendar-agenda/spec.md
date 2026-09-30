@@ -9,10 +9,12 @@ Specifies `meta-notes calendar`, which turns the user's latest Google Calendar e
 The CLI SHALL provide `meta-notes calendar [--date PERIOD] [--ics PATH] [--json]`, which prints the agenda for PERIOD. PERIOD SHALL use the shared `--date` syntax and default to today. The command SHALL resolve the notes root like the other commands.
 
 #### Scenario: Default period
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes calendar` on 2026-09-28 with a current export
 - **THEN** the agenda SHALL cover 2026-09-28 only
 
 #### Scenario: Week range
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes calendar --date 2026-09-28..2026-10-02`
 - **THEN** the agenda SHALL have one day for each date from 2026-09-28 to 2026-10-02
 
@@ -24,10 +26,12 @@ The command SHALL read these settings from the `[calendar]` table in `.meta-note
 - `calendars`: a list of calendar names to load from a zip export. When unset, all.
 
 #### Scenario: Timezone conversion
+*Verification*: **non-executable**
 - **WHEN** `timezone` is `America/New_York` and an event starts at 10:00 `America/Chicago`
 - **THEN** the event SHALL be shown starting at 11:00
 
 #### Scenario: Email unset
+*Verification*: **non-executable**
 - **WHEN** `[calendar]` has no `email` and an event has the user as a declined attendee
 - **THEN** the event SHALL be listed and the output SHALL include a warning that `email` is not set
 
@@ -35,14 +39,17 @@ The command SHALL read these settings from the `[calendar]` table in `.meta-note
 With `--ics PATH`, the command SHALL read that file. Otherwise it SHALL read the newest file, by modification time, whose name ends in `.ics` or `.zip` directly inside `<root>/.meta-notes-cache/ics/`. The export's age SHALL be measured from its modification time.
 
 #### Scenario: Newest export wins
+*Verification*: **non-executable**
 - **WHEN** `ics/` holds `a.zip` modified on 2026-09-24 and `b.ics` modified on 2026-09-25
 - **THEN** the agenda SHALL come from `b.ics`
 
 #### Scenario: Explicit path
+*Verification*: **non-executable**
 - **WHEN** the user passes `--ics ~/Downloads/export.zip`
 - **THEN** the agenda SHALL come from that file, whatever `ics/` holds
 
 #### Scenario: Other files ignored
+*Verification*: **non-executable**
 - **WHEN** `ics/` holds only `notes.txt` and a folder `old/` containing `c.ics`
 - **THEN** the command SHALL behave as if `ics/` held no export
 
@@ -50,10 +57,12 @@ With `--ics PATH`, the command SHALL read that file. Otherwise it SHALL read the
 When no export is found and no cached calendar exists, the command SHALL exit non-zero with an error that gives the absolute path of `.meta-notes-cache/ics/` and says to export from Google Calendar into it. When no export is found but a cached calendar exists, the command SHALL use the newest cached calendar and SHALL warn that the export it was built from is missing.
 
 #### Scenario: Nothing at all
+*Verification*: **non-executable**
 - **WHEN** `ics/` is empty and `calendar/` is empty
 - **THEN** the command SHALL fail with an error naming the absolute path of `ics/`
 
 #### Scenario: Export deleted after caching
+*Verification*: **non-executable**
 - **WHEN** the only export was cached and then deleted from `ics/`
 - **THEN** the command SHALL print the agenda from the cached calendar with a warning that its export is missing
 
@@ -61,14 +70,17 @@ When no export is found and no cached calendar exists, the command SHALL exit no
 A `.zip` export SHALL be read without extracting it to disk. Each `.ics` member SHALL be one calendar, named by its `X-WR-CALNAME` property, or by its file name without `.ics` when that property is missing. When `calendars` is set, only calendars whose name or member file name without `.ics` matches an entry, ignoring case, SHALL be loaded; an entry that matches no calendar SHALL be an error listing the available names. When `calendars` is unset, all calendars SHALL be loaded. For a `.ics` export, the file SHALL be the one calendar and `calendars` SHALL NOT apply.
 
 #### Scenario: Selected calendar
+*Verification*: **non-executable**
 - **WHEN** the zip holds calendars named `me@example.com`, `Holidays in United States`, and `Birthdays`, and `calendars = ["me@example.com"]`
 - **THEN** only events from `me@example.com` SHALL appear
 
 #### Scenario: Unknown calendar name
+*Verification*: **non-executable**
 - **WHEN** `calendars = ["work"]` and no calendar in the zip is named `work`
 - **THEN** the command SHALL fail with an error listing `me@example.com`, `Holidays in United States`, and `Birthdays`
 
 #### Scenario: All calendars
+*Verification*: **non-executable**
 - **WHEN** `calendars` is unset and the zip holds three calendars
 - **THEN** events from all three SHALL appear, and the JSON output SHALL list all three as available and loaded
 
@@ -81,22 +93,27 @@ The agenda SHALL include every occurrence of every event, including each occurre
 A timed event SHALL appear on the day it starts. An all-day event SHALL appear on each day it covers within PERIOD. Within a day, all-day events SHALL come first, then timed events by start time.
 
 #### Scenario: Declined meeting hidden
+*Verification*: **non-executable**
 - **WHEN** `email = "me@example.com"` and an event lists `me@example.com` as an attendee with `PARTSTAT=DECLINED`
 - **THEN** the event SHALL NOT appear
 
 #### Scenario: Moved occurrence
+*Verification*: **non-executable**
 - **WHEN** a weekly Tuesday meeting has its 2026-09-29 occurrence moved to Wednesday 2026-09-30
 - **THEN** the agenda SHALL show it on 2026-09-30 and not on 2026-09-29
 
 #### Scenario: Series split at an edit
+*Verification*: **non-executable**
 - **WHEN** a weekly meeting's series ends with `UNTIL=20260924T035959Z` and continues as a new series starting 2026-09-24 (`America/New_York`)
 - **THEN** the agenda for 2026-09-24 SHALL show that meeting once
 
 #### Scenario: Occurrence recorded twice
+*Verification*: **non-executable**
 - **WHEN** the export holds the same occurrence of a meeting twice, at `SEQUENCE` 1 titled `Sync` and `SEQUENCE` 2 titled `Sync (moved)`
 - **THEN** the agenda SHALL show `Sync (moved)` once
 
 #### Scenario: Multi-day all-day event
+*Verification*: **non-executable**
 - **WHEN** an all-day event covers 2026-09-28 through 2026-09-30 and PERIOD is 2026-09-29..2026-10-02
 - **THEN** it SHALL appear on 2026-09-29 and 2026-09-30
 
@@ -106,10 +123,12 @@ Without `--json`, the command SHALL print, for each day in PERIOD including days
 With `--json`, the object SHALL have `ok`, `days` (each with `date` and `events`, each event with `start`, `end`, `all_day`, `title`, `location`, `calendar`, `mine`, `organizer`, `response`, `attendee_count`, and `attendees`), `source` (the export's path, its modification time, its age in days, whether a cached calendar was used, and the available and loaded calendar names), `pruned` (paths deleted by pruning), and `warnings`.
 
 #### Scenario: Text output
+*Verification*: **non-executable**
 - **WHEN** 2026-09-28 has an all-day event `Holiday` and a meeting `Standup` from 09:00 to 09:30 in `Room 4` that the user accepted, and one calendar is loaded
 - **THEN** the output SHALL include `## 2026-09-28 Mon`, then `all day  Holiday`, then `09:00-09:30  Standup`
 
 #### Scenario: Empty day
+*Verification*: **non-executable**
 - **WHEN** 2026-09-29 has no events and is in PERIOD
 - **THEN** the output SHALL include the heading `## 2026-09-29 Tue` with no event lines after it
 
@@ -124,22 +143,27 @@ Each event SHALL report, in the JSON output:
 The text output SHALL show ` [maybe]` or ` [no-reply]` when `response` is `maybe` or `no-reply` and `mine` is false, and nothing otherwise.
 
 #### Scenario: Maybe
+*Verification*: **non-executable**
 - **WHEN** the user's attendee entry has `PARTSTAT=TENTATIVE`
 - **THEN** the event's `response` SHALL be `maybe` and its text line SHALL end with ` [maybe]`
 
 #### Scenario: No reply
+*Verification*: **non-executable**
 - **WHEN** the user's attendee entry has `PARTSTAT=NEEDS-ACTION`
 - **THEN** the event's `response` SHALL be `no-reply` and its text line SHALL end with ` [no-reply]`
 
 #### Scenario: Created by the user
+*Verification*: **non-executable**
 - **WHEN** the event's `ORGANIZER` is `mailto:me@example.com` and `email = "me@example.com"`
 - **THEN** `mine` SHALL be true and the text line SHALL have no bracket
 
 #### Scenario: Personal event without attendees
+*Verification*: **non-executable**
 - **WHEN** an event in the calendar named `WORK` has no organizer and no attendees, and `email = "me@example.com"`
 - **THEN** `mine` SHALL be true, `response` null, and `attendee_count` 0
 
 #### Scenario: Large meeting
+*Verification*: **non-executable**
 - **WHEN** an event has 30 people and a room as attendees
 - **THEN** `attendee_count` SHALL be 30 and `attendees` SHALL list the first 20 people with their responses
 
@@ -147,10 +171,12 @@ The text output SHALL show ` [maybe]` or ` [no-reply]` when `response` is `maybe
 When the export used is older than `stale_days` days, the command SHALL succeed and SHALL warn with the export's age in days. The same SHALL apply to a cached calendar used without its export, using the export's recorded modification time.
 
 #### Scenario: Default threshold
+*Verification*: **non-executable**
 - **WHEN** `stale_days` is unset and the newest export was modified 4 days ago
 - **THEN** the agenda SHALL print with a warning that the export is 4 days old
 
 #### Scenario: Configured threshold
+*Verification*: **non-executable**
 - **WHEN** `stale_days = 7` and the newest export was modified 4 days ago
 - **THEN** no stale warning SHALL be given
 
@@ -158,14 +184,17 @@ When the export used is older than `stale_days` days, the command SHALL succeed 
 The command SHALL store what it reads from an export in `<root>/.meta-notes-cache/calendar/`, keyed by the export's file name, size, modification time, and the loaded calendar names, and SHALL reuse it while all four are unchanged. The agenda from a cached calendar SHALL equal the agenda from the export for any PERIOD that starts no more than 30 days before the cache was built. For a PERIOD that starts earlier, the command SHALL read the export directly when it exists, and otherwise SHALL use the cached calendar and warn that events before the cache's start may be missing. The command SHALL create `calendar/` when it is missing.
 
 #### Scenario: Reuse
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes calendar` twice without changing the export or config
 - **THEN** the second run's JSON SHALL report that a cached calendar was used, and both agendas SHALL be equal
 
 #### Scenario: New export
+*Verification*: **non-executable**
 - **WHEN** a new export is saved into `ics/` after a run
 - **THEN** the next run SHALL read the new export and cache it
 
 #### Scenario: Calendar selection changed
+*Verification*: **non-executable**
 - **WHEN** `calendars` changes between runs with the same export
 - **THEN** the next run SHALL read the export again and cache it with the new selection
 
@@ -178,10 +207,12 @@ Each `calendar` run SHALL, after choosing its source:
 Pruning SHALL only delete files directly inside `ics/` whose names end in `.ics` or `.zip`, and files inside `calendar/`. Every deleted path SHALL be reported: in `pruned` with `--json`, on stderr without it.
 
 #### Scenario: Old exports removed
+*Verification*: **non-executable**
 - **WHEN** `ics/` holds 7 exports
 - **THEN** after the run it SHALL hold the 5 newest, and cached calendars built from the 2 deleted exports SHALL be deleted
 
 #### Scenario: Other files kept
+*Verification*: **non-executable**
 - **WHEN** `ics/` holds 7 exports and `notes.txt`
 - **THEN** `notes.txt` SHALL still exist after the run
 
@@ -189,6 +220,7 @@ Pruning SHALL only delete files directly inside `ics/` whose names end in `.ics`
 When the libraries the calendar command needs are not installed for the interpreter running it, `meta-notes calendar` SHALL exit non-zero with an error that says calendar support is not installed in this notes root and to run `meta-notes init`, or `meta-notes init --force` when `.venv` exists. Other commands SHALL NOT need these libraries.
 
 #### Scenario: No virtualenv
+*Verification*: **non-executable**
 - **WHEN** the notes root has no `.venv` and the system `python3` lacks the libraries
 - **THEN** `meta-notes calendar` SHALL fail with the not-installed error, and `meta-notes tasks` SHALL work
 
@@ -196,10 +228,12 @@ When the libraries the calendar command needs are not installed for the interpre
 The CLI SHALL provide `meta-notes cache clear [--json]`, which deletes every file in `<root>/.meta-notes-cache/calendar/` and reports how many it deleted. It SHALL NOT delete anything in `ics/` or `.meta-notes-cache/README.md`, and a missing `calendar/` SHALL NOT be an error. It SHALL NOT need the calendar libraries.
 
 #### Scenario: Clear
+*Verification*: **non-executable**
 - **WHEN** `calendar/` holds 2 cached calendars and `ics/` holds 3 exports
 - **THEN** after `meta-notes cache clear`, `calendar/` SHALL be empty, `ics/` SHALL hold the 3 exports, and the report SHALL say 2 were deleted
 
 #### Scenario: Nothing to clear
+*Verification*: **non-executable**
 - **WHEN** `.meta-notes-cache/calendar/` does not exist
 - **THEN** `meta-notes cache clear` SHALL succeed and report 0 deleted
 
@@ -207,22 +241,27 @@ The CLI SHALL provide `meta-notes cache clear [--json]`, which deletes every fil
 `meta-notes calendar` SHALL accept `--with NAME`, repeatable. A person SHALL match NAME when every word of NAME, ignoring case, is the start of a word in the person's name or email address, in any order; words are runs of letters and digits. An event SHALL match NAME when its organizer or any of its attendees who are people matches, checking every attendee, not only those listed in `attendees`. With `--with`, only events that match every NAME SHALL be included. A NAME without letters or digits SHALL be an error.
 
 #### Scenario: First name as a prefix
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes calendar --with zach` and an event has the attendee `Zachary Kim <zkim@example.com>`
 - **THEN** the event SHALL be included
 
 #### Scenario: Name found in the email address
+*Verification*: **non-executable**
 - **WHEN** the user runs `--with "Loan Bui"` and an attendee has no name and the address `bui.loan@example.com`
 - **THEN** the event SHALL be included
 
 #### Scenario: Attendee past the list cap
+*Verification*: **non-executable**
 - **WHEN** the user runs `--with sapna` and Sapna is the 25th of 30 attendees
 - **THEN** the event SHALL be included, and its `matches` SHALL list Sapna
 
 #### Scenario: Two names
+*Verification*: **non-executable**
 - **WHEN** the user runs `--with zach --with sapna` and an event has Zach but not Sapna
 - **THEN** the event SHALL NOT be included
 
 #### Scenario: Word start only
+*Verification*: **non-executable**
 - **WHEN** the user runs `--with ann` and the only attendee is `Joanna Smith <jsmith@example.com>`
 - **THEN** the event SHALL NOT be included
 
@@ -230,10 +269,12 @@ The CLI SHALL provide `meta-notes cache clear [--json]`, which deletes every fil
 `meta-notes calendar` SHALL accept `--search TEXT`, repeatable. An event SHALL match TEXT when its title, location, or description contains TEXT, ignoring case. With `--search`, only events that match every TEXT SHALL be included.
 
 #### Scenario: Topic in the description
+*Verification*: **non-executable**
 - **WHEN** the user runs `--search efp` and an event titled `Quarterly sync` has `EFP rollout` in its description
 - **THEN** the event SHALL be included, with `description` as the matching field
 
 #### Scenario: Filters combined
+*Verification*: **non-executable**
 - **WHEN** the user runs `--with zach --search 1:1`
 - **THEN** only events that match both SHALL be included
 
@@ -241,13 +282,16 @@ The CLI SHALL provide `meta-notes cache clear [--json]`, which deletes every fil
 With `--with` or `--search`, the text and JSON output SHALL include only the days in PERIOD that have a matching event, in date order, each with only its matching events. When no event matches, the command SHALL succeed; the text output SHALL be the line `No matching events.` and the JSON `days` SHALL be empty. In the JSON, each included event SHALL have `matches`, an object with `with`, a list with one entry per `--with` NAME (`name`, and `people`: every organizer or attendee that matched, each with `name`, `email`, and `response`), and `search`, a list with one entry per `--search` TEXT (`text`, and `fields`: the matching fields among `title`, `location`, and `description`). Without a filter, the output SHALL be unchanged, and events SHALL NOT have `matches`.
 
 #### Scenario: Only matching days
+*Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes calendar --date 2026-09-28..2026-10-02 --with zach` and Zach is only in a meeting on 2026-09-30
 - **THEN** the output SHALL have only the day 2026-09-30, with only that meeting
 
 #### Scenario: No matches
+*Verification*: **non-executable**
 - **WHEN** no event in PERIOD matches `--with nobody`
 - **THEN** the command SHALL exit 0, print `No matching events.`, and with `--json` return an empty `days`
 
 #### Scenario: Matches in JSON
+*Verification*: **non-executable**
 - **WHEN** the user runs `--with zach --json` and Zachary Kim accepted the meeting
 - **THEN** the event's `matches.with` SHALL be `[{"name": "zach", "people": [{"name": "Zachary Kim", "email": "zkim@example.com", "response": "yes"}]}]`

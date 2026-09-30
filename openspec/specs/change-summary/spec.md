@@ -10,14 +10,17 @@ Specifies `meta-notes changes`, which lists the notes changed in a period from t
 `meta-notes changes [--date PERIOD] [--json]` SHALL list the notes changed in PERIOD, where PERIOD uses the `date-period` syntax and defaults to today. A note is a `.md` file under `plan/`, `project/`, `area/`, `resource/`, or `archive/`, at any depth. Files outside those folders, and files that aren't `.md`, SHALL NOT be listed. Notes under `archive/` SHALL be listed like any other note.
 
 #### Scenario: Default period is today
+*Verification*: **non-executable**
 - **WHEN** today is 2026-09-25 and `meta-notes changes` is run with no `--date`
 - **THEN** the list SHALL cover 2026-09-25 only
 
 #### Scenario: Non-note files ignored
+*Verification*: **non-executable**
 - **WHEN** a commit in PERIOD changes `project/kitchen/plan.pdf`, `templates/daily.md`, and `project/kitchen/Home.md`
 - **THEN** only `project/kitchen/Home.md` SHALL be listed
 
 #### Scenario: Archived note listed
+*Verification*: **non-executable**
 - **WHEN** a commit in PERIOD edits `archive/project/trip.md`
 - **THEN** `archive/project/trip.md` SHALL be listed
 
@@ -25,14 +28,17 @@ Specifies `meta-notes changes`, which lists the notes changed in a period from t
 A commit SHALL be in PERIOD when its author date, taken in the timezone recorded with that date, falls on or between START and END. Commits outside PERIOD SHALL NOT contribute to the list.
 
 #### Scenario: Commit inside the week
+*Verification*: **non-executable**
 - **WHEN** a commit authored 2026-09-23 edits `area/health.md` and the command is run with `--date 2026-09-21..2026-09-25`
 - **THEN** `area/health.md` SHALL be listed
 
 #### Scenario: Commit outside the week
+*Verification*: **non-executable**
 - **WHEN** the only commit editing `area/health.md` was authored 2026-09-19 and the command is run with `--date 2026-09-21..2026-09-25`
 - **THEN** `area/health.md` SHALL NOT be listed
 
 #### Scenario: Author timezone decides the day
+*Verification*: **non-executable**
 - **WHEN** a commit's author date is `2026-09-25T23:30:00-07:00`
 - **THEN** it SHALL be in `--date 2026-09-25` and SHALL NOT be in `--date 2026-09-26`
 
@@ -40,14 +46,17 @@ A commit SHALL be in PERIOD when its author date, taken in the timezone recorded
 When PERIOD includes today, the list SHALL also include notes with uncommitted changes: staged, unstaged, and untracked (but not ignored) files. When PERIOD does not include today, uncommitted changes SHALL NOT be listed.
 
 #### Scenario: Unstaged edit today
+*Verification*: **non-executable**
 - **WHEN** today is 2026-09-25 and `resource/vim.md` has an unstaged edit
 - **THEN** `meta-notes changes --date 2026-09-21..2026-09-25` SHALL list `resource/vim.md`
 
 #### Scenario: Untracked note today
+*Verification*: **non-executable**
 - **WHEN** today is 2026-09-25 and `project/new-idea.md` is untracked
 - **THEN** `meta-notes changes` SHALL list `project/new-idea.md` as added
 
 #### Scenario: Past period ignores the working tree
+*Verification*: **non-executable**
 - **WHEN** today is 2026-09-25 and `resource/vim.md` has an unstaged edit
 - **THEN** `meta-notes changes --date 2026-09-14..2026-09-18` SHALL NOT list it because of that edit
 
@@ -62,26 +71,32 @@ The list SHALL have one entry per note, combining all of its committed and uncom
 Renames SHALL be detected as git detects them by default; a rename git does not detect SHALL appear as a deleted note and an added note.
 
 #### Scenario: Several edits to one note
+*Verification*: **non-executable**
 - **WHEN** three commits in PERIOD edit `project/kitchen/Home.md`, adding 4, 2, and 1 lines and removing 1
 - **THEN** there SHALL be one entry for it with kind `modified`, `added` 7, and `removed` 1
 
 #### Scenario: Committed and uncommitted edits combined
+*Verification*: **non-executable**
 - **WHEN** today is in PERIOD, a commit in PERIOD adds 3 lines to `area/health.md`, and an unstaged edit adds 2 more
 - **THEN** there SHALL be one entry for `area/health.md` with `added` 5
 
 #### Scenario: Archive is rename-only
+*Verification*: **non-executable**
 - **WHEN** a commit in PERIOD moves `project/trip.md` to `archive/project/trip.md` with no content change
 - **THEN** the entry SHALL have path `archive/project/trip.md`, kind `renamed`, old path `project/trip.md`, and `rename_only` true
 
 #### Scenario: Worked on, then archived
+*Verification*: **non-executable**
 - **WHEN** one commit in PERIOD edits `project/trip.md` and a later one moves it to `archive/project/trip.md`
 - **THEN** the entry SHALL have path `archive/project/trip.md`, kind `renamed`, old path `project/trip.md`, and `rename_only` false
 
 #### Scenario: Created this week
+*Verification*: **non-executable**
 - **WHEN** a commit in PERIOD adds `resource/sourdough.md` and a later one edits it
 - **THEN** its one entry SHALL have kind `added`
 
 #### Scenario: Deleted this week
+*Verification*: **non-executable**
 - **WHEN** a commit in PERIOD deletes `project/old.md`
 - **THEN** the entry SHALL have path `project/old.md` and kind `deleted`
 
@@ -89,10 +104,12 @@ Renames SHALL be detected as git detects them by default; a rename git does not 
 With `--json`, the command SHALL write one object with `ok` true, `start` and `end` as `YYYY-MM-DD`, and `changes`, the list of entries. Without `--json`, it SHALL print one line per entry with its kind, lines added and removed, and path, followed by the old path for a rename and a marker for rename-only; a period with no changes SHALL print nothing and succeed.
 
 #### Scenario: JSON output
+*Verification*: **non-executable**
 - **WHEN** `meta-notes changes --date 2026-09-21..2026-09-25 --json` is run and only `area/health.md` was modified, with 5 lines added and 1 removed
 - **THEN** the output SHALL be `ok` true, `start` `2026-09-21`, `end` `2026-09-25`, and one change with path `area/health.md`, kind `modified`, `old_path` null, `added` 5, `removed` 1, `rename_only` false
 
 #### Scenario: Nothing changed
+*Verification*: **non-executable**
 - **WHEN** no note changed in PERIOD
 - **THEN** the command SHALL succeed; with `--json`, `changes` SHALL be empty, and without it nothing SHALL be printed
 
@@ -100,17 +117,21 @@ With `--json`, the command SHALL write one object with `ok` true, `start` and `e
 The command SHALL NOT write any file, change the git index, or create commits, refs, or lock files. It SHALL fail with an error when `git` is not available, when the notes root is not the top level of a git working tree, or when PERIOD is invalid.
 
 #### Scenario: Index untouched
+*Verification*: **non-executable**
 - **WHEN** `meta-notes changes` runs in a notes root with staged and unstaged edits
 - **THEN** the index, the working tree, and the commit history SHALL be unchanged
 
 #### Scenario: Not a git repository
+*Verification*: **non-executable**
 - **WHEN** the notes root is not in a git working tree
 - **THEN** the command SHALL exit non-zero with an error saying the notes root is not a git repository
 
 #### Scenario: Notes root below the repository top level
+*Verification*: **non-executable**
 - **WHEN** the notes root is a subdirectory of a git working tree
 - **THEN** the command SHALL exit non-zero with an error saying the notes root must be the top level of its git repository
 
 #### Scenario: Repository with no commits
+*Verification*: **non-executable**
 - **WHEN** the notes root is a new git repository with no commits and an untracked `project/foo.md`
 - **THEN** `meta-notes changes` SHALL succeed and list `project/foo.md` as added
