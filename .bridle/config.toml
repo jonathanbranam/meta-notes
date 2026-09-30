@@ -63,3 +63,18 @@ start_prompt      = """
 You're starting up. Run `bridle status --json`, `bridle agents --json` and \
 `bridle inbox --json`, then send the human one short line saying you're ready \
 and what, if anything, is already in flight. Then wait for work."""
+
+# The daemon supervises the orchestrator session: context and uptime wakes,
+# handover stop and relaunch, and a note to the human when no wait-for-wake
+# runs. Only this daemon enables it; the NUC's one orchestrator also covers
+# dotfiles-local. Off by default, which is why context wakes never came
+# (bridle ticket jf9u).
+[orchestrator]
+enabled           = true
+launcher          = ".bridle/claude-orchestrator"
+note_tokens       = "150k"    # "context at N": a heads-up
+plan_tokens       = "180k"    # "plan a handover at the next quiet point"
+handover_tokens   = "200k"    # "hand over now"; starts the deadline below
+handover_deadline = "30m"     # then the daemon stops the session and relaunches it
+max_uptime        = "12h"     # a plan-a-handover at this age, whatever the size
+waiter_grace      = "15m"     # no wait-for-wake running this long tells the human

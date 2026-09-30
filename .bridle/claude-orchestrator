@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# The orchestrator launcher ([orchestrator] launcher in config.toml): the
+# daemon types this path into the orchestrator's tmux pane to relaunch it
+# after a handover or a crash. It takes no arguments of its own, so the
+# project is named here.
+exec bridle session orchestrator --project meta-notes "$@"
