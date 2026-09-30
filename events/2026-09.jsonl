@@ -19,3 +19,9 @@
 {"actor":"human","at":"2026-09-30T04:19:24.778Z","from":"","task":"mn-ba09","to":"open"}
 {"actor":"agent:manager","at":"2026-09-30T04:22:33.289212Z","from":"open","task":"mn-ba09","to":"planned"}
 {"actor":"agent:manager","at":"2026-09-30T04:24:39.044345Z","from":"planned","task":"mn-ba09","to":"integrated"}
+{"actor":"human","at":"2026-09-30T19:59:47.459Z","from":"","task":"mn-a8aa","to":"open"}
+{"actor":"human","at":"2026-09-30T19:59:48.211Z","from":"","task":"mn-d904","to":"open"}
+{"actor":"human","at":"2026-09-30T19:59:48.502Z","from":"","task":"mn-363f","to":"open"}
+{"actor":"human","at":"2026-09-30T19:59:48.622Z","from":"","task":"mn-1005","to":"open"}
+{"actor":"human","at":"2026-09-30T19:59:48.733Z","from":"","task":"mn-8b74","to":"open"}
+{"actor":"human","at":"2026-09-30T19:59:54.533Z","from":"","task":"mn-5703","to":"open"}
