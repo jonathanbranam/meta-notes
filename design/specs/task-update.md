@@ -59,7 +59,7 @@ Specifies `meta-notes task update`, which edits one checkbox line's status, tags
 - **THEN** the command SHALL exit non-zero with a usage error
 
 ### Requirement: Completion date  {#r-43d5}
-When `--status` changes a line from a status that is not done to done, the command SHALL append `✅ <today>` at the end of the line, unless the line already has a `✅` date, the line's due date (after this call's `--due` edit, if any) is today, or `--no-completed` is given. A line that is already done and set to done again SHALL keep its completion date or lack of one. When `--status` sets any status other than done, including canceled (`-`) and rescheduled (`>`), the command SHALL remove every `✅` date from the line.
+When `--status` changes a line from a status that is not done to done, the command SHALL append `✅ <today>` at the end of the line, unless the line already has a `✅` date, the line's due date (after this call's `--due` edit, if any) is today, or `--no-completed` is given. A recurring line (see the "Complete a recurring task" requirement) SHALL always get `✅ <today>`, even when due today, and `--no-completed` on it SHALL be a usage error that writes nothing. A line that is already done and set to done again SHALL keep its completion date or lack of one. When `--status` sets any status other than done, including canceled (`-`) and rescheduled (`>`), the command SHALL remove every `✅` date from the line.
 
 #### Scenario: Done late  {#s-473c}
 *Verification*: **non-executable**
@@ -94,7 +94,7 @@ When `--status` changes a line from a status that is not done to done, the comma
 ### Requirement: Add and remove tags  {#r-b6d0}
 `--add-tag <tag>` and `--remove-tag <tag>` SHALL be repeatable, and SHALL accept the tag with or without a leading `#`. A tag name SHALL be letters, digits, `_`, or `-`; any other value SHALL be a usage error. Giving the same tag to both options SHALL be a usage error. Tags SHALL be matched as the `task-query` capability matches them: ignoring case, with aliases applied (`#mtg` is `meeting`, `#pers` and `#per` are `personal`).
 
-An added tag SHALL be written as given, with `#`, before the first `🛫`, `📅`, `📆`, `🗓`, or `✅` on the line, separated by single spaces; with none of those, at the end of the line. Adding a tag the line already has SHALL leave the line unchanged. Removing a tag SHALL remove every occurrence of it and the space before it (or after it, when the tag follows the checkbox directly). Removing a tag the line doesn't have SHALL leave the line unchanged.
+An added tag SHALL be written as given, with `#`, before the first `🛫`, `📅`, `📆`, `🗓`, `⏰`, `🔁`, or `✅` on the line, separated by single spaces; with none of those, at the end of the line. Adding a tag the line already has SHALL leave the line unchanged. Removing a tag SHALL remove every occurrence of it and the space before it (or after it, when the tag follows the checkbox directly). Removing a tag the line doesn't have SHALL leave the line unchanged.
 
 #### Scenario: Tag goes before the dates  {#s-e58f}
 *Verification*: **non-executable**
@@ -174,7 +174,7 @@ A new due emoji SHALL be placed after any `🛫` date and before any `✅` date;
 - **THEN** line 3 SHALL become `- [ ] draft outline 📅 2026-10-10`
 
 ### Requirement: Set the time of day  {#r-a684}
-`--time <value>` SHALL accept a 24-hour `HH:MM` (one or two digits for the hour) or `none`; any other value SHALL be a usage error. A time SHALL be written as `⏰ HH:MM`, replacing the line's existing `⏰` marker (in any form), or else placed before the first `🛫`, due, or `✅` date emoji, or at the end of the line if it has none. Setting a time SHALL remove a time written after the due date (`📅 2026-10-01 15:00`). `none` SHALL remove every `⏰` marker and the time after the due date. Changing the due date with `--due` SHALL keep a time after the date; `--due none` SHALL remove it with the date.
+`--time <value>` SHALL accept a 24-hour `HH:MM` (one or two digits for the hour) or `none`; any other value SHALL be a usage error. A time SHALL be written as `⏰ HH:MM`, replacing the line's existing `⏰` marker (in any form), or else placed before the first `🛫`, due, `🔁`, or `✅` date emoji, or at the end of the line if it has none. Setting a time SHALL remove a time written after the due date (`📅 2026-10-01 15:00`). `none` SHALL remove every `⏰` marker and the time after the due date. Changing the due date with `--due` SHALL keep a time after the date; `--due none` SHALL remove it with the date.
 
 #### Scenario: Add a time  {#s-8cf5}
 *Verification*: **non-executable**
@@ -213,7 +213,7 @@ When an edit removes a line's last due emoji and last `🛫` date, so that queri
 - **THEN** line 3 SHALL become `- [ ] call Sam`, and `warnings` SHALL include one saying the line is no longer a task
 
 ### Requirement: Only the target line changes  {#r-021a}
-The command SHALL change only the target line. The number of lines, every other line, the file's line endings, and whether it ends with a newline SHALL be unchanged, so line numbers from one query stay valid across several updates. Removing text SHALL NOT leave runs of spaces or trailing whitespace where it was. When the edits produce the same line text, the command SHALL NOT write the file.
+The command SHALL change only the target line, and, when it completes a recurring task, the new line inserted above it. Otherwise the number of lines, every other line, the file's line endings, and whether it ends with a newline SHALL be unchanged, so line numbers from one query stay valid across several updates. A recurring completion SHALL change no other line, but the lines after it move down one. Removing text SHALL NOT leave runs of spaces or trailing whitespace where it was. When the edits produce the same line text, the command SHALL NOT write the file.
 
 #### Scenario: Several updates from one query  {#s-19aa}
 *Verification*: **non-executable**
@@ -231,9 +231,68 @@ The command SHALL change only the target line. The number of lines, every other 
 - **THEN** the command SHALL succeed with `changed` false, and the file SHALL NOT be written
 
 ### Requirement: Update result  {#r-265b}
-On success, the text output SHALL be `<file>:<line>` followed by the old line prefixed with `- ` and the new line prefixed with `+ `, or `<file>:<line> unchanged` when nothing changed. With `--json`, the result SHALL have `ok` true, `file` (relative to the notes root), `line`, `old`, `new`, `changed`, and `warnings`.
+On success, the text output SHALL be `<file>:<line>` followed by the old line prefixed with `- ` and the new line prefixed with `+ `, or `<file>:<line> unchanged` when nothing changed. With `--json`, the result SHALL have `ok` true, `file` (relative to the notes root), `line`, `old`, `new`, `changed`, `created`, and `warnings`. `created` SHALL be null unless a next occurrence was inserted, and then an object with `file`, `line` (the new line's number), and `text`. After an insert the text output SHALL add a `<file>:<line> created` line and the new line prefixed with `+ `.
 
 #### Scenario: JSON result  {#s-9097}
 *Verification*: **non-executable**
 - **WHEN** today is 2026-09-25, line 3 of `project/foo.md` is `- [ ] call Sam 📅 2026-09-22`, and the user runs `meta-notes task update project/foo.md:3 --expect '- [ ] call Sam 📅 2026-09-22' --status x --json`
 - **THEN** the JSON SHALL have `ok` true, `file` `project/foo.md`, `line` 3, `old` `- [ ] call Sam 📅 2026-09-22`, `new` `- [x] call Sam 📅 2026-09-22 ✅ 2026-09-25`, and `changed` true
+
+### Requirement: Complete a recurring task  {#r-0b86}
+A line is recurring when it has a `🔁` rule that `recurrence` supports and a date to step from: its due date, else its start date, or none for a `when done` rule. When `--status` changes a recurring line from a status that is not done to done, the command SHALL mark it done as usual (stamping `✅ <today>`), compute the next date, and insert a new line directly above the target, in the same write. The new line SHALL be the done line with `[ ]`, no `✅`, and the same indentation, bullet, tags, `🔁` rule and time (`⏰`, or a time after the due date). A rule without `when done` SHALL step from the due date after this call's edits, else the start date, even when the result is already past; a `when done` rule SHALL step from today. The new line's due date SHALL be the next date (a bare due emoji is dated); with both a due and a start date the start date SHALL move by the same number of days, and with only a start date it SHALL be the next date. Done lines SHALL stay in place, so the target moves to `<line>+1`. A line already done and set to done again, and every other status, SHALL NOT insert a line. Reopening a done line SHALL NOT remove a line inserted earlier. When the target is the last line of a file with no final newline, the inserted line SHALL take the file's line ending and the target SHALL keep having none. A line with a `🔁` rule that is unsupported, or valid but without a date to step from, SHALL complete as any other line and report a warning that no next occurrence was made.
+
+#### Scenario: Done twice  {#s-8659}
+*Verification*: **non-executable**
+- **WHEN** line 3 is `- [ ] replace filter 🔁 every 3 months ⏰ 09:00 📅 2026-07-01`, today is 2026-09-25, and the user runs `--status x` twice, the second time on line 4 with the done line as `--expect`
+- **THEN** after the first run line 3 SHALL be `- [ ] replace filter 🔁 every 3 months ⏰ 09:00 📅 2026-10-01` and line 4 `- [x] replace filter 🔁 every 3 months ⏰ 09:00 📅 2026-07-01 ✅ 2026-09-25`, and the second run SHALL change nothing
+
+#### Scenario: Canceled  {#s-edbd}
+*Verification*: **non-executable**
+- **WHEN** line 3 is a recurring task and the user runs `--status -`
+- **THEN** only line 3 SHALL change and no line SHALL be inserted
+
+#### Scenario: Completed late  {#s-adbd}
+*Verification*: **non-executable**
+- **WHEN** line 3 is `- [ ] replace filter 🔁 every 3 months 📅 2026-07-01`, today is 2026-10-05, and the user runs `--status x`
+- **THEN** the inserted line SHALL have `📅 2026-10-01`
+
+#### Scenario: Due today still stamped  {#s-d46a}
+*Verification*: **non-executable**
+- **WHEN** today is 2026-09-25 and line 3 is `- [ ] stretch 🔁 every day 📅 2026-09-25`
+- **THEN** the done line SHALL end with `✅ 2026-09-25` and the inserted line SHALL have `📅 2026-09-26`
+
+#### Scenario: When done  {#s-a86a}
+*Verification*: **non-executable**
+- **WHEN** line 3 is `- [ ] buy salt 🔁 every month when done 📅 2026-07-24` and today is 2026-10-05
+- **THEN** the inserted line SHALL have `📅 2026-11-05`
+
+#### Scenario: Indented line in a CRLF file  {#s-4f34}
+*Verification*: **non-executable**
+- **WHEN** a CRLF file has `  - [ ] mow 🔁 every weekday 📅 2026-09-25` on its last line with no final newline
+- **THEN** the inserted line SHALL keep the two-space indentation and end with CRLF, and the done line SHALL have no line ending
+
+### Requirement: No next occurrence  {#r-aa0c}
+`--no-recur` SHALL complete a recurring line without inserting the next occurrence; the line keeps its `🔁` rule and gets its `✅` date. It SHALL have no effect on a line that is not recurring.
+
+#### Scenario: Finished series  {#s-4d2f}
+*Verification*: **non-executable**
+- **WHEN** line 3 is `- [ ] replace filter 🔁 every 3 months 📅 2026-07-01` and the user runs `--status x --no-recur`
+- **THEN** line 3 SHALL become the done line and no line SHALL be inserted
+
+### Requirement: Set the recurrence rule  {#r-3ea6}
+`--recur <rule>` SHALL accept a rule `recurrence` supports (such as `every 3 months` or `every week when done`) or `none`; any other value SHALL be a usage error. A rule SHALL be written as `🔁 <rule>`, replacing the line's existing `🔁` marker and rule, or else placed before the first `🛫`, due, `⏰`, or `✅` date emoji, or at the end of the line if it has none. `none` SHALL remove every `🔁` marker and its rule. The rule is applied before `--status`, so `--status x --recur none` completes without inserting a line.
+
+#### Scenario: Add a rule  {#s-fba0}
+*Verification*: **non-executable**
+- **WHEN** line 3 is `- [ ] call Sam 📅 2026-10-01` and the user runs `--recur 'every week'`
+- **THEN** line 3 SHALL become `- [ ] call Sam 🔁 every week 📅 2026-10-01`
+
+#### Scenario: Remove a rule  {#s-0e47}
+*Verification*: **non-executable**
+- **WHEN** line 3 is `- [ ] call Sam 🔁 every week 📅 2026-10-01` and the user runs `--recur none`
+- **THEN** line 3 SHALL become `- [ ] call Sam 📅 2026-10-01`
+
+#### Scenario: Unsupported rule  {#s-bef0}
+*Verification*: **non-executable**
+- **WHEN** the user runs `--recur 'every other week'`
+- **THEN** the command SHALL exit non-zero with a usage error, and the file SHALL be unchanged

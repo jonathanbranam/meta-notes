@@ -805,7 +805,15 @@ Commands ~
                         before the first date emoji; `none` removes the
                         time. A time with no due date makes the edit with
                         a warning.
-    --no-completed      Don't add a ✅ date when marking the task done.
+    --recur {rule}      Set the `🔁` rule (`every 3 months`, `every week when
+                        done`, `every weekday`, ...), replacing an existing
+                        one, else before the first date emoji; `none`
+                        removes the marker and its rule. An unsupported
+                        rule is a usage error.
+    --no-recur          Mark a recurring task done without adding its next
+                        occurrence (for a series that is finished).
+    --no-completed      Don't add a ✅ date when marking the task done. It
+                        is a usage error on a recurring task.
 
     Marking a task done (`x` or `X`) from another status appends
     `✅ {today}`, unless the line already has a ✅ date, its due date (after
@@ -813,6 +821,22 @@ Commands ~
     the due date for a completed task without ✅. Setting a done task done
     again changes nothing. Any other status, including `-` (canceled) and
     `>` (rescheduled), removes every ✅ date: the task wasn't done.
+
+    Marking a recurring task done (a `🔁` rule and a due or start date, or
+    `when done`) always stamps `✅ {today}`, even when due today, and adds
+    the next occurrence as a new open line directly above the done line, in
+    the same write: the same line with `[ ]`, no ✅, and its due date
+    stepped (a start date moves by as many days, and the time `⏰` is kept).
+    A rule without `when done` steps from the due date (else the start
+    date), even when that is already past: `every 3 months 📅 2026-07-01`
+    done on 2026-10-05 gives 2026-10-01. `when done` steps from today. Done
+    lines stay where they are, so the task is now on the next line down and
+    the lines after it have moved: re-read the file. Setting a done task
+    done again, or any other status, adds nothing; reopening a done task
+    doesn't remove the line added earlier. An unsupported rule, or a rule
+    with nothing to step from, completes the line with a warning and adds
+    nothing. The output then lists `{file}:{line} created` and the new line
+    after `+ `.
 
     Changing a date doesn't reschedule a task: `--due` and `--start` edit
     the task where it lives. `>` is for a copy of a task, such as one in a
@@ -1254,7 +1278,8 @@ and `links_updated` (files whose wiki-links were rewritten). `archive` adds
 `overdue`, `due`, `scheduled`, `ready`, `future`, or `undated`), in report
 order. A task under several tags with `--group-by tag` appears once.
 `task update` returns `file`, `line`, `old` and `new` (the line before and
-after), and `changed`; when the line didn't match `--expect`, it fails with
+after), `changed`, and `created` (null, or `file`, `line` and `text` of the
+next occurrence a recurring completion inserted above the line); when the line didn't match `--expect`, it fails with
 `file`, `line`, and `current`, the line's current text. `note` returns `path`, `exists` (whether the
 note existed before), `created` (whether this command wrote it), and
 `template` (the template used, or null); with `--render` and a new note, it

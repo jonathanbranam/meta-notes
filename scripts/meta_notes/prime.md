@@ -70,7 +70,10 @@ A task with `🔁 every 3 months` (or `every week`, `every weekday`, and so
 on, optionally `when done`) repeats. It lives in one home note, usually in
 `area/`. Never copy a `🔁` line into a daily or weekly note; when a plan
 needs the task, write it there without the `🔁` marker. `meta-notes tasks
---json` gives `recurrence` and `recurs_from_completion`.
+--json` gives `recurrence` and `recurs_from_completion`. `task update
+--status x` on one stamps `✅` and adds the next occurrence above the done
+line (`created` in `--json`); re-query afterwards, since lines shift.
+`--no-recur` completes without the next occurrence.
 
 ## Commands
 

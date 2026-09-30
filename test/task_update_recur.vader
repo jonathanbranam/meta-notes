@@ -1,0 +1,72 @@
+" Tests for completing a recurring task through the CLI
+
+Execute (Setup - Create temporary notes root):
+  let g:test_dir = tempname()
+  call mkdir(g:test_dir, 'p')
+  let g:original_dir = getcwd()
+  execute 'cd' g:test_dir
+  call writefile([], '.meta-notes')
+  call mkdir('project', 'p')
+
+Execute (Completing a recurring task inserts the next one above it):
+  let g:line = '- [ ] replace filter 🔁 every 3 months ⏰ 09:00 📅 2026-07-01'
+  call writefile(['# foo', '', g:line, 'after'], 'project/foo.md')
+  let g:result = meta_notes#cli#Run(['task', 'update', 'project/foo.md:3',
+        \ '--expect', g:line, '--status', 'x'])
+  Assert g:result.ok, string(g:result)
+  AssertEqual '- [ ] replace filter 🔁 every 3 months ⏰ 09:00 📅 2026-10-01',
+        \ g:result.created.text
+  AssertEqual 3, g:result.created.line
+  let g:lines = readfile('project/foo.md')
+  AssertEqual 5, len(g:lines)
+  AssertEqual g:result.created.text, g:lines[2]
+  AssertEqual g:result.new, g:lines[3]
+  Assert g:lines[3] =~# '^- \[x\] .* 📅 2026-07-01 ✅ \d\{4}-\d\{2}-\d\{2}$', g:lines[3]
+  AssertEqual 'after', g:lines[4]
+
+Execute (Completing the done line again adds nothing):
+  let g:result = meta_notes#cli#Run(['task', 'update', 'project/foo.md:4',
+        \ '--expect', g:lines[3], '--status', 'x'])
+  Assert g:result.ok, string(g:result)
+  Assert g:result.created is v:null
+  AssertEqual 5, len(readfile('project/foo.md'))
+
+Execute (Canceling adds nothing):
+  let g:line = '- [ ] stretch 🔁 every day 📅 2026-09-25'
+  call writefile([g:line], 'project/bar.md')
+  let g:result = meta_notes#cli#Run(['task', 'update', 'project/bar.md:1',
+        \ '--expect', g:line, '--status', '-'])
+  Assert g:result.ok, string(g:result)
+  Assert g:result.created is v:null
+  AssertEqual ['- [-] stretch 🔁 every day 📅 2026-09-25'], readfile('project/bar.md')
+
+Execute (--no-recur completes without a next occurrence):
+  call writefile([g:line], 'project/bar.md')
+  let g:result = meta_notes#cli#Run(['task', 'update', 'project/bar.md:1',
+        \ '--expect', g:line, '--status', 'x', '--no-recur'])
+  Assert g:result.ok, string(g:result)
+  Assert g:result.created is v:null
+  AssertEqual 1, len(readfile('project/bar.md'))
+
+Execute (A when-done task without a final newline, in a CRLF file):
+  let g:line = '- [ ] buy salt 🔁 every month when done 📅 2026-07-24'
+  call writefile(["# foo\r", g:line], 'project/crlf.md', 'b')
+  let g:result = meta_notes#cli#Run(['task', 'update', 'project/crlf.md:2',
+        \ '--expect', g:line, '--status', 'x'])
+  Assert g:result.ok, string(g:result)
+  let g:raw = join(readfile('project/crlf.md', 'b'), "\n")
+  Assert g:raw =~# "^# foo\r\n- \\[ \\] buy salt .* 📅 \\d\\{4}-\\d\\{2}-\\d\\{2}\r\n- \\[x\\] buy salt .* ✅ \\d\\{4}-\\d\\{2}-\\d\\{2}$", string(g:raw)
+
+Execute (--recur sets and removes the rule):
+  call writefile(['- [ ] call Sam 📅 2026-10-01'], 'project/baz.md')
+  let g:result = meta_notes#cli#Run(['task', 'update', 'project/baz.md:1',
+        \ '--expect', '- [ ] call Sam 📅 2026-10-01', '--recur', 'every week'])
+  AssertEqual '- [ ] call Sam 🔁 every week 📅 2026-10-01', g:result.new
+  let g:result = meta_notes#cli#Run(['task', 'update', 'project/baz.md:1',
+        \ '--expect', g:result.new, '--recur', 'none'])
+  AssertEqual '- [ ] call Sam 📅 2026-10-01', g:result.new
+
+Execute (Cleanup):
+  execute 'cd' g:original_dir
+  call delete(g:test_dir, 'rf')
+  unlet g:test_dir g:original_dir g:line g:result g:lines g:raw
