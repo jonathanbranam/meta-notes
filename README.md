@@ -375,6 +375,8 @@ vim -u NONE -c 'source ~/.vim/pack/testing/start/vader.vim/plugin/vader.vim' \
     -c 'Vader! test/*.vader'
 ```
 
+Tests also run automatically on push to main and on pull requests via GitHub Actions.
+
 ### Writing Tests
 
 Tests use vader.vim syntax and live in the `test/` directory. Example:
