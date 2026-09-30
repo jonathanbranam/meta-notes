@@ -370,6 +370,19 @@ def cmd_task_update(args, root: str) -> Output:
     return out
 
 
+def cmd_task_add(args, root: str) -> Output:
+    path = to_root_relative(args.file, root)
+    try:
+        result = task_update.add(
+            path, args.text, due=args.due, start=args.start, time=args.time,
+            recur=args.recur, add_tags=args.add_tags or [], line_no=args.line)
+    except task_update.TaskUpdateError as e:
+        raise CliError(f"meta-notes task add: {e}")
+    data = {"file": path, "line": result.created_line, "text": result.new}
+    return Output(data, [f"{path}:{result.created_line} added",
+                         f"+ {result.new}"], warnings=result.warnings)
+
+
 def cmd_ceremony_status(args, root: str) -> Output:
     day = date.fromisoformat(args.date) if args.date else date.today()
     lines, data = ceremony.run(day)
@@ -691,7 +704,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(handler=cmd_note)
 
     p = sub.add_parser("task", parents=[common],
-                       help="edit a task line in place")
+                       help="edit or add a task line")
     kinds = p.add_subparsers(dest="kind", metavar="KIND", parser_class=_Parser)
     kinds.required = True
     k = kinds.add_parser("update", parents=[common],
@@ -727,6 +740,28 @@ def build_parser() -> argparse.ArgumentParser:
                    help="don't add a ✅ date when marking the task done "
                         "(not allowed on a recurring task)")
     p.set_defaults(handler=cmd_task_update)
+
+    k = kinds.add_parser("add", parents=[common],
+                         help="add an open task line to a note")
+    k.add_argument("file", metavar="FILE",
+                   help="the note, relative to the notes root; it must exist")
+    k.add_argument("text", metavar="TEXT",
+                   help="the task's description, without the checkbox")
+    k.add_argument("--due", type=_day_value, metavar="DATE",
+                   help="the due date, YYYY-MM-DD")
+    k.add_argument("--start", type=_day_value, metavar="DATE",
+                   help="the 🛫 date, YYYY-MM-DD")
+    k.add_argument("--time", type=_time_value, metavar="TIME",
+                   help="HH:MM (24-hour), written as ⏰ HH:MM; needs --due")
+    k.add_argument("--recur", type=_recur_value, metavar="RULE",
+                   help="the 🔁 rule, like 'every 3 months'")
+    k.add_argument("--tag", dest="add_tags", action="append",
+                   type=_tag_value, metavar="TAG",
+                   help="add a tag (repeatable)")
+    k.add_argument("--line", type=int, metavar="N",
+                   help="insert before line N (from 1); default: the end "
+                        "of the file")
+    k.set_defaults(handler=cmd_task_add)
 
     p = sub.add_parser("ceremony", parents=[common],
                        help="read ceremony markers in daily and weekly notes")

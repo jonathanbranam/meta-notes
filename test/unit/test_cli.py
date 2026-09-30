@@ -1307,3 +1307,50 @@ def test_task_update_recurring_no_completed_fails(notes_root, capsys):
     assert code == 1
     assert 'no-completed' in out['error']
     assert path.read_text() == line + '\n'
+
+
+def test_task_add_json(notes_root, capsys):
+    path = notes_root / 'project' / 'foo.md'
+    path.write_text('# foo\n\nlast\n')
+    code, out, _ = run_json(capsys, [
+        'task', 'add', 'project/foo.md', 'call Sam', '--due', '2026-10-01',
+        '--time', '9:00', '--recur', 'every week', '--tag', '#next'])
+    assert code == 0
+    line = '- [ ] call Sam #next 🔁 every week ⏰ 09:00 📅 2026-10-01'
+    assert out['file'] == 'project/foo.md'
+    assert out['line'] == 4
+    assert out['text'] == line
+    assert path.read_text().splitlines()[3] == line
+    code, out, _ = run_json(capsys, ['tasks', '--all', '--folder', 'project'])
+    task = next(t for t in out['tasks'] if t['text'] == line)
+    assert task['time'] == '09:00'
+    assert task['recurrence'] == 'every week'
+
+
+def test_task_add_text_output_and_line(task_note, notes_root, capsys):
+    assert cli.main(['task', 'add', 'project/foo.md', 'x', '--due', '2026-10-01',
+                 '--line', '1', '--root', str(notes_root)]) == 0
+    assert capsys.readouterr().out.splitlines() == [
+        'project/foo.md:1 added', '+ - [ ] x 📅 2026-10-01']
+
+
+@pytest.mark.parametrize('args', [
+    ['--time', '09:00'],
+    ['--recur', 'every week'],
+    ['--recur', 'every other week', '--due', '2026-10-01'],
+    ['--due', 'undated'],
+    ['--time', 'none', '--due', '2026-10-01'],
+    ['--due', '2026-10-01', '--line', '99'],
+])
+def test_task_add_errors(task_note, capsys, args):
+    before = task_note.read_text()
+    code, out, _ = run_json(capsys, ['task', 'add', 'project/foo.md', 'x',
+                                     *args])
+    assert code != 0
+    assert task_note.read_text() == before
+
+
+def test_task_add_warns_without_date(task_note, capsys):
+    code, out, _ = run_json(capsys, ['task', 'add', 'project/foo.md', 'x'])
+    assert code == 0
+    assert len(out['warnings']) == 1
