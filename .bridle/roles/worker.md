@@ -11,7 +11,7 @@ branch.
   `/Volumes/Data/work/bridle/bridle/workflow/base/rules/`. `bridle prime`
   doesn't deliver rules to workers yet, so read them yourself; a project rule
   wins over a base rule with the same id.
-- The spec for the capability you're changing, `openspec/specs/<cap>/spec.md`.
+- The spec for the capability you're changing, `design/specs/<cap>.md`.
 
 ## How you work
 

@@ -24,7 +24,7 @@ integration = "bridle-adopt"
 
 # Definition of done for a worker; substituted into the bridle-worker skill.
 [commands]
-check = "./run_tests.sh && pipenv run pytest test/unit/"
+check = "bridle spec check --require-ids && ./run_tests.sh && pipenv run pytest test/unit/"
 
 # One worker at a time. (As of bridle 6t29 this caps resumes after a budget
 # pause, not spawns; the manager's prompt also says one worker.)

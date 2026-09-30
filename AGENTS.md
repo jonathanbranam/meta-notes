@@ -21,7 +21,7 @@ exception for commands that need a pinned library, are in
   Older helpers the plugin calls are `scripts/*.py`.
 - `skills/`, `templates/`: product files installed into a notes root by
   `meta-notes init` (`.bridle/rules/product-skills.md`).
-- `openspec/specs/<capability>/spec.md`: the behaviour specs
+- `design/specs/<capability>.md`: the behaviour specs
   (`.bridle/rules/specs.md`). `openspec/changes/archive/` is history.
 - `doc/meta-notes.txt`: the Vim help file.
 
