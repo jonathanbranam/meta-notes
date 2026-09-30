@@ -18,7 +18,7 @@ Specifies `meta-notes tasks`, the CLI task query that exposes the existing `scri
 - **THEN** the output SHALL equal `find_tasks.py --folder project --status all --all` run in the notes root
 
 ### Requirement: Task query JSON  {#r-8297}
-With `--json`, `meta-notes tasks` SHALL return the same tasks as the text output, in the same order. Each task SHALL have its file, line number, line text, status, start, due, and completed dates, `time` (the time of day as 24-hour `HH:MM`, or null), `tags` (canonical names without `#`), and `section` (the section it is listed in: `overdue`, `due`, `scheduled`, `ready`, `future`, or `undated`). A task listed under several tags with `--group-by tag` SHALL appear once.
+With `--json`, `meta-notes tasks` SHALL return the same tasks as the text output, in the same order. Each task SHALL have its file, line number, line text, status, start, due, and completed dates, `time` (the time of day as 24-hour `HH:MM`, or null), `recurrence` (the rule text as written, or null), `recurs_from_completion` (true for a `when done` rule), `tags` (canonical names without `#`), and `section` (the section it is listed in: `overdue`, `due`, `scheduled`, `ready`, `future`, or `undated`). A task listed under several tags with `--group-by tag` SHALL appear once.
 
 #### Scenario: JSON task fields  {#s-e78e}
 *Verification*: **non-executable**
@@ -72,6 +72,19 @@ A `⏰` with no valid time after it SHALL be ignored and reported as a warning. 
 *Verification*: **non-executable**
 - **WHEN** a task is `- [ ] call ⏰ 15:00 🛫 2026-10-01` and the user runs `meta-notes tasks --all --json`
 - **THEN** its `time` SHALL be null or ignored, and `warnings` SHALL say the time has no due date
+
+### Requirement: Recurrence on tasks  {#r-51c4}
+A task's recurrence SHALL be read from a `🔁` marker (optionally followed by the emoji variation selector) and the rule text after it, which runs to the next `📅 📆 🗓 🛫 ✅ ⏰` marker, the first `#tag`, or the end of the line. A supported rule (see the `recurrence` spec) SHALL be reported as `recurrence`, the rule text as written, and `recurs_from_completion`, true when the rule ends in `when done`; a task without a rule SHALL have `recurrence` null and `recurs_from_completion` false. `🔁` SHALL NOT make a line a task. A valid rule on a task with no valid due or start date SHALL NOT be recurring unless it is `when done`. A `🔁` whose text is not a supported rule SHALL be ignored and reported as a warning, and the query SHALL NOT fail.
+
+#### Scenario: Recurrence fields  {#s-3a9e}
+*Verification*: **non-executable**
+- **WHEN** a note contains `- [ ] change filter 🔁 every 3 months 📅 2026-07-01 #home` and `- [ ] salt 🔁 every month when done 📅 2026-07-24`, and the user runs `meta-notes tasks --all --json`
+- **THEN** the first task SHALL have `recurrence` `every 3 months` and `recurs_from_completion` false, and the second `every month when done` and true
+
+#### Scenario: Unsupported rule  {#s-c8d2}
+*Verification*: **non-executable**
+- **WHEN** a task is `- [ ] sweep 🔁 every other week 📅 2026-10-01` and the user runs `meta-notes tasks --all --json`
+- **THEN** its `recurrence` SHALL be null, the task SHALL still be listed, and `warnings` SHALL name the line's unsupported rule
 
 ### Requirement: Completion date stands in for the due date  {#r-ebb9}
 For a completed task that has a `✅ YYYY-MM-DD` date, that date SHALL be used in place of its due date by every mode. A completed task without a ✅ date SHALL use its due date.

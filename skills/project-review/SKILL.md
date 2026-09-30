@@ -115,7 +115,8 @@ Set fields by editing the field list in the home note: replace the
 - For each task carried to another project, write the copy in the
   target note, then mark the original
   `meta-notes task update <file>:<line> --expect '<text>' --status '>'`.
-  Don't change the original's dates.
+  Don't change the original's dates. Leave out any `🔁` marker and rule
+  from the copy.
 
 ### 6. Record, then restructure
 

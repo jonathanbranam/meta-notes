@@ -64,6 +64,14 @@ area with `meta-notes move project/<name> area/<name>`.
 `archived: YYYY-MM-DD` on a project, and updates links. Archived notes
 stay searchable and in task queries.
 
+## Recurring tasks
+
+A task with `🔁 every 3 months` (or `every week`, `every weekday`, and so
+on, optionally `when done`) repeats. It lives in one home note, usually in
+`area/`. Never copy a `🔁` line into a daily or weekly note; when a plan
+needs the task, write it there without the `🔁` marker. `meta-notes tasks
+--json` gives `recurrence` and `recurs_from_completion`.
+
 ## Commands
 
 ```

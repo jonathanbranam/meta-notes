@@ -19,6 +19,8 @@ def task_to_dict(task: Task, root_dir: str, section: str) -> dict:
         "start": task.start_date.isoformat() if task.start_date else None,
         "due": task.due_date.isoformat() if task.due_date else None,
         "time": task.due_time.strftime("%H:%M") if task.due_time else None,
+        "recurrence": task.recurrence,
+        "recurs_from_completion": task.recurs_from_completion,
         "completed": task.completed_date.isoformat() if task.completed_date else None,
         "tags": task.tags,
         "section": section,

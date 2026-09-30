@@ -173,6 +173,7 @@ def test_cli_tasks_json_fields(root, capsys):
         'start': None,
         'due': '2026-10-01',
         'time': None,
+        'recurrence': None, 'recurs_from_completion': False,
         'completed': None,
         'tags': ['meeting'],
         'section': 'ready' if date(2026, 10, 1) <= TODAY else 'future',
@@ -202,6 +203,7 @@ def test_cli_tasks_json_dates(root, capsys):
         'start': None,
         'due': PAST,
         'time': None,
+        'recurrence': None, 'recurs_from_completion': False,
         'completed': PAST,
         'tags': [],
         'section': 'ready',
@@ -279,3 +281,20 @@ def test_cli_tasks_due_today_ignores_time(root, capsys):
 
     assert sorted(t['text'][6:11] for t in out['tasks']) == ['early', 'late ', 'plain']
     assert {t['section'] for t in out['tasks']} == {'due'}
+
+
+def test_cli_tasks_json_recurrence_fields_and_warning(root, capsys):
+    (root / 'project' / 'recur.md').write_text(
+        '- [ ] a 🔁 every 3 months 📅 2026-07-01 #home\n'
+        '- [ ] b 🔁 every month when done 📅 2026-07-24\n'
+        '- [ ] c 🔁 every other week 📅 2026-10-01\n'
+        '- [ ] d 📅 2026-10-01\n')
+
+    code, out = cli_json(capsys, ['--folder', 'project', '--all'])
+
+    rules = {t['text'][6]: (t['recurrence'], t['recurs_from_completion'])
+             for t in out['tasks'] if t['file'] == 'project/recur.md'}
+    assert rules == {'a': ('every 3 months', False),
+                     'b': ('every month when done', True),
+                     'c': (None, False), 'd': (None, False)}
+    assert any('recur.md:3' in w and '🔁' in w for w in out['warnings'])
