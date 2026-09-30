@@ -107,13 +107,13 @@ per module, as bare functions named `test_<module>_<function>_<scenario>`
 
 ```bash
 # Run all Python unit tests
-pipenv run pytest test/unit/
+uv run pytest test/unit/
 
 # Run specific test file
-pipenv run pytest test/unit/test_tasks.py
+uv run pytest test/unit/test_tasks.py
 
 # Run specific test function
-pipenv run pytest test/unit/test_tasks.py::test_find_tasks_in_file_simple_uncompleted_task
+uv run pytest test/unit/test_tasks.py::test_find_tasks_in_file_simple_uncompleted_task
 ```
 
 ## Versioning

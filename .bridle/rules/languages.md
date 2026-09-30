@@ -11,8 +11,8 @@ Vimscript first; Python for larger work. Python is standard library only.
   (`bin/meta-notes` runs `scripts/meta_notes/`; older helpers are
   `scripts/*.py`).
 - Python must run on **3.11 or newer**, using only the standard library. The
-  3.11 floor is what users are promised; development runs on 3.14 through
-  pipenv (`Pipfile`), so don't use anything newer than 3.11 without saying
+  3.11 floor is what users are promised; development runs on 3.11 through
+  uv (`pyproject.toml`, `.python-version`), so don't use anything newer than 3.11 without saying
   so in your report.
 - The exception is a command whose spec needs a third-party library. Pin it
   in `requirements.txt`, and import it lazily, inside that command only. It's

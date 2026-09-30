@@ -33,7 +33,7 @@ test_<capability>.py     <capability>.vader
 (Python scenarios)       (vim scenarios)
     │                    │
     ▼                    ▼
-pipenv run pytest    ./run_tests.sh
+uv run pytest    ./run_tests.sh
 ```
 
 If the compiled test passes, the spec is satisfied. No review step needed to
@@ -172,8 +172,8 @@ matching project conventions). It:
 Running the compiler:
 
 ```bash
-pipenv run python scripts/compile_features.py          # compile all
-pipenv run python scripts/compile_features.py --check  # verify generated files are in sync
+uv run python scripts/compile_features.py          # compile all
+uv run python scripts/compile_features.py --check  # verify generated files are in sync
 ```
 
 ## Integration with OpenSpec Workflow
@@ -185,7 +185,7 @@ closes the loop automatically:
 1. `openspec-new-change` or `openspec-propose` generates `spec.feature`
 2. Developer implements the capability
 3. `compile_features.py` generates the tests
-4. `./run_tests.sh` and `pipenv run pytest` verify the implementation
+4. `./run_tests.sh` and `uv run pytest` verify the implementation
 5. `openspec-verify-change` confirms spec, implementation, and compiled tests
    are coherent before archiving
 

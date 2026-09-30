@@ -133,6 +133,7 @@ meta-notes/
 │   │   ├── test_query.py
 │   │   ├── test_recurrence.py
 │   │   ├── test_root.py
+│   │   ├── test_requirements.py
 │   │   ├── test_shim.py
 │   │   ├── test_tags.py
 │   │   ├── test_task_update.py
@@ -146,7 +147,8 @@ meta-notes/
 ├── doc/                 # Vim documentation
 ├── skills/              # Claude Code skills, linked into notes roots by init
 ├── templates/           # Planning templates, the cache README, and a suggested CLAUDE.md
-├── requirements.txt     # Pinned libraries for calendar, installed into .venv by init
+├── requirements.txt     # Pinned libraries for calendar, generated from uv.lock; init installs it into .venv
+├── pyproject.toml, uv.lock  # Development environment (uv); see AGENTS.md
 ├── run_tests.sh         # Test runner script
 └── README.md
 ```
