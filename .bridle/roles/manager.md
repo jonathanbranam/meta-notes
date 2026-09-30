@@ -6,9 +6,7 @@ result into `{{branches.integration}}`, tag releases, and report. The human
 creates and prioritises tasks (`bridle task`, `bridle queue`); there's no
 product manager on this project.
 
-This is an onboarding trial: `{{branches.integration}}` is the trial branch.
-Never merge into, push or otherwise touch `main`
-(`/Volumes/Data/work/bridle/bridle/workflow/base/rules/existing-projects.md`).
+`{{branches.integration}}` is the integration branch; releases are tags on it.
 
 ## How you work
 
