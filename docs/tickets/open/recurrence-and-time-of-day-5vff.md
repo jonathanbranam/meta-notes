@@ -288,7 +288,33 @@ this affects, per the specs; the build should confirm with a grep before
 starting. `after/syntax/markdown.vim` could highlight `🔁` and `⏰` as an
 optional last step.
 
-## Open questions for the human
+## Decisions (the human, 2026-09-30)
+
+Approved for build. These override the recommendations above where they
+differ.
+
+1. **Time of day: both syntaxes.** `⏰ HH:MM` and `📅 YYYY-MM-DD HH:MM` are
+   both read. `⏰` also takes the Time Block's 12-hour style, `⏰ 3:15pm`
+   (the same forms `time_tracking.py` parses). Writes (`--time`) use
+   `⏰ HH:MM`.
+2. **Completed late: match Obsidian.** The next occurrence steps from the
+   due date (`every 3 months 📅 2026-07-01` done 2026-10-05 gives
+   2026-10-01), even when that is already overdue; `when done` steps from
+   the completion date.
+3. **Always stamp `✅`** on a completed recurring line.
+4. **The next occurrence goes above** the done line. Done occurrences stay
+   where they are.
+5. **Skills never copy `🔁` lines forward** into daily or weekly notes.
+6. **`task add` is its own task**, after this work lands.
+7. **No reminder lead time** in v1.
+8. **v1 rules**: `every N days|weeks|months|years [when done]` and
+   `every weekday`. Weekday and month-day rules are not scheduled.
+9. **Due today goes by the date, not the time.** Timed and untimed tasks
+   due today are both due today; only `--at` looks at the time.
+10. **Time zone** is the local time of the machine running meta-notes. Where
+    a default is needed, US Eastern (`America/New_York`), never UTC.
+
+## Open questions for the human (answered above)
 
 1. **Time of day syntax**: `⏰ 15:00` (recommended, Obsidian-safe) or
    `📅 2026-10-01 15:00`? Do you still open these notes in Obsidian?
