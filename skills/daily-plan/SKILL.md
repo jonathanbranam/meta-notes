@@ -96,7 +96,9 @@ For each Follow up item from PREV, ask what to do:
 - **Drop it**: `--status -`.
 
 To carry an unfinished task into TARGET's note, write the copy there and
-mark the old line `>` with `task update ... --status '>'`.
+mark the old line `>` with `task update ... --status '>'`. Never copy a
+`🔁` marker or its rule into the copy: recurring tasks stay in their home
+note.
 
 ### 5. Write the plan
 

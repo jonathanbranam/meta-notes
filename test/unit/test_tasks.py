@@ -841,3 +841,43 @@ def test_tasks_task_warnings_none_for_valid_time(tmp_path):
     (task,) = tasks_module.find_tasks_in_file(str(path))
 
     assert tasks_module.task_warnings(task) == []
+
+
+# Tests for recurrence
+
+@pytest.mark.parametrize('line, rule, from_completion', [
+    ('- [ ] filter 🔁 every 3 months 📅 2026-07-01', 'every 3 months', False),
+    ('- [ ] salt 🔁 every month when done 📅 2025-07-24', 'every month when done', True),
+    ('- [ ] vitamins ⏰ 08:00 🔁 every day 📅 2026-10-01', 'every day', False),
+    ('- [ ] mail 🔁️ Every Weekday 📅 2026-10-01', 'Every Weekday', False),
+    ('- [ ] sweep 🔁 every 2 weeks #home 📅 2026-10-01', 'every 2 weeks', False),
+    ('- [ ] check 🔁 every week', None, False),
+    ('- [ ] check 🔁 every week 🛫 2026-10-01', 'every week', False),
+    ('- [ ] check 🔁 every week when done 📅', 'every week when done', True),
+    ('- [ ] plain 📅 2026-10-01', None, False),
+])
+def test_tasks_find_tasks_in_file_recurrence(tmp_path, line, rule, from_completion):
+    path = tmp_path / 'test.md'
+    path.write_text(line + '\n')
+
+    tasks = tasks_module.find_tasks_in_file(str(path))
+
+    if rule is None and '📅' not in line and '🛫' not in line:
+        assert tasks == []  # 🔁 alone doesn't make a task
+        return
+    (task,) = tasks
+    assert task.recurrence == rule
+    assert task.recurs_from_completion == from_completion
+    assert not task.invalid_recurrence
+
+
+@pytest.mark.parametrize('rule', ['every other week', 'every Monday', 'every 0 days', 'soon'])
+def test_tasks_find_tasks_in_file_invalid_recurrence(tmp_path, rule):
+    path = tmp_path / 'test.md'
+    path.write_text(f'- [ ] sweep 🔁 {rule} 📅 2026-10-01\n')
+
+    (task,) = tasks_module.find_tasks_in_file(str(path))
+
+    assert task.recurrence is None
+    assert task.invalid_recurrence
+    assert any('🔁' in w for w in tasks_module.task_warnings(task))

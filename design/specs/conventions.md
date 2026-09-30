@@ -28,6 +28,7 @@ The conventions SHALL cover:
 - task edits: take `file`, `line`, and `text` from `meta-notes tasks --json`, edit with `meta-notes task update <file>:<line> --expect <text>`, and re-query when the line has changed; never rewrite a task line directly
 - where new markers go: tags before dates (`... #next 📅 <date>`)
 - carrying a task forward: mark the old line `>` with `task update` and write the new copy
+- recurring tasks: `🔁 every 3 months` before the dates, reported as `recurrence` and `recurs_from_completion`; a recurring task lives in one home note, and a `🔁` line is never copied forward into a daily or weekly note
 - ceremony markers and checking them with `task update --status x`
 - structural changes only through `meta-notes move`, `rename`, and `archive`, after the user confirms the command
 

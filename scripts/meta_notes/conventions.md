@@ -15,6 +15,14 @@ for its due date in queries. A time of day goes with the due date:
 `⏰ 15:00` before the dates, or `📅 2026-10-01 15:00`. It is for humans and
 reminders; a task is due today by its date, whatever its time.
 
+A recurring task has `🔁 every 3 months` (or `every day`, `every 2 weeks`,
+`every year`, `every weekday`, any of them with `when done` after) before
+the dates. `meta-notes tasks --json` reports it as `recurrence` and
+`recurs_from_completion`; a `🔁` rule it doesn't support is a warning. A
+recurring task lives in one home note (usually in `area/`). **Never copy a
+`🔁` line forward** into a daily or weekly note, or into another note:
+write the task without the `🔁` marker and leave the original where it is.
+
 ```markdown
 - [ ] Order tiles 📅 2026-09-28
 - [x] Call the plumber 📅 ✅ 2026-09-22

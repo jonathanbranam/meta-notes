@@ -40,7 +40,7 @@ Skills SHALL change task lines only with `meta-notes task update`, using the `fi
 - **THEN** the skill SHALL show the `meta-notes archive` command and run it only after the user confirms
 
 ### Requirement: Carrying a task forward  {#r-7ed1}
-When a skill carries an unfinished task from one note to another, it SHALL write the new copy in the target note and mark the old line `>` with `meta-notes task update --status '>'`. It SHALL NOT move the original task's dates to the copy by editing the original.
+When a skill carries an unfinished task from one note to another, it SHALL write the new copy in the target note and mark the old line `>` with `meta-notes task update --status '>'`. It SHALL NOT move the original task's dates to the copy by editing the original. It SHALL NOT copy a `🔁` marker or its rule into the copy: a recurring task stays in its home note.
 
 #### Scenario: Unfinished daily task  {#s-5461}
 *Verification*: **non-executable**
