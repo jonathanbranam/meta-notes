@@ -25,6 +25,10 @@ integration = "main"
 [commands]
 check = "bridle spec check --require-ids && ./run_tests.sh && uv run pytest test/unit/"
 
+# A failed GitHub Actions run on main wakes the orchestrator.
+[ci]
+github = true
+
 # One worker at a time. (As of bridle 6t29 this caps resumes after a budget
 # pause, not spawns; the manager's prompt also says one worker.)
 [budget]
