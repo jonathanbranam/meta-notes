@@ -1,7 +1,12 @@
 ---
-id: mn-ba09
+id: 5vff
 title: Recurrence and time of day for tasks and reminders
-status: proposal, awaiting the human's review
+opened: 2026-09-30
+repos: [meta-notes]
+changes: []
+specs: []
+needs: []
+see: [a-life-assistant-agent-on-the-notes-repo-phyy]
 ---
 
 # Recurrence and time of day for tasks and reminders
