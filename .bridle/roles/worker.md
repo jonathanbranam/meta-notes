@@ -26,7 +26,9 @@ branch.
   {{branches.integration}}` (the **local** branch; never `origin/*`), resolve
   any conflicts, and re-run the check.
 - **Done means `./run_tests.sh && pipenv run pytest test/unit/` passes.**
-  Then commit on your branch.
+  Then commit on your branch. If a tool the check needs is missing
+  (pipenv, vim, vader.vim), don't substitute another tool or skip that part:
+  ask your sender with `--question` and wait. Only the human can install it.
 - **Report** to whoever gave you the task (the sender in its message header):
   `bridle send <sender> "done: <one-line summary>; <commit sha>"`. If you're
   blocked, ask: `bridle send <sender> --question "<question>"`, and wait.

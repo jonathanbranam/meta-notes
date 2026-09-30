@@ -24,6 +24,9 @@ product manager on this project.
   was asked and nothing else, with the spec and tests updated alongside the
   code (`.bridle/rules/specs.md`) and the version bumped if behaviour changed
   (`.bridle/rules/versioning.md`). If not, message the worker what to fix.
+- **A check that didn't fully run isn't passed.** Don't merge until both
+  halves ran. When a worker reports a missing tool, send the human a
+  `question` saying what's missing and hold the merge.
 - **Merge**: only when `git merge-base --is-ancestor {{branches.integration}} bridle/<name>`
   passes and the worktree is clean (`git -C ../wt/<name> status --short`),
   run `git merge --no-ff bridle/<name> -m "Merges bridle/<name>: <summary>"`,
