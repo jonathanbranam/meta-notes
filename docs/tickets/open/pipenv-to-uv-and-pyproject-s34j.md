@@ -35,7 +35,12 @@ stdlib-only. So moving development to uv doesn't change the install, as
 long as `requirements.txt` stays and `init` keeps using venv and pip.
 Users then need nothing new. Vim plugin managers ignore a `pyproject.toml`.
 
-## Proposal
+## Decisions (the human, 2026-09-30)
+
+Approved as below. `requirements.txt` is kept and generated from
+`uv.lock` whenever it changes; development moves to 3.11.
+
+## Plan
 
 - **`pyproject.toml`** with `requires-python = ">=3.11"`, the runtime
   libraries (`icalendar`, `recurring-ical-events`, pinned as in
@@ -45,34 +50,33 @@ Users then need nothing new. Vim plugin managers ignore a `pyproject.toml`.
 - **Remove `Pipfile` and `Pipfile.lock`.** Keep `pytest.ini` as it is.
 - **The check** becomes `./run_tests.sh && uv run pytest test/unit/`
   everywhere the list above names it (the bridle `check =` too).
-- **`requirements.txt` stays** for `init`, and has to match the
-  `pyproject.toml` pins. A unit test that compares them is enough; no
-  generator.
-- A bonus: `uv run --python 3.11 pytest test/unit/` tests the promised 3.11
-  floor, which today only the rule in `languages.md` guards. Worth one
-  mention in `python-tests.md`, not a second required check.
+- **`requirements.txt` stays** for `init`, and is generated from `uv.lock`
+  every time the lock changes: `uv export --no-dev --no-hashes
+  --no-emit-project -o requirements.txt` (flags as needed for a plain
+  pinned list pip reads). A unit test runs the export and fails when
+  `requirements.txt` differs, so a lock change can't land without it.
+- **Development runs on 3.11**, the version users are promised: a
+  `.python-version` of `3.11`. The Pipfile's 3.14 was a mistake. Update
+  `languages.md` to say so.
 
 ## Issues
 
 None that block it. To keep in mind:
 
-1. **Two lists of runtime pins** (`pyproject.toml` and `requirements.txt`).
-   The test above catches drift. The alternative, `init` reading
+1. **Two files of runtime pins.** `requirements.txt` is generated, and the
+   test above catches a stale one. The alternative, `init` reading
    `pyproject.toml` or calling uv, would make users install uv. Not
    recommended.
-2. **The development Python changes.** The Pipfile asks for 3.14; uv picks
-   what `requires-python` allows, so pin 3.14 for development with
-   `.python-version` if the human wants development to stay on 3.14.
-3. **Every machine that runs checks needs uv.** The NUC has it
+2. **Every machine that runs checks needs uv.** The NUC has it
    (`~/.local/bin/uv`); the Mac needs it too. The missing-tools rule
    covers a machine without it.
-4. **Agents spawned before the change** have `pipenv run` in their
+3. **Agents spawned before the change** have `pipenv run` in their
    prompts. Land it between tasks, not while a worker is running.
 
 ## Done means
 
 No `pipenv` or `Pipfile` outside `openspec/changes/archive/`, `uv run pytest
-test/unit/` and `./run_tests.sh` pass, `uv run --python 3.11 pytest
-test/unit/` passes (or its failures are reported), and `meta-notes init` in
+test/unit/` (on 3.11) and `./run_tests.sh` pass, `requirements.txt` matches
+`uv export`, and `meta-notes init` in
 a scratch root still builds `.venv` from `requirements.txt`. No CLI or
 plugin behaviour changes, so no version bump (`.bridle/rules/versioning.md`).
