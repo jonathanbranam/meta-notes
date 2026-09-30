@@ -36,3 +36,5 @@
 {"actor":"external:orchestrator","at":"2026-09-30T20:14:49.390106112Z","from":"planned","task":"mn-363f","to":"integrated"}
 {"actor":"agent:manager","at":"2026-09-30T20:17:46.651344457Z","from":"planned","task":"mn-d904","to":"integrated"}
 {"actor":"agent:manager","at":"2026-09-30T20:21:58.093838009Z","from":"planned","task":"mn-8b74","to":"integrated"}
+{"actor":"human","at":"2026-09-30T20:26:39.195Z","from":"","task":"mn-4efa","to":"open"}
+{"actor":"external:orchestrator","at":"2026-09-30T20:26:40.040720227Z","from":"open","task":"mn-4efa","to":"planned"}
