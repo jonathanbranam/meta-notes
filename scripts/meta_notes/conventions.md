@@ -22,6 +22,11 @@ the dates. `meta-notes tasks --json` reports it as `recurrence` and
 recurring task lives in one home note (usually in `area/`). **Never copy a
 `🔁` line forward** into a daily or weekly note, or into another note:
 write the task without the `🔁` marker and leave the original where it is.
+Completing one with `task update --status x` stamps `✅` and adds the next
+occurrence as a new open line **above** the done line (the `created` field
+of `--json`), so the lines after it move down one: re-query before the next
+edit. `--no-recur` completes without the next one; `--recur <rule>|none`
+sets or removes the rule.
 
 ```markdown
 - [ ] Order tiles 📅 2026-09-28
@@ -89,12 +94,14 @@ Never rewrite an existing task line yourself. To change one:
    `meta-notes task update <file>:<line> --expect <text> <options>`,
    passing `text` exactly as `--expect`. Options: `--status <c>`,
    `--add-tag <tag>`, `--remove-tag <tag>`, `--due <YYYY-MM-DD|undated|none>`,
-   `--start <YYYY-MM-DD|none>`. Combine them in one call.
+   `--start <YYYY-MM-DD|none>`, `--time <HH:MM|none>`,
+   `--recur <rule|none>`, `--no-recur`. Combine them in one call.
 3. If the command fails because the line changed, re-run the query and
    retry with the current `text`, or ask the user. Never guess a line.
 
 Line numbers from one query stay valid across `task update` calls on that
-query's lines, so a batch of edits can use one query.
+query's lines, so a batch of edits can use one query. The exception is
+completing a recurring task, which adds a line above it.
 
 `--status x` adds `✅ <today>` and any other status removes it. Use
 `--add-tag later` to defer, `--status -` to cancel.

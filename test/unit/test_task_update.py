@@ -482,3 +482,221 @@ def test_task_update_update_time_with_due_date_no_warning(tmp_path):
 
     assert result.warnings == []
     assert path.read_text().splitlines() == ['- [ ] call ⏰ 15:00 📅 2026-10-01']
+
+
+# Tests for completing a recurring task
+
+RECUR = '- [ ] replace filter 🔁 every 3 months 📅 2026-07-01'
+RECUR_DONE = '- [x] replace filter 🔁 every 3 months 📅 2026-07-01 ✅ 2026-09-25'
+RECUR_NEXT = '- [ ] replace filter 🔁 every 3 months 📅 2026-10-01'
+
+
+def test_task_update_recur_done_inserts_next_above(tmp_path):
+    path = write_note(tmp_path, ['# foo', '', RECUR, 'after'])
+    result = update(str(path), 3, RECUR, status='x', today=TODAY)
+    assert result.old == RECUR
+    assert result.new == RECUR_DONE
+    assert result.created == RECUR_NEXT
+    assert result.created_line == 3
+    assert result.changed
+    assert path.read_text() == '\n'.join(
+        ['# foo', '', RECUR_NEXT, RECUR_DONE, 'after']) + '\n'
+
+
+def test_task_update_recur_done_on_due_date_still_stamps(tmp_path):
+    line = '- [ ] stretch 🔁 every day 📅 2026-09-25'
+    path = write_note(tmp_path, [line])
+    result = update(str(path), 1, line, status='x', today=TODAY)
+    assert result.new == '- [x] stretch 🔁 every day 📅 2026-09-25 ✅ 2026-09-25'
+    assert result.created == '- [ ] stretch 🔁 every day 📅 2026-09-26'
+
+
+def test_task_update_recur_done_twice_spawns_once(tmp_path):
+    path = write_note(tmp_path, [RECUR])
+    update(str(path), 1, RECUR, status='x', today=TODAY)
+    before = path.read_text()
+    result = update(str(path), 2, RECUR_DONE, status='x', today=TODAY)
+    assert result.created is None
+    assert not result.changed
+    assert path.read_text() == before
+
+
+def test_task_update_recur_stale_second_call_is_guarded(tmp_path):
+    path = write_note(tmp_path, [RECUR])
+    update(str(path), 1, RECUR, status='x', today=TODAY)
+    with pytest.raises(TaskUpdateError) as info:
+        update(str(path), 1, RECUR, status='x', today=TODAY)
+    assert info.value.current == RECUR_NEXT
+
+
+@pytest.mark.parametrize('status', ['-', '>', '.', ' '])
+def test_task_update_recur_other_status_spawns_nothing(tmp_path, status):
+    path = write_note(tmp_path, [RECUR])
+    result = update(str(path), 1, RECUR, status=status, today=TODAY)
+    assert result.created is None
+    assert len(path.read_text().splitlines()) == 1
+
+
+def test_task_update_recur_late_steps_from_due_date(tmp_path):
+    path = write_note(tmp_path, [RECUR])
+    result = update(str(path), 1, RECUR, status='x', today=date(2026, 10, 5))
+    assert result.created == RECUR_NEXT
+
+
+def test_task_update_recur_when_done_steps_from_completion(tmp_path):
+    line = '- [ ] buy salt 🔁 every month when done 📅 2026-07-24'
+    path = write_note(tmp_path, [line])
+    result = update(str(path), 1, line, status='x', today=date(2026, 10, 5))
+    assert result.created == (
+        '- [ ] buy salt 🔁 every month when done 📅 2026-11-05')
+
+
+def test_task_update_recur_when_done_bare_due_gets_a_date(tmp_path):
+    line = '- [ ] buy salt 🔁 every week when done 📅'
+    path = write_note(tmp_path, [line])
+    result = update(str(path), 1, line, status='x', today=TODAY)
+    assert result.created == '- [ ] buy salt 🔁 every week when done 📅 2026-10-02'
+
+
+def test_task_update_recur_keeps_time_and_moves_start(tmp_path):
+    line = '- [ ] check ⏰ 15:00 🔁 every 2 weeks 🛫 2026-09-20 📅 2026-09-22'
+    path = write_note(tmp_path, [line])
+    result = update(str(path), 1, line, status='x', today=TODAY)
+    assert result.created == (
+        '- [ ] check ⏰ 15:00 🔁 every 2 weeks 🛫 2026-10-04 📅 2026-10-06')
+
+
+def test_task_update_recur_keeps_time_after_due_date(tmp_path):
+    line = '- [ ] call 🔁 every day 📅 2026-09-25 15:00'
+    path = write_note(tmp_path, [line])
+    result = update(str(path), 1, line, status='x', today=TODAY)
+    assert result.created == '- [ ] call 🔁 every day 📅 2026-09-26 15:00'
+
+
+def test_task_update_recur_start_only_steps_start(tmp_path):
+    line = '- [ ] plan 🔁 every week 🛫 2026-09-21'
+    path = write_note(tmp_path, [line])
+    result = update(str(path), 1, line, status='x', today=TODAY)
+    assert result.created == '- [ ] plan 🔁 every week 🛫 2026-09-28'
+
+
+def test_task_update_recur_keeps_tags_and_indentation(tmp_path):
+    line = '    * [ ] #home mow 🔁 every weekday 📅 2026-09-25'
+    path = write_note(tmp_path, [line])
+    result = update(str(path), 1, line, status='X', today=TODAY)
+    assert result.created == '    * [ ] #home mow 🔁 every weekday 📅 2026-09-28'
+    assert path.read_text().splitlines()[1] == (
+        '    * [X] #home mow 🔁 every weekday 📅 2026-09-25 ✅ 2026-09-25')
+
+
+def test_task_update_recur_crlf_file(tmp_path):
+    path = write_note(tmp_path, ['# foo', RECUR, 'end'], ending='\r\n')
+    update(str(path), 2, RECUR, status='x', today=TODAY)
+    assert path.read_bytes().decode() == '\r\n'.join(
+        ['# foo', RECUR_NEXT, RECUR_DONE, 'end']) + '\r\n'
+
+
+def test_task_update_recur_last_line_without_newline(tmp_path):
+    path = write_note(tmp_path, ['# foo', RECUR], final_newline=False)
+    update(str(path), 2, RECUR, status='x', today=TODAY)
+    assert path.read_bytes().decode() == (
+        '# foo\n' + RECUR_NEXT + '\n' + RECUR_DONE)
+
+
+def test_task_update_recur_last_line_without_newline_crlf(tmp_path):
+    path = write_note(tmp_path, ['# foo', RECUR], ending='\r\n',
+                      final_newline=False)
+    update(str(path), 2, RECUR, status='x', today=TODAY)
+    assert path.read_bytes().decode() == (
+        '# foo\r\n' + RECUR_NEXT + '\r\n' + RECUR_DONE)
+
+
+def test_task_update_recur_single_line_file_without_newline(tmp_path):
+    path = write_note(tmp_path, [RECUR], final_newline=False)
+    update(str(path), 1, RECUR, status='x', today=TODAY)
+    assert path.read_bytes().decode() == RECUR_NEXT + '\n' + RECUR_DONE
+
+
+def test_task_update_recur_no_recur_completes_only(tmp_path):
+    path = write_note(tmp_path, [RECUR])
+    result = update(str(path), 1, RECUR, status='x', no_recur=True,
+                    today=TODAY)
+    assert result.created is None
+    assert path.read_text() == RECUR_DONE + '\n'
+
+
+def test_task_update_recur_no_completed_is_an_error(tmp_path):
+    path = write_note(tmp_path, [RECUR])
+    with pytest.raises(TaskUpdateError, match='no-completed'):
+        update(str(path), 1, RECUR, status='x', no_completed=True,
+               today=TODAY)
+    assert path.read_text() == RECUR + '\n'
+
+
+def test_task_update_recur_due_in_same_call_is_the_base(tmp_path):
+    path = write_note(tmp_path, [RECUR])
+    result = update(str(path), 1, RECUR, status='x', due='2026-09-01',
+                    today=TODAY)
+    assert result.created == (
+        '- [ ] replace filter 🔁 every 3 months 📅 2026-12-01')
+
+
+def test_task_update_recur_unsupported_rule_warns_and_acts_plain(tmp_path):
+    line = '- [ ] x 🔁 every other week 📅 2026-09-25'
+    path = write_note(tmp_path, [line])
+    result = update(str(path), 1, line, status='x', today=TODAY)
+    assert result.created is None
+    assert result.new == '- [x] x 🔁 every other week 📅 2026-09-25'
+    assert any('not supported' in w or "isn't supported" in w
+               for w in result.warnings)
+
+
+def test_task_update_recur_rule_without_date_warns(tmp_path):
+    line = '- [ ] x 🔁 every week 📅'
+    path = write_note(tmp_path, [line])
+    result = update(str(path), 1, line, status='x', today=TODAY)
+    assert result.created is None
+    assert result.new == '- [x] x 🔁 every week 📅 ✅ 2026-09-25'
+    assert any('no next occurrence' in w for w in result.warnings)
+
+
+def test_task_update_recur_non_recurring_done_unchanged_behavior(tmp_path):
+    line = '- [ ] call 📅 2026-09-25'
+    path = write_note(tmp_path, [line])
+    result = update(str(path), 1, line, status='x', today=TODAY)
+    assert result.created is None
+    assert result.new == '- [x] call 📅 2026-09-25'
+
+
+# Tests for --recur and tags around the 🔁 marker
+
+def test_task_update_recur_set_adds_marker_before_dates():
+    assert edit('- [ ] call 📅 2026-10-01', recur='every week') == (
+        '- [ ] call 🔁 every week 📅 2026-10-01')
+
+
+def test_task_update_recur_set_replaces_rule():
+    assert edit('- [ ] call 🔁 every day #a 📅 2026-10-01',
+                recur='every 2 weeks when done') == (
+        '- [ ] call 🔁 every 2 weeks when done #a 📅 2026-10-01')
+
+
+def test_task_update_recur_none_removes_marker_and_rule():
+    assert edit('- [ ] call 🔁 every 2 weeks 📅 2026-10-01',
+                recur='none') == '- [ ] call 📅 2026-10-01'
+    assert edit('- [ ] call 📅 2026-10-01 🔁 every day',
+                recur='none') == '- [ ] call 📅 2026-10-01'
+
+
+def test_task_update_recur_none_with_done_spawns_nothing(tmp_path):
+    path = write_note(tmp_path, [RECUR])
+    result = update(str(path), 1, RECUR, status='x', recur='none',
+                    today=TODAY)
+    assert result.created is None
+    assert path.read_text() == (
+        '- [x] replace filter 📅 2026-07-01 ✅ 2026-09-25\n')
+
+
+def test_task_update_add_tag_goes_before_recurrence():
+    assert edit('- [ ] call 🔁 every day 📅 2026-10-01', add_tags=['later']) == (
+        '- [ ] call #later 🔁 every day 📅 2026-10-01')

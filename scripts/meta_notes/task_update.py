@@ -11,14 +11,16 @@ a time after the due date (`📅 2026-10-01 15:00`); `time` writes `⏰ HH:MM`.
 
 import re
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, timedelta
 
 import tasks
+from recurrence import Rule, next_date, parse_rule
 from tags import TAG_PATTERN, canonical_tag
 
 START_EMOJI = '🛫'
 COMPLETED_EMOJI = '✅'
 NEW_DUE_EMOJI = '📅'
+RECUR_EMOJI = '🔁'
 DONE_CHARS = ('x', 'X')
 TIME_EMOJI = tasks.TIME_EMOJI
 
@@ -26,7 +28,8 @@ _DATE = r'\d{4}-\d{2}-\d{2}'
 
 # Every emoji that starts a date marker; an added tag goes before the first
 _DATE_EMOJI_PATTERN = re.compile(
-    '|'.join((START_EMOJI, *tasks.DUE_EMOJIS, COMPLETED_EMOJI, TIME_EMOJI)))
+    '|'.join((START_EMOJI, *tasks.DUE_EMOJIS, COMPLETED_EMOJI, TIME_EMOJI,
+     RECUR_EMOJI)))
 
 # A line ending, as Python's universal newlines reads it
 _LINE_PATTERN = re.compile(r'[^\r\n]*(?:\r\n|\r|\n)|[^\r\n]+\Z')
@@ -51,6 +54,8 @@ _TIME_MARKER = re.compile(
     TIME_EMOJI + r'\ufe0f?(?:[ \t]*\d{1,2}:\d{2}(?:[ \t]*[AaPp][Mm])?)?')
 _START_MARKER = _marker_pattern(START_EMOJI)
 _COMPLETED_MARKER = _marker_pattern(COMPLETED_EMOJI)
+# 🔁 and its rule text, which runs to the next date marker or tag
+_RECUR_MARKER = tasks._RECURRENCE_MARKER_PATTERN
 
 
 class TaskUpdateError(Exception):
@@ -67,11 +72,19 @@ class TaskUpdateError(Exception):
 
 @dataclass
 class UpdateResult:
-    """Outcome of an update: the line before and after, and any warnings."""
+    """
+    Outcome of an update: the line before and after, and any warnings.
+
+    created is the next occurrence's text when completing a recurring task
+    inserted one, and created_line its line number. It sits directly above
+    the target, which has moved down one line.
+    """
     old: str
     new: str
     changed: bool
     warnings: list[str] = field(default_factory=list)
+    created: str | None = None
+    created_line: int | None = None
 
 
 # Marker token helpers
@@ -199,15 +212,60 @@ def _set_time(text: str, value: str) -> str:
     return _insert(text, first_date.start() if first_date else len(text), token)
 
 
+def _set_recur(text: str, value: str) -> str:
+    """Set the 🔁 rule, or remove the marker and its rule with 'none'."""
+    if value == 'none':
+        while match := _RECUR_MARKER.search(text):
+            text = _remove_span(text, match.start(), match.end())
+        return text
+
+    token = f'{RECUR_EMOJI} {value}'
+    match = _RECUR_MARKER.search(text)
+    if match:
+        return text[:match.start()] + token + text[match.end():]
+    first_date = _DATE_EMOJI_PATTERN.search(text)
+    return _insert(text, first_date.start() if first_date else len(text), token)
+
+
+def _recurrence(text: str) -> tuple[Rule | None, bool]:
+    """
+    The line's rule, and whether the rule has a date to step from.
+
+    The rule is None when there is no 🔁 or its rule isn't supported. A rule
+    steps from the due date, else the start date, or from the completion
+    date when it is "when done".
+    """
+    match = _RECUR_MARKER.search(text)
+    rule = parse_rule(match.group(1)) if match else None
+    if rule is None:
+        return None, False
+    start_date, due_date, _ = tasks._parse_task_dates(text)
+    return rule, (rule.when_done or due_date is not None
+                  or start_date is not None)
+
+
+def _is_recurring(text: str) -> bool:
+    rule, has_base = _recurrence(text)
+    return rule is not None and has_base
+
+
 def _set_status(text: str, status: str, no_completed: bool, today: date) -> str:
     checkbox = tasks.CHECKBOX_PATTERN.match(text)
     was_done = checkbox.group(1) in DONE_CHARS
+    completing = status in DONE_CHARS and not was_done
+    recurring = completing and _is_recurring(text)
+    if recurring and no_completed:
+        raise TaskUpdateError(
+            "--no-completed can't be used on a recurring task: "
+            "its ✅ date records the completion")
     text = text[:checkbox.start(1)] + status + text[checkbox.end(1):]
 
     if status not in DONE_CHARS:
         return _remove_markers(text, _COMPLETED_MARKER)
     if was_done or no_completed or _COMPLETED_MARKER.search(text):
         return text
+    if recurring:
+        return _insert(text, len(text), f'{COMPLETED_EMOJI} {today.isoformat()}')
     _, due_date, _ = tasks._parse_task_dates(text)
     if due_date == today:
         return text
@@ -218,7 +276,8 @@ def edit_line(text: str, *, status: str | None = None,
               add_tags: list[str] | None = None,
               remove_tags: list[str] | None = None,
               due: str | None = None, start: str | None = None,
-              time: str | None = None, no_completed: bool = False,
+              time: str | None = None, recur: str | None = None,
+              no_completed: bool = False,
               today: date | None = None) -> str:
     """
     Apply edits to a checkbox line.
@@ -230,7 +289,11 @@ def edit_line(text: str, *, status: str | None = None,
         due: YYYY-MM-DD, 'undated', or 'none'.
         start: YYYY-MM-DD or 'none'.
         time: HH:MM (24-hour) or 'none'; written as ⏰ HH:MM.
-        no_completed: Don't add a ✅ date when marking the task done.
+        recur: A rule such as 'every 3 months' (written as 🔁 <rule>), or
+            'none' to remove the marker and its rule.
+        no_completed: Don't add a ✅ date when marking the task done. A
+            recurring task always gets one, so this raises TaskUpdateError
+            there.
         today: The ✅ date and the date compared with the due date
             (default: today).
 
@@ -246,6 +309,8 @@ def edit_line(text: str, *, status: str | None = None,
         text = _set_start(text, start)
     if time is not None:
         text = _set_time(text, time)
+    if recur is not None:
+        text = _set_recur(text, recur)
     if status is not None:
         text = _set_status(text, status, no_completed, today)
     for name in add_tags or []:
@@ -259,10 +324,45 @@ def _split_ending(line: str) -> tuple[str, str]:
     return content, line[len(content):]
 
 
+def next_occurrence(done: str, today: date) -> str | None:
+    """
+    The open line that follows a completed recurring task line.
+
+    Args:
+        done: The line as completed, without its line ending.
+        today: The completion date, the base of a "when done" rule.
+
+    Returns:
+        The next occurrence: the same line, open, without ✅, its due date
+        replaced by the next date and its start date moved by as many days,
+        or None when the line isn't recurring. The time and rule are kept.
+    """
+    rule, has_base = _recurrence(done)
+    if rule is None or not has_base:
+        return None
+    start_date, due_date, _ = tasks._parse_task_dates(done)
+    if rule.when_done:
+        base = today
+    else:
+        base = due_date or start_date
+    following = next_date(rule, base)
+
+    text = _set_status(done, ' ', False, today)
+    if due_date is not None or start_date is None:
+        text = _set_due(text, following.isoformat())
+        if due_date is not None and start_date is not None:
+            shifted = start_date + (following - due_date)
+            text = _set_start(text, shifted.isoformat())
+    else:
+        text = _set_start(text, following.isoformat())
+    return text
+
+
 def update(path: str, line_no: int, expect: str, *,
            status: str | None = None, add_tags: list[str] | None = None,
            remove_tags: list[str] | None = None, due: str | None = None,
            start: str | None = None, time: str | None = None,
+           recur: str | None = None, no_recur: bool = False,
            no_completed: bool = False,
            today: date | None = None) -> UpdateResult:
     """
@@ -273,11 +373,17 @@ def update(path: str, line_no: int, expect: str, *,
         line_no: The line, counting from 1.
         expect: The line's text as last read; compared ignoring trailing
             whitespace.
-        status, add_tags, remove_tags, due, start, time, no_completed, today:
-            See edit_line.
+        status, add_tags, remove_tags, due, start, time, recur,
+        no_completed, today: See edit_line.
+        no_recur: Don't insert the next occurrence when a recurring task is
+            marked done.
 
     Returns:
         The line before and after. The file is written only if it changed.
+        Marking a recurring task done (not already done) also inserts its
+        next occurrence as a new open line directly above it, in the same
+        write; the target then sits one line lower. A done task set to done
+        again inserts nothing.
 
     Raises:
         TaskUpdateError: If the file can't be read, the line is out of
@@ -307,8 +413,27 @@ def update(path: str, line_no: int, expect: str, *,
 
     new = edit_line(old, status=status, add_tags=add_tags,
                     remove_tags=remove_tags, due=due, start=start, time=time,
-                    no_completed=no_completed, today=today)
+                    recur=recur, no_completed=no_completed, today=today)
     result = UpdateResult(old=old, new=new, changed=new != old)
+    today = today or date.today()
+    completed = (status in DONE_CHARS
+                 and tasks.CHECKBOX_PATTERN.match(old).group(1)
+                 not in DONE_CHARS)
+    spawned = None
+    if completed:
+        if _is_recurring(new):
+            if not no_recur:
+                spawned = next_occurrence(new, today)
+        else:
+            rule, _ = _recurrence(new)
+            if rule is not None:
+                result.warnings.append(
+                    f"Line {line_no} of {path} has a 🔁 rule but no due or "
+                    "start date, so no next occurrence was made")
+            elif _RECUR_MARKER.search(new):
+                result.warnings.append(
+                    f"Line {line_no} of {path} has a 🔁 rule that isn't "
+                    "supported, so no next occurrence was made")
     if tasks.is_task(old) and not tasks.is_task(new):
         result.warnings.append(
             f"Line {line_no} of {path} is no longer a task "
@@ -320,7 +445,18 @@ def update(path: str, line_no: int, expect: str, *,
             f"Line {line_no} of {path} has a time but no due date, "
             "so the time is ignored")
 
-    if result.changed:
+    if spawned is not None:
+        result.created = spawned
+        result.created_line = line_no
+        result.changed = True
+        # The last line may lack a line ending; the line above it needs one
+        above_ending = ending or next(
+            (_split_ending(line)[1] for line in reversed(lines)
+             if _split_ending(line)[1]), '\n')
+        lines[line_no - 1:line_no] = [spawned + above_ending, new + ending]
+        with open(path, 'w', encoding='utf-8', newline='') as f:
+            f.write(''.join(lines))
+    elif result.changed:
         lines[line_no - 1] = new + ending
         with open(path, 'w', encoding='utf-8', newline='') as f:
             f.write(''.join(lines))

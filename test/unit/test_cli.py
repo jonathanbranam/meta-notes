@@ -730,6 +730,8 @@ TASK = '- [ ] call Sam 📅 2026-09-22'
     (['--time', '25:00'], 'invalid value'),
     (['--time', '3pm'], 'invalid value'),
     (['--time', '15:60'], 'invalid value'),
+    (['--recur', 'every other week'], 'invalid value'),
+    (['--recur', 'sometimes'], 'invalid value'),
     (['--add-tag', 'two words'], 'invalid tag'),
     (['--remove-tag', '#a.b'], 'invalid tag'),
     (['--add-tag', 'later', '--remove-tag', '#Later'], 'both'),
@@ -791,7 +793,7 @@ def test_task_update_json_success(notes_root, capsys):
         'ok': True, 'file': 'project/foo.md', 'line': 3,
         'old': '- [ ] call Sam 📅 2000-01-01',
         'new': f'- [x] call Sam 📅 2000-01-01 ✅ {date.today().isoformat()}',
-        'changed': True, 'warnings': []}
+        'changed': True, 'created': None, 'warnings': []}
     assert path.read_text().splitlines()[2] == out['new']
 
 
@@ -1247,3 +1249,61 @@ def test_checkin_wait_bad_config_interval(notes_root, capsys):
     code, data, _ = run_json(capsys, ['checkin', 'wait'])
 
     assert code == 1 and 'interval' in data['error']
+
+
+def test_task_update_completing_a_recurring_task_reports_created(
+        notes_root, capsys):
+    path = notes_root / 'project' / 'foo.md'
+    line = '- [ ] call Sam 🔁 every week 📅 2026-09-22'
+    path.write_text('# project/foo\n\n' + line + '\n')
+
+    code, out, _ = run_json(capsys, ['task', 'update', 'project/foo.md:3',
+                                     '--expect', line, '--status', 'x'])
+
+    assert code == 0
+    assert out['old'] == line
+    assert out['new'].startswith('- [x] call Sam 🔁 every week 📅 2026-09-22 ✅ ')
+    assert out['created'] == {
+        'file': 'project/foo.md', 'line': 3,
+        'text': '- [ ] call Sam 🔁 every week 📅 2026-09-29'}
+    lines = path.read_text().splitlines()
+    assert lines[2] == out['created']['text']
+    assert lines[3] == out['new']
+
+
+def test_task_update_created_is_null_without_a_spawn(task_note, capsys):
+    code, out, _ = run_json(capsys, ['task', 'update', 'project/foo.md:3',
+                                     '--expect', TASK, '--status', 'x'])
+    assert code == 0
+    assert out['created'] is None
+
+
+def test_task_update_no_recur_and_recur_options(notes_root, capsys):
+    path = notes_root / 'project' / 'foo.md'
+    line = '- [ ] call Sam 🔁 every week 📅 2026-09-22'
+    path.write_text(line + '\n')
+
+    code, out, _ = run_json(capsys, ['task', 'update', 'project/foo.md:1',
+                                     '--expect', line, '--status', 'x',
+                                     '--no-recur'])
+    assert code == 0
+    assert out['created'] is None
+    assert len(path.read_text().splitlines()) == 1
+
+    code, out, _ = run_json(capsys, ['task', 'update', 'project/foo.md:1',
+                                     '--expect', out['new'],
+                                     '--recur', 'none'])
+    assert code == 0
+    assert '🔁' not in path.read_text()
+
+
+def test_task_update_recurring_no_completed_fails(notes_root, capsys):
+    path = notes_root / 'project' / 'foo.md'
+    line = '- [ ] call Sam 🔁 every week 📅 2026-09-22'
+    path.write_text(line + '\n')
+    code, out, _ = run_json(capsys, ['task', 'update', 'project/foo.md:1',
+                                     '--expect', line, '--status', 'x',
+                                     '--no-completed'])
+    assert code == 1
+    assert 'no-completed' in out['error']
+    assert path.read_text() == line + '\n'

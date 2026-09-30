@@ -21,6 +21,7 @@ from datetime import date, datetime
 
 import find_tasks
 import tasks as task_model
+from recurrence import parse_rule
 from tags import canonical_tag
 from meta_notes import (__version__, brief, calendar, ceremony, changes,
                         checkin, config, conventions, init, note, ops, prime,
@@ -299,6 +300,16 @@ def _time_value(value: str) -> str:
         f"invalid value: {value!r} (expected HH:MM, 00:00 to 23:59, or none)")
 
 
+def _recur_value(value: str) -> str:
+    """Check a --recur value: a supported rule or none; return it trimmed."""
+    value = value.strip()
+    if value == "none" or parse_rule(value) is not None:
+        return value
+    raise argparse.ArgumentTypeError(
+        f"invalid value: {value!r} (expected a rule like 'every 3 months', "
+        "'every week when done', or 'every weekday', or none)")
+
+
 def _tag_value(value: str) -> str:
     """Check a tag name, with or without #; return it without #."""
     bare = value.removeprefix("#")
@@ -325,15 +336,17 @@ def cmd_task_update(args, root: str) -> Output:
         raise CliError(f"{prog}: tag given to both --add-tag and --remove-tag: "
                        f"{', '.join(sorted(both))}")
     if (args.status is None and args.due is None and args.start is None
-            and args.time is None and not add_tags and not remove_tags):
+            and args.time is None and args.recur is None
+            and not add_tags and not remove_tags):
         raise CliError(f"{prog}: give at least one of --status, --add-tag, "
-                       "--remove-tag, --due, --start, or --time")
+                       "--remove-tag, --due, --start, --time, or --recur")
 
     try:
         result = task_update.update(
             path, line_no, args.expect, status=args.status, add_tags=add_tags,
             remove_tags=remove_tags, due=args.due, start=args.start,
-            time=args.time, no_completed=args.no_completed)
+            time=args.time, recur=args.recur, no_recur=args.no_recur,
+            no_completed=args.no_completed)
     except task_update.TaskUpdateError as e:
         if e.current is None:
             raise CliError(str(e))
@@ -341,9 +354,16 @@ def cmd_task_update(args, root: str) -> Output:
                       error=str(e))
 
     out = Output({"file": path, "line": line_no, "old": result.old,
-                  "new": result.new, "changed": result.changed},
+                  "new": result.new, "changed": result.changed,
+                  "created": None},
                  warnings=result.warnings)
-    if result.changed:
+    if result.created is not None:
+        out.data["created"] = {"file": path, "line": result.created_line,
+                               "text": result.created}
+        out.text = [f"{path}:{line_no}", f"- {result.old}", f"+ {result.new}",
+                    f"{path}:{result.created_line} created (the task is now "
+                    f"on line {line_no + 1})", f"+ {result.created}"]
+    elif result.changed:
         out.text = [f"{path}:{line_no}", f"- {result.old}", f"+ {result.new}"]
     else:
         out.text = [f"{path}:{line_no} unchanged"]
@@ -698,8 +718,14 @@ def build_parser() -> argparse.ArgumentParser:
                    help="YYYY-MM-DD or none")
     k.add_argument("--time", type=_time_value, metavar="TIME",
                    help="HH:MM (24-hour), written as ⏰ HH:MM, or none")
+    k.add_argument("--recur", type=_recur_value, metavar="RULE",
+                   help="set the 🔁 rule (like 'every 3 months') or none")
+    k.add_argument("--no-recur", action="store_true",
+                   help="mark a recurring task done without adding its next "
+                        "occurrence")
     k.add_argument("--no-completed", action="store_true",
-                   help="don't add a ✅ date when marking the task done")
+                   help="don't add a ✅ date when marking the task done "
+                        "(not allowed on a recurring task)")
     p.set_defaults(handler=cmd_task_update)
 
     p = sub.add_parser("ceremony", parents=[common],
