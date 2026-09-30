@@ -2,9 +2,9 @@
 id = "mn-a8aa"
 title = "Recurrence 1/5: recurrence rules module"
 kind = "feature"
-state = "open"
+state = "planned"
 created_at = "2026-09-30T19:59:47.459Z"
-updated_at = "2026-09-30T19:59:47.459Z"
+updated_at = "2026-09-30T20:00:07.171655775Z"
 size = "M"
 +++
 
