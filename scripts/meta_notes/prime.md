@@ -74,6 +74,8 @@ needs the task, write it there without the `🔁` marker. `meta-notes tasks
 --status x` on one stamps `✅` and adds the next occurrence above the done
 line (`created` in `--json`); re-query afterwards, since lines shift.
 `--no-recur` completes without the next occurrence.
+Create one with `meta-notes task add <file> <text> --recur <rule> --due
+<date> [--time HH:MM]`, which checks the rule, date and time.
 
 ## Commands
 

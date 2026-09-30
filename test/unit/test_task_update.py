@@ -700,3 +700,72 @@ def test_task_update_recur_none_with_done_spawns_nothing(tmp_path):
 def test_task_update_add_tag_goes_before_recurrence():
     assert edit('- [ ] call 🔁 every day 📅 2026-10-01', add_tags=['later']) == (
         '- [ ] call #later 🔁 every day 📅 2026-10-01')
+
+
+# Tests for add function
+
+def test_add_appends_with_markers(tmp_path):
+    path = write_note(tmp_path, ['# foo'])
+    result = task_update.add(str(path), 'change filter', due='2026-10-01',
+                             time='09:00', recur='every 3 months',
+                             add_tags=['home'])
+    line = '- [ ] change filter #home 🔁 every 3 months ⏰ 09:00 📅 2026-10-01'
+    assert result.new == line
+    assert result.created_line == 2
+    assert result.warnings == []
+    assert path.read_text(encoding='utf-8') == f'# foo\n{line}\n'
+
+
+def test_add_inserts_before_line(tmp_path):
+    path = write_note(tmp_path, ['a', 'b'])
+    result = task_update.add(str(path), 'x', due='2026-10-01', line_no=2)
+    assert result.created_line == 2
+    assert path.read_text(encoding='utf-8') == 'a\n- [ ] x 📅 2026-10-01\nb\n'
+
+
+def test_add_keeps_crlf_and_adds_final_newline(tmp_path):
+    path = write_note(tmp_path, ['a', 'b'], ending='\r\n', final_newline=False)
+    task_update.add(str(path), 'x', due='2026-10-01')
+    assert path.read_bytes() == 'a\r\nb\r\n- [ ] x 📅 2026-10-01\r\n'.encode()
+
+
+def test_add_to_empty_file(tmp_path):
+    path = tmp_path / 'foo.md'
+    path.write_text('')
+    task_update.add(str(path), 'x', start='2026-10-01')
+    assert path.read_text(encoding='utf-8') == '- [ ] x 🛫 2026-10-01\n'
+
+
+def test_add_without_a_date_warns(tmp_path):
+    path = write_note(tmp_path, ['a'])
+    result = task_update.add(str(path), 'buy milk')
+    assert len(result.warnings) == 1
+    assert path.read_text(encoding='utf-8') == 'a\n- [ ] buy milk\n'
+
+
+def test_add_when_done_rule_needs_no_date(tmp_path):
+    path = write_note(tmp_path, ['a'])
+    result = task_update.add(str(path), 'x', recur='every week when done')
+    assert result.new == '- [ ] x 🔁 every week when done'
+
+
+@pytest.mark.parametrize('kwargs', [
+    {'text': ''},
+    {'text': 'a\nb'},
+    {'time': '09:00'},
+    {'recur': 'every week'},
+    {'recur': 'every other week', 'due': '2026-10-01'},
+    {'due': '2026-10-01', 'line_no': 9},
+    {'due': '2026-10-01', 'line_no': 0},
+])
+def test_add_errors_write_nothing(tmp_path, kwargs):
+    path = write_note(tmp_path, ['a'])
+    kwargs = {'text': 'x', **kwargs}
+    with pytest.raises(TaskUpdateError):
+        task_update.add(str(path), **kwargs)
+    assert path.read_text(encoding='utf-8') == 'a\n'
+
+
+def test_add_missing_file(tmp_path):
+    with pytest.raises(TaskUpdateError, match='No such file'):
+        task_update.add(str(tmp_path / 'no.md'), 'x', due='2026-10-01')

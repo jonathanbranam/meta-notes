@@ -182,7 +182,7 @@ This structure is compatible with vim-plug, Vundle, and Pathogen.
 
 `bin/meta-notes` performs the plugin's setup (`init`), note creation from
 templates (`note`), file operations (`move`, `rename`, `archive`), task
-query (`tasks`), task edits (`task update`), time reports (`time`), changed
+query (`tasks`), task edits (`task update`, `task add`), time reports (`time`), changed
 notes (`changes`), calendar agendas (`calendar`, `cache clear`), the
 project list (`projects`), ceremony status (`ceremony status`), stay-on-task check-ins (`checkin`), and the
 skills' shared conventions (`conventions`), and a guide to the notes root
@@ -237,6 +237,7 @@ bin/meta-notes tasks --all --folder project --status all
 meta-notes tasks --overdue --due          # overdue and due today
 meta-notes tasks --scheduled --date 2026-11 --group-by tag
 meta-notes tasks --overdue --due --at now  # timed tasks due by this moment
+meta-notes task add area/home.md 'change filter' --recur 'every 3 months' --time 09:00 --due 2026-10-01
 meta-notes task update project/foo.md:3 --expect '- [ ] call Sam 📅 2026-09-22' --status x
 meta-notes task update project/foo.md:3 --expect '- [ ] call Sam 📅 2026-09-22' --time 15:00
 meta-notes task update area/home.md:9 --expect '- [ ] change filter 🔁 every 3 months 📅 2026-07-01' --status x  # adds the next occurrence above

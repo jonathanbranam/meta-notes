@@ -461,3 +461,76 @@ def update(path: str, line_no: int, expect: str, *,
         with open(path, 'w', encoding='utf-8', newline='') as f:
             f.write(''.join(lines))
     return result
+
+
+def add(path: str, text: str, *, due: str | None = None,
+        start: str | None = None, time: str | None = None,
+        recur: str | None = None, add_tags: list[str] | None = None,
+        line_no: int | None = None) -> UpdateResult:
+    """
+    Add an open task line to a file.
+
+    Args:
+        path: The file, which must exist.
+        text: The task's description, one line, without the checkbox.
+        due, start, time, recur, add_tags: As in edit_line, but no 'none'
+            or 'undated'.
+        line_no: Insert before this line (counting from 1); the default is
+            the end of the file.
+
+    Returns:
+        old is empty, new is the added line, and created_line is its line
+        number. The file is written with the line ending it already uses.
+
+    Raises:
+        TaskUpdateError: If the file can't be read, text is empty or has a
+            line break, line_no is out of range, a time has no due date, or
+            a rule has no date to step from and isn't "when done".
+    """
+    text = text.strip()
+    if not text or re.search(r'[\r\n]', text):
+        raise TaskUpdateError("The task text must be one non-empty line")
+    if time == 'none':
+        raise TaskUpdateError("--time none is for task update")
+    if time is not None and due is None:
+        raise TaskUpdateError("--time needs --due: a time without a due "
+                              "date is ignored")
+    if recur is not None:
+        rule = parse_rule(recur)
+        if rule is None:
+            raise TaskUpdateError(f"Unsupported rule: {recur!r}")
+        if not rule.when_done and due is None and start is None:
+            raise TaskUpdateError(
+                "--recur needs --due or --start to step from, "
+                "or a 'when done' rule")
+    try:
+        with open(path, encoding='utf-8', newline='') as f:
+            content = f.read()
+    except FileNotFoundError:
+        raise TaskUpdateError(f"No such file: {path}")
+    except (OSError, UnicodeDecodeError) as e:
+        raise TaskUpdateError(f"Could not read {path}: {e}")
+
+    lines = _LINE_PATTERN.findall(content)
+    if line_no is None:
+        line_no = len(lines) + 1
+    elif not 1 <= line_no <= len(lines) + 1:
+        raise TaskUpdateError(
+            f"Line {line_no} is out of range: {path} has {len(lines)} lines")
+
+    new = edit_line('- [ ] ' + text, due=due, start=start, time=time,
+                    recur=recur, add_tags=add_tags)
+    ending = next((_split_ending(line)[1] for line in lines
+                   if _split_ending(line)[1]), '\n')
+    if line_no > len(lines) and lines and not _split_ending(lines[-1])[1]:
+        lines[-1] += ending
+    lines.insert(line_no - 1, new + ending)
+    with open(path, 'w', encoding='utf-8', newline='') as f:
+        f.write(''.join(lines))
+
+    result = UpdateResult(old='', new=new, changed=True, created_line=line_no)
+    if not tasks.is_task(new):
+        result.warnings.append(
+            f"The line added to {path} has no due emoji or 🛫 date, "
+            "so queries don't list it as a task")
+    return result

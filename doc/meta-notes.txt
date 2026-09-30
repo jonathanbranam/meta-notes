@@ -856,6 +856,32 @@ Commands ~
             --expect '- [ ] #later read book 📅' \
             --remove-tag later --add-tag next --due 2026-10-08
 <
+`meta-notes task add {file} {text} [options]`     *meta-notes-cli-task-add*
+    Add an open task line, `- [ ] {text}` and its markers, to {file}, an
+    existing note (relative to the notes root, or an absolute path inside
+    it). The line goes at the end of the file, or before line {n} with
+    `--line {n}` (up to one past the last line). The file's line endings
+    are kept, and nothing is written on an error. {text} is one non-empty
+    line.
+
+    --due {date}        Write `📅 {date}` (`YYYY-MM-DD`).
+    --start {date}      Write `🛫 {date}`.
+    --time {HH:MM}      Write `⏰ {HH:MM}` (24-hour). Needs `--due`.
+    --recur {rule}      Write `🔁 {rule}` (`every 3 months`, `every week
+                        when done`, `every weekday`, ...). Needs `--due` or
+                        `--start` to step from, unless it is a `when done`
+                        rule. An unsupported rule is a usage error.
+    --tag {tag}         Add a tag (with or without `#`) before the first
+                        date marker. Repeatable.
+
+    A line with neither `--due` nor `--start` is added with a warning that
+    queries won't list it as a task. The output is `{file}:{line} added`
+    and the line after `+ `; `--json` returns `file`, `line`, and `text`.
+
+    Example: >
+        meta-notes task add area/home.md 'change filter' \
+            --recur 'every 3 months' --time 09:00 --due 2026-10-01
+<
 `meta-notes time [--date {period}]`             *meta-notes-cli-time*
     Print the time report (|meta-notes-time-report|). For a single day
     (the default is today), prints that day's report, and fails if the
@@ -1277,6 +1303,7 @@ and `links_updated` (files whose wiki-links were rewritten). `archive` adds
 (canonical names without `#`), and `section` (the section it is listed in:
 `overdue`, `due`, `scheduled`, `ready`, `future`, or `undated`), in report
 order. A task under several tags with `--group-by tag` appears once.
+`task add` returns `file`, `line` and `text` of the added line.
 `task update` returns `file`, `line`, `old` and `new` (the line before and
 after), `changed`, and `created` (null, or `file`, `line` and `text` of the
 next occurrence a recurring completion inserted above the line); when the line didn't match `--expect`, it fails with

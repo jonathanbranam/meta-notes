@@ -108,8 +108,11 @@ completing a recurring task, which adds a line above it.
 
 ## Adding lines
 
-New tasks, Follow up items, and summaries are written into the note
-directly. Put tags before date markers:
+Add a task with `meta-notes task add <file> <text> [--due <date>]
+[--time HH:MM] [--recur <rule>] [--start <date>] [--tag <tag>]`; it
+validates the date, time and rule and appends the line (`--line <n>`
+inserts before line n). Follow up items and summaries are written into
+the note directly. Put tags before date markers:
 
 ```markdown
 - [ ] Call Sam about the quote #next 📅 2026-09-28
