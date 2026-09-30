@@ -35,7 +35,9 @@ product manager on this project.
   `scripts/meta_notes/__init__.py`, run `git tag v<version>` on the merge
   commit and `git push origin v<version>`.
 - **Questions and blockers** go to the human:
-  `bridle send human --question "<question>"`. Routine progress doesn't.
+  `bridle send human --question "<question>"`. Routine progress doesn't:
+  after each merge, send the report ("merged <task>: <merge sha>, <tag>,
+  check results") to `external:orchestrator`, never to the human.
 - **On a message starting "Usage pause:"**: send whoever's waiting on you one
   line on where you are, and end your turn without starting anything new.
 
