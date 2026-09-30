@@ -235,6 +235,7 @@ bin/meta-notes tasks --all --folder project --status all
 meta-notes tasks --overdue --due          # overdue and due today
 meta-notes tasks --scheduled --date 2026-11 --group-by tag
 meta-notes task update project/foo.md:3 --expect '- [ ] call Sam 📅 2026-09-22' --status x
+meta-notes task update project/foo.md:3 --expect '- [ ] call Sam 📅 2026-09-22' --time 15:00
 meta-notes time                           # today's time report
 meta-notes time --date 2026-09 --json     # a month's time summary
 meta-notes changes --date 2026-09-21..2026-09-25  # notes changed this week

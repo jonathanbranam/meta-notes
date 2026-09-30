@@ -11,7 +11,9 @@ character `c`. It is a **task** only when it has a due date
 (`📅 YYYY-MM-DD`, or a bare `📅` for undated) or a start date
 (`🛫 YYYY-MM-DD`). Other checkbox lines are checklist items and never
 appear in task queries. A done task gets `✅ YYYY-MM-DD`, which stands in
-for its due date in queries.
+for its due date in queries. A time of day goes with the due date:
+`⏰ 15:00` before the dates, or `📅 2026-10-01 15:00`. It is for humans and
+reminders; a task is due today by its date, whatever its time.
 
 ```markdown
 - [ ] Order tiles 📅 2026-09-28

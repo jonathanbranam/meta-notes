@@ -770,3 +770,74 @@ def test_task_effective_due_incomplete_ignores_completion_date():
     task = Task("- [ ] ship it", TaskStatus.INCOMPLETE, "f.md", 1,
                 due_date=date(2026, 10, 1), completed_date=date(2026, 10, 3))
     assert task.effective_due == date(2026, 10, 1)
+
+
+# Tests for time of day
+
+@pytest.mark.parametrize('line, due, time_text', [
+    ('- [ ] call ⏰ 15:00 📅 2026-10-01', '2026-10-01', '15:00'),
+    ('- [ ] call ⏰ 9:05 📅 2026-10-01', '2026-10-01', '09:05'),
+    ('- [ ] call ⏰ 3:15pm 📅 2026-10-01', '2026-10-01', '15:15'),
+    ('- [ ] call ⏰ 12:00 am 📅 2026-10-01', '2026-10-01', '00:00'),
+    ('- [ ] call 📅 2026-10-01 15:00', '2026-10-01', '15:00'),
+    ('- [ ] call 📆 2026-10-01 08:30 #tag', '2026-10-01', '08:30'),
+    ('- [ ] call ⏰ 10:00 📅 2026-10-01 14:00', '2026-10-01', '10:00'),
+    ('- [ ] call 📅 2026-10-01', '2026-10-01', None),
+])
+def test_tasks_find_tasks_in_file_time_of_day(tmp_path, line, due, time_text):
+    path = tmp_path / 'test.md'
+    path.write_text(line + '\n')
+
+    (task,) = tasks_module.find_tasks_in_file(str(path))
+
+    assert task.due_date == date.fromisoformat(due)
+    assert (task.due_time.strftime('%H:%M') if task.due_time else None) == time_text
+    assert not task.invalid_time
+
+
+def test_tasks_find_tasks_in_file_due_date_with_time_keeps_completed_date(tmp_path):
+    path = tmp_path / 'test.md'
+    path.write_text('- [x] call 📅 2026-10-01 15:00 ✅ 2026-10-02\n')
+
+    (task,) = tasks_module.find_tasks_in_file(str(path))
+
+    assert task.due_date == date(2026, 10, 1)
+    assert task.completed_date == date(2026, 10, 2)
+    assert task.effective_due == date(2026, 10, 2)
+
+
+@pytest.mark.parametrize('line', [
+    '- [ ] call ⏰ 25:00 📅 2026-10-01',
+    '- [ ] call ⏰ soon 📅 2026-10-01',
+    '- [ ] call ⏰ 📅 2026-10-01',
+    '- [ ] call ⏰ 13:00pm 📅 2026-10-01',
+])
+def test_tasks_find_tasks_in_file_invalid_time(tmp_path, line):
+    path = tmp_path / 'test.md'
+    path.write_text(line + '\n')
+
+    (task,) = tasks_module.find_tasks_in_file(str(path))
+
+    assert task.due_time is None
+    assert task.invalid_time
+    assert 'not a time' in tasks_module.task_warnings(task)[0]
+
+
+def test_tasks_task_warnings_time_without_due_date(tmp_path):
+    path = tmp_path / 'test.md'
+    path.write_text('- [ ] call ⏰ 15:00 🛫 2026-10-01\n- [ ] call ⏰ 15:00 📅\n')
+
+    found = tasks_module.find_tasks_in_file(str(path))
+
+    assert len(found) == 2
+    for task in found:
+        assert 'time without a due date' in tasks_module.task_warnings(task)[0]
+
+
+def test_tasks_task_warnings_none_for_valid_time(tmp_path):
+    path = tmp_path / 'test.md'
+    path.write_text('- [ ] call ⏰ 15:00 📅 2026-10-01\n')
+
+    (task,) = tasks_module.find_tasks_in_file(str(path))
+
+    assert tasks_module.task_warnings(task) == []

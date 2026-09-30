@@ -18,7 +18,7 @@ Specifies `meta-notes tasks`, the CLI task query that exposes the existing `scri
 - **THEN** the output SHALL equal `find_tasks.py --folder project --status all --all` run in the notes root
 
 ### Requirement: Task query JSON  {#r-8297}
-With `--json`, `meta-notes tasks` SHALL return the same tasks as the text output, in the same order. Each task SHALL have its file, line number, line text, status, start, due, and completed dates, `tags` (canonical names without `#`), and `section` (the section it is listed in: `overdue`, `due`, `scheduled`, `ready`, `future`, or `undated`). A task listed under several tags with `--group-by tag` SHALL appear once.
+With `--json`, `meta-notes tasks` SHALL return the same tasks as the text output, in the same order. Each task SHALL have its file, line number, line text, status, start, due, and completed dates, `time` (the time of day as 24-hour `HH:MM`, or null), `tags` (canonical names without `#`), and `section` (the section it is listed in: `overdue`, `due`, `scheduled`, `ready`, `future`, or `undated`). A task listed under several tags with `--group-by tag` SHALL appear once.
 
 #### Scenario: JSON task fields  {#s-e78e}
 *Verification*: **non-executable**
@@ -52,6 +52,26 @@ A checkbox line (`-`, `*`, or `+`, then `[<char>]`) SHALL be a task only when it
 *Verification*: **non-executable**
 - **WHEN** a note contains `- [ ] draft outline 🛫 2026-10-05`
 - **THEN** it SHALL be a task with start date 2026-10-05 and no due date
+
+### Requirement: Time of day  {#r-02aa}
+A task's time of day SHALL be read from a `⏰` marker, `⏰ HH:MM` (24-hour) or the Time Block's 12-hour style such as `⏰ 3:15pm`, or from a 24-hour time after the due date, `📅 YYYY-MM-DD HH:MM`. When a line has both, the `⏰` time SHALL be used. A `📅` date followed by a time SHALL still be that due date in every mode. `⏰` and a time SHALL NOT make a line a task, and a time SHALL NOT change which section a task is listed in: a task is due today by its date, timed or not.
+
+A `⏰` with no valid time after it SHALL be ignored and reported as a warning. A time on a task with no valid due date (none, bare due emoji, or only `🛫`) SHALL be ignored and reported as a warning.
+
+#### Scenario: Both forms  {#s-4014}
+*Verification*: **non-executable**
+- **WHEN** a note contains `- [ ] a ⏰ 3:15pm 📅 2026-10-01` and `- [ ] b 📅 2026-10-01 08:30`
+- **THEN** `meta-notes tasks --all --json` SHALL report `time` `15:15` for a and `08:30` for b, both due 2026-10-01
+
+#### Scenario: Due today ignores the time  {#s-d713}
+*Verification*: **non-executable**
+- **WHEN** a task is due 2026-09-25 at 23:59, another at 00:01, and another has no time, and the user runs `meta-notes tasks --due --date 2026-09-25`
+- **THEN** all three SHALL be listed as due
+
+#### Scenario: Time without a due date  {#s-a482}
+*Verification*: **non-executable**
+- **WHEN** a task is `- [ ] call ⏰ 15:00 🛫 2026-10-01` and the user runs `meta-notes tasks --all --json`
+- **THEN** its `time` SHALL be null or ignored, and `warnings` SHALL say the time has no due date
 
 ### Requirement: Completion date stands in for the due date  {#r-ebb9}
 For a completed task that has a `✅ YYYY-MM-DD` date, that date SHALL be used in place of its due date by every mode. A completed task without a ✅ date SHALL use its due date.

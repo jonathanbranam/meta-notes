@@ -4,6 +4,9 @@ Task update: edit one checkbox line's status, tags, and dates in place.
 The line is edited as marker tokens (date markers and tags), never
 re-rendered from a parsed Task, so everything the edit doesn't touch keeps
 the user's order and spacing. Only the target line of the file changes.
+
+The time of day is read from `⏰ HH:MM` (or 12-hour, `⏰ 3:15pm`) and from
+a time after the due date (`📅 2026-10-01 15:00`); `time` writes `⏰ HH:MM`.
 """
 
 import re
@@ -17,29 +20,35 @@ START_EMOJI = '🛫'
 COMPLETED_EMOJI = '✅'
 NEW_DUE_EMOJI = '📅'
 DONE_CHARS = ('x', 'X')
+TIME_EMOJI = tasks.TIME_EMOJI
 
 _DATE = r'\d{4}-\d{2}-\d{2}'
 
 # Every emoji that starts a date marker; an added tag goes before the first
 _DATE_EMOJI_PATTERN = re.compile(
-    '|'.join((START_EMOJI, *tasks.DUE_EMOJIS, COMPLETED_EMOJI)))
+    '|'.join((START_EMOJI, *tasks.DUE_EMOJIS, COMPLETED_EMOJI, TIME_EMOJI)))
 
 # A line ending, as Python's universal newlines reads it
 _LINE_PATTERN = re.compile(r'[^\r\n]*(?:\r\n|\r|\n)|[^\r\n]+\Z')
 
 
-def _marker_pattern(*emojis: str) -> re.Pattern:
+def _marker_pattern(*emojis: str, time: bool = False) -> re.Pattern:
     """
     A date marker: one of emojis, an optional emoji variation selector, and
     an optional date. The date is matched by shape, so an invalid date after
-    the emoji is part of the marker.
+    the emoji is part of the marker. With time, a 24-hour time after the
+    date is part of the marker too.
     """
+    clock = r'(?P<clock>[ \t]+\d{1,2}:\d{2}(?![\d:]))?' if time else ''
     return re.compile(
         '(?P<emoji>(?:' + '|'.join(emojis) + r')️?)'
-        rf'(?:(?P<sep>\s*)(?P<date>{_DATE}))?')
+        rf'(?:(?P<sep>\s*)(?P<date>{_DATE}){clock})?')
 
 
-_DUE_MARKER = _marker_pattern(*tasks.DUE_EMOJIS)
+_DUE_MARKER = _marker_pattern(*tasks.DUE_EMOJIS, time=True)
+# ⏰ and its time, in 24-hour or 12-hour form
+_TIME_MARKER = re.compile(
+    TIME_EMOJI + r'\ufe0f?(?:[ \t]*\d{1,2}:\d{2}(?:[ \t]*[AaPp][Mm])?)?')
 _START_MARKER = _marker_pattern(START_EMOJI)
 _COMPLETED_MARKER = _marker_pattern(COMPLETED_EMOJI)
 
@@ -173,6 +182,23 @@ def _set_start(text: str, value: str) -> str:
     return _insert(text, min(later) if later else len(text), token)
 
 
+def _set_time(text: str, value: str) -> str:
+    """Set the time to ⏰ HH:MM, or remove every time with 'none'."""
+    for match in _DUE_MARKER.finditer(text):
+        if match.group('clock'):
+            text = text[:match.start('clock')] + text[match.end('clock'):]
+            break
+    if value == 'none':
+        return _remove_markers(text, _TIME_MARKER)
+
+    token = f'{TIME_EMOJI} {value}'
+    match = _TIME_MARKER.search(text)
+    if match:
+        return text[:match.start()] + token + text[match.end():]
+    first_date = _DATE_EMOJI_PATTERN.search(text)
+    return _insert(text, first_date.start() if first_date else len(text), token)
+
+
 def _set_status(text: str, status: str, no_completed: bool, today: date) -> str:
     checkbox = tasks.CHECKBOX_PATTERN.match(text)
     was_done = checkbox.group(1) in DONE_CHARS
@@ -192,7 +218,7 @@ def edit_line(text: str, *, status: str | None = None,
               add_tags: list[str] | None = None,
               remove_tags: list[str] | None = None,
               due: str | None = None, start: str | None = None,
-              no_completed: bool = False,
+              time: str | None = None, no_completed: bool = False,
               today: date | None = None) -> str:
     """
     Apply edits to a checkbox line.
@@ -203,6 +229,7 @@ def edit_line(text: str, *, status: str | None = None,
         add_tags, remove_tags: Tag names, with or without #.
         due: YYYY-MM-DD, 'undated', or 'none'.
         start: YYYY-MM-DD or 'none'.
+        time: HH:MM (24-hour) or 'none'; written as ⏰ HH:MM.
         no_completed: Don't add a ✅ date when marking the task done.
         today: The ✅ date and the date compared with the due date
             (default: today).
@@ -217,6 +244,8 @@ def edit_line(text: str, *, status: str | None = None,
         text = _set_due(text, due)
     if start is not None:
         text = _set_start(text, start)
+    if time is not None:
+        text = _set_time(text, time)
     if status is not None:
         text = _set_status(text, status, no_completed, today)
     for name in add_tags or []:
@@ -233,7 +262,8 @@ def _split_ending(line: str) -> tuple[str, str]:
 def update(path: str, line_no: int, expect: str, *,
            status: str | None = None, add_tags: list[str] | None = None,
            remove_tags: list[str] | None = None, due: str | None = None,
-           start: str | None = None, no_completed: bool = False,
+           start: str | None = None, time: str | None = None,
+           no_completed: bool = False,
            today: date | None = None) -> UpdateResult:
     """
     Edit one checkbox line of a file in place.
@@ -243,7 +273,7 @@ def update(path: str, line_no: int, expect: str, *,
         line_no: The line, counting from 1.
         expect: The line's text as last read; compared ignoring trailing
             whitespace.
-        status, add_tags, remove_tags, due, start, no_completed, today:
+        status, add_tags, remove_tags, due, start, time, no_completed, today:
             See edit_line.
 
     Returns:
@@ -276,13 +306,19 @@ def update(path: str, line_no: int, expect: str, *,
         raise TaskUpdateError(f"Line {line_no} of {path} is not a checkbox")
 
     new = edit_line(old, status=status, add_tags=add_tags,
-                    remove_tags=remove_tags, due=due, start=start,
+                    remove_tags=remove_tags, due=due, start=start, time=time,
                     no_completed=no_completed, today=today)
     result = UpdateResult(old=old, new=new, changed=new != old)
     if tasks.is_task(old) and not tasks.is_task(new):
         result.warnings.append(
             f"Line {line_no} of {path} is no longer a task "
             "(it has no due emoji or 🛫 date)")
+    _, due_date, _ = tasks._parse_task_dates(new)
+    due_time, _ = tasks.parse_due_time(new)
+    if due_time is not None and due_date is None:
+        result.warnings.append(
+            f"Line {line_no} of {path} has a time but no due date, "
+            "so the time is ignored")
 
     if result.changed:
         lines[line_no - 1] = new + ending

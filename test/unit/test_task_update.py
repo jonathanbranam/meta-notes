@@ -426,3 +426,59 @@ def test_update_no_warning_for_plain_checkbox(tmp_path):
 
     assert result.new == '- [x] buy milk ✅ 2026-09-25'
     assert result.warnings == []
+
+
+# Tests for time of day
+
+@pytest.mark.parametrize('text, value, expected', [
+    ('- [ ] call 📅 2026-10-01', '15:00', '- [ ] call ⏰ 15:00 📅 2026-10-01'),
+    ('- [ ] call #a 📅 2026-10-01 ✅ 2026-10-02', '09:30',
+     '- [ ] call #a ⏰ 09:30 📅 2026-10-01 ✅ 2026-10-02'),
+    ('- [ ] call ⏰ 3:15pm 📅 2026-10-01', '08:00', '- [ ] call ⏰ 08:00 📅 2026-10-01'),
+    ('- [ ] call 📅 2026-10-01 15:00', '16:00', '- [ ] call ⏰ 16:00 📅 2026-10-01'),
+    ('- [ ] call ⏰ 15:00 📅 2026-10-01', 'none', '- [ ] call 📅 2026-10-01'),
+    ('- [ ] call ⏰ 3:15pm 📅 2026-10-01', 'none', '- [ ] call 📅 2026-10-01'),
+    ('- [ ] call 📅 2026-10-01 15:00', 'none', '- [ ] call 📅 2026-10-01'),
+    ('- [ ] call 📅 2026-10-01', 'none', '- [ ] call 📅 2026-10-01'),
+])
+def test_task_update_edit_line_time(text, value, expected):
+    assert edit(text, time=value) == expected
+
+
+def test_task_update_edit_line_due_keeps_time_after_date():
+    assert (edit('- [ ] call 📅 2026-10-01 15:00', due='2026-10-08')
+            == '- [ ] call 📅 2026-10-08 15:00')
+
+
+def test_task_update_edit_line_due_none_removes_time_after_date():
+    assert edit('- [ ] call 📅 2026-10-01 15:00 #a', due='none') == '- [ ] call #a'
+
+
+def test_task_update_edit_line_done_on_due_date_with_time_skips_completed():
+    assert (edit('- [ ] call 📅 2026-09-25 15:00', status='x')
+            == '- [x] call 📅 2026-09-25 15:00')
+
+
+def test_task_update_edit_line_tag_goes_before_time_marker():
+    assert (edit('- [ ] call ⏰ 15:00 📅 2026-10-01', add_tags=['a'])
+            == '- [ ] call #a ⏰ 15:00 📅 2026-10-01')
+
+
+def test_task_update_update_time_without_due_date_warns(tmp_path):
+    path = write_note(tmp_path, ['- [ ] call 🛫 2026-10-01'])
+
+    result = update(str(path), 1, '- [ ] call 🛫 2026-10-01', time='15:00',
+                    today=TODAY)
+
+    assert result.new == '- [ ] call ⏰ 15:00 🛫 2026-10-01'
+    assert 'time but no due date' in result.warnings[0]
+
+
+def test_task_update_update_time_with_due_date_no_warning(tmp_path):
+    path = write_note(tmp_path, ['- [ ] call 📅 2026-10-01'])
+
+    result = update(str(path), 1, '- [ ] call 📅 2026-10-01', time='15:00',
+                    today=TODAY)
+
+    assert result.warnings == []
+    assert path.read_text().splitlines() == ['- [ ] call ⏰ 15:00 📅 2026-10-01']

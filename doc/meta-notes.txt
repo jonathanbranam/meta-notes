@@ -678,6 +678,12 @@ Commands ~
     Plain checkboxes are checklist items and are ignored. The date after the
     due emoji is the due date. A due emoji with no date after it (a bare
     📅) marks an undated task, so an item worth tracking gets a bare 📅.
+    A time of day goes with the due date: `⏰ 15:00` (24-hour) or
+    `⏰ 3:15pm` (12-hour, as in a Time Block), placed before the dates, or
+    `📅 2026-10-01 15:00`. With both, `⏰` is used. `meta-notes tasks --json`
+    reports it as `time` (`HH:MM`, 24-hour, or null). The time never changes
+    which section a task is in: a task is due today by its date. A `⏰` that
+    isn't a time, or a time with no due date, is ignored with a warning.
     For a completed task with a `✅ YYYY-MM-DD` date, that date is used in
     place of its due date by every mode. The status character `x` or `X` is
     completed, `>` rescheduled, `-` canceled, and anything else incomplete.
@@ -778,6 +784,11 @@ Commands ~
                         and before any ✅ date.
     --start {value}     `YYYY-MM-DD` sets the 🛫 date, and `none` removes
                         it. A new 🛫 goes before the due and ✅ dates.
+    --time {value}      `HH:MM` (24-hour) writes `⏰ HH:MM`, replacing an
+                        existing `⏰` or a time after the due date, else
+                        before the first date emoji; `none` removes the
+                        time. A time with no due date makes the edit with
+                        a warning.
     --no-completed      Don't add a ✅ date when marking the task done.
 
     Marking a task done (`x` or `X`) from another status appends

@@ -5,13 +5,17 @@ Handles task parsing, status tracking, and date extraction from markdown tasks.
 """
 
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, time
 from enum import Enum
 from typing import Optional
 import re
 import sys
 
 from tags import parse_tags
+from time_tracking import _parse_bare_time_24h, _parse_time
+
+# The time-of-day marker, written `⏰ HH:MM`
+TIME_EMOJI = '⏰'
 
 # Emojis that mark a due date. Used bare (no date after it), one marks an
 # undated task.
@@ -30,9 +34,16 @@ STATUS_CHARS = {
     'O': 'partial (open)',
 }
 
-# A due emoji (optionally with an emoji variation selector) and a date
+# A due emoji (optionally with an emoji variation selector), a date, and an
+# optional 24-hour time after the date
 _DUE_DATE_PATTERN = re.compile(
-    '(?:' + '|'.join(DUE_EMOJIS) + r')\ufe0f?\s*(\d{4}-\d{2}-\d{2})')
+    '(?:' + '|'.join(DUE_EMOJIS) + r')\ufe0f?\s*(\d{4}-\d{2}-\d{2})'
+    r'(?:[ \t]+(\d{1,2}:\d{2})(?![\d:]))?')
+
+# ⏰ (optionally with an emoji variation selector) and what follows it: a
+# time such as 15:00, 3:15pm, or 3:15 pm, or other text that isn't a time
+_TIME_MARKER_PATTERN = re.compile(
+    TIME_EMOJI + r'\ufe0f?[ \t]*(\d{1,2}:\d{2}(?:[ \t]*[AaPp][Mm])?|\S*)')
 
 # A checkbox line: optional indentation, a bullet (-, *, +), whitespace, and
 # a single status character in square brackets
@@ -56,6 +67,10 @@ class Task:
     - 📅, 📆, or 🗓 YYYY-MM-DD for due_date
     - ✅ YYYY-MM-DD for completed_date
 
+    The due time is the ⏰ time (24-hour like 15:00 or 12-hour like 3:15pm)
+    or the time after the due date (📅 2026-10-01 15:00). When both are
+    present, ⏰ wins. invalid_time is True when a ⏰ marker isn't a time.
+
     A due emoji with no valid date after it makes the task undated. Tags
     are the canonical names (without #) of every #tag on the line.
     """
@@ -68,6 +83,8 @@ class Task:
     completed_date: Optional[date] = None
     undated: bool = False
     tags: list[str] = field(default_factory=list)
+    due_time: Optional[time] = None
+    invalid_time: bool = False
 
     @property
     def effective_due(self) -> Optional[date]:
@@ -121,6 +138,56 @@ def _parse_task_dates(text: str) -> tuple[Optional[date], Optional[date], Option
             continue
     completed_date = _extract_date(text, '✅')
     return start_date, due_date, completed_date
+
+
+def parse_time_marker(text: str) -> tuple[Optional[time], bool]:
+    """
+    Read the ⏰ time of task text.
+
+    Args:
+        text: The task text.
+
+    Returns:
+        A tuple of (the time, or None; True when a ⏰ marker is there but
+        isn't a valid time). The first ⏰ is used.
+    """
+    match = _TIME_MARKER_PATTERN.search(text)
+    if not match:
+        return None, False
+    value = match.group(1)
+    parsed = _parse_bare_time_24h(value) or _parse_time(value)
+    return parsed, parsed is None
+
+
+def parse_due_time(text: str) -> tuple[Optional[time], bool]:
+    """
+    Read a task's time of day: ⏰ first, else the time after the due date.
+
+    Returns:
+        A tuple of (the time, or None; True when a ⏰ marker isn't a time).
+    """
+    marked, invalid = parse_time_marker(text)
+    if marked is not None:
+        return marked, False
+    for match in _DUE_DATE_PATTERN.finditer(text):
+        try:
+            date.fromisoformat(match.group(1))
+        except ValueError:
+            continue
+        if match.group(2):
+            return _parse_bare_time_24h(match.group(2)), invalid
+        break
+    return None, invalid
+
+
+def task_warnings(task: Task) -> list[str]:
+    """Warnings for a task's ⏰ time: not a time, or no due date to go with."""
+    where = f"{task.filename}:{task.line_no}"
+    if task.invalid_time:
+        return [f"{where}: ⏰ is not a time (use HH:MM)"]
+    if task.due_time is not None and task.due_date is None:
+        return [f"{where}: time without a due date is ignored"]
+    return []
 
 
 def _has_due_emoji(text: str) -> bool:
@@ -192,6 +259,7 @@ def find_tasks_in_file(filepath: str) -> list[Task]:
                     continue
                 start_date, due_date, completed_date = _parse_task_dates(text)
                 has_due_emoji = _has_due_emoji(text)
+                due_time, invalid_time = parse_due_time(text)
                 tasks.append(Task(
                     text=text,
                     status=char_to_status(match.group(1)),
@@ -202,6 +270,8 @@ def find_tasks_in_file(filepath: str) -> list[Task]:
                     completed_date=completed_date,
                     undated=has_due_emoji and due_date is None,
                     tags=parse_tags(text),
+                    due_time=due_time,
+                    invalid_time=invalid_time,
                 ))
     except (IOError, UnicodeDecodeError) as e:
         print(f"Warning: Could not read {filepath}: {e}", file=sys.stderr)
