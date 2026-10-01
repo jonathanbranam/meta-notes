@@ -460,7 +460,8 @@ The report for one day has these sections, in order:
                         `latest time`, `total time`, and `*missing time*`
                         (see below).
   `## Time Log Summary` `### Time by Tag` (most time first) and
-                        `### Work vs Non-Work`.
+                        `### Work vs Non-Work` (non-work is
+                        `#break`, `#off-task`, `#personal`; the rest is work).
   `## Plan Adherence`   Counts of on-plan, off-plan, and unplanned time
                         blocks.
   `## Summary for ...`  The period summary for the Monday-Sunday week

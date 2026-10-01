@@ -654,8 +654,8 @@ def calculate_work_vs_nonwork(entries: list[TimeLogEntry]) -> tuple[timedelta, t
     """
     Calculate total work time vs non-work time.
 
-    Work time includes: #mtg, #dev, #admin
-    Non-work time includes: #pers, #break
+    Uses the same rule as the work duration: an entry is non-work when it has
+    any of NON_WORK_TAGS, and work otherwise (untagged entries included).
 
     Args:
         entries: List of TimeLogEntry objects with start and end times.
@@ -666,10 +666,6 @@ def calculate_work_vs_nonwork(entries: list[TimeLogEntry]) -> tuple[timedelta, t
     work_time = timedelta()
     nonwork_time = timedelta()
 
-    # Define work tags and non-work tags
-    work_tags = {'#mtg', '#dev', '#admin', '#meeting', '#code', '#coding', '#administrative'}
-    nonwork_tags = {'#pers', '#break', '#personal'}
-
     for entry in entries:
         # Skip entries without both start and end times
         if entry.start_time is None or entry.end_time is None:
@@ -677,15 +673,10 @@ def calculate_work_vs_nonwork(entries: list[TimeLogEntry]) -> tuple[timedelta, t
 
         duration = calculate_duration(entry.start_time, entry.end_time)
 
-        # Categorize based on tags
-        has_work_tag = any(tag.text.lower() in work_tags for tag in entry.tags)
-        has_nonwork_tag = any(tag.text.lower() in nonwork_tags for tag in entry.tags)
-
-        if has_work_tag:
-            work_time += duration
-        elif has_nonwork_tag:
+        if _has_any_tag(entry, NON_WORK_TAGS):
             nonwork_time += duration
-        # If no categorizing tags, don't count it
+        else:
+            work_time += duration
 
     return work_time, nonwork_time
 

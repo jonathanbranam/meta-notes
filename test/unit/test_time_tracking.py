@@ -1078,25 +1078,40 @@ def test_calculate_work_vs_nonwork_mixed():
 
 
 def test_calculate_work_vs_nonwork_untagged():
-    """Test that untagged or uncategorized entries don't count."""
+    """Untagged and project-tagged entries count as work."""
     entries = [
         TimeLogEntry(
 "- something", "test.md", 1,
             time(8, 0), time(9, 0), "something",
-            [Tag("#unknown")]
+            []
         ),
         TimeLogEntry(
-"- work", "test.md", 2,
-            time(9, 0), time(10, 0), "work",
-            [Tag("#dev")]
+"- trip", "test.md", 2,
+            time(9, 0), time(10, 0), "trip",
+            [Tag("#2026-10-ny")]
         ),
     ]
 
     work, nonwork = calculate_work_vs_nonwork(entries)
 
-    # Only the #dev entry should count
-    assert work == timedelta(hours=1)
+    assert work == timedelta(hours=2)
     assert nonwork == timedelta()
+
+
+def test_calculate_work_vs_nonwork_non_work_tags_and_aliases():
+    """Each NON_WORK_TAGS tag, and the #per alias, is non-work."""
+    entries = [
+        TimeLogEntry("- a", "test.md", 1, time(8, 0), time(8, 10), "a", [Tag("#personal")]),
+        TimeLogEntry("- b", "test.md", 2, time(8, 10), time(8, 30), "b", [Tag("#off-task")]),
+        TimeLogEntry("- c", "test.md", 3, time(8, 30), time(9, 0), "c", [Tag("#break")]),
+        TimeLogEntry("- d", "test.md", 4, time(9, 0), time(9, 15), "d", [Tag("#per")]),
+        TimeLogEntry("- e", "test.md", 5, time(9, 15), time(10, 0), "e", []),
+    ]
+
+    work, nonwork = calculate_work_vs_nonwork(entries)
+
+    assert work == timedelta(minutes=45)
+    assert nonwork == timedelta(minutes=75)
 
 
 # Tests for format_duration function

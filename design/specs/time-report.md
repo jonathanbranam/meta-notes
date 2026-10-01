@@ -126,6 +126,13 @@ Tags SHALL be compared by their canonical names, so `#pers` and `#per` count as 
 - **WHEN** a day starts with a 07:00–08:00 `#pers` entry, ends with an 18:00–19:00 `#personal` entry, and has two hours of untagged work between them
 - **THEN** `work duration` SHALL be `2 hr 0 min` and `total duration` SHALL be `4 hr 0 min`
 
+The Work vs Non-Work section SHALL use the same rule as `work duration`: an entry is non-work when it has any of `#break`, `#off-task` or `#personal`, and work otherwise, untagged entries included. Every timed entry counts, so the two add up to the total logged time.
+
+#### Scenario: Work vs Non-Work agrees with work duration  {#s-f747}
+*Verification*: **non-executable**
+- **WHEN** a day has 90 minutes of untagged entries, a 15-minute `#pers` entry and a 30-minute `#break` entry
+- **THEN** Work vs Non-Work SHALL show work 1 hr 30 min, non-work 45 min and total logged 2 hr 15 min
+
 ### Requirement: Period summary  {#r-c729}
 A period summary SHALL cover every day from START to END. A week summary SHALL be the period summary for Monday through Sunday of the week. The summary SHALL be headed `Summary for <START> to <END>` and SHALL contain, in order:
 
