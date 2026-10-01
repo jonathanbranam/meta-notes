@@ -27,3 +27,6 @@
 {"actor":"external:orchestrator","at":"2026-10-01T19:48:54.859073191Z","from":"open","task":"mn-d0f2","to":"planned"}
 {"actor":"external:orchestrator","at":"2026-10-01T19:48:55.126077029Z","queue":"reprioritized"}
 {"actor":"agent:manager","at":"2026-10-01T19:50:22.499554855Z","from":"planned","task":"mn-d0f2","to":"integrated"}
+{"actor":"human","at":"2026-10-01T19:51:31.208Z","from":"","task":"mn-cf3d","to":"open"}
+{"actor":"external:orchestrator","at":"2026-10-01T19:51:32.426056243Z","from":"open","task":"mn-cf3d","to":"planned"}
+{"actor":"external:orchestrator","at":"2026-10-01T19:51:32.726362936Z","queue":"reprioritized"}
