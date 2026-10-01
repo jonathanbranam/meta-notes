@@ -1,5 +1,5 @@
 """
-Task update: edit one checkbox line's status, tags, and dates in place.
+Task update: edit one checkbox line's text, status, tags, and dates in place.
 
 The line is edited as marker tokens (date markers and tags), never
 re-rendered from a parsed Task, so everything the edit doesn't touch keeps
@@ -249,6 +249,20 @@ def _is_recurring(text: str) -> bool:
     return rule is not None and has_base
 
 
+def _set_text(text: str, value: str) -> str:
+    """
+    Replace the description, the words between the checkbox and the first
+    date emoji (or the end of the line), keeping everything else.
+    """
+    value = value.strip()
+    if not value or re.search(r'[\r\n]', value):
+        raise TaskUpdateError("The task text must be one non-empty line")
+    box_end = tasks.CHECKBOX_PATTERN.match(text).end()
+    first_date = _DATE_EMOJI_PATTERN.search(text, box_end)
+    rest = text[first_date.start():] if first_date else ''
+    return text[:box_end] + ' ' + value + (' ' + rest if rest else '')
+
+
 def _set_status(text: str, status: str, no_completed: bool, today: date) -> str:
     checkbox = tasks.CHECKBOX_PATTERN.match(text)
     was_done = checkbox.group(1) in DONE_CHARS
@@ -273,6 +287,7 @@ def _set_status(text: str, status: str, no_completed: bool, today: date) -> str:
 
 
 def edit_line(text: str, *, status: str | None = None,
+              new_text: str | None = None,
               add_tags: list[str] | None = None,
               remove_tags: list[str] | None = None,
               due: str | None = None, start: str | None = None,
@@ -285,6 +300,8 @@ def edit_line(text: str, *, status: str | None = None,
     Args:
         text: The line, without its line ending. Must be a checkbox line.
         status: New status character.
+        new_text: Replacement description (see _set_text); applied first, so
+            the other edits see it. Tags in the old description go with it.
         add_tags, remove_tags: Tag names, with or without #.
         due: YYYY-MM-DD, 'undated', or 'none'.
         start: YYYY-MM-DD or 'none'.
@@ -301,6 +318,8 @@ def edit_line(text: str, *, status: str | None = None,
         The edited line.
     """
     today = today or date.today()
+    if new_text is not None:
+        text = _set_text(text, new_text)
     for name in remove_tags or []:
         text = _remove_tag(text, name)
     if due is not None:
@@ -363,7 +382,7 @@ def update(path: str, line_no: int, expect: str, *,
            remove_tags: list[str] | None = None, due: str | None = None,
            start: str | None = None, time: str | None = None,
            recur: str | None = None, no_recur: bool = False,
-           no_completed: bool = False,
+           new_text: str | None = None, no_completed: bool = False,
            today: date | None = None) -> UpdateResult:
     """
     Edit one checkbox line of a file in place.
@@ -374,7 +393,7 @@ def update(path: str, line_no: int, expect: str, *,
         expect: The line's text as last read; compared ignoring trailing
             whitespace.
         status, add_tags, remove_tags, due, start, time, recur,
-        no_completed, today: See edit_line.
+        new_text, no_completed, today: See edit_line.
         no_recur: Don't insert the next occurrence when a recurring task is
             marked done.
 
@@ -411,7 +430,7 @@ def update(path: str, line_no: int, expect: str, *,
     if not tasks.CHECKBOX_PATTERN.match(old):
         raise TaskUpdateError(f"Line {line_no} of {path} is not a checkbox")
 
-    new = edit_line(old, status=status, add_tags=add_tags,
+    new = edit_line(old, status=status, new_text=new_text, add_tags=add_tags,
                     remove_tags=remove_tags, due=due, start=start, time=time,
                     recur=recur, no_completed=no_completed, today=today)
     result = UpdateResult(old=old, new=new, changed=new != old)
