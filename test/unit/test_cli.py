@@ -793,7 +793,8 @@ def test_task_update_json_success(notes_root, capsys):
         'ok': True, 'file': 'project/foo.md', 'line': 3,
         'old': '- [ ] call Sam 📅 2000-01-01',
         'new': f'- [x] call Sam 📅 2000-01-01 ✅ {date.today().isoformat()}',
-        'changed': True, 'created': None, 'warnings': []}
+        'changed': True, 'created': None, 'ancestors': [],
+        'warnings': []}
     assert path.read_text().splitlines()[2] == out['new']
 
 
@@ -1429,3 +1430,95 @@ def test_cli_task_show_errors(notes_root, capsys, target):
     code, out, _ = run_json(capsys, ['task', 'show', target])
     assert code != 0
     assert out['ok'] is False
+
+
+# Tests for task notes, task replace, task add --under
+
+LATE_NOTE = (
+    '- [o] main\n'
+    '  * note\n'
+    '  - [x] sub\n'
+    '  * note after\n')
+
+
+def test_cli_task_show_node_text_skips_subtasks(notes_root, capsys):
+    (notes_root / 'project' / 'foo.md').write_text(LATE_NOTE)
+    code = cli.main(['task', 'show', 'project/foo.md:1'])
+    assert code == 0
+    assert capsys.readouterr().out.splitlines() == [
+        'project/foo.md:1-2,4-4', '- [o] main', '  * note', '  * note after']
+
+
+def test_cli_task_notes_json(notes_root, capsys):
+    path = notes_root / 'project' / 'foo.md'
+    path.write_text(LATE_NOTE)
+    code, out, _ = run_json(capsys, [
+        'task', 'notes', 'project/foo.md:1', '--expect',
+        '  * note\n  * note after', '--text', '  * only'])
+    assert code == 0
+    assert out['changed'] is True and out['new'] == ['  * only']
+    assert path.read_text() == '- [o] main\n  * only\n  - [x] sub\n'
+
+
+def test_cli_task_notes_mismatch(notes_root, capsys):
+    path = notes_root / 'project' / 'foo.md'
+    path.write_text(LATE_NOTE)
+    code, out, _ = run_json(capsys, [
+        'task', 'notes', 'project/foo.md:1', '--expect', '  * stale',
+        '--text', '  * only'])
+    assert code != 0
+    assert out['current'] == '  * note\n  * note after'
+    assert path.read_text() == LATE_NOTE
+
+
+def test_cli_task_notes_stdin(notes_root, capsys, monkeypatch):
+    import io
+    path = notes_root / 'project' / 'foo.md'
+    path.write_text('- [ ] a\n')
+    monkeypatch.setattr('sys.stdin', io.StringIO('  * one\n  * two\n'))
+    code, out, _ = run_json(capsys, ['task', 'notes', 'project/foo.md:1',
+                                     '--expect', '', '--text', '-'])
+    assert code == 0
+    assert path.read_text() == '- [ ] a\n  * one\n  * two\n'
+
+
+def test_cli_task_replace_tree(notes_root, capsys):
+    path = notes_root / 'project' / 'foo.md'
+    path.write_text(TREE_NOTE)
+    code, out, _ = run_json(capsys, [
+        'task', 'replace', 'project/foo.md:1', '--tree', '--expect',
+        TREE_NOTE.splitlines()[0] + '\n' + '\n'.join(
+            TREE_NOTE.splitlines()[1:5]),
+        '--text', '- [ ] main\n  - [ ] solo'])
+    assert code == 0
+    assert path.read_text() == '- [ ] main\n  - [ ] solo\n- [ ] other 📅 2026-10-09\n'
+
+
+def test_cli_task_add_under(notes_root, capsys):
+    path = notes_root / 'project' / 'foo.md'
+    path.write_text(TREE_NOTE)
+    code, out, _ = run_json(capsys, [
+        'task', 'add', 'project/foo.md', 'third', '--under', '1', '--expect',
+        '- [o] main 📅 2026-10-08', '--due', '2026-10-07'])
+    assert code == 0
+    assert out['line'] == 6
+    assert path.read_text().splitlines()[5] == '  - [ ] third 📅 2026-10-07'
+
+
+def test_cli_task_add_under_needs_expect(notes_root, capsys):
+    (notes_root / 'project' / 'foo.md').write_text(TREE_NOTE)
+    code, out, _ = run_json(capsys, ['task', 'add', 'project/foo.md', 'x',
+                                     '--under', '1'])
+    assert code != 0
+
+
+def test_cli_task_update_reports_ancestors(notes_root, capsys):
+    path = notes_root / 'project' / 'foo.md'
+    path.write_text(TREE_NOTE)
+    code, out, _ = run_json(capsys, [
+        'task', 'update', 'project/foo.md:5', '--expect',
+        '  - [ ] second 📅 2026-10-06', '--status', 'x'])
+    assert code == 0
+    assert out['ancestors'] == [{'line': 1, 'old': '- [o] main 📅 2026-10-08',
+                                 'new': '- [X] main 📅 2026-10-08'}]
+    assert path.read_text().splitlines()[0] == '- [X] main 📅 2026-10-08'

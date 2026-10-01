@@ -96,6 +96,19 @@ each task's `notes`, `parent` and `subtasks`. To read one task as a whole,
 use `meta-notes task show <file>:<line>` (the line and its notes) or
 `--tree` (every subtask too), and don't parse the indentation yourself.
 
+To write them, use these, each with `--expect` (what you read; `task show`
+prints it) and one write, and never edit the lines yourself:
+`meta-notes task notes <file>:<line> --expect <notes> --text <notes>`
+replaces a task's notes (indented lines as written; empty removes them);
+`meta-notes task add <file> <text> --under <line> --expect <parent line>`
+adds a subtask after its notes and subtasks; `meta-notes task replace
+<file>:<line> --expect <lines> --text <lines> [--tree]` replaces a task and
+its notes, or its whole subtree. Pass long text with `-` to read it from
+standard input. Marking a subtask done through `task update` sets its
+ancestors' status for you (` .oOX` by how many subtasks are done); don't
+set the parent's status yourself. Line numbers move after a write above
+them, so re-read before the next one.
+
 ## Editing tasks
 
 Never rewrite an existing task line yourself. To change one:

@@ -25,8 +25,8 @@ from recurrence import parse_rule
 from tags import canonical_tag
 from meta_notes import (__version__, brief, calendar, ceremony, changes,
                         checkin, config, conventions, init, note, ops, prime,
-                        projects, query, task_show, task_update, time, time_block,
-                        time_log)
+                        projects, query, task_show, task_update, task_write, time,
+                        time_block, time_log)
 from meta_notes.root import SENTINEL, find_root
 
 
@@ -365,7 +365,7 @@ def cmd_task_update(args, root: str) -> Output:
 
     out = Output({"file": path, "line": line_no, "old": result.old,
                   "new": result.new, "changed": result.changed,
-                  "created": None},
+                  "created": None, "ancestors": result.ancestors},
                  warnings=result.warnings)
     if result.created is not None:
         out.data["created"] = {"file": path, "line": result.created_line,
@@ -377,6 +377,9 @@ def cmd_task_update(args, root: str) -> Output:
         out.text = [f"{path}:{line_no}", f"- {result.old}", f"+ {result.new}"]
     else:
         out.text = [f"{path}:{line_no} unchanged"]
+    for anc in result.ancestors:
+        out.text += [f"{path}:{anc['line']} status", f"- {anc['old']}",
+                     f"+ {anc['new']}"]
     return out
 
 
@@ -387,23 +390,94 @@ def cmd_task_show(args, root: str) -> Output:
                        f"got {args.target!r}")
     path = to_root_relative(path, root)
     try:
-        data, lines = task_show.show(path, int(line), tree=args.tree)
+        data, lines, numbers = task_show.show(path, int(line), tree=args.tree)
     except task_show.TaskShowError as e:
         raise CliError(f"meta-notes task show: {e}")
-    return Output(data, [f"{path}:{data['line']}-{data['end_line']}", *lines])
+    return Output(data, [f"{path}:{task_show.format_ranges(numbers)}", *lines])
 
 
 def cmd_task_add(args, root: str) -> Output:
     path = to_root_relative(args.file, root)
+    if args.under is None:
+        if args.expect is not None:
+            raise CliError("meta-notes task add: --expect is for --under")
+    elif args.expect is None:
+        raise CliError("meta-notes task add: --under needs --expect, the "
+                       "parent line as last read")
+    elif args.line is not None:
+        raise CliError("meta-notes task add: --under and --line can't be "
+                       "used together")
     try:
-        result = task_update.add(
-            path, args.text, due=args.due, start=args.start, time=args.time,
-            recur=args.recur, add_tags=args.add_tags or [], line_no=args.line)
+        if args.under is not None:
+            result = task_write.add_subtask(
+                path, args.under, args.expect, args.text, due=args.due,
+                start=args.start, time=args.time, recur=args.recur,
+                add_tags=args.add_tags or [])
+        else:
+            result = task_update.add(
+                path, args.text, due=args.due, start=args.start,
+                time=args.time, recur=args.recur,
+                add_tags=args.add_tags or [], line_no=args.line)
     except task_update.TaskUpdateError as e:
-        raise CliError(f"meta-notes task add: {e}")
-    data = {"file": path, "line": result.created_line, "text": result.new}
-    return Output(data, [f"{path}:{result.created_line} added",
-                         f"+ {result.new}"], warnings=result.warnings)
+        if e.current is None:
+            raise CliError(f"meta-notes task add: {e}")
+        return Output({"file": path, "line": args.under,
+                       "current": e.current}, error=str(e))
+    if args.under is not None:
+        line, text, warnings = result.line, result.new[0], []
+    else:
+        line, text, warnings = result.created_line, result.new, result.warnings
+    data = {"file": path, "line": line, "text": text}
+    return Output(data, [f"{path}:{line} added", f"+ {text}"],
+                  warnings=warnings)
+
+
+def _block_text(value: str) -> str:
+    """A multi-line argument; "-" reads it from standard input."""
+    return sys.stdin.read() if value == "-" else value
+
+
+def _write_output(path: str, result: task_write.WriteResult) -> Output:
+    data = {"file": path, "line": result.line, "end_line": result.end_line,
+            "old": result.old, "new": result.new, "changed": result.changed,
+            "ancestors": result.ancestors}
+    if not result.changed and not result.ancestors:
+        return Output(data, [f"{path}:{result.line} unchanged"])
+    text = [f"{path}:{result.line}", *(f"- {line}" for line in result.old),
+            *(f"+ {line}" for line in result.new)]
+    for anc in result.ancestors:
+        text += [f"{path}:{anc['line']} status", f"- {anc['old']}",
+                 f"+ {anc['new']}"]
+    return Output(data, text)
+
+
+def _task_write(args, root: str, prog: str, call) -> Output:
+    path, sep, line = args.target.rpartition(":")
+    if not sep or not path or not line.isdigit():
+        raise CliError(f"{prog}: target must be <file>:<line>, got "
+                       f"{args.target!r}")
+    path = to_root_relative(path, root)
+    try:
+        result = call(path, int(line), _block_text(args.expect),
+                      _block_text(args.text))
+    except task_update.TaskUpdateError as e:
+        if e.current is None:
+            raise CliError(f"{prog}: {e}")
+        return Output({"file": path, "line": int(line), "current": e.current},
+                      error=str(e))
+    return _write_output(path, result)
+
+
+def cmd_task_notes(args, root: str) -> Output:
+    return _task_write(args, root, "meta-notes task notes",
+                       task_write.replace_notes)
+
+
+def cmd_task_replace(args, root: str) -> Output:
+    return _task_write(
+        args, root, "meta-notes task replace",
+        lambda path, line, expect, text: task_write.replace_node(
+            path, line, expect, text, tree=args.tree))
 
 
 def cmd_ceremony_status(args, root: str) -> Output:
@@ -782,7 +856,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(handler=cmd_note)
 
     p = sub.add_parser("task", parents=[common],
-                       help="edit or add a task line")
+                       help="edit, add or read a task line, its notes and subtasks")
     kinds = p.add_subparsers(dest="kind", metavar="KIND", parser_class=_Parser)
     kinds.required = True
     k = kinds.add_parser("update", parents=[common],
@@ -852,7 +926,44 @@ def build_parser() -> argparse.ArgumentParser:
     k.add_argument("--line", type=int, metavar="N",
                    help="insert before line N (from 1); default: the end "
                         "of the file")
+    k.add_argument("--under", type=int, metavar="N",
+                   help="add a subtask of the task on line N (from 1), after "
+                        "its notes and subtasks; needs --expect")
+    k.add_argument("--expect", metavar="TEXT",
+                   help="with --under, the parent line as last read; nothing "
+                        "is written if it differs (ignoring trailing "
+                        "whitespace)")
     k.set_defaults(handler=cmd_task_add)
+
+    k = kinds.add_parser("notes", parents=[common],
+                         help="replace one task's notes")
+    k.add_argument("target", metavar="FILE:LINE",
+                   help="the note and the checkbox line's number (from 1)")
+    k.add_argument("--expect", required=True, metavar="TEXT",
+                   help="the task's notes as last read (task show's lines "
+                        "after the first; empty for none), or - for stdin; "
+                        "nothing is written if they differ")
+    k.add_argument("--text", required=True, metavar="TEXT",
+                   help="the new notes, one per line as written, indented "
+                        "deeper than the task; empty removes them; - reads "
+                        "stdin")
+    k.set_defaults(handler=cmd_task_notes)
+
+    k = kinds.add_parser("replace", parents=[common],
+                         help="replace a task's lines, or its whole subtree")
+    k.add_argument("target", metavar="FILE:LINE",
+                   help="the note and the checkbox line's number (from 1)")
+    k.add_argument("--expect", required=True, metavar="TEXT",
+                   help="the lines replaced as last read (what task show "
+                        "prints), or - for stdin; nothing is written if "
+                        "they differ")
+    k.add_argument("--text", required=True, metavar="TEXT",
+                   help="the new lines, as written; the first is a checkbox "
+                        "line at the task's indent; - reads stdin")
+    k.add_argument("--tree", action="store_true",
+                   help="replace the whole subtree, not just the line and "
+                        "its notes")
+    k.set_defaults(handler=cmd_task_replace)
 
     p = sub.add_parser("ceremony", parents=[common],
                        help="read ceremony markers in daily and weekly notes")

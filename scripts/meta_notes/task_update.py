@@ -85,6 +85,7 @@ class UpdateResult:
     warnings: list[str] = field(default_factory=list)
     created: str | None = None
     created_line: int | None = None
+    ancestors: list[dict] = field(default_factory=list)
 
 
 # Marker token helpers
@@ -377,6 +378,55 @@ def next_occurrence(done: str, today: date) -> str | None:
     return text
 
 
+# Partial status of parent tasks, as bullets.vim sets it
+
+PARTIAL_MARKERS = ' .oOX'
+
+
+def partial_status(children: list[tasks.Node]) -> str:
+    """
+    The status character a parent gets from its subtasks: the marker at
+    ceil(4 * checked / subtasks), where only x and X count as checked.
+    """
+    checked = sum(1 for c in children if c.status_char in DONE_CHARS)
+    return PARTIAL_MARKERS[-(-4 * checked // len(children))]
+
+
+def update_ancestors(lines: list[str], line_no: int) -> list[dict]:
+    """
+    Set the status of every ancestor of the task at line_no from its
+    subtasks, from the nearest up. Only the status character changes: no ✅
+    date, no next occurrence, and an ancestor already x stays x when all its
+    subtasks are done.
+
+    Args:
+        lines: The file's lines with their endings, as the new status of
+            line_no left them; changed in place.
+        line_no: The subtask whose status changed, counting from 1.
+
+    Returns:
+        One dict per changed ancestor (nearest first) with line, old and new
+        (the lines without endings).
+    """
+    contents = [_split_ending(line)[0] for line in lines]
+    node = next((n for n in tasks.parse_outline(contents)
+                 if n.line_no == line_no), None)
+    changed = []
+    parent = node.parent if node else None
+    while parent is not None:
+        char = partial_status(parent.children)
+        current = parent.status_char
+        if not (char == 'X' and current in DONE_CHARS) and char != current:
+            old, ending = _split_ending(lines[parent.line_no - 1])
+            box = tasks.CHECKBOX_PATTERN.match(old)
+            new = old[:box.start(1)] + char + old[box.end(1):]
+            lines[parent.line_no - 1] = new + ending
+            parent.status_char = char
+            changed.append({"line": parent.line_no, "old": old, "new": new})
+        parent = parent.parent
+    return changed
+
+
 def update(path: str, line_no: int, expect: str, *,
            status: str | None = None, add_tags: list[str] | None = None,
            remove_tags: list[str] | None = None, due: str | None = None,
@@ -464,6 +514,11 @@ def update(path: str, line_no: int, expect: str, *,
             f"Line {line_no} of {path} has a time but no due date, "
             "so the time is ignored")
 
+    lines[line_no - 1] = new + ending
+    old_char = tasks.CHECKBOX_PATTERN.match(old).group(1)
+    new_char = (tasks.CHECKBOX_PATTERN.match(new) or [None, old_char])[1]
+    if spawned is None and new_char != old_char:
+        result.ancestors = update_ancestors(lines, line_no)
     if spawned is not None:
         result.created = spawned
         result.created_line = line_no
@@ -473,13 +528,42 @@ def update(path: str, line_no: int, expect: str, *,
             (_split_ending(line)[1] for line in reversed(lines)
              if _split_ending(line)[1]), '\n')
         lines[line_no - 1:line_no] = [spawned + above_ending, new + ending]
+        # The next occurrence is a sibling too, so count it in the parent
+        result.ancestors = update_ancestors(lines, line_no + 1)
         with open(path, 'w', encoding='utf-8', newline='') as f:
             f.write(''.join(lines))
-    elif result.changed:
-        lines[line_no - 1] = new + ending
+    elif result.changed or result.ancestors:
         with open(path, 'w', encoding='utf-8', newline='') as f:
             f.write(''.join(lines))
     return result
+
+
+def _check_new_task(text: str, due, start, time, recur) -> None:
+    """Raise TaskUpdateError if the arguments of add can't make a task line."""
+    text = text.strip()
+    if not text or re.search(r'[\r\n]', text):
+        raise TaskUpdateError("The task text must be one non-empty line")
+    if time == 'none':
+        raise TaskUpdateError("--time none is for task update")
+    if time is not None and due is None:
+        raise TaskUpdateError("--time needs --due: a time without a due "
+                              "date is ignored")
+    if recur is not None:
+        rule = parse_rule(recur)
+        if rule is None:
+            raise TaskUpdateError(f"Unsupported rule: {recur!r}")
+        if not rule.when_done and due is None and start is None:
+            raise TaskUpdateError(
+                "--recur needs --due or --start to step from, "
+                "or a 'when done' rule")
+
+
+def new_task_line(text: str, due=None, start=None, time=None, recur=None,
+                  add_tags=None) -> str:
+    """The open task line for add's arguments, without indent or ending."""
+    _check_new_task(text, due, start, time, recur)
+    return edit_line('- [ ] ' + text.strip(), due=due, start=start, time=time,
+                     recur=recur, add_tags=add_tags)
 
 
 def add(path: str, text: str, *, due: str | None = None,
@@ -506,22 +590,7 @@ def add(path: str, text: str, *, due: str | None = None,
             line break, line_no is out of range, a time has no due date, or
             a rule has no date to step from and isn't "when done".
     """
-    text = text.strip()
-    if not text or re.search(r'[\r\n]', text):
-        raise TaskUpdateError("The task text must be one non-empty line")
-    if time == 'none':
-        raise TaskUpdateError("--time none is for task update")
-    if time is not None and due is None:
-        raise TaskUpdateError("--time needs --due: a time without a due "
-                              "date is ignored")
-    if recur is not None:
-        rule = parse_rule(recur)
-        if rule is None:
-            raise TaskUpdateError(f"Unsupported rule: {recur!r}")
-        if not rule.when_done and due is None and start is None:
-            raise TaskUpdateError(
-                "--recur needs --due or --start to step from, "
-                "or a 'when done' rule")
+    _check_new_task(text, due, start, time, recur)
     try:
         with open(path, encoding='utf-8', newline='') as f:
             content = f.read()
@@ -537,8 +606,7 @@ def add(path: str, text: str, *, due: str | None = None,
         raise TaskUpdateError(
             f"Line {line_no} is out of range: {path} has {len(lines)} lines")
 
-    new = edit_line('- [ ] ' + text, due=due, start=start, time=time,
-                    recur=recur, add_tags=add_tags)
+    new = new_task_line(text, due, start, time, recur, add_tags)
     ending = next((_split_ending(line)[1] for line in lines
                    if _split_ending(line)[1]), '\n')
     if line_no > len(lines) and lines and not _split_ending(lines[-1])[1]:

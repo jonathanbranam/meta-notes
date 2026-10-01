@@ -882,8 +882,13 @@ Commands ~
     --tree              Read the whole subtree: every subtask, with its
                         notes and subtasks, to any depth.
 
-    The output is `{file}:{first}-{last}` and then those lines as written.
-    With `--json`: `file`, `line`, `end_line` (the last line read), `text`,
+    The output is `{file}:{ranges}` and then those lines as written. The
+    ranges are runs of consecutive lines, `{first}-{last}` joined by
+    commas. The node alone is the task line and its own notes only, so
+    when a note comes after the subtasks the header is `1-2,4-4` and the
+    subtasks between are left out; the subtree is one run.
+    With `--json`: `file`, `line`, `end_line` (the last line of the node's
+    notes, or of the subtree), `text`,
     `status`, `notes`, and `parent` (null, or `file`, `line`, `text` and
     `status` of the checkbox line it is nested under). With `--tree`,
     also `subtasks`, each with the same fields (without `parent`),
@@ -912,6 +917,56 @@ Commands ~
     `file`, `line`, `text` and `status` for each of those, whether or not
     they are tasks themselves. The listed tasks and their order don't
     change.
+
+`meta-notes task notes {file}:{line} --expect {notes} --text {notes}`
+                                                *meta-notes-cli-task-notes*
+    Replace the notes of the task at {file}:{line} (|meta-notes-task-tree|)
+    in one write. {notes} are lines as written, so `--text` needs their
+    indent: each at least one column deeper than the task, none blank,
+    none a checkbox. They go directly under the task line, before its
+    subtasks, and replace every note the task owned, also a note after the
+    subtasks. Empty `--text` removes the notes. `--expect` is the current
+    notes (task show's lines after the first, empty for none, ignoring
+    trailing whitespace); if they differ nothing is written and the
+    command fails, reporting the current notes. Either option can be `-` to
+    read standard input. The output is `{file}:{line}` with the old lines
+    after `- ` and the new after `+ `, or `unchanged`; `--json` has `file`,
+    `line` and `end_line` (of the new notes), `old`, `new`, `changed` and
+    `ancestors`.
+
+    Example: >
+        meta-notes task notes project/foo.md:3 \
+            --expect '  * old note' --text '  * new note'
+<
+`meta-notes task replace {file}:{line} --expect {lines} --text {lines} [--tree]`
+                                                *meta-notes-cli-task-replace*
+    Replace the task at {file}:{line}: its line and notes, or with
+    `--tree` its whole subtree, in one write. `--expect` is what
+    |meta-notes-cli-task-show| prints for the same target (and `--tree`),
+    without the header. The new lines start with a checkbox line at the
+    task's indent, the rest indented deeper, none blank. Without `--tree`
+    the subtasks stay below the new lines. If the first line's status
+    character changes, the ancestors' statuses follow
+    (|meta-notes-task-partial|). Output and `--json` are as for
+    |meta-notes-cli-task-notes|, with the ancestors listed.
+
+    Example: >
+        meta-notes task replace project/foo.md:3 --tree \
+            --expect "$(meta-notes task show project/foo.md:3 --tree | tail -n +2)" \
+            --text "$new"
+<
+                                                *meta-notes-task-partial*
+    When `task update --status` changes a subtask's status character (and
+    when `task replace` does), the status of each ancestor, nearest first,
+    becomes the character of ` .oOX` at `ceil(4 * checked / subtasks)`,
+    where `checked` counts its direct subtasks that are `x` or `X`: none is
+    ` `, up to 1/4 `.`, up to 1/2 `o`, up to 3/4 `O`, and (rounding up)
+    7/8 or all `X`. This is what bullets.vim does in Vim. Only the status
+    character changes: no ✅ date, no next occurrence, no dates inherited,
+    and an ancestor already `x` stays `x`. A recurring subtask's next
+    occurrence counts as one more subtask. The changes are in the same
+    write; `task update` lists them after its own line and in `--json` as
+    `ancestors` (`line`, `old`, `new`).
 
 `meta-notes task add {file} {text} [options]`     *meta-notes-cli-task-add*
     Add an open task line, `- [ ] {text}` and its markers, to {file}, an

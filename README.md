@@ -104,6 +104,7 @@ meta-notes/
 │   │   ├── root.py              # Sentinel search for the notes root
 │   │   ├── task_show.py         # One task with its notes and subtasks
 │   │   ├── task_update.py       # Task line edits
+│   │   ├── task_write.py        # Task notes, subtasks and subtree writes
 │   │   └── template.py          # Template discovery and rendering
 │   ├── find_tasks.py        # Task selection and report
 │   ├── notes.py             # Note utilities
@@ -141,6 +142,7 @@ meta-notes/
 │   │   ├── test_shim.py
 │   │   ├── test_tags.py
 │   │   ├── test_task_update.py
+│   ├── test_task_write.py
 │   │   ├── test_tasks.py
 │   │   ├── test_template.py
 │   │   ├── test_time_block.py
@@ -188,7 +190,7 @@ This structure is compatible with vim-plug, Vundle, and Pathogen.
 
 `bin/meta-notes` performs the plugin's setup (`init`), note creation from
 templates (`note`), file operations (`move`, `rename`, `archive`), task
-query (`tasks`), task edits (`task update`, `task add`), one task read as a tree (`task show`), time reports (`time`), changed
+query (`tasks`), task edits (`task update`, `task add`), one task read as a tree (`task show`), its notes and subtasks written (`task notes`, `task replace`, `task add --under`), time reports (`time`), changed
 notes (`changes`), calendar agendas (`calendar`, `cache clear`), the
 project list (`projects`), ceremony status (`ceremony status`), stay-on-task check-ins (`checkin`), Time Block cell edits (`time-block update`), Time Log edits (`time-log append`, `time-log update`), and the
 skills' shared conventions (`conventions`), and a guide to the notes root
@@ -244,6 +246,9 @@ meta-notes tasks --overdue --due          # overdue and due today
 meta-notes tasks --scheduled --date 2026-11 --group-by tag
 meta-notes tasks --overdue --due --at now  # timed tasks due by this moment
 meta-notes task show project/foo.md:3 --tree  # a task, its notes and subtasks
+meta-notes task notes project/foo.md:3 --expect '  * old' --text '  * new'
+meta-notes task add project/foo.md 'book flights' --under 3 --expect '- [ ] plan trip' --due 2026-10-06
+meta-notes task replace project/foo.md:3 --tree --expect "$old" --text "$new"
 meta-notes task add area/home.md 'change filter' --recur 'every 3 months' --time 09:00 --due 2026-10-01
 meta-notes task update project/foo.md:3 --expect '- [ ] call Sam 📅 2026-09-22' --status x
 meta-notes task update project/foo.md:3 --expect '- [ ] call Sam 📅 2026-09-22' --time 15:00
