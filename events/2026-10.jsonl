@@ -7,3 +7,4 @@
 {"actor":"agent:manager","at":"2026-10-01T15:56:47.004468478Z","from":"planned","task":"mn-ee94","to":"integrated"}
 {"actor":"human","at":"2026-10-01T16:34:00.959Z","from":"","task":"mn-7951","to":"open"}
 {"actor":"external:orchestrator","at":"2026-10-01T16:34:01.218892885Z","from":"open","task":"mn-7951","to":"planned"}
+{"actor":"human","at":"2026-10-01T18:23:39.034Z","from":"","task":"mn-0305","to":"open"}
