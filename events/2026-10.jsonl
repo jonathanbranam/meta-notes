@@ -18,3 +18,4 @@
 {"actor":"human","at":"2026-10-01T19:13:03.021Z","from":"","task":"mn-cdfa","to":"open"}
 {"actor":"external:orchestrator","at":"2026-10-01T19:13:07.256539016Z","from":"open","task":"mn-cdfa","to":"planned"}
 {"actor":"external:orchestrator","at":"2026-10-01T19:13:07.320153342Z","queue":"reprioritized"}
+{"actor":"agent:manager","at":"2026-10-01T19:16:25.098582130Z","from":"planned","task":"mn-cdfa","to":"integrated"}
