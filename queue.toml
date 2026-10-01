@@ -21,3 +21,9 @@ tasks = ["mn-cf3d"]
 
 [[tier]]
 tasks = ["mn-68e3"]
+
+[[tier]]
+tasks = ["mn-f51d"]
+
+[[tier]]
+tasks = ["mn-e08c"]
