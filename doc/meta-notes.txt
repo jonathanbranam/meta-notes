@@ -959,10 +959,10 @@ Commands ~
     When `task update --status` changes a subtask's status character (and
     when `task replace` does), the status of each ancestor, nearest first,
     becomes, where `checked` counts its direct subtasks that are `x` or `X`:
-    ` ` for none, `X` for all, otherwise `.`, `o` or `O` by thirds (up to
-    1/3 `.`, up to 2/3 `o`, above that `O`; never `X`). Only the status
+    ` ` for none, `x` for all, otherwise `.`, `o` or `O` by thirds (up to
+    1/3 `.`, up to 2/3 `o`, above that `O`; never `x` or `X`). Only the status
     character changes: no ✅ date, no next occurrence, no dates inherited,
-    and an ancestor already `x` stays `x`. A recurring subtask's next
+    and an ancestor already `X` stays `X`. A recurring subtask's next
     occurrence counts as one more subtask. The changes are in the same
     write; `task update` lists them after its own line and in `--json` as
     `ancestors` (`line`, `old`, `new`).

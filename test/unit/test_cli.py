@@ -1520,5 +1520,5 @@ def test_cli_task_update_reports_ancestors(notes_root, capsys):
         '  - [ ] second 📅 2026-10-06', '--status', 'x'])
     assert code == 0
     assert out['ancestors'] == [{'line': 1, 'old': '- [o] main 📅 2026-10-08',
-                                 'new': '- [X] main 📅 2026-10-08'}]
-    assert path.read_text().splitlines()[0] == '- [X] main 📅 2026-10-08'
+                                 'new': '- [x] main 📅 2026-10-08'}]
+    assert path.read_text().splitlines()[0] == '- [x] main 📅 2026-10-08'

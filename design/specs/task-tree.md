@@ -86,14 +86,14 @@ Every command that writes a task's notes, a node or a subtree SHALL take `--expe
 - **THEN** every line of the subtree SHALL be replaced by the new lines in one write
 
 ### Requirement: Status of ancestors  {#r-7c52}
-When `task update --status` changes a task's status character, or `task replace` changes the status character of the first line, the command SHALL set the status of each ancestor, nearest first, as follows, where `checked` counts the ancestor's direct subtasks whose status is `x` or `X`, in the same write: none checked is ` `; all checked is `X`; otherwise the character at 1-based index `ceil(3 * checked / subtasks)` of `.oO` (`.` up to 1/3, `o` up to 2/3, `O` above), never `X`, so a parent is marked done only when every subtask is done. Only the status character SHALL change: no `✅` date, no next occurrence, no date inheritance; an ancestor that is `x` and computes `X` SHALL stay `x`. When the update adds the next occurrence of a recurring subtask, it SHALL count as a subtask of the parent. `task update` and `task replace` output SHALL list each changed ancestor with `ancestors` (`line`, `old`, `new`) in `--json`.
+When `task update --status` changes a task's status character, or `task replace` changes the status character of the first line, the command SHALL set the status of each ancestor, nearest first, as follows, where `checked` counts the ancestor's direct subtasks whose status is `x` or `X`, in the same write: none checked is ` `; all checked is `x`; otherwise the character at 1-based index `ceil(3 * checked / subtasks)` of `.oO` (`.` up to 1/3, `o` up to 2/3, `O` above), never `x` or `X`, so a parent is marked done only when every subtask is done. Only the status character SHALL change: no `✅` date, no next occurrence, no date inheritance; an ancestor that is `X` and computes `x` SHALL stay `X`. When the update adds the next occurrence of a recurring subtask, it SHALL count as a subtask of the parent. `task update` and `task replace` output SHALL list each changed ancestor with `ancestors` (`line`, `old`, `new`) in `--json`.
 
 #### Scenario: Thresholds  {#s-2402}
 *Verification*: **non-executable**
 - **WHEN** a parent has four open subtasks and the user marks them done one at a time
-- **THEN** the parent's status SHALL be `.`, `o`, `O` and `X` in turn
+- **THEN** the parent's status SHALL be `.`, `o`, `O` and `x` in turn
 
 #### Scenario: Two levels  {#s-6fdf}
 *Verification*: **non-executable**
 - **WHEN** a subtask's only subtask is marked done
-- **THEN** the subtask SHALL become `X` and its parent SHALL be set from it in the same write
+- **THEN** the subtask SHALL become `x` and its parent SHALL be set from it in the same write

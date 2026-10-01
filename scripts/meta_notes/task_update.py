@@ -378,7 +378,7 @@ def next_occurrence(done: str, today: date) -> str | None:
     return text
 
 
-# Partial status of parent tasks: X only when every subtask is done
+# Partial status of parent tasks: x only when every subtask is done
 
 PARTIAL_MARKERS = '.oO'
 
@@ -386,7 +386,8 @@ PARTIAL_MARKERS = '.oO'
 def partial_status(children: list[tasks.Node]) -> str:
     """
     The status character a parent gets from its subtasks: the marker at
-    ' ' when none is checked, 'X' when all are, otherwise the marker of
+    ' ' when none is checked, 'x' when all are (an ancestor already 'X'
+    keeps it), otherwise the marker of
     '.oO' at ceil(3 * checked / subtasks), 1-based. Only x and X count as
     checked.
     """
@@ -394,7 +395,7 @@ def partial_status(children: list[tasks.Node]) -> str:
     if checked == 0:
         return ' '
     if checked == len(children):
-        return 'X'
+        return 'x'
     return PARTIAL_MARKERS[-(-3 * checked // len(children)) - 1]
 
 
@@ -402,7 +403,7 @@ def update_ancestors(lines: list[str], line_no: int) -> list[dict]:
     """
     Set the status of every ancestor of the task at line_no from its
     subtasks, from the nearest up. Only the status character changes: no ✅
-    date, no next occurrence, and an ancestor already x stays x when all its
+    date, no next occurrence, and an ancestor already X stays X when all its
     subtasks are done.
 
     Args:
@@ -422,7 +423,7 @@ def update_ancestors(lines: list[str], line_no: int) -> list[dict]:
     while parent is not None:
         char = partial_status(parent.children)
         current = parent.status_char
-        if not (char == 'X' and current in DONE_CHARS) and char != current:
+        if not (char == 'x' and current in DONE_CHARS) and char != current:
             old, ending = _split_ending(lines[parent.line_no - 1])
             box = tasks.CHECKBOX_PATTERN.match(old)
             new = old[:box.start(1)] + char + old[box.end(1):]
