@@ -237,8 +237,8 @@ def tree_of(statuses):
 
 @pytest.mark.parametrize('done,total,expected', [
     (1, 4, '.'), (2, 4, 'o'), (3, 4, 'O'), (4, 4, 'X'),
-    (1, 3, 'o'), (2, 3, 'O'), (1, 2, 'o'), (1, 8, '.'), (3, 8, 'o'),
-    (5, 8, 'O'), (6, 8, 'O'), (7, 8, 'X'), (1, 1, 'X')])
+    (1, 3, '.'), (2, 3, 'o'), (1, 2, 'o'), (1, 8, '.'), (3, 8, 'o'),
+    (5, 8, 'o'), (6, 8, 'O'), (7, 8, 'O'), (8, 8, 'X'), (1, 1, 'X')])
 def test_task_update_partial_status_thresholds(tmp_path, done, total, expected):
     statuses = ['x'] * (done - 1) + [' '] * (total - done + 1)
     path = write_note(tmp_path, tree_of(statuses))

@@ -378,18 +378,24 @@ def next_occurrence(done: str, today: date) -> str | None:
     return text
 
 
-# Partial status of parent tasks, as bullets.vim sets it
+# Partial status of parent tasks: X only when every subtask is done
 
-PARTIAL_MARKERS = ' .oOX'
+PARTIAL_MARKERS = '.oO'
 
 
 def partial_status(children: list[tasks.Node]) -> str:
     """
     The status character a parent gets from its subtasks: the marker at
-    ceil(4 * checked / subtasks), where only x and X count as checked.
+    ' ' when none is checked, 'X' when all are, otherwise the marker of
+    '.oO' at ceil(3 * checked / subtasks), 1-based. Only x and X count as
+    checked.
     """
     checked = sum(1 for c in children if c.status_char in DONE_CHARS)
-    return PARTIAL_MARKERS[-(-4 * checked // len(children))]
+    if checked == 0:
+        return ' '
+    if checked == len(children):
+        return 'X'
+    return PARTIAL_MARKERS[-(-3 * checked // len(children)) - 1]
 
 
 def update_ancestors(lines: list[str], line_no: int) -> list[dict]:
