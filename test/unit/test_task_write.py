@@ -164,9 +164,9 @@ def test_task_write_replace_status_updates_ancestors(tmp_path):
     path = write_note(tmp_path, TREE)
     result = task_write.replace_node(str(path), 7, '  - [ ] second',
                                      '  - [x] second')
-    assert read(path)[2] == '- [X] main 📅 2026-10-08'
+    assert read(path)[2] == '- [x] main 📅 2026-10-08'
     assert result.ancestors == [{'line': 3, 'old': '- [o] main 📅 2026-10-08',
-                                 'new': '- [X] main 📅 2026-10-08'}]
+                                 'new': '- [x] main 📅 2026-10-08'}]
 
 
 def test_task_write_replace_mismatch_writes_nothing(tmp_path):
@@ -236,9 +236,9 @@ def tree_of(statuses):
 
 
 @pytest.mark.parametrize('done,total,expected', [
-    (1, 4, '.'), (2, 4, 'o'), (3, 4, 'O'), (4, 4, 'X'),
-    (1, 3, 'o'), (2, 3, 'O'), (1, 2, 'o'), (1, 8, '.'), (3, 8, 'o'),
-    (5, 8, 'O'), (6, 8, 'O'), (7, 8, 'X'), (1, 1, 'X')])
+    (1, 4, '.'), (2, 4, 'o'), (3, 4, 'O'), (4, 4, 'x'),
+    (1, 3, '.'), (2, 3, 'o'), (1, 2, 'o'), (1, 8, '.'), (3, 8, 'o'),
+    (5, 8, 'o'), (6, 8, 'O'), (7, 8, 'O'), (8, 8, 'x'), (1, 1, 'x')])
 def test_task_update_partial_status_thresholds(tmp_path, done, total, expected):
     statuses = ['x'] * (done - 1) + [' '] * (total - done + 1)
     path = write_note(tmp_path, tree_of(statuses))
@@ -267,21 +267,21 @@ def test_task_update_partial_status_two_levels(tmp_path):
                                   ' 2026', ' ✅ 2026')]
     assert [a['line'] for a in result.ancestors] == [2]
     update(str(path), 4, '    - [ ] b', status='x', today=date(2026, 10, 1))
-    assert read(path)[:2] == ['- [o] top', '  - [X] mid']
+    assert read(path)[:2] == ['- [o] top', '  - [x] mid']
 
 
 def test_task_update_partial_status_adds_no_date_or_occurrence(tmp_path):
     path = write_note(tmp_path, [
         '- [ ] parent 🔁 every day 📅 2026-10-01', '  - [ ] only'])
     update(str(path), 2, '  - [ ] only', status='x', today=date(2026, 10, 1))
-    assert read(path)[0] == '- [X] parent 🔁 every day 📅 2026-10-01'
+    assert read(path)[0] == '- [x] parent 🔁 every day 📅 2026-10-01'
     assert len(read(path)) == 2
 
 
-def test_task_update_partial_status_keeps_lowercase_done(tmp_path):
-    path = write_note(tmp_path, ['- [x] parent', '  - [ ] only'])
-    update(str(path), 2, '  - [ ] only', status='X', today=date(2026, 10, 1))
-    assert read(path)[0] == '- [x] parent'
+def test_task_update_partial_status_keeps_uppercase_done(tmp_path):
+    path = write_note(tmp_path, ['- [X] parent', '  - [ ] only'])
+    update(str(path), 2, '  - [ ] only', status='x', today=date(2026, 10, 1))
+    assert read(path)[0] == '- [X] parent'
 
 
 def test_task_update_partial_status_not_for_other_fields(tmp_path):

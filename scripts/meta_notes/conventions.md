@@ -105,9 +105,9 @@ adds a subtask after its notes and subtasks; `meta-notes task replace
 <file>:<line> --expect <lines> --text <lines> [--tree]` replaces a task and
 its notes, or its whole subtree. Pass long text with `-` to read it from
 standard input. Marking a subtask done through `task update` sets its
-ancestors' status for you (` .oOX` by how many subtasks are done); don't
-set the parent's status yourself. Line numbers move after a write above
-them, so re-read before the next one.
+ancestors' status for you (` .oO` by thirds of the subtasks done, `x`
+only when all are); don't set the parent's status yourself. Line
+numbers move after a write above them, so re-read before the next one.
 
 ## Editing tasks
 
