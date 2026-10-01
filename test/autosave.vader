@@ -1,0 +1,145 @@
+Execute (Setup - Create a notes root and a stray directory):
+  let g:test_dir = resolve(tempname())
+  call mkdir(g:test_dir . '/notes/project', 'p')
+  call mkdir(g:test_dir . '/stray', 'p')
+  call writefile([''], g:test_dir . '/notes/.meta-notes')
+  call writefile(['one', 'two'], g:test_dir . '/notes/project/a.md')
+  call writefile(['one', 'two'], g:test_dir . '/stray/b.md')
+  let g:original_dir = getcwd()
+  execute 'cd' g:test_dir
+
+Execute (Settings are off by default):
+  Assert !exists('g:meta_notes_autosave') || g:meta_notes_autosave == 0
+  Assert !exists('g:meta_notes_autoreload') || g:meta_notes_autoreload == 0
+  AssertEqual 0, get(g:, 'meta_notes_checktime_interval', 0)
+  let lines = join(meta_notes#autosave#StatusLines(), "\n")
+  Assert lines =~# 'autosave:   off'
+  Assert lines =~# 'autoreload: off'
+
+Execute (Nothing attaches to buffers while the settings are off):
+  execute 'edit' g:test_dir . '/notes/project/a.md'
+  Assert !exists('b:meta_notes_root')
+  Assert !&autoread
+  bwipeout!
+
+Execute (FindRoot finds the nearest .meta-notes):
+  AssertEqual g:test_dir . '/notes', meta_notes#autosave#FindRoot(g:test_dir . '/notes/project/a.md')
+  AssertEqual '', meta_notes#autosave#FindRoot(g:test_dir . '/stray/b.md')
+  AssertEqual '', meta_notes#autosave#FindRoot('')
+
+Execute (Autoreload applies to notes buffers only):
+  let g:meta_notes_watch = 0
+  MetaNotesAutoreload on
+  execute 'edit' g:test_dir . '/notes/project/a.md'
+  AssertEqual g:test_dir . '/notes', b:meta_notes_root
+  Assert &autoread
+  execute 'edit' g:test_dir . '/stray/b.md'
+  AssertEqual '', b:meta_notes_root
+  Assert !&autoread
+  MetaNotesAutoreload off
+  bwipeout!
+  bwipeout!
+
+Execute (Autosave writes an edited notes buffer when the file is unchanged):
+  let g:meta_notes_autosave = 1
+  execute 'edit' g:test_dir . '/notes/project/a.md'
+  call setline(1, 'edited')
+  Assert &modified
+  AssertEqual 1, meta_notes#autosave#Save(bufnr('%'))
+  Assert !&modified
+  AssertEqual ['edited', 'two'], readfile(g:test_dir . '/notes/project/a.md')
+  bwipeout!
+
+Execute (Autosave leaves a buffer outside a notes root alone):
+  execute 'edit' g:test_dir . '/stray/b.md'
+  call setline(1, 'edited')
+  AssertEqual 0, meta_notes#autosave#Save(bufnr('%'))
+  Assert &modified
+  AssertEqual ['one', 'two'], readfile(g:test_dir . '/stray/b.md')
+  bwipeout!
+
+Execute (A conflict is flagged and pauses autosave until a write):
+  let g:meta_notes_conflict_diff = 0
+  call writefile(['one', 'two'], g:test_dir . '/notes/project/a.md')
+  execute 'edit' g:test_dir . '/notes/project/a.md'
+  call setline(1, 'mine')
+  call writefile(['theirs, and longer', 'two'], g:test_dir . '/notes/project/a.md')
+  AssertEqual 0, meta_notes#autosave#Save(bufnr('%'))
+  Assert &modified
+  AssertEqual 1, b:meta_notes_conflict
+  AssertEqual ['mine', 'two'], getline(1, '$')
+  AssertEqual ['theirs, and longer', 'two'], readfile(g:test_dir . '/notes/project/a.md')
+  " Paused: no write, even when the file is back to what Vim read
+  call writefile(['one', 'two'], g:test_dir . '/notes/project/a.md')
+  AssertEqual 0, meta_notes#autosave#Save(bufnr('%'))
+  AssertEqual ['one', 'two'], readfile(g:test_dir . '/notes/project/a.md')
+  " A write (Vim's own prompt is the human's job) ends the conflict
+  doautocmd BufWritePost
+  AssertEqual 0, b:meta_notes_conflict
+  bwipeout!
+
+Execute (A conflict opens a diff against the disk, and a write closes it):
+  let g:meta_notes_conflict_diff = 1
+  call writefile(['one', 'two'], g:test_dir . '/notes/project/a.md')
+  execute 'edit' g:test_dir . '/notes/project/a.md'
+  let notes_buf = bufnr('%')
+  let wins = winnr('$')
+  call setline(1, 'mine')
+  call writefile(['theirs, and longer', 'x'], g:test_dir . '/notes/project/a.md')
+  AssertEqual 0, meta_notes#autosave#Save(notes_buf)
+  AssertEqual wins + 1, winnr('$')
+  Assert &diff
+  AssertEqual 'mine', getline(1)
+  doautocmd BufWritePost
+  AssertEqual wins, winnr('$')
+  Assert !&diff
+  bwipeout!
+
+Execute (FileChangedShell reloads an unmodified notes buffer):
+  let g:meta_notes_autoreload = 1
+  let g:meta_notes_watch = 0
+  call meta_notes#autosave#Refresh()
+  call writefile(['one', 'two'], g:test_dir . '/notes/project/a.md')
+  execute 'edit' g:test_dir . '/notes/project/a.md'
+  call writefile(['theirs, and longer', 'two'], g:test_dir . '/notes/project/a.md')
+  checktime
+  AssertEqual ['theirs, and longer', 'two'], getline(1, '$')
+  Assert !&modified
+  bwipeout!
+
+Execute (FileChangedShell keeps a modified notes buffer and flags the conflict):
+  let g:meta_notes_conflict_diff = 0
+  call writefile(['one', 'two'], g:test_dir . '/notes/project/a.md')
+  execute 'edit' g:test_dir . '/notes/project/a.md'
+  call setline(1, 'mine')
+  call writefile(['theirs, and longer', 'two'], g:test_dir . '/notes/project/a.md')
+  checktime
+  sleep 50m
+  AssertEqual ['mine', 'two'], getline(1, '$')
+  Assert &modified
+  AssertEqual 1, b:meta_notes_conflict
+  bwipeout!
+
+Execute (Status reports the mechanisms):
+  let g:meta_notes_checktime_interval = 5000
+  let g:meta_notes_autoreload = 1
+  let lines = join(meta_notes#autosave#StatusLines(), "\n")
+  Assert lines =~# 'autosave:   on, 1000 ms'
+  Assert lines =~# 'timer:      5000 ms'
+
+Execute (WatcherCommand excludes git, venv and cache):
+  let cmd = meta_notes#autosave#WatcherCommand('/r')
+  if !empty(cmd)
+    Assert join(cmd) =~# '\.git'
+    Assert join(cmd) =~# 'meta-notes-cache'
+    AssertEqual '/r', cmd[-1]
+  endif
+
+Execute (Cleanup):
+  unlet! g:meta_notes_autosave g:meta_notes_autoreload g:meta_notes_watch
+  unlet! g:meta_notes_conflict_diff g:meta_notes_checktime_interval
+  call meta_notes#autosave#Refresh()
+  execute 'cd' g:original_dir
+  call delete(g:test_dir, 'rf')
+  unlet g:test_dir
+  unlet g:original_dir

@@ -91,6 +91,23 @@ command! MetaNotesVersion call meta_notes#cli#ShowVersion()
 " Time tracking
 command! MetaNotesTimeReport call meta_notes#time_tracking#ShowReport()
 
+" Autosave and autoreload of notes buffers (off by default; see
+" :help meta-notes-autosave)
+command! -nargs=? -complete=custom,meta_notes#autosave#Complete MetaNotesAutosave call meta_notes#autosave#SetAutosave(<q-args>)
+command! -nargs=? -complete=custom,meta_notes#autosave#Complete MetaNotesAutoreload call meta_notes#autosave#SetAutoreload(<q-args>)
+command! MetaNotesAutoStatus call meta_notes#autosave#Status()
+
+augroup meta_notes_autosave
+  autocmd!
+  autocmd BufReadPost,BufNewFile * call meta_notes#autosave#OnBufRead()
+  autocmd BufWritePost * call meta_notes#autosave#OnWritten()
+  autocmd BufEnter * call meta_notes#autosave#OnBufEnter()
+  autocmd FocusGained * call meta_notes#autosave#OnFocusGained()
+  autocmd TextChanged * call meta_notes#autosave#OnTextChanged()
+  autocmd InsertLeave * call meta_notes#autosave#OnInsertLeave()
+  autocmd VimLeavePre * call meta_notes#autosave#StopWatchers()
+augroup END
+
 " Mappings — global
 nnoremap <localleader>mr :MetaNotesReload<CR>
 

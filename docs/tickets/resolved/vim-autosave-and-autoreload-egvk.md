@@ -4,7 +4,7 @@ title: Vim autosave and autoreload for notes buffers, safe against agent edits
 opened: 2026-10-01
 repos: [meta-notes]
 changes: []
-specs: []
+specs: [notes-autosave]
 needs: []
 see: [time-log-append-and-update-commands-v63j, time-block-update-command-gmqp]
 ---
