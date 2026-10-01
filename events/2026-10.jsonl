@@ -30,3 +30,4 @@
 {"actor":"human","at":"2026-10-01T19:51:31.208Z","from":"","task":"mn-cf3d","to":"open"}
 {"actor":"external:orchestrator","at":"2026-10-01T19:51:32.426056243Z","from":"open","task":"mn-cf3d","to":"planned"}
 {"actor":"external:orchestrator","at":"2026-10-01T19:51:32.726362936Z","queue":"reprioritized"}
+{"actor":"agent:manager","at":"2026-10-01T19:55:19.849596604Z","from":"planned","task":"mn-cf3d","to":"integrated"}
