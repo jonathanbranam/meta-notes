@@ -103,8 +103,11 @@ Line numbers from one query stay valid across `task update` calls on that
 query's lines, so a batch of edits can use one query. The exception is
 completing a recurring task, which adds a line above it.
 
-`--status x` adds `✅ <today>` and any other status removes it. Use
-`--add-tag later` to defer, `--status -` to cancel.
+`--status x` adds `✅ <today>` unless the line already has
+`✅`, its due date is today, or `--no-completed` is given.
+Recurring lines always get `✅ <today>`. Any other status
+removes `✅`. Use `--add-tag later` to defer, `--status -`
+to cancel.
 
 ## Editing the Time Block
 
