@@ -106,6 +106,18 @@ completing a recurring task, which adds a line above it.
 `--status x` adds `✅ <today>` and any other status removes it. Use
 `--add-tag later` to defer, `--status -` to cancel.
 
+## Editing the Time Block
+
+Never edit the daily note's `### Time Block` table yourself. Write its
+Plan and Actual cells with
+`meta-notes time-block update <file> --time 9:30am [--through 10:15am]
+--plan <text>` (or `--actual <text>`, or both). It finds rows by time and
+pads each cell to its column. A filled cell is only overwritten with
+`--expect <its current text>`; when it reports a mismatch, re-read the
+cell and retry, or ask the user. `--create` adds a row the table lacks.
+When it says the text is too wide, shorten it. Check-ins may use
+`meta-notes checkin actual` instead.
+
 ## Adding lines
 
 Add a task with `meta-notes task add <file> <text> [--due <date>]
