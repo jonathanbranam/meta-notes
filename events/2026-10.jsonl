@@ -8,3 +8,5 @@
 {"actor":"human","at":"2026-10-01T16:34:00.959Z","from":"","task":"mn-7951","to":"open"}
 {"actor":"external:orchestrator","at":"2026-10-01T16:34:01.218892885Z","from":"open","task":"mn-7951","to":"planned"}
 {"actor":"human","at":"2026-10-01T18:23:39.034Z","from":"","task":"mn-0305","to":"open"}
+{"actor":"external:orchestrator","at":"2026-10-01T18:23:48.713171880Z","queue":"reprioritized"}
+{"actor":"external:orchestrator","at":"2026-10-01T18:23:56.455810933Z","from":"open","task":"mn-0305","to":"planned"}
