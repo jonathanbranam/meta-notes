@@ -1167,6 +1167,30 @@ Commands ~
         end             end of the workday, `HH:MM`. Unset: `17:30`.
     The `checkin` skill (|meta-notes-skills|) drives these commands.
 
+`meta-notes time-block update {file} --time {time} ...`
+                                                *meta-notes-cli-time-block*
+    Write Plan and Actual cells of a note's `### Time Block` table, found
+    by row time. Options: `--time {time}` (`HH:MM` or `9:30am`),
+    `--through {time}` (every row through it, inclusive), `--plan {text}`,
+    `--actual {text}` (at least one; both may be given), `--expect {text}`
+    and `--create`. Text is padded to the column's width; `|` becomes `/`
+    and newlines spaces. A cell that isn't empty is only overwritten when
+    `--expect` equals its current text (compared stripped); with no
+    `--expect` every target cell must be empty. `--expect` applies to every
+    target cell, Plan and Actual. On a mismatch nothing is written and the
+    error names each row, column and current text; with `--json`, `current`
+    lists them as `time`, `column` and `text`, so the caller can re-read
+    and retry. Also an error, with nothing written: no Time Block, a
+    missing row without `--create`, a ragged table (a column whose cell
+    widths differ between rows), and text wider than its column (the
+    error gives the column's width and the text's length; nothing is
+    truncated or widened). `--create` adds a missing `--time` row in time
+    order, padded to the table's widths; it does nothing when the row
+    exists, and can't be combined with `--through`. With `--json`: `file`,
+    `written` and `created` (row labels). The `daily-plan` skill
+    (|meta-notes-skills|) fills the Plan with it; `checkin actual` fills
+    the Actual of today's note.
+
 `meta-notes projects [--warnings]`              *meta-notes-cli-projects*
     List every project directly in `project/`: each note, and each folder,
     whose home note is its `Home.md`. Archived projects aren't listed. A
@@ -1313,7 +1337,7 @@ note existed before), `created` (whether this command wrote it), and
 also returns `content`, the rendered note. `--version` returns `version`,
 `commit` (the short hash, or null), and `dirty`. Output from template commands
 appears only in `content` or the written note, never on stdout.
-`calendar`, `cache clear`, `conventions`, `ceremony status`, `checkin`, and
+`calendar`, `cache clear`, `conventions`, `ceremony status`, `checkin`, `time-block update`, and
 `projects` return the fields listed under each command above.
 
 The exit status is non-zero on failure. `--root` and `--json` may come
