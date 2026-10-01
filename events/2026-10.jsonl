@@ -42,3 +42,4 @@
 {"actor":"external:orchestrator","at":"2026-10-01T23:23:02.111779254Z","queue":"reprioritized"}
 {"actor":"external:orchestrator","at":"2026-10-01T23:23:02.336128611Z","queue":"reprioritized"}
 {"actor":"agent:manager","at":"2026-10-01T23:25:52.773668458Z","from":"planned","task":"mn-f51d","to":"integrated"}
+{"actor":"agent:manager","at":"2026-10-01T23:32:52.920427170Z","from":"planned","task":"mn-e08c","to":"integrated"}
