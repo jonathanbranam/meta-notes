@@ -339,7 +339,21 @@ def test_edit_line_status_done_to_done_unchanged():
     assert (edit('- [x] call Sam 📅 2026-09-22', status='x')
             == '- [x] call Sam 📅 2026-09-22')
     assert (edit('- [X] call Sam 📅 2026-09-22', status='x')
-            == '- [x] call Sam 📅 2026-09-22')
+            == '- [X] call Sam 📅 2026-09-22')
+
+
+def test_edit_line_status_uppercase_x_writes_lowercase():
+    """--status X on an open task writes lowercase x, not uppercase."""
+    assert (edit('- [ ] call Sam 📅 2026-09-22', status='X')
+            == '- [x] call Sam 📅 2026-09-22 ✅ 2026-09-25')
+
+
+def test_edit_line_status_x_on_uppercase_X_preserves_case():
+    """--status x on a task already [X] keeps the uppercase X."""
+    assert (edit('- [X] call Sam 📅 2026-09-22', status='x')
+            == '- [X] call Sam 📅 2026-09-22')
+    assert (edit('- [X] call Sam 📅 2026-09-22', status='X')
+            == '- [X] call Sam 📅 2026-09-22')
 
 
 def test_edit_line_status_cancel_removes_completed():
@@ -586,7 +600,7 @@ def test_task_update_recur_keeps_tags_and_indentation(tmp_path):
     result = update(str(path), 1, line, status='X', today=TODAY)
     assert result.created == '    * [ ] #home mow 🔁 every weekday 📅 2026-09-28'
     assert path.read_text().splitlines()[1] == (
-        '    * [X] #home mow 🔁 every weekday 📅 2026-09-25 ✅ 2026-09-25')
+        '    * [x] #home mow 🔁 every weekday 📅 2026-09-25 ✅ 2026-09-25')
 
 
 def test_task_update_recur_crlf_file(tmp_path):

@@ -266,14 +266,28 @@ def _set_text(text: str, value: str) -> str:
 
 def _set_status(text: str, status: str, no_completed: bool, today: date) -> str:
     checkbox = tasks.CHECKBOX_PATTERN.match(text)
-    was_done = checkbox.group(1) in DONE_CHARS
+    old_status = checkbox.group(1)
+    was_done = old_status in DONE_CHARS
     completing = status in DONE_CHARS and not was_done
     recurring = completing and _is_recurring(text)
     if recurring and no_completed:
         raise TaskUpdateError(
             "--no-completed can't be used on a recurring task: "
             "its ✅ date records the completion")
-    text = text[:checkbox.start(1)] + status + text[checkbox.end(1):]
+
+    # Determine the status character to write
+    if status in DONE_CHARS:
+        if was_done:
+            # Already done - keep the original case
+            status_to_write = old_status
+        else:
+            # Not done - write lowercase x
+            status_to_write = 'x'
+    else:
+        # Not a done status - write as given
+        status_to_write = status
+
+    text = text[:checkbox.start(1)] + status_to_write + text[checkbox.end(1):]
 
     if status not in DONE_CHARS:
         return _remove_markers(text, _COMPLETED_MARKER)

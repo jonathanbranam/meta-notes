@@ -97,3 +97,16 @@ When `task update --status` changes a task's status character, or `task replace`
 *Verification*: **non-executable**
 - **WHEN** a subtask's only subtask is marked done
 - **THEN** the subtask SHALL become `x` and its parent SHALL be set from it in the same write
+
+### Requirement: Writing the done status character  {#r-1a2c}
+When the CLI writes a done status character (`x` or `X`), it SHALL preserve case to avoid unnecessary diffs: if a task is already marked done (with `x` or `X`), setting it done again SHALL keep the original character; if a task is not done, marking it done with `--status x` or `--status X` SHALL write lowercase `x`. This applies to `task update --status` and the partial status characters computed for ancestors (e.g. when all subtasks are done, the parent gets `x`, but stays `X` if it was already `X`).
+
+#### Scenario: Uppercase X on open task writes lowercase  {#s-1a2b}
+*Verification*: **non-executable**
+- **WHEN** an open task receives `--status X`
+- **THEN** the status character written SHALL be lowercase `x`, not uppercase `X`
+
+#### Scenario: Done status preserves case  {#s-3c4d}
+*Verification*: **non-executable**
+- **WHEN** a task already marked done as `[X]` receives `--status x` or `--status X`
+- **THEN** the status character SHALL remain uppercase `X`

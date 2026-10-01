@@ -830,9 +830,12 @@ Commands ~
     Marking a task done (`x` or `X`) from another status appends
     `✅ {today}`, unless the line already has a ✅ date, its due date (after
     this call's `--due`) is today, or `--no-completed` is given; queries use
-    the due date for a completed task without ✅. Setting a done task done
-    again changes nothing. Any other status, including `-` (canceled) and
-    `>` (rescheduled), removes every ✅ date: the task wasn't done.
+    the due date for a completed task without ✅. When marking a task done,
+    the CLI always writes lowercase `x` unless the task is already marked done,
+    in which case it preserves the existing case to avoid unnecessary diffs.
+    Setting a done task done again changes nothing. Any other status, including
+    `-` (canceled) and `>` (rescheduled), removes every ✅ date: the task
+    wasn't done.
 
     Marking a recurring task done (a `🔁` rule and a due or start date, or
     `when done`) always stamps `✅ {today}`, even when due today, and adds
