@@ -6,13 +6,20 @@ import os
 from datetime import date
 
 import find_tasks
-from tasks import Task, task_warnings
+from tasks import Node, Task, task_warnings
+
+
+def node_ref(node: Node, rel: str) -> dict:
+    """A checkbox line as a JSON-ready reference: file, line, text, status."""
+    return {"file": rel, "line": node.line_no, "text": node.text,
+            "status": node.status.value}
 
 
 def task_to_dict(task: Task, root_dir: str, section: str) -> dict:
     """Convert a Task to a JSON-ready dict with a root-relative file path."""
+    rel = os.path.relpath(task.filename, root_dir)
     return {
-        "file": os.path.relpath(task.filename, root_dir),
+        "file": rel,
         "line": task.line_no,
         "text": task.text,
         "status": task.status.value,
@@ -24,6 +31,9 @@ def task_to_dict(task: Task, root_dir: str, section: str) -> dict:
         "completed": task.completed_date.isoformat() if task.completed_date else None,
         "tags": task.tags,
         "section": section,
+        "notes": list(task.notes),
+        "parent": node_ref(task.parent, rel) if task.parent else None,
+        "subtasks": [node_ref(child, rel) for child in task.subtasks],
     }
 
 

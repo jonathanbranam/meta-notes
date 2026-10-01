@@ -1354,3 +1354,78 @@ def test_task_add_warns_without_date(task_note, capsys):
     code, out, _ = run_json(capsys, ['task', 'add', 'project/foo.md', 'x'])
     assert code == 0
     assert len(out['warnings']) == 1
+
+
+# Tests for tasks --json tree fields and task show
+
+TREE_NOTE = (
+    '- [o] main 📅 2026-10-08\n'
+    '  * note on main\n'
+    '  - [x] first\n'
+    '    * note on first\n'
+    '  - [ ] second 📅 2026-10-06\n'
+    '- [ ] other 📅 2026-10-09\n')
+
+
+def test_cli_tasks_json_tree_fields(notes_root, capsys):
+    (notes_root / 'project' / 'foo.md').write_text(TREE_NOTE)
+    code, out, _ = run_json(capsys, ['tasks', '--all', '--folder', 'project',
+                                     '--json'])
+    assert code == 0
+    by_line = {t['line']: t for t in out['tasks']}
+    assert sorted(by_line) == [1, 5, 6]
+    assert by_line[1]['notes'] == ['  * note on main']
+    assert by_line[1]['parent'] is None
+    assert by_line[1]['subtasks'] == [
+        {'file': 'project/foo.md', 'line': 3, 'text': '  - [x] first',
+         'status': 'completed'},
+        {'file': 'project/foo.md', 'line': 5,
+         'text': '  - [ ] second 📅 2026-10-06', 'status': 'incomplete'}]
+    assert by_line[5]['parent']['line'] == 1
+    assert by_line[5]['subtasks'] == []
+    assert by_line[6]['notes'] == []
+
+
+def test_cli_task_show_node_alone(notes_root, capsys):
+    (notes_root / 'project' / 'foo.md').write_text(TREE_NOTE)
+    code, out, _ = run_json(capsys, ['task', 'show', 'project/foo.md:1'])
+    assert code == 0
+    assert out['end_line'] == 2
+    assert out['notes'] == ['  * note on main']
+    assert out['parent'] is None
+    assert 'subtasks' not in out
+
+
+def test_cli_task_show_subtree(notes_root, capsys):
+    (notes_root / 'project' / 'foo.md').write_text(TREE_NOTE)
+    code, out, _ = run_json(capsys, ['task', 'show', 'project/foo.md:1',
+                                     '--tree'])
+    assert code == 0
+    assert out['end_line'] == 5
+    assert [s['line'] for s in out['subtasks']] == [3, 5]
+    assert out['subtasks'][0]['notes'] == ['    * note on first']
+
+
+def test_cli_task_show_subtask_has_parent(notes_root, capsys):
+    (notes_root / 'project' / 'foo.md').write_text(TREE_NOTE)
+    code, out, _ = run_json(capsys, ['task', 'show', 'project/foo.md:3'])
+    assert code == 0
+    assert out['parent']['line'] == 1
+    assert out['end_line'] == 4
+
+
+def test_cli_task_show_text(notes_root, capsys):
+    (notes_root / 'project' / 'foo.md').write_text(TREE_NOTE)
+    code = cli.main(['task', 'show', 'project/foo.md:3', '--tree'])
+    assert code == 0
+    assert capsys.readouterr().out.splitlines() == [
+        'project/foo.md:3-4', '  - [x] first', '    * note on first']
+
+
+@pytest.mark.parametrize('target', ['project/foo.md:2', 'project/foo.md:99',
+                                    'project/foo.md', 'project/none.md:1'])
+def test_cli_task_show_errors(notes_root, capsys, target):
+    (notes_root / 'project' / 'foo.md').write_text(TREE_NOTE)
+    code, out, _ = run_json(capsys, ['task', 'show', target])
+    assert code != 0
+    assert out['ok'] is False

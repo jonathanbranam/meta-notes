@@ -871,6 +871,48 @@ Commands ~
             --expect '- [ ] call Sam 📅 2026-09-22' \
             --text 'call Sam about the quote' --status x
 <
+`meta-notes task show {file}:{line} [--tree]`    *meta-notes-cli-task-show*
+    Read one task: the checkbox line at {file}:{line}, with its notes
+    (|meta-notes-task-tree|). {file} is relative to the notes root (or an
+    absolute path inside it), and the target is split at its last `:`.
+    Any checkbox line works, dated or not, including a subtask. A line that
+    isn't a checkbox, a missing file, or a line out of range is an error.
+    Nothing is written.
+
+    --tree              Read the whole subtree: every subtask, with its
+                        notes and subtasks, to any depth.
+
+    The output is `{file}:{first}-{last}` and then those lines as written.
+    With `--json`: `file`, `line`, `end_line` (the last line read), `text`,
+    `status`, `notes`, and `parent` (null, or `file`, `line`, `text` and
+    `status` of the checkbox line it is nested under). With `--tree`,
+    also `subtasks`, each with the same fields (without `parent`),
+    nested.
+
+    Example: >
+        meta-notes task show project/foo.md:3
+        meta-notes task show project/foo.md:3 --tree --json
+<
+                                                *meta-notes-task-tree*
+    A task is a checkbox line plus its notes: the indented lines under it
+    that aren't checkbox lines, up to the next line indented no deeper
+    than the task. A deeper line belongs to the nearest checkbox line
+    above it with a smaller indent, so a subtask's notes are its own. A
+    subtask is a checkbox line indented under another, to any depth; notes
+    may come after the subtasks. A blank line ends every task before it. >
+        - [o] main task 📅 2026-10-08
+          * a note on the main task
+          - [x] first subtask
+            * a note on the first subtask
+          - [ ] second subtask 📅 2026-10-06
+<
+    Dates aren't inherited: each line keeps its own, and queries match
+    each line alone. `meta-notes tasks --json` adds `notes` (the note
+    lines), `parent` and `subtasks` (direct subtasks) to every task, with
+    `file`, `line`, `text` and `status` for each of those, whether or not
+    they are tasks themselves. The listed tasks and their order don't
+    change.
+
 `meta-notes task add {file} {text} [options]`     *meta-notes-cli-task-add*
     Add an open task line, `- [ ] {text}` and its markers, to {file}, an
     existing note (relative to the notes root, or an absolute path inside

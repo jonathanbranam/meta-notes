@@ -83,6 +83,19 @@ A project's tasks are every task in its note or folder, plus every task
 anywhere carrying its tag. `meta-notes projects` lists projects with their
 last review and warnings.
 
+## Tasks with notes and subtasks
+
+A task is its checkbox line plus its **notes**: the indented lines under it
+that aren't checkboxes, up to the next line indented no deeper. A
+**subtask** is a checkbox line indented under another, to any depth, with
+notes of its own (a deeper note belongs to the nearest checkbox above it
+with a smaller indent). Notes may come after the subtasks. A blank line
+ends the task. Dates aren't inherited: each line keeps its own, so a dated
+subtask can sit under an undated parent. `meta-notes tasks --json` gives
+each task's `notes`, `parent` and `subtasks`. To read one task as a whole,
+use `meta-notes task show <file>:<line>` (the line and its notes) or
+`--tree` (every subtask too), and don't parse the indentation yourself.
+
 ## Editing tasks
 
 Never rewrite an existing task line yourself. To change one:

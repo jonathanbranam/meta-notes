@@ -57,6 +57,79 @@ _RECURRENCE_MARKER_PATTERN = re.compile(
 CHECKBOX_PATTERN = re.compile(r'^\s*[-*+]\s+\[(.)\]')
 
 
+@dataclass(eq=False)
+class Node:
+    """A checkbox line in the outline of a note, with its notes and subtasks.
+
+    Every checkbox line is a node, dated or not. notes are the lines under
+    it that aren't checkbox lines, indented deeper than it, up to the next
+    line indented no deeper (a deeper note belongs to the nearest checkbox
+    above it with a smaller indent). children are the checkbox lines
+    indented under it. end_line is the last line of the node and its
+    notes; subtree_end its last line with all its descendants.
+    """
+    line_no: int
+    text: str
+    status_char: str
+    indent: int
+    notes: list[str] = field(default_factory=list)
+    parent: Optional['Node'] = None
+    children: list['Node'] = field(default_factory=list)
+    end_line: int = 0
+    subtree_end: int = 0
+
+    @property
+    def status(self) -> 'TaskStatus':
+        return char_to_status(self.status_char)
+
+
+def _indent_of(line: str) -> int:
+    """The width of a line's leading whitespace, a tab counting to a multiple of 4."""
+    expanded = line.expandtabs(4)
+    return len(expanded) - len(expanded.lstrip())
+
+
+def parse_outline(lines: list[str]) -> list[Node]:
+    """
+    Build the checkbox outline of a note's lines.
+
+    Args:
+        lines: The note's lines (line numbers count from 1).
+
+    Returns:
+        Every checkbox line as a Node, in file order, with parent, children
+        and notes set. A blank line ends the nodes before it, so lines
+        after it belong to none of them.
+    """
+    nodes: list[Node] = []
+    stack: list[Node] = []
+    for line_no, raw in enumerate(lines, 1):
+        text = raw.rstrip()
+        if not text.strip():
+            stack.clear()
+            continue
+        indent = _indent_of(text)
+        while stack and stack[-1].indent >= indent:
+            stack.pop()
+        match = CHECKBOX_PATTERN.match(text)
+        if match:
+            node = Node(line_no, text, match.group(1), indent,
+                        parent=stack[-1] if stack else None,
+                        end_line=line_no, subtree_end=line_no)
+            if node.parent:
+                node.parent.children.append(node)
+            nodes.append(node)
+            stack.append(node)
+        elif stack:
+            stack[-1].notes.append(text)
+            stack[-1].end_line = line_no
+        else:
+            continue
+        for owner in stack:
+            owner.subtree_end = line_no
+    return nodes
+
+
 class TaskStatus(Enum):
     """Enum representing the status of a task."""
     INCOMPLETE = "incomplete"
@@ -100,6 +173,20 @@ class Task:
     recurrence: Optional[str] = None
     recurs_from_completion: bool = False
     invalid_recurrence: bool = False
+    node: Optional[Node] = field(default=None, repr=False, compare=False)
+
+    @property
+    def notes(self) -> list[str]:
+        """The task's notes (see Node), empty without an outline."""
+        return self.node.notes if self.node else []
+
+    @property
+    def parent(self) -> Optional[Node]:
+        return self.node.parent if self.node else None
+
+    @property
+    def subtasks(self) -> list[Node]:
+        return self.node.children if self.node else []
 
     @property
     def effective_due(self) -> Optional[date]:
@@ -291,34 +378,33 @@ def find_tasks_in_file(filepath: str) -> list[Task]:
 
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
-            for line_num, line in enumerate(f, 1):
-                match = CHECKBOX_PATTERN.match(line)
-                if not match:
-                    continue
-                text = line.rstrip()
-                if not is_task(text):
-                    continue
-                start_date, due_date, completed_date = _parse_task_dates(text)
-                has_due_emoji = _has_due_emoji(text)
-                due_time, invalid_time = parse_due_time(text)
-                recurrence, from_completion, invalid_rule = parse_recurrence(
-                    text, due_date, start_date)
-                tasks.append(Task(
-                    text=text,
-                    status=char_to_status(match.group(1)),
-                    filename=filepath,
-                    line_no=line_num,
-                    start_date=start_date,
-                    due_date=due_date,
-                    completed_date=completed_date,
-                    undated=has_due_emoji and due_date is None,
-                    tags=parse_tags(text),
-                    due_time=due_time,
-                    invalid_time=invalid_time,
-                    recurrence=recurrence,
-                    recurs_from_completion=from_completion,
-                    invalid_recurrence=invalid_rule,
-                ))
+            lines = f.readlines()
+        for node in parse_outline(lines):
+            line_num, text = node.line_no, node.text
+            if not is_task(text):
+                continue
+            start_date, due_date, completed_date = _parse_task_dates(text)
+            has_due_emoji = _has_due_emoji(text)
+            due_time, invalid_time = parse_due_time(text)
+            recurrence, from_completion, invalid_rule = parse_recurrence(
+                text, due_date, start_date)
+            tasks.append(Task(
+                text=text,
+                status=node.status,
+                filename=filepath,
+                line_no=line_num,
+                start_date=start_date,
+                due_date=due_date,
+                completed_date=completed_date,
+                undated=has_due_emoji and due_date is None,
+                tags=parse_tags(text),
+                due_time=due_time,
+                invalid_time=invalid_time,
+                recurrence=recurrence,
+                recurs_from_completion=from_completion,
+                invalid_recurrence=invalid_rule,
+                node=node,
+            ))
     except (IOError, UnicodeDecodeError) as e:
         print(f"Warning: Could not read {filepath}: {e}", file=sys.stderr)
 
