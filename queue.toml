@@ -1,17 +1,2 @@
 [[tier]]
-tasks = [
-    "mn-a8aa",
-    "mn-d904",
-    "mn-363f",
-    "mn-1005",
-    "mn-8b74",
-]
-
-[[tier]]
-tasks = ["mn-5703"]
-
-[[tier]]
-tasks = ["mn-4efa"]
-
-[[tier]]
-tasks = ["mn-4e3e"]
+tasks = ["mn-ee94"]
