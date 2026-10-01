@@ -45,6 +45,10 @@ Time log entries go under the daily note's `### Log`, times as `HH:MM`:
 
 <!-- generated: tag-groups -->
 
+Change log entries with `meta-notes time-log append` (add one at the end)
+and `meta-notes time-log update` (replace whole entries), not by editing
+the note; they refuse when the log no longer matches what you expect.
+
 The `### Time Block` table has 15-minute rows: Plan is what was planned,
 Actual a short summary of what happened. Fill cells with `meta-notes
 time-block update <file> --time 9:30am --plan 'text'` (or `--actual`), not

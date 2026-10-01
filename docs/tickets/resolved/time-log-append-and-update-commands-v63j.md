@@ -4,7 +4,7 @@ title: time-log append and time-log update, race-safe commands for Time Log entr
 opened: 2026-10-01
 repos: [meta-notes]
 changes: []
-specs: []
+specs: [time-log-edit]
 needs: []
 see: [time-block-update-command-gmqp, time-report-work-split-disagrees-286n]
 ---

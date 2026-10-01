@@ -92,7 +92,10 @@ Run `meta-notes time --json` for today. Look at `entries`:
 Ask about each in one question: what happened, and which project or work
 item it belongs to. Update the `### Log` in TODAY_NOTE from the answers:
 add an entry for a gap (text, tag, `* start:`, `* end:`), or add a tag or
-link to an unclear entry. Log entries aren't tasks; edit them directly.
+link to an unclear entry. Never edit the log by hand: change it with
+`meta-notes time-log update <file> --expect <entries> --text <entries>`
+(a gap is filled by replacing the entries around it), or add an entry at
+the end with `meta-notes time-log append`; see `meta-notes conventions`.
 A rough log beats none; accept "don't know".
 
 ### 5. Follow up
