@@ -1527,7 +1527,8 @@ prompt. It saves only the current buffer, in normal mode.
 
 Autoreload: no check reloads a buffer while you are in insert mode; the
 next one after you leave it does. When a buffer reloads, a message says
-`meta-notes: reloaded <file> (changed on disk; u to undo)`. A reload is
+`meta-notes: reloaded <file> (changed on disk; u to undo)`, also for the
+timer's and watcher's silent checks. A reload is
 undoable: press `u`. That relies on 'undoreload' (Vim's default, 10000
 lines); a longer note can't be undone, and the plugin doesn't change it.
 

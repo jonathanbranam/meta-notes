@@ -18,7 +18,7 @@ With `g:meta_notes_autoreload` on, the plugin SHALL set `autoread` buffer-locall
 #### Scenario: Unmodified buffer reloads  {#s-5e9b}
 *Verification*: **non-executable**
 - **WHEN** a notes buffer has no unsaved edits and its file changes on disk
-- **THEN** the buffer SHALL reload and a message SHALL say it was reloaded and that `u` undoes it, even when Vim skips `FileChangedShell` because `autoread` is set
+- **THEN** the buffer SHALL reload and a message SHALL say it was reloaded and that `u` undoes it, even when Vim skips `FileChangedShell` because `autoread` is set, and even when the reload happens inside a silenced `:checktime` (the plugin SHALL show the message from a timer, since `silent!` swallows `:echomsg`)
 
 #### Scenario: Timer at startup  {#s-108a}
 *Verification*: **non-executable**

@@ -133,20 +133,26 @@ Execute (Opening a notes buffer starts the checktime timer):
   call meta_notes#autosave#StopWatchers()
   unlet g:meta_notes_checktime_interval
 
-Execute (The reload notice shows when FileChangedShell did not run):
-  " With 'autoread' on an unmodified buffer v:fcs_reason isn't 'changed'
-  " (it's empty, or left over from an earlier event); the notice shows anyway
+Execute (The reload notice shows after a real autoreload inside silent!):
+  " The path the timer takes: an outside edit, then silent! checktime.
+  " (Headless, this fires FileChangedShellPost too, but a real Vim's hit-enter
+  " prompt and focus events can't be reproduced here; see the tmux repro in
+  " the ticket.)
+  let g:meta_notes_watch = 0
+  MetaNotesAutoreload on
   execute 'edit' g:test_dir . '/notes/project/a.md'
-  Assert v:fcs_reason !=# 'changed'
-  redir => g:out
-    silent messages clear
-  redir END
-  call meta_notes#autosave#OnChangedShellPost()
+  call writefile(['one', 'two', 'three'], g:test_dir . '/notes/project/a.md')
+  call system('touch -d "+10 seconds" ' . shellescape(g:test_dir . '/notes/project/a.md'))
+  silent messages clear
+  silent! checktime
+  AssertEqual ['one', 'two', 'three'], getline(1, '$')
+  sleep 100m
   redir => g:out
     silent messages
   redir END
   Assert g:out =~# 'meta-notes: reloaded a.md (changed on disk; u to undo)'
   unlet g:out
+  MetaNotesAutoreload off
   bwipeout!
 
 Execute (Status reports the mechanisms):
