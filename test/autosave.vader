@@ -120,6 +120,35 @@ Execute (FileChangedShell keeps a modified notes buffer and flags the conflict):
   AssertEqual 1, b:meta_notes_conflict
   bwipeout!
 
+Execute (Opening a notes buffer starts the checktime timer):
+  call meta_notes#autosave#StopWatchers()
+  let g:meta_notes_checktime_interval = 1000
+  Assert join(meta_notes#autosave#StatusLines(), "\n") =~# 'not running'
+  execute 'edit' g:test_dir . '/notes/project/a.md'
+  Assert join(meta_notes#autosave#StatusLines(), "\n") !~# 'not running'
+  AssertEqual 1, len(timer_info())
+  call meta_notes#autosave#Attach(bufnr('%'), 0)
+  AssertEqual 1, len(timer_info())
+  bwipeout!
+  call meta_notes#autosave#StopWatchers()
+  unlet g:meta_notes_checktime_interval
+
+Execute (The reload notice shows when FileChangedShell did not run):
+  " With 'autoread' on an unmodified buffer v:fcs_reason isn't 'changed'
+  " (it's empty, or left over from an earlier event); the notice shows anyway
+  execute 'edit' g:test_dir . '/notes/project/a.md'
+  Assert v:fcs_reason !=# 'changed'
+  redir => g:out
+    silent messages clear
+  redir END
+  call meta_notes#autosave#OnChangedShellPost()
+  redir => g:out
+    silent messages
+  redir END
+  Assert g:out =~# 'meta-notes: reloaded a.md (changed on disk; u to undo)'
+  unlet g:out
+  bwipeout!
+
 Execute (Status reports the mechanisms):
   let g:meta_notes_checktime_interval = 5000
   let g:meta_notes_autoreload = 1

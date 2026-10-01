@@ -101,6 +101,7 @@ function! meta_notes#autosave#Attach(buf, refresh_stamp) abort
   if s:Autoreload()
     call setbufvar(a:buf, '&autoread', 1)
     call s:StartWatcher(getbufvar(a:buf, 'meta_notes_root'))
+    call s:StartTimer()
   else
     if bufnr('%') == a:buf
       " Back to the global value
@@ -258,9 +259,11 @@ function! s:ConflictLater(buf, timer) abort
   call s:Conflict(a:buf)
 endfunction
 
-" FileChangedShellPost: Vim reloaded the buffer
+" FileChangedShellPost: Vim reloaded the buffer. With 'autoread' and an
+" unmodified buffer Vim skips FileChangedShell, so v:fcs_reason is empty
+" here; only mode and time changes (no reload) are left out.
 function! meta_notes#autosave#OnChangedShellPost() abort
-  if v:fcs_reason ==# 'changed' && s:Autoreload()
+  if v:fcs_reason !~# '^\(mode\|time\)$' && s:Autoreload()
     call s:Notice(bufnr('%'))
   endif
 endfunction

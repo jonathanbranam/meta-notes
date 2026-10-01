@@ -13,12 +13,17 @@ The plugin SHALL do nothing for autosave and autoreload unless `g:meta_notes_aut
 - **THEN** the plugin SHALL NOT set `autoread` on it, save it, or check it for changes
 
 ### Requirement: Autoreload notices changes  {#r-8c8f}
-With `g:meta_notes_autoreload` on, the plugin SHALL set `autoread` buffer-locally on notes buffers and run `:checktime` on `FocusGained`, from a file-watcher job (`fswatch` or `inotifywait`, one per notes root, excluding `.git/`, `.venv/` and `.meta-notes-cache/`, stopped when Vim exits) when `g:meta_notes_watch` is on, and every `g:meta_notes_checktime_interval` ms when that is above 0. When no watcher binary exists it SHALL say so once. It SHALL NOT reload a buffer in insert mode; the next check after leaving insert mode SHALL.
+With `g:meta_notes_autoreload` on, the plugin SHALL set `autoread` buffer-locally on notes buffers and run `:checktime` on `FocusGained`, from a file-watcher job (`fswatch` or `inotifywait`, one per notes root, excluding `.git/`, `.venv/` and `.meta-notes-cache/`, stopped when Vim exits) when `g:meta_notes_watch` is on, and every `g:meta_notes_checktime_interval` ms when that is above 0, started when the first notes buffer is attached (not only on a runtime toggle). When no watcher binary exists it SHALL say so once. It SHALL NOT reload a buffer in insert mode; the next check after leaving insert mode SHALL.
 
 #### Scenario: Unmodified buffer reloads  {#s-5e9b}
 *Verification*: **non-executable**
 - **WHEN** a notes buffer has no unsaved edits and its file changes on disk
-- **THEN** the buffer SHALL reload and a message SHALL say it was reloaded and that `u` undoes it
+- **THEN** the buffer SHALL reload and a message SHALL say it was reloaded and that `u` undoes it, even when Vim skips `FileChangedShell` because `autoread` is set
+
+#### Scenario: Timer at startup  {#s-108a}
+*Verification*: **non-executable**
+- **WHEN** autoreload is on, `g:meta_notes_checktime_interval` is above 0, and a notes buffer is opened
+- **THEN** the checktime timer SHALL be running, whether or not the watcher is on
 
 ### Requirement: Autosave never overwrites the disk  {#r-cbc5}
 With `g:meta_notes_autosave` on, the plugin SHALL, after `g:meta_notes_autosave_delay` ms without a further change following `TextChanged` or `InsertLeave`, write the notes buffer only when the file on disk is unchanged since Vim read or wrote it, and SHALL NOT force a write or trigger Vim's changed-since-reading prompt.
