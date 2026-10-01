@@ -131,8 +131,10 @@ Line numbers from one query stay valid across `task update` calls on that
 query's lines, so a batch of edits can use one query. The exception is
 completing a recurring task, which adds a line above it.
 
-`--status x` adds `✅ <today>` unless the line already has
-`✅`, its due date is today, or `--no-completed` is given.
+`--status x` (or `X`) adds `✅ <today>` unless the line already has
+`✅`, its due date is today, or `--no-completed` is given; the CLI always
+writes lowercase `x` unless the task is already done, in which case it
+preserves the existing case to avoid unnecessary diffs.
 Recurring lines always get `✅ <today>`. Any other status
 removes `✅`. Use `--add-tag later` to defer, `--status -`
 to cancel.
