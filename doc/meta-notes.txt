@@ -19,6 +19,7 @@ CONTENTS                                        *meta-notes-contents*
   8. Wiki Links ................ |meta-notes-wiki-links|
   9. Command Line .............. |meta-notes-cli|
  10. Planning Skills ........... |meta-notes-skills|
+ 11. Autosave and Autoreload ... |meta-notes-autosave|
 
 ==============================================================================
 1. INTRODUCTION                                 *meta-notes-intro*
@@ -1436,6 +1437,110 @@ dates, so task queries don't list them. The daily template also has a
 `## Follow Up` section, and the weekly template `## Review` and `## Plan`.
 Notes created before these were added have no markers; they read as not
 done. |meta-notes-cli-ceremony| reports them.
+
+==============================================================================
+11. AUTOSAVE AND AUTORELOAD                     *meta-notes-autosave*
+
+Keeps Vim open on the notes root all day while agents edit the same notes
+through the CLI: Vim saves your edits quickly, picks up other writers' edits
+quickly, and never overwrites either. Everything is off by default and
+applies only to buffers whose file is under a notes root (the nearest
+directory with a `.meta-notes` file, found the way the CLI does; see
+|meta-notes-cli-root|). Other buffers are never touched. Vim 8 or newer;
+Neovim isn't supported.
+
+Settings ~
+                                                *g:meta_notes_autosave*
+g:meta_notes_autosave           (default 0)
+    Save notes buffers automatically.
+                                                *g:meta_notes_autosave_delay*
+g:meta_notes_autosave_delay     (default 1000)
+    Debounce in ms. After `TextChanged` or `InsertLeave`, Vim waits this
+    long without another change, then saves.
+                                                *g:meta_notes_autoreload*
+g:meta_notes_autoreload         (default 0)
+    Set 'autoread' on notes buffers and check them for changes made
+    outside Vim: on |FocusGained|, by the file watcher, and by the timer.
+                                                *g:meta_notes_watch*
+g:meta_notes_watch              (default 1)
+    With autoreload on, run a file watcher job: `fswatch` (macOS) or
+    `inotifywait` (Linux). One job per notes root, started with its first
+    notes buffer and stopped when Vim exits. It watches the whole root
+    except `.git/`, `.venv/` and `.meta-notes-cache/`, and checks a buffer
+    when its file changes. If neither binary is found, a message says so
+    once and the timer (below) is the only polling. Install fswatch with
+    `brew install fswatch`; inotifywait comes with `inotify-tools`.
+                                                *g:meta_notes_checktime_interval*
+g:meta_notes_checktime_interval (default 0)
+    With autoreload on, run |:checktime| on loaded notes buffers every this
+    many ms. 0 turns the timer off. It runs alongside the watcher; use it
+    alone, or as the fallback when the watcher isn't available.
+                                                *g:meta_notes_conflict_diff*
+g:meta_notes_conflict_diff      (default 1)
+    On a conflict, open a diff against the file on disk. With 0 only a
+    message is shown.
+
+Settings are read when used; after changing them in a running Vim, run
+`:MetaNotesAutoreload on` to restart the watcher and timer.
+
+Commands ~
+                                                *:MetaNotesAutosave*
+:MetaNotesAutosave [on|off|toggle]
+    Turn autosave on or off, or toggle it (the default). Sets
+    |g:meta_notes_autosave| and shows the state.
+                                                *:MetaNotesAutoreload*
+:MetaNotesAutoreload [on|off|toggle]
+    The same for autoreload: |g:meta_notes_autoreload|. Also re-reads the
+    watcher and timer settings and restarts them.
+                                                *:MetaNotesAutoStatus*
+:MetaNotesAutoStatus
+    Show autosave (and its delay), autoreload, the watcher binary found and
+    whether it's running, the timer interval and the conflict diff setting.
+
+Recommended .vimrc ~
+
+A fast machine: watcher plus a slow timer as a safety net >
+    let g:meta_notes_autosave = 1
+    let g:meta_notes_autoreload = 1
+    let g:meta_notes_checktime_interval = 5000
+<
+A slow or busy machine: no polling and a longer debounce >
+    let g:meta_notes_autosave = 1
+    let g:meta_notes_autosave_delay = 3000
+    let g:meta_notes_autoreload = 1
+<
+No watcher, timer only >
+    let g:meta_notes_autoreload = 1
+    let g:meta_notes_watch = 0
+    let g:meta_notes_checktime_interval = 3000
+<
+Inside tmux, Vim only gets |FocusGained| if tmux passes focus events on.
+Add to `~/.tmux.conf`: >
+    set -g focus-events on
+<
+How it works ~
+
+Autosave: after the debounce Vim runs |:checktime| on the buffer, then
+`:update` only if the file on disk is unchanged since Vim read or wrote it.
+It never forces a write and never triggers Vim's "changed since reading it"
+prompt. It saves only the current buffer, in normal mode.
+
+Autoreload: no check reloads a buffer while you are in insert mode; the
+next one after you leave it does. When a buffer reloads, a message says
+`meta-notes: reloaded <file> (changed on disk; u to undo)`. A reload is
+undoable: press `u`. That relies on 'undoreload' (Vim's default, 10000
+lines); a longer note can't be undone, and the plugin doesn't change it.
+
+Conflicts ~
+                                                *meta-notes-conflict*
+When a buffer has unsaved edits and its file changes on disk, the plugin
+keeps your buffer, doesn't reload, pauses autosave for that buffer, and
+says so. With |g:meta_notes_conflict_diff| on, a scratch split
+`meta-notes://disk/<file>` opens beside it in diff mode, showing the file as
+it is on disk. Merge what you need (|do|, |dp|) and write with |:w|; Vim
+may ask whether to overwrite, which is your decision. A successful write
+resumes autosave and closes the diff. Closing the split yourself just ends
+diff mode. A file deleted on disk gives a warning; the buffer is kept.
 
 ==============================================================================
 vim:ft=help:tw=78:ts=4:et:

@@ -14,7 +14,7 @@ exception for commands that need a pinned library, are in
 
 - `plugin/meta_notes.vim`: the auto-loaded entry point; defines commands and
   `<localleader>` mappings (`.bridle/rules/key-mappings.md`).
-- `autoload/meta_notes/`: on-demand Vimscript modules (cli, file_ops, notes,
+- `autoload/meta_notes/`: on-demand Vimscript modules (autosave, cli, file_ops, notes,
   template, time_tracking).
 - `after/syntax/`: markdown syntax extensions.
 - `bin/meta-notes`: the CLI, which runs the `scripts/meta_notes/` package.

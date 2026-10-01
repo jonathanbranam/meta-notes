@@ -69,6 +69,7 @@ meta-notes/
 │   └── meta_notes.vim
 ├── autoload/            # Functions loaded on-demand
 │   └── meta_notes/
+│       ├── autosave.vim     # Autosave and autoreload of notes buffers
 │       ├── cli.vim          # Runs bin/meta-notes and decodes its JSON
 │       ├── file_ops.vim     # File operations (archive, rename) via the CLI
 │       ├── notes.vim        # Note navigation; opens notes via the CLI
@@ -327,6 +328,24 @@ re-run it after updating the plugin to link new ones. Each starts from
 Daily notes carry `- [ ] plan complete` and `- [ ] shutdown complete`,
 weekly notes `- [ ] review complete` and `- [ ] plan complete`. The skills
 check them, and `meta-notes ceremony status` reports them.
+
+## Autosave and Autoreload
+
+Opt-in, for notes buffers only: Vim can save your edits after a short pause
+and pick up changes agents make through the CLI, without overwriting either.
+A conflict keeps your buffer, pauses autosave and opens a diff against the
+file on disk.
+
+```vim
+let g:meta_notes_autosave = 1
+let g:meta_notes_autoreload = 1
+let g:meta_notes_checktime_interval = 5000   " optional timer, ms
+```
+
+Changes are noticed on focus (tmux needs `set -g focus-events on`), by an
+`fswatch` or `inotifywait` job, and by the optional timer.
+`:MetaNotesAutosave`, `:MetaNotesAutoreload` and `:MetaNotesAutoStatus`
+control it at runtime. See `:help meta-notes-autosave`.
 
 ## Key Mappings
 
