@@ -34,3 +34,4 @@
 {"actor":"human","at":"2026-10-01T22:47:52.672Z","from":"","task":"mn-68e3","to":"open"}
 {"actor":"external:orchestrator","at":"2026-10-01T22:47:56.495320400Z","from":"open","task":"mn-68e3","to":"planned"}
 {"actor":"external:orchestrator","at":"2026-10-01T22:47:56.751673662Z","queue":"reprioritized"}
+{"actor":"agent:manager","at":"2026-10-01T22:50:23.643282284Z","from":"planned","task":"mn-68e3","to":"integrated"}
