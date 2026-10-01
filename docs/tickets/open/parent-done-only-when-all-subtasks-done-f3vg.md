@@ -28,10 +28,11 @@ For an ancestor with `subtasks` direct subtasks, of which `checked` are
 `x` or `X`:
 
 - none checked: ` `
-- all checked: `X` (an ancestor already `x` stays `x`, as now)
+- all checked: `x`, lowercase (the human, 2026-10-01: "I prefer lowercase
+  \"x\""); an ancestor already `X` stays `X`
 - otherwise `.`, `o` or `O` by thirds: `.` up to 1/3, `o` up to 2/3, `O`
   above 2/3 (the character at `ceil(3 * checked / subtasks)` of `.oO`,
-  1-based). Never `X`.
+  1-based). Never `x` or `X`.
 
 Everything else in the task-tree spec stays: only the status character
 changes, nested ancestors nearest first, `ancestors` in `--json`.
