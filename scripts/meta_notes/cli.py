@@ -25,7 +25,7 @@ from recurrence import parse_rule
 from tags import canonical_tag
 from meta_notes import (__version__, brief, calendar, ceremony, changes,
                         checkin, config, conventions, init, note, ops, prime,
-                        projects, query, task_update, time)
+                        projects, query, task_update, time, time_block)
 from meta_notes.root import SENTINEL, find_root
 
 
@@ -455,6 +455,27 @@ def cmd_checkin_actual(args, root: str) -> Output:
     return Output(data, text)
 
 
+def cmd_time_block_update(args, root: str) -> Output:
+    path = to_root_relative(args.file, root)
+    try:
+        first = checkin.parse_time(args.time)
+        last = checkin.parse_time(args.through) if args.through else first
+        result = time_block.update(path, first, last, args.plan, args.actual,
+                                   args.expect, args.create)
+    except time_block.TimeBlockError as e:
+        if e.current is None:
+            raise CliError(str(e))
+        return Output({"file": path, "current": e.current}, error=str(e))
+    except ValueError as e:
+        raise CliError(str(e))
+    data = {"file": path, "written": result.written,
+            "created": result.created}
+    text = [f"{path}: wrote {', '.join(result.written)}"]
+    if result.created:
+        text.append(f"created: {', '.join(result.created)}")
+    return Output(data, text)
+
+
 def cmd_projects(args, root: str) -> Output:
     lines, entries = projects.run(".", warnings_only=args.warnings)
     return Output({"projects": entries}, lines)
@@ -811,6 +832,28 @@ def build_parser() -> argparse.ArgumentParser:
     k.add_argument("--date", type=_day_value, metavar="DAY",
                    help="YYYY-MM-DD (default: today)")
     k.set_defaults(handler=cmd_checkin_actual)
+
+    p = sub.add_parser("time-block", parents=[common],
+                       help="edit the Time Block's Plan and Actual cells")
+    kinds = p.add_subparsers(dest="kind", metavar="KIND", parser_class=_Parser)
+    kinds.required = True
+    k = kinds.add_parser("update", parents=[common],
+                         help="write Plan and/or Actual cells of rows found "
+                              "by time")
+    k.add_argument("file", metavar="FILE",
+                   help="the note, relative to the notes root")
+    k.add_argument("--time", required=True, type=_clock_value, metavar="TIME",
+                   help="the row, HH:MM or 9:30am")
+    k.add_argument("--through", type=_clock_value, metavar="TIME",
+                   help="also cover the rows through this one")
+    k.add_argument("--plan", metavar="TEXT", help="the Plan cell text")
+    k.add_argument("--actual", metavar="TEXT", help="the Actual cell text")
+    k.add_argument("--expect", metavar="TEXT",
+                   help="the text a non-empty cell must hold to be "
+                        "overwritten (default: cells must be empty)")
+    k.add_argument("--create", action="store_true",
+                   help="add the row when it's missing (not with --through)")
+    p.set_defaults(handler=cmd_time_block_update)
 
     p = sub.add_parser("projects", parents=[common],
                        help="list projects with status, latest date, last "
