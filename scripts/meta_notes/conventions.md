@@ -93,7 +93,9 @@ Never rewrite an existing task line yourself. To change one:
 2. Edit it with
    `meta-notes task update <file>:<line> --expect <text> <options>`,
    passing `text` exactly as `--expect`. Options: `--status <c>`,
-   `--add-tag <tag>`, `--remove-tag <tag>`, `--due <YYYY-MM-DD|undated|none>`,
+   `--text <words>` (replaces the task's words, keeping its dates; tags
+   among the old words go too), `--add-tag <tag>`, `--remove-tag <tag>`,
+   `--due <YYYY-MM-DD|undated|none>`,
    `--start <YYYY-MM-DD|none>`, `--time <HH:MM|none>`,
    `--recur <rule|none>`, `--no-recur`. Combine them in one call.
 3. If the command fails because the line changed, re-run the query and

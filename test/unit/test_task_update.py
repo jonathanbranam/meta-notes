@@ -769,3 +769,66 @@ def test_add_errors_write_nothing(tmp_path, kwargs):
 def test_add_missing_file(tmp_path):
     with pytest.raises(TaskUpdateError, match='No such file'):
         task_update.add(str(tmp_path / 'no.md'), 'x', due='2026-10-01')
+
+
+# Tests for --text
+
+def _text_file(tmp_path, line):
+    path = tmp_path / 'n.md'
+    path.write_text(line + '\n', encoding='utf-8')
+    return path
+
+
+def test_task_update_text_only(tmp_path):
+    path = _text_file(tmp_path, '  - [ ] call Sam #work 📅 2026-10-01')
+    update(str(path), 1, '  - [ ] call Sam #work 📅 2026-10-01',
+           new_text='call Sam about the quote')
+    assert path.read_text(encoding='utf-8') == (
+        '  - [ ] call Sam about the quote 📅 2026-10-01\n')
+
+
+def test_task_update_text_keeps_dates_and_recurrence(tmp_path):
+    old = '- [ ] change filter 🔁 every 3 months 🛫 2026-06-01 ⏰ 09:00 📅 2026-07-01'
+    path = _text_file(tmp_path, old)
+    update(str(path), 1, old, new_text='replace furnace filter')
+    assert path.read_text(encoding='utf-8') == (
+        '- [ ] replace furnace filter 🔁 every 3 months 🛫 2026-06-01 '
+        '⏰ 09:00 📅 2026-07-01\n')
+
+
+def test_task_update_text_without_dates(tmp_path):
+    path = _text_file(tmp_path, '- [ ] old words')
+    update(str(path), 1, '- [ ] old words', new_text='new words')
+    assert path.read_text(encoding='utf-8') == '- [ ] new words\n'
+
+
+def test_task_update_text_with_status_on_recurring(tmp_path):
+    old = '- [ ] stretch 🔁 every day 📅 2026-09-25'
+    path = _text_file(tmp_path, old)
+    result = update(str(path), 1, old, new_text='stretch hard', status='x',
+                    today=date(2026, 9, 25))
+    assert result.created == '- [ ] stretch hard 🔁 every day 📅 2026-09-26'
+    assert path.read_text(encoding='utf-8').splitlines()[1] == (
+        '- [x] stretch hard 🔁 every day 📅 2026-09-25 ✅ 2026-09-25')
+
+
+def test_task_update_text_with_add_tag(tmp_path):
+    path = _text_file(tmp_path, '- [ ] a #old 📅 2026-10-01')
+    update(str(path), 1, '- [ ] a #old 📅 2026-10-01', new_text='b',
+           add_tags=['old'])
+    assert path.read_text(encoding='utf-8') == '- [ ] b #old 📅 2026-10-01\n'
+
+
+@pytest.mark.parametrize('value', ['', '   ', 'a\nb'])
+def test_task_update_text_rejects_bad_text(tmp_path, value):
+    path = _text_file(tmp_path, '- [ ] a 📅 2026-10-01')
+    with pytest.raises(TaskUpdateError):
+        update(str(path), 1, '- [ ] a 📅 2026-10-01', new_text=value)
+    assert path.read_text(encoding='utf-8') == '- [ ] a 📅 2026-10-01\n'
+
+
+def test_task_update_text_expect_mismatch_writes_nothing(tmp_path):
+    path = _text_file(tmp_path, '- [ ] a 📅 2026-10-01')
+    with pytest.raises(TaskUpdateError):
+        update(str(path), 1, '- [ ] b 📅 2026-10-01', new_text='c')
+    assert path.read_text(encoding='utf-8') == '- [ ] a 📅 2026-10-01\n'

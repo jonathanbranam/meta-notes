@@ -311,6 +311,14 @@ def _recur_value(value: str) -> str:
         "'every week when done', or 'every weekday', or none)")
 
 
+def _text_value(value: str) -> str:
+    """Check a --text value: one non-empty line; return it trimmed."""
+    value = value.strip()
+    if not value or re.search(r"[\r\n]", value):
+        raise argparse.ArgumentTypeError("the text must be one non-empty line")
+    return value
+
+
 def _tag_value(value: str) -> str:
     """Check a tag name, with or without #; return it without #."""
     bare = value.removeprefix("#")
@@ -336,16 +344,17 @@ def cmd_task_update(args, root: str) -> Output:
     if both:
         raise CliError(f"{prog}: tag given to both --add-tag and --remove-tag: "
                        f"{', '.join(sorted(both))}")
-    if (args.status is None and args.due is None and args.start is None
+    if (args.status is None and args.text is None and args.due is None and args.start is None
             and args.time is None and args.recur is None
             and not add_tags and not remove_tags):
-        raise CliError(f"{prog}: give at least one of --status, --add-tag, "
-                       "--remove-tag, --due, --start, --time, or --recur")
+        raise CliError(f"{prog}: give at least one of --status, --text, "
+                       "--add-tag, --remove-tag, --due, --start, --time, "
+                       "or --recur")
 
     try:
         result = task_update.update(
-            path, line_no, args.expect, status=args.status, add_tags=add_tags,
-            remove_tags=remove_tags, due=args.due, start=args.start,
+            path, line_no, args.expect, status=args.status, new_text=args.text,
+            add_tags=add_tags, remove_tags=remove_tags, due=args.due, start=args.start,
             time=args.time, recur=args.recur, no_recur=args.no_recur,
             no_completed=args.no_completed)
     except task_update.TaskUpdateError as e:
@@ -764,7 +773,7 @@ def build_parser() -> argparse.ArgumentParser:
     kinds = p.add_subparsers(dest="kind", metavar="KIND", parser_class=_Parser)
     kinds.required = True
     k = kinds.add_parser("update", parents=[common],
-                         help="edit one checkbox line's status, tags, and dates")
+                         help="edit one checkbox line's text, status, tags, and dates")
     k.add_argument("target", metavar="FILE:LINE",
                    help="the note, relative to the notes root, and the line "
                         "number (from 1)")
@@ -774,6 +783,9 @@ def build_parser() -> argparse.ArgumentParser:
     k.add_argument("--status", choices=STATUS_CHARS, metavar="CHAR",
                    help="set the status character: ' ', x, X, >, -, ., o, "
                         "or O")
+    k.add_argument("--text", type=_text_value, metavar="TEXT",
+                   help="replace the task's words (tags among them), keeping "
+                        "the checkbox, tags and dates after them")
     k.add_argument("--add-tag", dest="add_tags", action="append",
                    type=_tag_value, metavar="TAG",
                    help="add a tag before the first date (repeatable)")

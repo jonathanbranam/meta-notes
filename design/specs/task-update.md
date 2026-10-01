@@ -296,3 +296,21 @@ A line is recurring when it has a `🔁` rule that `recurrence` supports and a d
 *Verification*: **non-executable**
 - **WHEN** the user runs `--recur 'every other week'`
 - **THEN** the command SHALL exit non-zero with a usage error, and the file SHALL be unchanged
+
+### Requirement: Set the text  {#r-8081}
+`--text <text>` SHALL replace the task's description: everything between the checkbox and the first `🛫`, due, `⏰`, `🔁`, or `✅` date emoji, or to the end of the line when there is none. The indentation, bullet, status, and everything from that emoji on (dates, rule, tags after it) SHALL be kept as they are. Tags inside the old description SHALL be replaced with it; a tag to keep SHALL be in the new text or added with `--add-tag`. The text SHALL be one non-empty line; empty (or blank) text or a line break SHALL be a usage error that writes nothing. The text is applied before the other edits, so it combines with them in one call, and completing a recurring line in the same call inserts a next occurrence with the new text. `--expect` and the one-line write apply as for any edit.
+
+#### Scenario: Reword a task  {#s-6afa}
+*Verification*: **non-executable**
+- **WHEN** line 3 is `  - [ ] call Sam #work 🔁 every week 📅 2026-10-01` and the user runs `--text 'call Sam about the quote'`
+- **THEN** line 3 SHALL become `  - [ ] call Sam about the quote 🔁 every week 📅 2026-10-01`
+
+#### Scenario: Text with another option  {#s-1f0f}
+*Verification*: **non-executable**
+- **WHEN** line 3 is `- [ ] call Sam 📅 2026-10-01` and the user runs `--text 'call Sam today' --status x`
+- **THEN** line 3 SHALL become `- [x] call Sam today 📅 2026-10-01 ✅ <today>`
+
+#### Scenario: Empty text  {#s-bfb5}
+*Verification*: **non-executable**
+- **WHEN** the user runs `--text ''`
+- **THEN** the command SHALL exit non-zero with a usage error, and the file SHALL be unchanged

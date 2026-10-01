@@ -80,7 +80,8 @@ needs the task, write it there without the `🔁` marker. `meta-notes tasks
 --json` gives `recurrence` and `recurs_from_completion`. `task update
 --status x` on one stamps `✅` and adds the next occurrence above the done
 line (`created` in `--json`); re-query afterwards, since lines shift.
-`--no-recur` completes without the next occurrence.
+`--no-recur` completes without the next occurrence. `task update --text`
+rewords a task and keeps its dates and `🔁` rule.
 Create one with `meta-notes task add <file> <text> --recur <rule> --due
 <date> [--time HH:MM]`, which checks the rule, date and time.
 

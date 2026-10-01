@@ -769,7 +769,7 @@ Commands ~
 
 `meta-notes task update {file}:{line} --expect {text} [options]`
                                                 *meta-notes-cli-task-update*
-    Edit one checkbox line in place: its status, tags, and dates. {file} is
+    Edit one checkbox line in place: its text, status, tags, and dates. {file} is
     relative to the notes root (or an absolute path inside it), and {line}
     counts from 1; the target is split at its last `:`. Any checkbox line
     (|meta-notes-tasks-model|) can be edited, including a plain checkbox that
@@ -787,6 +787,16 @@ Commands ~
 
     --status {char}     Set the status character: ` `, `x`, `X`, `>`, `-`,
                         `.`, `o`, or `O`.
+    --text {text}       Replace the task's words: everything between the
+                        checkbox and the first date emoji (🛫, due, ⏰,
+                        🔁, ✅), or the end of the line. The indent,
+                        status, the date fields and everything after them
+                        stay as they are, and a 🔁 line keeps its rule.
+                        Tags in the old words go with them; put a tag to
+                        keep in {text} or add it with `--add-tag`. Empty
+                        text is an error. It is applied first, so a
+                        recurring task completed in the same call gets
+                        its next occurrence with the new words.
     --add-tag {tag}     Add a tag (with or without `#`), before the first
                         🛫, due, or ✅ date emoji, or at the end of the
                         line. Repeatable. A tag already on the line is
@@ -857,6 +867,9 @@ Commands ~
         meta-notes task update project/foo.md:4 \
             --expect '- [ ] #later read book 📅' \
             --remove-tag later --add-tag next --due 2026-10-08
+        meta-notes task update project/foo.md:5 \
+            --expect '- [ ] call Sam 📅 2026-09-22' \
+            --text 'call Sam about the quote' --status x
 <
 `meta-notes task add {file} {text} [options]`     *meta-notes-cli-task-add*
     Add an open task line, `- [ ] {text}` and its markers, to {file}, an
