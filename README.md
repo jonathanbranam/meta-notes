@@ -99,6 +99,7 @@ meta-notes/
 │   │   ├── query.py             # Task query
 │   │   ├── time.py              # Time report
 │   │   ├── time_block.py        # Time Block Plan and Actual edits
+│   │   ├── time_log.py          # Time Log entry append and replace
 │   │   ├── root.py              # Sentinel search for the notes root
 │   │   ├── task_update.py       # Task line edits
 │   │   └── template.py          # Template discovery and rendering
@@ -141,6 +142,7 @@ meta-notes/
 │   │   ├── test_tasks.py
 │   │   ├── test_template.py
 │   │   ├── test_time_block.py
+│   │   ├── test_time_log.py
 │   │   ├── test_time_report.py
 │   │   ├── test_time_tracking.py
 │   │   └── test_update_links.py
@@ -186,7 +188,7 @@ This structure is compatible with vim-plug, Vundle, and Pathogen.
 templates (`note`), file operations (`move`, `rename`, `archive`), task
 query (`tasks`), task edits (`task update`, `task add`), time reports (`time`), changed
 notes (`changes`), calendar agendas (`calendar`, `cache clear`), the
-project list (`projects`), ceremony status (`ceremony status`), stay-on-task check-ins (`checkin`), Time Block cell edits (`time-block update`), and the
+project list (`projects`), ceremony status (`ceremony status`), stay-on-task check-ins (`checkin`), Time Block cell edits (`time-block update`), Time Log edits (`time-log append`, `time-log update`), and the
 skills' shared conventions (`conventions`), and a guide to the notes root
 for agents (`prime`) outside Vim, for shells, agents, and other tools. The Vim
 commands call it. Every command accepts `--json`. It needs Python 3.11 or newer as `python3`. See
@@ -252,6 +254,8 @@ meta-notes ceremony status --date 2026-09-25
 meta-notes checkin wait                   # sleep, then report the Time Block
 meta-notes checkin actual 9:15 "wrote spec" --through 9:45
 meta-notes time-block update plan/daily/26-Q4/2026-10-01\ Thu.md --time 9:30am --plan "write spec" --create
+meta-notes time-log append plan/daily/26-Q4/2026-10-01\ Thu.md --prev '- Work' --prev-start 09:45 --prev-open --close-prev --text '- Packed #2026-10-ny' --start 13:00
+meta-notes time-log update plan/daily/26-Q4/2026-10-01\ Thu.md --expect "$old" --text "$new"
 meta-notes calendar --date 2026-09-28..2026-10-02  # agenda from the latest export
 meta-notes calendar --ics ~/Downloads/export.zip --json
 meta-notes calendar --date 2026-09 --with zach --search 1:1  # filtered

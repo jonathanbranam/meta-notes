@@ -121,6 +121,25 @@ cell and retry, or ask the user. `--create` adds a row the table lacks.
 When it says the text is too wide, shorten it. Check-ins may use
 `meta-notes checkin actual` instead.
 
+## Editing the Time Log
+
+Never edit the entries under the daily note's `### Log` yourself; the user
+usually has the note open in Vim. An entry is a `- ` header line plus its
+indented lines (`* start:`, `* end:`, notes).
+
+- `meta-notes time-log append <file> --prev '- Work' --prev-start 09:45
+  --prev-open --close-prev --text '- Packed #trip' --start 13:00
+  [--end 14:00] [--note <text>]...` adds an entry at the end. The `--prev`
+  options must match the last entry, or nothing is written; `--close-prev`
+  ends that entry at `--start`. `--first` is for an empty log.
+- `meta-notes time-log update <file> --expect <entries> --text <entries>`
+  replaces whole entries, found by their exact text, with zero or more
+  entries: edit, split, merge or delete (empty `--text`). On a mismatch
+  it shows the likely entries; re-read and retry, or ask the user.
+
+A gap or overlap is reported as a warning and still written; fixing times
+may take several calls.
+
 ## Adding lines
 
 Add a task with `meta-notes task add <file> <text> [--due <date>]

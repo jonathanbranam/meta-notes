@@ -1192,6 +1192,40 @@ Commands ~
     (|meta-notes-skills|) fills the Plan with it; `checkin actual` fills
     the Actual of today's note.
 
+`meta-notes time-log append {file} --text {line} ...`
+                                                  *meta-notes-cli-time-log*
+`meta-notes time-log update {file} --expect {text} --text {text}`
+    Edit the entries under a note's `### Log`. An entry is a `- ` header
+    line plus every indented line under it. Both commands check that the
+    log still holds what the caller expects and otherwise write nothing,
+    so they don't overwrite what you changed in Vim meanwhile. Times are
+    `HH:MM` or `9:30am`.
+
+    `append` adds one entry at the end. Options: `--text {line}` (the
+    header, `- text #tags`), `--start {time}` (default: now), `--end
+    {time}` (default: open), `--note {text}` (an extra `* note` line,
+    repeatable), `--prev {line}` and `--prev-start {time}` (the last
+    entry's header, exactly, and start), `--prev-open` (the last entry has
+    no `end:`; without it, it must have one), `--close-prev` (write the
+    last entry's `end:` as `--start`; needs `--prev-open`) and `--first`
+    (the log is empty; replaces the `--prev` options). A mismatch writes
+    nothing and shows the last entry (`current` in `--json`).
+
+    `update` replaces a contiguous run of whole entries with zero or more.
+    `--expect {text}` is the exact text of those entries, starting at a
+    header and ending at an entry's last line; `--text {text}` replaces it
+    (empty deletes), so edit, split, merge and delete all use it. No match
+    is an error that shows the likely entries, `~` marking lines that
+    differ (`current` in `--json`); two matches is an error too. Each new
+    entry needs a header, a valid `start:` and an `end:` that is valid and
+    not before its start; only the log's last entry may be open. Any
+    failure writes nothing.
+
+    A gap or overlap with a neighbouring entry is written anyway and
+    reported as a warning (`*Gap of N min*`, `*Overlap of N min*`; in
+    `--json`, `warnings`). With `--json`: `file` and `written` (`line`,
+    `text`). The `daily-shutdown` skill (|meta-notes-skills|) uses them.
+
 `meta-notes projects [--warnings]`              *meta-notes-cli-projects*
     List every project directly in `project/`: each note, and each folder,
     whose home note is its `Home.md`. Archived projects aren't listed. A
@@ -1338,7 +1372,7 @@ note existed before), `created` (whether this command wrote it), and
 also returns `content`, the rendered note. `--version` returns `version`,
 `commit` (the short hash, or null), and `dirty`. Output from template commands
 appears only in `content` or the written note, never on stdout.
-`calendar`, `cache clear`, `conventions`, `ceremony status`, `checkin`, `time-block update`, and
+`calendar`, `cache clear`, `conventions`, `ceremony status`, `checkin`, `time-block update`, `time-log append`, `time-log update`, and
 `projects` return the fields listed under each command above.
 
 The exit status is non-zero on failure. `--root` and `--json` may come

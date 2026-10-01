@@ -25,7 +25,8 @@ from recurrence import parse_rule
 from tags import canonical_tag
 from meta_notes import (__version__, brief, calendar, ceremony, changes,
                         checkin, config, conventions, init, note, ops, prime,
-                        projects, query, task_update, time, time_block)
+                        projects, query, task_update, time, time_block,
+                        time_log)
 from meta_notes.root import SENTINEL, find_root
 
 
@@ -476,6 +477,40 @@ def cmd_time_block_update(args, root: str) -> Output:
     return Output(data, text)
 
 
+def _time_log_output(path: str, call) -> Output:
+    try:
+        result = call()
+    except time_log.TimeLogError as e:
+        if e.current is None:
+            raise CliError(str(e))
+        return Output({"file": path, "current": e.current}, error=str(e))
+    except ValueError as e:
+        raise CliError(str(e))
+    data = {"file": path, "written": result.written}
+    text = [f"{path}: wrote {len(result.written)} "
+            f"{'entry' if len(result.written) == 1 else 'entries'}"
+            if result.written else f"{path}: deleted entries"]
+    return Output(data, text, warnings=result.warnings)
+
+
+def cmd_time_log_append(args, root: str) -> Output:
+    path = to_root_relative(args.file, root)
+    start = (checkin.parse_time(args.start) if args.start
+             else datetime.now().time().replace(second=0, microsecond=0))
+    return _time_log_output(path, lambda: time_log.append(
+        path, args.text, start,
+        checkin.parse_time(args.end) if args.end else None, args.note,
+        args.prev,
+        checkin.parse_time(args.prev_start) if args.prev_start else None,
+        args.prev_open, args.close_prev, args.first))
+
+
+def cmd_time_log_update(args, root: str) -> Output:
+    path = to_root_relative(args.file, root)
+    return _time_log_output(path, lambda: time_log.update(
+        path, args.expect, args.text))
+
+
 def cmd_projects(args, root: str) -> Output:
     lines, entries = projects.run(".", warnings_only=args.warnings)
     return Output({"projects": entries}, lines)
@@ -854,6 +889,46 @@ def build_parser() -> argparse.ArgumentParser:
     k.add_argument("--create", action="store_true",
                    help="add the row when it's missing (not with --through)")
     p.set_defaults(handler=cmd_time_block_update)
+
+    p = sub.add_parser("time-log", parents=[common],
+                       help="append and replace entries in the daily "
+                            "note's ### Log")
+    kinds = p.add_subparsers(dest="kind", metavar="KIND", parser_class=_Parser)
+    kinds.required = True
+    k = kinds.add_parser("append", parents=[common],
+                         help="add one entry at the end of the log")
+    k.add_argument("file", metavar="FILE",
+                   help="the note, relative to the notes root")
+    k.add_argument("--text", required=True, metavar="TEXT",
+                   help="the new entry's header line, '- text #tags'")
+    k.add_argument("--start", type=_clock_value, metavar="TIME",
+                   help="HH:MM or 9:30am (default: now)")
+    k.add_argument("--end", type=_clock_value, metavar="TIME",
+                   help="the new entry's end (default: open)")
+    k.add_argument("--note", action="append", default=[], metavar="TEXT",
+                   help="an extra '* note' line; repeat for more")
+    k.add_argument("--prev", metavar="LINE",
+                   help="the last entry's header line, exactly")
+    k.add_argument("--prev-start", type=_clock_value, metavar="TIME",
+                   help="the last entry's start")
+    k.add_argument("--prev-open", action="store_true",
+                   help="the last entry has no end")
+    k.add_argument("--close-prev", action="store_true",
+                   help="write the last entry's end as --start "
+                        "(needs --prev-open)")
+    k.add_argument("--first", action="store_true",
+                   help="the log is empty (instead of the --prev options)")
+    k.set_defaults(handler=cmd_time_log_append)
+    k = kinds.add_parser("update", parents=[common],
+                         help="replace a run of whole entries with other "
+                              "entries")
+    k.add_argument("file", metavar="FILE",
+                   help="the note, relative to the notes root")
+    k.add_argument("--expect", required=True, metavar="TEXT",
+                   help="the exact text of the whole entries to replace")
+    k.add_argument("--text", required=True, metavar="TEXT",
+                   help="the replacement entries (empty deletes)")
+    k.set_defaults(handler=cmd_time_log_update)
 
     p = sub.add_parser("projects", parents=[common],
                        help="list projects with status, latest date, last "
