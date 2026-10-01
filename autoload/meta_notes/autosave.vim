@@ -220,8 +220,14 @@ function! s:Resolve(buf) abort
   endif
 endfunction
 
+" Store the new stamp now, but show the message from a timer: the reload
+" is usually inside `silent! checktime`, which swallows :echomsg.
 function! s:Notice(buf) abort
   call s:StoreStamp(a:buf)
+  call timer_start(0, function('s:NoticeLater', [a:buf]))
+endfunction
+
+function! s:NoticeLater(buf, timer) abort
   call s:Message('reloaded ' . s:Name(a:buf)
         \ . ' (changed on disk; u to undo)', 0)
 endfunction
