@@ -18,7 +18,7 @@ Specifies `meta-notes tasks`, the CLI task query that exposes the existing `scri
 - **THEN** the output SHALL equal `find_tasks.py --folder project --status all --all` run in the notes root
 
 ### Requirement: Task query JSON  {#r-8297}
-With `--json`, `meta-notes tasks` SHALL return the same tasks as the text output, in the same order. Each task SHALL have its file, line number, line text, status, start, due, and completed dates, `time` (the time of day as 24-hour `HH:MM`, or null), `recurrence` (the rule text as written, or null), `recurs_from_completion` (true for a `when done` rule), `tags` (canonical names without `#`), and `section` (the section it is listed in: `overdue`, `due`, `scheduled`, `ready`, `future`, or `undated`). A task listed under several tags with `--group-by tag` SHALL appear once.
+With `--json`, `meta-notes tasks` SHALL return the same tasks as the text output, in the same order. Each task SHALL have its file, line number, line text, status, start, due, and completed dates, `time` (the time of day as 24-hour `HH:MM`, or null), `recurrence` (the rule text as written, or null), `recurs_from_completion` (true for a `when done` rule), `tags` (canonical names without `#`), `section` (the section it is listed in: `overdue`, `due`, `scheduled`, `ready`, `future`, or `undated`), and its `notes`, `parent` and `subtasks` (see the `task-tree` spec). A task listed under several tags with `--group-by tag` SHALL appear once.
 
 #### Scenario: JSON task fields  {#s-e78e}
 *Verification*: **non-executable**

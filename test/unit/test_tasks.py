@@ -881,3 +881,77 @@ def test_tasks_find_tasks_in_file_invalid_recurrence(tmp_path, rule):
     assert task.recurrence is None
     assert task.invalid_recurrence
     assert any('🔁' in w for w in tasks_module.task_warnings(task))
+
+
+# Tests for parse_outline
+
+TREE = [
+    '# note\n',
+    '- [o] main 📅 2026-10-08\n',
+    '  * note on main\n',
+    '  * another\n',
+    '  - [x] first\n',
+    '    * note on first\n',
+    '    - [ ] deep 📅 2026-10-05\n',
+    '      * deep note\n',
+    '  - [ ] second 📅 2026-10-06\n',
+    '  * note after the subtasks\n',
+    '\n',
+    '  * stray after blank\n',
+    '- [ ] next\n',
+]
+
+
+def test_tasks_parse_outline_notes_vs_subtasks():
+    nodes = {n.line_no: n for n in tasks_module.parse_outline(TREE)}
+    main = nodes[2]
+    assert [c.line_no for c in main.children] == [5, 9]
+    assert main.notes == ['  * note on main', '  * another',
+                          '  * note after the subtasks']
+    assert main.parent is None
+    assert main.end_line == 10
+    assert main.subtree_end == 10
+
+
+def test_tasks_parse_outline_subtask_notes_are_its_own():
+    nodes = {n.line_no: n for n in tasks_module.parse_outline(TREE)}
+    assert nodes[5].notes == ['    * note on first']
+    assert nodes[5].parent is nodes[2]
+    assert nodes[5].end_line == 6
+    assert nodes[5].subtree_end == 8
+
+
+def test_tasks_parse_outline_deeper_nesting():
+    nodes = {n.line_no: n for n in tasks_module.parse_outline(TREE)}
+    assert nodes[7].parent is nodes[5]
+    assert nodes[7].notes == ['      * deep note']
+    assert nodes[5].children == [nodes[7]]
+
+
+def test_tasks_parse_outline_blank_line_ends_nodes():
+    nodes = {n.line_no: n for n in tasks_module.parse_outline(TREE)}
+    assert '  * stray after blank' not in nodes[2].notes
+    assert nodes[13].parent is None
+    assert nodes[13].notes == []
+
+
+def test_tasks_parse_outline_sibling_at_same_indent_ends_notes():
+    lines = ['- [ ] a\n', '  * n\n', '- [ ] b\n', '  * m\n']
+    nodes = tasks_module.parse_outline(lines)
+    assert nodes[0].notes == ['  * n']
+    assert nodes[1].notes == ['  * m']
+    assert nodes[1].parent is None
+
+
+# Tests for find_tasks_in_file trees
+
+def test_tasks_find_tasks_in_file_tree_fields(tmp_path):
+    path = tmp_path / 'n.md'
+    path.write_text(''.join(TREE))
+    found = {t.line_no: t for t in tasks_module.find_tasks_in_file(str(path))}
+    assert sorted(found) == [2, 7, 9]
+    assert found[2].notes[0] == '  * note on main'
+    assert [c.line_no for c in found[2].subtasks] == [5, 9]
+    # the undated parent is context for the dated subtask
+    assert found[7].parent.line_no == 5
+    assert found[9].parent.line_no == 2

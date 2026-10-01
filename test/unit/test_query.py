@@ -177,6 +177,7 @@ def test_cli_tasks_json_fields(root, capsys):
         'completed': None,
         'tags': ['meeting'],
         'section': 'ready' if date(2026, 10, 1) <= TODAY else 'future',
+        'notes': [], 'parent': None, 'subtasks': [],
     }]
     assert all('category' not in t for t in out['tasks'])
 
@@ -207,6 +208,7 @@ def test_cli_tasks_json_dates(root, capsys):
         'completed': PAST,
         'tags': [],
         'section': 'ready',
+        'notes': [], 'parent': None, 'subtasks': [],
     }]
 
 

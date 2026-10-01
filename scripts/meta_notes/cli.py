@@ -25,7 +25,7 @@ from recurrence import parse_rule
 from tags import canonical_tag
 from meta_notes import (__version__, brief, calendar, ceremony, changes,
                         checkin, config, conventions, init, note, ops, prime,
-                        projects, query, task_update, time, time_block,
+                        projects, query, task_show, task_update, time, time_block,
                         time_log)
 from meta_notes.root import SENTINEL, find_root
 
@@ -378,6 +378,19 @@ def cmd_task_update(args, root: str) -> Output:
     else:
         out.text = [f"{path}:{line_no} unchanged"]
     return out
+
+
+def cmd_task_show(args, root: str) -> Output:
+    path, sep, line = args.target.rpartition(":")
+    if not sep or not path or not line.isdigit():
+        raise CliError("meta-notes task show: target must be <file>:<line>, "
+                       f"got {args.target!r}")
+    path = to_root_relative(path, root)
+    try:
+        data, lines = task_show.show(path, int(line), tree=args.tree)
+    except task_show.TaskShowError as e:
+        raise CliError(f"meta-notes task show: {e}")
+    return Output(data, [f"{path}:{data['line']}-{data['end_line']}", *lines])
 
 
 def cmd_task_add(args, root: str) -> Output:
@@ -808,6 +821,16 @@ def build_parser() -> argparse.ArgumentParser:
                    help="don't add a ✅ date when marking the task done "
                         "(not allowed on a recurring task)")
     p.set_defaults(handler=cmd_task_update)
+
+    k = kinds.add_parser("show", parents=[common],
+                         help="read one task with its notes, or its subtree")
+    k.add_argument("target", metavar="FILE:LINE",
+                   help="the note, relative to the notes root, and the "
+                        "checkbox line's number (from 1)")
+    k.add_argument("--tree", action="store_true",
+                   help="include every subtask, nested, not just the line "
+                        "and its notes")
+    k.set_defaults(handler=cmd_task_show)
 
     k = kinds.add_parser("add", parents=[common],
                          help="add an open task line to a note")
