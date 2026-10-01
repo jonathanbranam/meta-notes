@@ -43,3 +43,6 @@
 {"actor":"external:orchestrator","at":"2026-10-01T23:23:02.336128611Z","queue":"reprioritized"}
 {"actor":"agent:manager","at":"2026-10-01T23:25:52.773668458Z","from":"planned","task":"mn-f51d","to":"integrated"}
 {"actor":"agent:manager","at":"2026-10-01T23:32:52.920427170Z","from":"planned","task":"mn-e08c","to":"integrated"}
+{"actor":"human","at":"2026-10-01T23:37:25.380Z","from":"","task":"mn-529a","to":"open"}
+{"actor":"external:orchestrator","at":"2026-10-01T23:37:29.388104030Z","from":"open","task":"mn-529a","to":"planned"}
+{"actor":"external:orchestrator","at":"2026-10-01T23:37:29.453111068Z","queue":"reprioritized"}
