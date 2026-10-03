@@ -32,7 +32,7 @@ what you meant to do; Actual records deviations and extras.
 - Keep `[brackets]`, `(parens)` and other prefixes (`train:`, `pers:`,
   `work:`, `(opt)`) as written. Never invent one; if the meaning matters,
   ask the user.
-- Text is lowercase except proper names. They aren't real sentences.
+- Text is lowercase except proper names. Project names (bridle, meta-notes) stay lowercase. They aren't real sentences.
 - No Markdown emphasis (`**`, `*`, `_`) in the table: Vim conceal breaks the
   column alignment. Tildes (below) are the one exception.
 - Single tildes wrap an off-plan row's Plan. A tilde before a time means
@@ -54,7 +54,7 @@ what you meant to do; Actual records deviations and extras.
 ## Rules for the content
 
 - **Replan**: rewrite the Plan of rows still ahead. One Plan column is
-  enough.
+  enough. Check what the change pushes out: deadlines, pickups, leave-by times.
 - **The plan happened**: leave Actual blank.
 - **The plan didn't happen** (a row already past): don't change the Plan,
   it has happened. Wrap it in single tildes, `~write spec~`, and give

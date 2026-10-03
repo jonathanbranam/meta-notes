@@ -263,7 +263,6 @@ meta-notes projects --warnings            # stalled or unreviewed projects
 meta-notes project brief project/kitchen/  # one project's files, tasks, dates
 meta-notes ceremony status --date 2026-09-25
 meta-notes planning --date 2026-09-21..2026-09-25  # planned days, no-plan, crossed-out
-meta-notes planning --date 2026-09-21..2026-09-25  # planned days, no-plan, crossed-out
 meta-notes checkin wait                   # sleep, then report the Time Block
 meta-notes checkin actual 9:15 "wrote spec" --through 9:45
 meta-notes time-block update plan/daily/26-Q4/2026-10-01\ Thu.md --time 9:30am --plan "write spec" --create
