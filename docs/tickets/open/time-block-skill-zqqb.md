@@ -62,3 +62,26 @@ dalek. This skill ships with meta-notes either way.
 - Text in the Time Block and Time Log starts lowercase except proper names
   ("we're not writing real sentences here").
 - These are in the notes root's `CLAUDE.md` for now.
+
+## Tildes: off-plan rows (the human, 2026-10-03)
+
+> If my actual is different than my planned... you don't change the plan
+> because it's already happened. What you do is you surround the plan with
+> tildes... and then left there... it shows that, like, I made a plan, and
+> then I just did something else completely. And then the actual should be
+> kind of a short summary of what actually happened. And then the time log
+> records exactly what happened
+
+The Time Log is the "literal truth", to the minute; Actual is a short
+summary; only future rows get replanned.
+
+Single or double tildes is the human's to confirm. The plugin today uses
+single: `:help meta-notes-timeblock-hl` documents `~text~`, and
+`after/syntax/markdown.vim` (`metaNotesOffPlan`) strikes `~text~` through.
+That pattern also matches inside `~~text~~`, which Obsidian renders as
+strikethrough and single tildes don't. The notes advisor wrote `~~text~~`
+meanwhile.
+
+Possible CLI support, part of this ticket or its own: `time-block update
+--strike` wraps the existing Plan text in the agreed tildes (with the usual
+`--expect`), so the agent doesn't retype it.
