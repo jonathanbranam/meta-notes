@@ -60,7 +60,7 @@ what you meant to do; Actual records deviations and extras.
   don't change the Plan, it has happened. Wrap it in single tildes,
   `~write spec~`, and give Actual a short summary of what happened instead.
 - **Agent plan the human never approved, didn't happen** (a row already past):
-  clear the Plan (leave it empty), set it to `no plan`, and give Actual a short
+  replace the Plan with `no plan` (not struck) and give Actual a short
   summary of what happened instead.
 - **No plan was made** (a row already past with an empty Plan): set the
   Plan to `no plan` and give Actual a short summary of what happened.

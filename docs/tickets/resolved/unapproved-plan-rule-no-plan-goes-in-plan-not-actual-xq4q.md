@@ -9,6 +9,7 @@ specs: []
 needs: []
 see: [qb8e]
 tasks: [mn-8f5e]
+closed: 2026-10-03T23:04:33Z
 ---
 
 # Unapproved-plan rule: `no plan` goes in Plan, not Actual
