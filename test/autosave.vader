@@ -170,6 +170,26 @@ Execute (WatcherCommand excludes git, venv and cache):
     AssertEqual '/r', cmd[-1]
   endif
 
+Execute (GitGutter is disabled per buffer in notes buffers only):
+  let g:gg_calls = []
+  command! GitGutterBufferDisable call add(g:gg_calls, bufname('%'))
+  execute 'edit' g:test_dir . '/notes/project/a.md'
+  Assert len(g:gg_calls) >= 1
+  let g:gg_calls = []
+  execute 'edit' g:test_dir . '/stray/b.md'
+  AssertEqual 0, len(g:gg_calls)
+  let g:meta_notes_disable_gitgutter = 0
+  execute 'edit' g:test_dir . '/notes/project/a.md'
+  AssertEqual 0, len(g:gg_calls)
+  unlet g:meta_notes_disable_gitgutter
+  delcommand GitGutterBufferDisable
+  unlet g:gg_calls
+  bwipeout!
+
+Execute (Without GitGutter nothing errors):
+  execute 'edit' g:test_dir . '/notes/project/a.md'
+  bwipeout!
+
 Execute (Cleanup):
   unlet! g:meta_notes_autosave g:meta_notes_autoreload g:meta_notes_watch
   unlet! g:meta_notes_conflict_diff g:meta_notes_checktime_interval

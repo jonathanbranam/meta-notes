@@ -1630,6 +1630,13 @@ g:meta_notes_checktime_interval (default 0)
     With autoreload on, run |:checktime| on loaded notes buffers every this
     many ms. 0 turns the timer off. It runs alongside the watcher; use it
     alone, or as the fallback when the watcher isn't available.
+                                                *g:meta_notes_disable_gitgutter*
+g:meta_notes_disable_gitgutter  (default 1)
+    Run |:GitGutterBufferDisable| (vim-gitgutter) on notes buffers, so no
+    signs show in your notes. It is per buffer, never the global
+    `:GitGutterDisable`, so work files keep their signs. It works whether
+    or not autosave and autoreload are on, and does nothing when
+    vim-gitgutter isn't installed. Set to 0 to leave GitGutter alone.
                                                 *g:meta_notes_conflict_diff*
 g:meta_notes_conflict_diff      (default 1)
     On a conflict, open a diff against the file on disk. With 0 only a
