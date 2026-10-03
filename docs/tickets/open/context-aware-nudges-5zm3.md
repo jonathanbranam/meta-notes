@@ -45,3 +45,15 @@ the phone app's (sent to dalek with that idea). meta-notes holds the data:
 
 Nothing to build until the human picks the first nudges they want. The
 daily workout (u34c) may be the first.
+
+## Pre-task checklists (2026-10-03)
+
+Addition from the human (relayed by the notes advisor, m-0047): "keep a
+list of things I need to do when I'm planning a task. So to mow the
+backyard, I need to go back there and check for dog toys and anything
+laying on the ground before I start mowing... it's not a scheduled thing,
+but like, hey, you're going to mow the backyard. Don't forget to
+first..." Like the trip reminders: only when doing that activity. The
+advisor started `area/home/Checklists.md` ("Before mowing the backyard")
+as plain checkboxes. A nudge could surface the matching checklist when a
+Time Block row or task mentions the activity ("mow").
