@@ -143,10 +143,16 @@ to cancel.
 
 A tilde before a time means approximately: `home ~9:20`, `until ~10:55`.
 Text is lowercase except proper names; project names (bridle, meta-notes)
-stay lowercase. For a row that already happened and didn't go as planned,
-wrap the Plan in single tildes (`~feed the dogs~`), never double. Don't
-rewrite the Plan; give Actual a short summary of what happened instead. A
-past row with an empty Plan gets the Plan `no plan` (the day had no plan
+stay lowercase. For a row that already happened and didn't go as planned:
+
+- If the Plan was the human's or the human approved it, wrap it in single
+  tildes (`~feed the dogs~`), never double. Don't rewrite the Plan; give
+  Actual a short summary of what happened instead.
+- If the Plan was agent-filled and the human never approved it, clear the
+  Plan (leave it empty) and set it to `no plan` in Actual. Give Actual a
+  short summary of what happened instead.
+
+A past row with an empty Plan gets the Plan `no plan` (the day had no plan
 for that block) and a short Actual summary.
 
 Never edit the daily note's `### Time Block` table yourself. Write its

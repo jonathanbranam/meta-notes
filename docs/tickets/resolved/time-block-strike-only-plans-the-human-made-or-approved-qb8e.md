@@ -9,6 +9,7 @@ specs: []
 needs: []
 see: [gjf6, bmen]
 tasks: [mn-d368]
+closed: 2026-10-03T22:14:30Z
 ---
 
 # Time Block: strike only plans the human made or approved
