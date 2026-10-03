@@ -4,10 +4,12 @@ title = "time-log update reports wrote 1 entry for a multi-entry replace (ticket
 kind = "bug"
 state = "open"
 created_at = "2026-10-03T13:57:19.330Z"
-updated_at = "2026-10-03T13:57:19.330Z"
+updated_at = "2026-10-03T13:57:32.450997077Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 size = "S"
 +++
+
+original id: 5rhr
 
 Ticket docs/tickets/open/time-log-update-entry-count-5rhr.md. Small: count entries in time-log update's result. PATCH bump; resolve the ticket with bridle ticket resolve.
