@@ -2,11 +2,12 @@
 id = "mn-ceb6"
 title = "README Key Mappings: stale after/ftplugin line (ticket jxmu)"
 kind = "bug"
-state = "open"
+state = "integrated"
 created_at = "2026-10-03T17:55:39.087Z"
-updated_at = "2026-10-03T17:55:39.087Z"
+updated_at = "2026-10-03T17:57:55.592155679Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
+commit = "5acab33"
 +++
 
 ---
@@ -34,3 +35,8 @@ section says "Filetype-specific mappings live in
 FileType` mappings in `plugin/meta_notes.vim`, as rule `key-mappings`
 requires ("Never use `after/ftplugin/`"). Fix the sentence to match.
 Docs only; no release needed unless the versioning rule says otherwise.
+
+## Thread
+
+### note · agent:manager · 2026-10-03T17:57:55.592Z
+integrated: 5acab33
