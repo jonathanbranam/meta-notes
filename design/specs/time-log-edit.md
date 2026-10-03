@@ -50,7 +50,7 @@ Each entry in `update`'s `--text` SHALL have a `- ` header, a valid `start:`, an
 - **THEN** the command SHALL fail and write nothing
 
 ### Requirement: Gaps and overlaps warn  {#r-6fd4}
-A gap or overlap between neighbouring entries touched by an edit, including the entries before and after the replaced run, SHALL be written anyway and reported as a warning, `*Gap of N min*` or `*Overlap of N min*`, and in `--json` as `warnings`. With `--json`, both commands SHALL return `ok`, `file` and `written` (`line` and `text`).
+A gap or overlap between neighbouring entries touched by an edit, including the entries before and after the replaced run, SHALL be written anyway and reported as a warning, `*Gap of N min*` or `*Overlap of N min*`, and in `--json` as `warnings`. With `--json`, both commands SHALL return `ok`, `file` and `written` (an array with one item per new entry, each with `line` and `text`).
 
 #### Scenario: Overlap  {#s-1422}
 *Verification*: **non-executable**

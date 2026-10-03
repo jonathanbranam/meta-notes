@@ -1357,8 +1357,9 @@ Commands ~
 
     A gap or overlap with a neighbouring entry is written anyway and
     reported as a warning (`*Gap of N min*`, `*Overlap of N min*`; in
-    `--json`, `warnings`). With `--json`: `file` and `written` (`line`,
-    `text`). The `daily-shutdown` skill (|meta-notes-skills|) uses them.
+    `--json`, `warnings`). With `--json`: `file` and `written` (an array
+    with one item per new entry, each with `line` and `text`). The
+    `daily-shutdown` skill (|meta-notes-skills|) uses them.
 
 `meta-notes projects [--warnings]`              *meta-notes-cli-projects*
     List every project directly in `project/`: each note, and each folder,

@@ -9,6 +9,7 @@ specs: []
 needs: []
 see: [v63j]
 tasks: [mn-e2d5]
+closed: 2026-10-03T13:59:37Z
 ---
 
 # time-log update reports "wrote 1 entry" for a multi-entry replace
