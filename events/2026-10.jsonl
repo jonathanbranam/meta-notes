@@ -76,3 +76,4 @@
 {"actor":"agent:manager","at":"2026-10-03T14:57:31.819087872Z","from":"open","task":"mn-0a21","to":"integrated"}
 {"actor":"agent:manager","at":"2026-10-03T15:00:44.362638136Z","from":"open","task":"mn-23f8","to":"integrated"}
 {"actor":"human","at":"2026-10-03T17:31:11.489Z","from":"","task":"mn-65ad","to":"open"}
+{"actor":"agent:manager","at":"2026-10-03T17:34:12.127625023Z","from":"open","task":"mn-65ad","to":"integrated"}

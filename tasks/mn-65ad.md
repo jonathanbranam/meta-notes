@@ -2,11 +2,12 @@
 id = "mn-65ad"
 title = "Vim: GitGutter off in notes buffers (ticket bawv)"
 kind = "feature"
-state = "open"
+state = "integrated"
 created_at = "2026-10-03T17:31:11.489Z"
-updated_at = "2026-10-03T17:31:11.489Z"
+updated_at = "2026-10-03T17:34:12.127625023Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
+commit = "9d36096"
 +++
 
 ---
@@ -46,3 +47,8 @@ Document it in `:help` and the README. Minor release.
 
 (Also from the human: autoreload works; "I actually saw the change come
 through while I was viewing the daily note... It worked great.")
+
+## Thread
+
+### note · agent:manager · 2026-10-03T17:34:12.127Z
+integrated: 9d36096
