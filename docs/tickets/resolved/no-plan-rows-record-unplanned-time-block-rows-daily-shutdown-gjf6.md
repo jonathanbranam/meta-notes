@@ -9,6 +9,7 @@ specs: []
 needs: []
 see: [bmen, zqqb]
 tasks: [mn-bfc6]
+closed: 2026-10-03T14:54:18Z
 ---
 
 # "no plan" rows

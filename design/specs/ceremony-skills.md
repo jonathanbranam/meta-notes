@@ -69,7 +69,7 @@ A skill that completes its ceremony SHALL check its marker with `meta-notes task
 - **THEN** the skill SHALL say so and continue
 
 ### Requirement: Daily shutdown  {#r-935e}
-`daily-shutdown` SHALL close out today's daily note, in about 15 minutes, with these steps in order: collect (items the user pastes or names become tasks in the right note), PR check (each open PR needing the user becomes a task dated the next workday), a next step for each project worked on today, the time-log check, a Follow up list, commit, and mark `shutdown complete`. It SHALL NOT plan the next day. The time-log check SHALL run today's time report, find gaps and large stretches that don't clearly map to a project or work item, ask the user about each, and update the log from the answers. The Follow up list SHALL go in today's `## Follow Up` section and list what to pick up on the next workday. The commit SHALL include all note changes in the notes root and SHALL be made only after the user confirms it.
+`daily-shutdown` SHALL close out today's daily note, in about 15 minutes, with these steps in order: collect (items the user pastes or names become tasks in the right note), PR check (each open PR needing the user becomes a task dated the next workday), a next step for each project worked on today, the time-log check, a Follow up list, commit, and mark `shutdown complete`. It SHALL NOT plan the next day. The time-log check SHALL run today's time report, find gaps and large stretches that don't clearly map to a project or work item, ask the user about each, and update the log from the answers. The time-log check SHALL also look at the Time Block's Plan cells: when past rows are still empty, it SHALL confirm with the user and then fill each with `no plan`, flexibly and without blocking shutdown. The Follow up list SHALL go in today's `## Follow Up` section and list what to pick up on the next workday. The commit SHALL include all note changes in the notes root and SHALL be made only after the user confirms it.
 
 #### Scenario: Time-log gap  {#s-adcb}
 *Verification*: **non-executable**
@@ -80,6 +80,11 @@ A skill that completes its ceremony SHALL check its marker with `meta-notes task
 *Verification*: **non-executable**
 - **WHEN** a two-hour log entry has no project tag or link
 - **THEN** the skill SHALL ask which project or work item it belongs to and update the entry
+
+#### Scenario: Empty plan at shutdown  {#s-5a0e}
+*Verification*: **non-executable**
+- **WHEN** the Time Block's Plan cells are still empty at shutdown
+- **THEN** the skill SHALL confirm with the user, then fill each past row's Plan with `no plan`
 
 ### Requirement: Daily planning  {#r-236e}
 `daily-plan` SHALL plan one day in about 10–15 minutes. It SHALL plan today when today's daily note has no completed `plan complete` marker, and the next workday (Monday to Friday) otherwise, and SHALL state the choice. It SHALL always read the previous workday's note (its Follow up list, unfinished time blocks, and shutdown status), and for a Monday also the weekly plan. It SHALL gather meetings for the target day as "Calendar from the export" requires, and due and overdue tasks and open `#wait` tasks from the CLI. It SHALL create the target day's note with `meta-notes note daily` if needed, fill the Plan column of the Time Block table (placing every meeting first, before other work), name a concrete first block, and mark `plan complete`. A Follow up item the user wants tracked SHALL become a task in place with `task update --due`. It SHALL NOT work through old tasks.
