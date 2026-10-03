@@ -58,3 +58,4 @@
 {"actor":"agent:manager","at":"2026-10-03T13:25:29.493927029Z","from":"open","task":"mn-6523","to":"integrated"}
 {"actor":"human","at":"2026-10-03T13:57:19.330Z","from":"","task":"mn-e2d5","to":"open"}
 {"actor":"external:orchestrator","at":"2026-10-03T13:57:21.426932611Z","queue":"reprioritized"}
+{"actor":"agent:manager","at":"2026-10-03T14:00:47.534657106Z","from":"open","task":"mn-e2d5","to":"integrated"}
