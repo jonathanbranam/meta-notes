@@ -2,11 +2,12 @@
 id = "mn-8f5e"
 title = "Unapproved-plan rule: 'no plan' goes in Plan, not Actual"
 kind = "bug"
-state = "open"
+state = "integrated"
 created_at = "2026-10-03T23:03:45.186Z"
-updated_at = "2026-10-03T23:03:45.186Z"
+updated_at = "2026-10-03T23:06:35.754094448Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
+commit = "26bb709"
 +++
 
 ---
@@ -36,3 +37,8 @@ happen, but worded it wrong:
 Intended: replace the Plan with `no plan` (not struck) and give Actual a
 short summary of what happened, the same as a past row with no plan.
 Check `design/specs/time-block-skill.md` says the same. Patch bump.
+
+## Thread
+
+### note · agent:manager · 2026-10-03T23:06:35.754Z
+integrated: 26bb709
