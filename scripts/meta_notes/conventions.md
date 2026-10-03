@@ -142,11 +142,12 @@ to cancel.
 ## Editing the Time Block
 
 A tilde before a time means approximately: `home ~9:20`, `until ~10:55`.
-For a row that already happened and didn't go as planned, wrap the Plan
-in single tildes (`~feed the dogs~`), never double. Don't rewrite the Plan;
-give Actual a short summary of what happened instead. A past row with
-an empty Plan gets the Plan `no plan` (the day had no plan for that block)
-and a short Actual summary.
+Text is lowercase except proper names; project names (bridle, meta-notes)
+stay lowercase. For a row that already happened and didn't go as planned,
+wrap the Plan in single tildes (`~feed the dogs~`), never double. Don't
+rewrite the Plan; give Actual a short summary of what happened instead. A
+past row with an empty Plan gets the Plan `no plan` (the day had no plan
+for that block) and a short Actual summary.
 
 Never edit the daily note's `### Time Block` table yourself. Write its
 Plan and Actual cells with
