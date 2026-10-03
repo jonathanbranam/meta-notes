@@ -135,6 +135,29 @@ Skills call `meta-notes` by name, so it must be on `PATH`. When no `meta-notes` 
 - **WHEN** `meta-notes` is on `PATH` and the user runs `meta-notes init` in an empty directory
 - **THEN** its output SHALL include no warnings
 
+### Requirement: Init warns when the file watcher is missing  {#r-762e}
+`meta-notes init` SHALL check, with `shutil.which`, for the autoreload file watcher of the platform: `fswatch` on macOS, `inotifywait` on Linux. When it is missing, init SHALL still succeed and SHALL report a warning that says the watcher is only needed for `g:meta_notes_autoreload` and gives the install command: `brew install fswatch` on macOS; `sudo apt install inotify-tools` on Linux when `/etc/os-release` `ID` or `ID_LIKE` includes `debian`; otherwise it SHALL name the `inotify-tools` package. The warning SHALL appear in `--json` `warnings`. Init SHALL NOT install anything.
+
+#### Scenario: Watcher missing on macOS  {#s-b626}
+*Verification*: **non-executable**
+- **WHEN** `fswatch` is not on `PATH` on macOS and the user runs `meta-notes init`
+- **THEN** init SHALL succeed and its warnings SHALL include one containing `brew install fswatch`
+
+#### Scenario: Watcher missing on Debian-like Linux  {#s-a696}
+*Verification*: **non-executable**
+- **WHEN** `inotifywait` is not on `PATH` on Linux whose `ID` or `ID_LIKE` includes `debian`
+- **THEN** the warnings SHALL include one containing `sudo apt install inotify-tools`
+
+#### Scenario: Watcher missing on other Linux  {#s-ecd8}
+*Verification*: **non-executable**
+- **WHEN** `inotifywait` is not on `PATH` on other Linux
+- **THEN** the warnings SHALL include one naming the `inotify-tools` package
+
+#### Scenario: Watcher found  {#s-f841}
+*Verification*: **non-executable**
+- **WHEN** the platform's watcher is on `PATH`
+- **THEN** init SHALL report no watcher warning
+
 ### Requirement: Init reports what it did  {#r-5163}
 `meta-notes init` SHALL report, for each folder, template, the sentinel, the cache README, each skill, the virtualenv, and each `.gitignore` entry, whether it was created, already existed, was overwritten, was rebuilt, or was skipped. With `--json`, this report SHALL be part of the single JSON object, and skill conflicts left alone, virtualenv failures, and a missing `.gitignore` SHALL appear in `warnings`.
 

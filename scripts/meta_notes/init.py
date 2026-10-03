@@ -13,6 +13,7 @@ only creates what is missing.
 """
 
 import os
+import platform
 import shutil
 import subprocess
 from dataclasses import dataclass, field
@@ -286,6 +287,40 @@ def cli_on_path() -> bool:
     return shutil.which("meta-notes") is not None
 
 
+def _os_release_ids() -> list[str]:
+    """The ID and ID_LIKE values from /etc/os-release, lowercased."""
+    try:
+        text = Path("/etc/os-release").read_text(errors="replace")
+    except OSError:
+        return []
+    ids = []
+    for line in text.splitlines():
+        key, _, value = line.partition("=")
+        if key in ("ID", "ID_LIKE"):
+            ids.extend(value.strip().strip("\"'").lower().split())
+    return ids
+
+
+def _check_watcher(result: InitResult) -> None:
+    """Warn, with the install command, when autoreload's file watcher is missing."""
+    system = platform.system()
+    if system == "Darwin":
+        binary, install = "fswatch", "brew install fswatch"
+    elif system == "Linux":
+        binary = "inotifywait"
+        if "debian" in _os_release_ids():
+            install = "sudo apt install inotify-tools"
+        else:
+            install = "your package manager's `inotify-tools` package"
+    else:
+        return
+    if shutil.which(binary) is not None:
+        return
+    result.warnings.append(
+        f"{binary} is not on PATH; it is only needed for "
+        f"g:meta_notes_autoreload's file watcher. Install it with: {install}")
+
+
 def _check_claude_md(result: InitResult) -> None:
     """Report whether CLAUDE.md tells agents to run `meta-notes prime`. Never writes."""
     for name in CLAUDE_MD_FILES:
@@ -364,5 +399,7 @@ def init(target: str, force: bool = False, home: str | None = None,
             "meta-notes is not on PATH, and the skills call it; link it into "
             f"a directory on PATH, for example: ln -s {CLI_PATH} "
             "~/bin/meta-notes")
+
+    _check_watcher(result)
 
     return result
