@@ -5,6 +5,8 @@ kind = "bug"
 state = "integrated"
 created_at = "2026-10-01T23:47:42.462Z"
 updated_at = "2026-10-01T23:52:10.700231912Z"
+created_by = "external:orchestrator"
+watchers = ["external:orchestrator"]
 commit = "ee6f6d5"
 +++
 

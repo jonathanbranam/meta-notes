@@ -5,6 +5,8 @@ kind = "feature"
 state = "integrated"
 created_at = "2026-10-01T23:22:56.739Z"
 updated_at = "2026-10-01T23:32:52.920427170Z"
+created_by = "external:orchestrator"
+watchers = ["external:orchestrator"]
 commit = "7ec8a97"
 +++
 
