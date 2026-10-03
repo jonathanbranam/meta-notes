@@ -9,6 +9,7 @@ specs: []
 needs: []
 see: [gmqp]
 tasks: [mn-6523]
+closed: 2026-10-03T13:24:33Z
 ---
 
 # time-block replace: rewrite a range of Time Block rows in one call

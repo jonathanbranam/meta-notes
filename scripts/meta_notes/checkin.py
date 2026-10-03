@@ -2,7 +2,7 @@
 Stay-on-task check-ins: read and fill the daily note's Time Block.
 
 The Time Block is the table under `### Time Block`. Its rows start with a
-12-hour time; the second cell is the Plan and the third the Actual.
+12-hour time; the Plan and Actual cells are found by the header names.
 `wait` sleeps until a check-in is due, so a calling agent wakes when it
 exits. Only `fill_actual` writes.
 """
@@ -59,9 +59,24 @@ def parse_time(text: str) -> time:
     raise ValueError(f"invalid time: {text!r}; use HH:MM or 9:15am")
 
 
-def time_block_rows(lines: list[str]) -> list[Row]:
-    """The Time Block's rows, in order; [] when there is no Time Block."""
-    rows = []
+_SEPARATOR = re.compile(r"^[\s:|-]+$")
+
+
+@dataclass
+class Layout:
+    """The Time Block table's header: cell names and the Plan/Actual cells."""
+    names: list[str]
+    plan: int
+    actual: int
+
+    def column(self, name: str) -> int:
+        """The `split("|")` index of the "plan" or "actual" cell."""
+        return self.plan if name == "plan" else self.actual
+
+
+def _block_lines(lines: list[str]) -> list[tuple[int, str]]:
+    """The table lines under `### Time Block`, with their indexes."""
+    found = []
     in_block = False
     for index, line in enumerate(lines):
         heading = _HEADING.match(line)
@@ -72,18 +87,67 @@ def time_block_rows(lines: list[str]) -> list[Row]:
                 continue
             if in_block and level <= 3:
                 break
-        if not in_block or not line.lstrip().startswith("|"):
+        if in_block and line.lstrip().startswith("|"):
+            found.append((index, line))
+    return found
+
+
+def layout(lines: list[str]) -> Layout:
+    """
+    The Time Block's columns, found by the table's header names.
+
+    Raises:
+        ValueError: If the table has no header with both Plan and Actual;
+            the message names the headers it found.
+    """
+    found = []
+    for _, line in _block_lines(lines):
+        if _SEPARATOR.match(line):
             continue
+        cells = line.strip().strip("|").split("|")
+        try:
+            parse_time(cells[0])
+            continue
+        except ValueError:
+            pass
+        names = [c.strip() for c in cells]
+        lower = [n.lower() for n in names]
+        if "plan" in lower and "actual" in lower:
+            # +1: split("|") has an empty first cell before the leading |
+            return Layout(names, lower.index("plan") + 1,
+                          lower.index("actual") + 1)
+        found = names
+    raise ValueError("the Time Block table needs Plan and Actual headers; "
+                     f"found: {', '.join(found) or 'none'}")
+
+
+def time_block_rows(lines: list[str]) -> list[Row]:
+    """
+    The Time Block's rows, in order; [] when there is no Time Block.
+
+    Raises:
+        ValueError: If there are rows but the header lacks Plan or Actual.
+    """
+    parsed = []
+    for index, line in _block_lines(lines):
         cells = line.split("|")
-        if len(cells) < 5:
+        if len(cells) < 3:
             continue
         try:
             at = parse_time(cells[1])
         except ValueError:
             continue
-        rows.append(Row(index, at, cells[1].strip(), cells[2].strip(),
-                        cells[3].strip()))
-    return rows
+        parsed.append((index, at, cells))
+    if not parsed:
+        return []
+    cols = layout(lines)
+
+    def cell(cells, col):
+        return cells[col].strip() if col < len(cells) - 1 else ""
+
+    return [Row(index, at, cells[1].strip(), cell(cells, cols.plan),
+                cell(cells, cols.actual))
+            for index, at, cells in parsed]
 
 
 def _read_lines(path: str) -> list[str] | None:
@@ -228,6 +292,7 @@ def fill_actual(day: date, first: time, last: time, text: str,
     if lines is None:
         raise ValueError(f"no daily note: {path}")
     rows = time_block_rows(lines)
+    col = layout(lines).actual if rows else 0
     if not any(r.time == first for r in rows):
         raise ValueError(f"no Time Block row at {first:%H:%M} in {path}")
     written, skipped = [], []
@@ -238,7 +303,7 @@ def fill_actual(day: date, first: time, last: time, text: str,
             skipped.append(row.label)
             continue
         cells = lines[row.index].split("|")
-        cells[3] = _cell(text, len(cells[3]))
+        cells[col] = _cell(text, len(cells[col]))
         lines[row.index] = "|".join(cells)
         written.append(row.label)
     if written:

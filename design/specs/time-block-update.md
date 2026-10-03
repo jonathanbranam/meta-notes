@@ -1,6 +1,6 @@
 ## Purpose
 
-Specifies `meta-notes time-block update`, which writes the Plan and Actual cells of a note's `### Time Block` table by row time, padded to the column and guarded against stale reads, so agents fill the table without miscounting widths or overwriting each other.
+Specifies `meta-notes time-block update` and `replace`, which writes the Plan and Actual cells of a note's `### Time Block` table by row time, padded to the column and guarded against stale reads, so agents fill the table without miscounting widths or overwriting each other.
 
 ## Requirements
 
@@ -50,3 +50,34 @@ With `--create` and no `--through`, a missing `--time` row SHALL be added in tim
 *Verification*: **non-executable**
 - **WHEN** the first row is `8:45am` and the user runs `--time 7:00am --plan flight --create`
 - **THEN** a `7:00am` row with Plan `flight` SHALL appear before the `8:45am` row
+
+### Requirement: Columns come from the header  {#r-77bb}
+`time-block update`, `time-block replace` and `checkin` SHALL find the Plan and Actual cells by the table header's names (case-insensitive), not by position. A Time Block without both headers SHALL make them fail, writing nothing and naming the headers found.
+
+#### Scenario: Columns in another order  {#s-4203}
+*Verification*: **non-executable**
+- **WHEN** the header is `Time | Actual | Notes | Plan` and the user runs `--plan go`
+- **THEN** the fourth cell SHALL be written, not the third
+
+#### Scenario: No Actual header  {#s-bb68}
+*Verification*: **non-executable**
+- **WHEN** the header is `Time | Plan | Result`
+- **THEN** the command SHALL fail naming `Time, Plan, Result` and the file SHALL be unchanged
+
+### Requirement: Replace a range of rows  {#r-7d26}
+`meta-notes time-block replace <file> --time A --through B --expect <rows> --text <rows>` SHALL rewrite the rows from A through B. `--expect` SHALL be compared with the file's rows cell by cell, stripped, so padding need not match; any difference SHALL write nothing and list each row, column and current text (`current` with `--json`). `--text` rows SHALL have one cell per header cell and are padded to the file's widths, with times right-aligned. Every time in the range SHALL remain; new times inside A..B SHALL be added in time order. Times outside the range, a duplicate time, a wrong cell count, a deleted row or text wider than its column SHALL fail naming the row. Every check SHALL run before anything is written, so a failure writes nothing.
+
+#### Scenario: Reorder and add a row  {#s-704b}
+*Verification*: **non-executable**
+- **WHEN** the user moves `mtg: standup` from 9:00am to 9:15am and adds a 9:10am row, with `--expect` the rows as read
+- **THEN** the rows SHALL read in time order, padded to the table's widths, and no other line SHALL change
+
+#### Scenario: Stale expectation  {#s-3060}
+*Verification*: **non-executable**
+- **WHEN** a Plan cell differs from `--expect`
+- **THEN** nothing SHALL be written and the error SHALL name that row and column with its current text
+
+#### Scenario: Text too wide  {#s-38f9}
+*Verification*: **non-executable**
+- **WHEN** one new cell is wider than its column
+- **THEN** the command SHALL fail naming the row and the file SHALL be unchanged

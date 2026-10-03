@@ -148,7 +148,14 @@ Plan and Actual cells with
 pads each cell to its column. A filled cell is only overwritten with
 `--expect <its current text>`; when it reports a mismatch, re-read the
 cell and retry, or ask the user. `--create` adds a row the table lacks.
-When it says the text is too wide, shorten it. Check-ins may use
+When it says the text is too wide, shorten it. To rewrite several rows
+at once (reorder, move, add a row), use
+`meta-notes time-block replace <file> --time 9:00am --through 10:00am
+--expect <rows> --text <rows>`: each is the rows as `| time | plan |
+actual |` lines (padding optional), `--expect` is what you read and is
+compared cell by cell, and nothing is written unless every check passes.
+Every row of the range must stay in `--text`. `update` is for one cell or
+a range set to the same text. Check-ins may use
 `meta-notes checkin actual` instead.
 
 ## Editing the Time Log

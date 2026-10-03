@@ -54,6 +54,8 @@ Actual a short summary of what happened. Fill cells with `meta-notes
 time-block update <file> --time 9:30am --plan 'text'` (or `--actual`), not
 by editing the table: it finds rows by time, pads to the column, and
 refuses to overwrite a filled cell unless `--expect 'old text'` matches.
+To rewrite several rows at once, use `time-block replace` (see
+`meta-notes conventions`).
 
 ## Projects
 
