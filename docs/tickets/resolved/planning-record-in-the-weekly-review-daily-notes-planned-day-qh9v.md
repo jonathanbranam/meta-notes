@@ -9,6 +9,7 @@ specs: []
 needs: [gjf6]
 see: [bmen]
 tasks: [mn-0a21]
+closed: 2026-10-03T14:56:41Z
 ---
 
 # Planning record in the weekly review

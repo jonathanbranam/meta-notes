@@ -1260,6 +1260,20 @@ Commands ~
     `note`, `note_exists`, `marker_present`, `done`, and `completed` (the
     `✅` date or null).
 
+`meta-notes planning [--date {period}]`         *meta-notes-cli-planning*
+    The planning record for each day of {period} (any `--date` form,
+    default today): whether the daily note exists, whether the day was
+    planned (its `plan complete` marker is checked, or a Time Block row
+    has a Plan other than `no plan`), and how many Time Block Plan cells
+    are `no plan` or crossed out (in single tildes), then totals. A
+    missing note counts zero. Writes nothing. Output: >
+        2026-09-21: planned, 1 no plan, 2 crossed out
+        2026-09-22: no note
+        Total: 1 of 2 days with a note, 1 planned, 1 no plan, 2 crossed out
+<   With `--json`: `start`, `end`, `days` (each with `date`, `note`,
+    `note_exists`, `planned`, `no_plan`, `crossed_out`) and `totals`
+    (`days`, `notes`, `planned`, `no_plan`, `crossed_out`).
+
 `meta-notes checkin status|wait|actual`         *meta-notes-cli-checkin*
     Stay-on-task check-ins against the daily note's `### Time Block` table
     (rows such as `|  9:15am | plan | actual |`). `status [--date {day}]
@@ -1507,7 +1521,7 @@ note existed before), `created` (whether this command wrote it), and
 also returns `content`, the rendered note. `--version` returns `version`,
 `commit` (the short hash, or null), and `dirty`. Output from template commands
 appears only in `content` or the written note, never on stdout.
-`calendar`, `cache clear`, `conventions`, `ceremony status`, `checkin`, `time-block update`, `time-block replace`, `time-log append`, `time-log update`, and
+`calendar`, `cache clear`, `conventions`, `ceremony status`, `planning`, `checkin`, `time-block update`, `time-block replace`, `time-log append`, `time-log update`, and
 `projects` return the fields listed under each command above.
 
 The exit status is non-zero on failure. `--root` and `--json` may come
