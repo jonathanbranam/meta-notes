@@ -56,9 +56,12 @@ what you meant to do; Actual records deviations and extras.
 - **Replan**: rewrite the Plan of rows still ahead. One Plan column is
   enough. Check what the change pushes out: deadlines, pickups, leave-by times.
 - **The plan happened**: leave Actual blank.
-- **The plan didn't happen** (a row already past): don't change the Plan,
-  it has happened. Wrap it in single tildes, `~write spec~`, and give
-  Actual a short summary of what happened instead.
+- **The plan didn't happen** (a human-made or approved plan, row already past):
+  don't change the Plan, it has happened. Wrap it in single tildes,
+  `~write spec~`, and give Actual a short summary of what happened instead.
+- **Agent plan the human never approved, didn't happen** (a row already past):
+  clear the Plan (leave it empty), set it to `no plan`, and give Actual a short
+  summary of what happened instead.
 - **No plan was made** (a row already past with an empty Plan): set the
   Plan to `no plan` and give Actual a short summary of what happened.
 - **Time Log**: the literal truth, to the minute. Actual is the short
