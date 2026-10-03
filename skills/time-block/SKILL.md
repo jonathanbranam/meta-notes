@@ -35,6 +35,8 @@ what you meant to do; Actual records deviations and extras.
 - Text is lowercase except proper names. They aren't real sentences.
 - No Markdown emphasis (`**`, `*`, `_`) in the table: Vim conceal breaks the
   column alignment. Tildes (below) are the one exception.
+- Single tildes wrap an off-plan row's Plan (below), never `~` to mean "approximately"
+  (write `about 9:20` or the time alone instead).
 
 ## Commands
 
@@ -55,9 +57,8 @@ what you meant to do; Actual records deviations and extras.
   enough.
 - **The plan happened**: leave Actual blank.
 - **The plan didn't happen** (a row already past): don't change the Plan,
-  it has happened. Wrap it in double tildes, `~~write spec~~`, and give
-  Actual a short summary of what happened instead. This is the default
-  until the user says otherwise.
+  it has happened. Wrap it in single tildes, `~write spec~`, and give
+  Actual a short summary of what happened instead.
 - **Time Log**: the literal truth, to the minute. Actual is the short
   summary; the log has the detail.
 
