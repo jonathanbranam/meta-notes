@@ -24,7 +24,7 @@ import tasks as task_model
 from recurrence import parse_rule
 from tags import canonical_tag
 from meta_notes import (__version__, brief, calendar, ceremony, changes,
-                        checkin, config, conventions, init, note, ops, prime,
+                        checkin, config, conventions, init, note, ops, planning, prime,
                         projects, query, task_show, task_update, task_write, time,
                         time_block, time_log)
 from meta_notes.root import SENTINEL, find_root
@@ -483,6 +483,14 @@ def cmd_task_replace(args, root: str) -> Output:
 def cmd_ceremony_status(args, root: str) -> Output:
     day = date.fromisoformat(args.date) if args.date else date.today()
     lines, data = ceremony.run(day)
+    return Output(data, lines)
+
+
+def cmd_planning(args, root: str) -> Output:
+    try:
+        lines, data = planning.run(args.date)
+    except ValueError as e:
+        raise CliError(str(e))
     return Output(data, lines)
 
 
@@ -979,6 +987,14 @@ def build_parser() -> argparse.ArgumentParser:
     k.add_argument("--date", type=_day_value, metavar="DAY",
                    help="YYYY-MM-DD (default: today)")
     p.set_defaults(handler=cmd_ceremony_status)
+
+    p = sub.add_parser("planning", parents=[common],
+                       help="per day: daily note, planned, no-plan and "
+                            "crossed-out Plan counts")
+    p.add_argument("--date", metavar="PERIOD",
+                   help="YYYY-MM-DD, YYYY-MM-DD..YYYY-MM-DD, YYYY-MM, "
+                        "YYYY-Qn, or YYYY (default: today)")
+    p.set_defaults(handler=cmd_planning)
 
     p = sub.add_parser("checkin", parents=[common],
                        help="stay-on-task check-ins and the Time Block's "

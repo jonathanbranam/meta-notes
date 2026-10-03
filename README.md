@@ -93,6 +93,7 @@ meta-notes/
 │   │   ├── init.py              # Notes root setup
 │   │   ├── note.py              # Note paths and creation
 │   │   ├── ops.py               # Move, rename, archive
+│   │   ├── planning.py          # Planning record
 │   │   ├── prime.md             # Agent guide text
 │   │   ├── prime.py             # Agent guide, generated parts filled in
 │   │   ├── project.py           # Project home notes and fields
@@ -131,6 +132,7 @@ meta-notes/
 │   │   ├── test_note.py
 │   │   ├── test_notes.py
 │   │   ├── test_period.py
+│   │   ├── test_planning.py
 │   │   ├── test_project.py
 │   │   ├── test_projects.py
 │   │   ├── test_ops.py
@@ -192,7 +194,7 @@ This structure is compatible with vim-plug, Vundle, and Pathogen.
 templates (`note`), file operations (`move`, `rename`, `archive`), task
 query (`tasks`), task edits (`task update`, `task add`), one task read as a tree (`task show`), its notes and subtasks written (`task notes`, `task replace`, `task add --under`), time reports (`time`), changed
 notes (`changes`), calendar agendas (`calendar`, `cache clear`), the
-project list (`projects`), ceremony status (`ceremony status`), stay-on-task check-ins (`checkin`), Time Block cell and row edits (`time-block update`, `time-block replace`), Time Log edits (`time-log append`, `time-log update`), and the
+project list (`projects`), ceremony status (`ceremony status`), the planning record (`planning`), stay-on-task check-ins (`checkin`), Time Block cell and row edits (`time-block update`, `time-block replace`), Time Log edits (`time-log append`, `time-log update`), and the
 skills' shared conventions (`conventions`), and a guide to the notes root
 for agents (`prime`) outside Vim, for shells, agents, and other tools. The Vim
 commands call it. Every command accepts `--json`. It needs Python 3.11 or newer as `python3`. See
@@ -260,6 +262,8 @@ meta-notes changes --date 2026-09-21..2026-09-25  # notes changed this week
 meta-notes projects --warnings            # stalled or unreviewed projects
 meta-notes project brief project/kitchen/  # one project's files, tasks, dates
 meta-notes ceremony status --date 2026-09-25
+meta-notes planning --date 2026-09-21..2026-09-25  # planned days, no-plan, crossed-out
+meta-notes planning --date 2026-09-21..2026-09-25  # planned days, no-plan, crossed-out
 meta-notes checkin wait                   # sleep, then report the Time Block
 meta-notes checkin actual 9:15 "wrote spec" --through 9:45
 meta-notes time-block update plan/daily/26-Q4/2026-10-01\ Thu.md --time 9:30am --plan "write spec" --create

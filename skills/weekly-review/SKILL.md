@@ -47,6 +47,7 @@ For a review on Friday 2026-09-25, MON..FRI is 2026-09-21..2026-09-25.
 - Ceremonies and note paths: `meta-notes ceremony status --date <day>
   --json` for each day MON to FRI. Read each existing daily note's
   `## Follow Up` list and `## Notes` headings, not whole folders.
+- Planning record: `meta-notes planning --date MON..FRI --json`.
 - The week's plan: the `## Plan` section of this week's weekly note (the
   `weekly-plan` entry's `note`), if any.
 - Changed notes: `meta-notes changes --date MON..FRI --json`. Skip
@@ -59,7 +60,9 @@ For a review on Friday 2026-09-25, MON..FRI is 2026-09-21..2026-09-25.
 
 In a few lines: the week's planned priorities and what happened to each,
 the biggest unplanned time sinks (from per-tag time), and skipped
-shutdowns or plans. Ask the user to correct anything.
+shutdowns or plans. Add a short, neutral planning line from the planning record: days with a
+daily note, days planned, `no plan` rows, and crossed-out plans. It's for
+looking back, not judging. Ask the user to correct anything.
 
 Then, in one batch, list the changed notes the other inputs don't already
 account for and ask which were real work worth a line in the summary.
