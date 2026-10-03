@@ -52,3 +52,13 @@ here when the skill exists.
 The human also expects bridle to provide skills to a project through its
 rules overlay eventually (not built); that's a bridle question, sent to
 dalek. This skill ships with meta-notes either way.
+
+## More from the human, 2026-10-03
+
+- Time blocking is Cal Newport's. On paper they kept two Plan columns (the
+  morning plan, then a replan) plus Actual. Actual stays blank when they
+  did what was planned; it records deviations and extras. One Plan column,
+  rewritten when replanning, is fine.
+- Text in the Time Block and Time Log starts lowercase except proper names
+  ("we're not writing real sentences here").
+- These are in the notes root's `CLAUDE.md` for now.

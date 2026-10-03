@@ -30,3 +30,15 @@ ceremonies run (weekly review for a manager is work-only), templates, the
 skills' wording. Then decide where each lives: per-root `.meta-notes` config,
 the root's `CLAUDE.md` (which already overrides the guide), or templates.
 Prefer what the root's `CLAUDE.md` already handles before adding config.
+
+## More from the human, 2026-10-03
+
+"Nothing is to be done yet, but just a note."
+
+- Tags flip meaning between roots: "at work, everything's considered work,
+  or it should be, unless it's personal or a break. But at home,
+  everything's essentially personal, unless it's work... when you put it in
+  one plug-in, it gets a little confusing between work and not work. So I
+  don't know how to resolve that yet." This touches the time report's Work
+  vs Non-Work split (286n). Home tags they'd use: `#exercise`, `#family`,
+  and one for home maintenance (`#maint` or `#home`, undecided).
