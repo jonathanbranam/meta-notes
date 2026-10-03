@@ -1547,6 +1547,11 @@ and can be stopped at any point.
                     you've done and whether you're on plan, fills the Time
                     Block's Actual column, and helps when you switch
                     tasks. Offers daily-shutdown at the end.
+    time-block      Anytime: plan, replan, fix or fill the Time Block and
+                    Time Log through |meta-notes-cli-time-block| in your
+                    style: lowercase, `mtg:` meetings untouched, past plans
+                    that didn't happen wrapped in `~~ ~~` with a short
+                    Actual, Actual blank when the plan happened.
     calendar        Anytime: answers questions about your meetings
                     (with someone, about a topic, a 1-1, free time)
                     with |meta-notes-cli-calendar| `--with` and

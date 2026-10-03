@@ -332,6 +332,7 @@ re-run it after updating the plugin to link new ones. Each starts from
 | `task-cleanup` | Anytime, 5–10 minutes of stale tasks |
 | `project-review` | One project at a time |
 | `checkin` | During the day: progress updates, fills the Time Block's Actual |
+| `time-block` | Anytime: plan, replan, fix or fill the Time Block and Time Log |
 | `calendar` | Anytime: meetings with someone, about a topic, or free time |
 
 Daily notes carry `- [ ] plan complete` and `- [ ] shutdown complete`,

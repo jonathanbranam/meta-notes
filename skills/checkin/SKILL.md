@@ -30,7 +30,8 @@ Needs no hooks: a background command sleeps and wakes you when it exits.
 - Wait only by running `meta-notes checkin wait --json` as a background
   command (Bash `run_in_background`), then end your turn. Never poll,
   sleep in the foreground, or start a second wait while one is running.
-- Change the Time Block only with `meta-notes checkin actual`. Don't edit
+- Change the Time Block only with `meta-notes checkin actual` (the
+  `time-block` skill has the style rules for Actual text). Don't edit
   any other part of a note during a check-in, and don't change tasks.
 - Ask one short question at a time. Never nag: if the user doesn't answer,
   or says "not now", skip that check-in and start the next wait.
