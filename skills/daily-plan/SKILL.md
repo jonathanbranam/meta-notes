@@ -29,7 +29,8 @@ About 10–15 minutes. Say so in one line when you start.
   `meta-notes tasks --json` or `grep -n`. Never rewrite them by hand.
 - If `task update` says the line changed, re-query and retry, or ask.
 - Change the Time Block only with `meta-notes time-block update` (or
-  `replace` for several rows). Never edit the table by hand.
+  `replace` for several rows). Never edit the table by hand. The
+  `time-block` skill has the rules and the user's style for these edits.
 - Don't work through old or overdue tasks one by one. Mention the count
   and suggest `task-cleanup` instead.
 - Don't read git history or file modification times.

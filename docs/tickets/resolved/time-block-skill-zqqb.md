@@ -9,6 +9,7 @@ specs: []
 needs: []
 see: [kkrj, u34c, zyab]
 tasks: [mn-49a5]
+closed: 2026-10-03T14:04:25Z
 ---
 
 # time-block skill: how to edit the Time Block, with the human's style
