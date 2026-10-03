@@ -82,3 +82,4 @@
 {"actor":"human","at":"2026-10-03T17:55:39.087Z","from":"","task":"mn-ceb6","to":"open"}
 {"actor":"agent:manager","at":"2026-10-03T17:57:55.592155679Z","from":"open","task":"mn-ceb6","to":"integrated"}
 {"actor":"human","at":"2026-10-03T22:13:34.585Z","from":"","task":"mn-d368","to":"open"}
+{"actor":"agent:manager","at":"2026-10-03T23:03:22.847275203Z","from":"open","task":"mn-d368","to":"integrated"}
