@@ -379,7 +379,7 @@ notes root. Started elsewhere, GitGutter stays on. Set
 
 All plugin mappings are defined in the plugin (not in the user's `.vimrc`) and
 use `<localleader>` so they don't conflict with global mappings. Filetype-specific
-mappings live in `after/ftplugin/<filetype>.vim` and are buffer-local.
+mappings are buffer-local (`<buffer>`) maps set from `autocmd FileType` in `plugin/meta_notes.vim`.
 
 ### Global mappings
 
