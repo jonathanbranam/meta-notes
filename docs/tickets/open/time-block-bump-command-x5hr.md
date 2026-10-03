@@ -24,7 +24,7 @@ Their concerns:
 - Shifting runs into the end of the day: what happens to rows pushed past
   the last slot?
 - Flexible work should usually flow around fixed meetings, not move with
-  them. Meetings are always marked `MTG:` in the Time Block, so flowing
+  them. Meetings are always marked `mtg:` (lowercase) in the Time Block, so flowing
   around them is possible, "although a little bit of extra work. Maybe it's
   unnecessary with what agents can do."
 - Task reminder times (⏰) don't move when blocks move.
