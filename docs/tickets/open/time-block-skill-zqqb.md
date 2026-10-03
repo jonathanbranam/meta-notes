@@ -8,7 +8,7 @@ changes: []
 specs: []
 needs: []
 see: [kkrj, u34c, zyab]
-tasks: []
+tasks: [mn-49a5]
 ---
 
 # time-block skill: how to edit the Time Block, with the human's style
@@ -85,3 +85,46 @@ meanwhile.
 Possible CLI support, part of this ticket or its own: `time-block update
 --strike` wraps the existing Plan text in the agreed tildes (with the usual
 `--expect`), so the agent doesn't retype it.
+
+## Scope for today (2026-10-03)
+
+The human asked for it today if the workforce can ("this needs to be built
+into Bridle. So as rules or skills... If you can do that today, do it
+today"). Bridle can't deliver skills to a project yet, so it ships the way
+meta-notes' skills already do: `skills/time-block/SKILL.md`, linked into a
+notes root by `meta-notes init`. Source text: the notes root's `CLAUDE.md`,
+sections "My day" and "Time log tags" (notes commit ab2e4d8), quoted above.
+
+Build:
+
+- **When**: the user asks to plan, replan, fix or fill the Time Block, or
+  to record what they did instead.
+- **Commands**: `time-block update` (one cell, or a range set to the same
+  text, `--create` for a missing row), `time-block replace` (rewrite a
+  range in one call), `checkin actual`, and `time-log append`/`update`
+  for the log. Always read first, always pass `--expect`; never edit the
+  table by hand.
+- **Rules**: replan only rows that haven't happened; a past row whose plan
+  didn't happen keeps its Plan wrapped in `~~ ~~` and gets a short Actual;
+  Actual stays blank when the plan happened; the Time Log is the literal
+  truth, to the minute; meetings start `mtg:` and aren't moved or replaced;
+  lowercase except proper names; no Markdown emphasis in the table (tildes
+  are the one exception).
+- **Defaults until the human says otherwise**: double tildes, as in the
+  notes root's `CLAUDE.md`; `[brackets]`, `(parens)` and other prefixes
+  (`train:`, `pers:`, `work:`, `(opt)`) are kept as written and never
+  invented; ask the user what they mean if it matters.
+- **Personal parts** (tags, working hours, the workout block) stay in the
+  notes root's `CLAUDE.md`; the skill tells the agent to follow it.
+- `daily-plan` and `checkin` point to this skill for Time Block edits
+  instead of repeating the rules; README's skill table and `prime`'s skill
+  list name it.
+
+Out for now: `--strike` (a follow-up if retyping the plan proves error
+prone); changing the Vim highlighting or `:help` on tildes.
+
+## Done means
+
+The skill exists and passes whatever checks the other skills have (see
+`test/unit/test_prime.py` or similar for skill lists); README, `prime` and
+the two skills updated. PATCH bump (docs and skills only).
