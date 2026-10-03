@@ -2,11 +2,12 @@
 id = "mn-9b7a"
 title = "Vim: GitGutter off for the session in a notes root (ticket tzac)"
 kind = "feature"
-state = "open"
+state = "integrated"
 created_at = "2026-10-03T17:53:50.909Z"
-updated_at = "2026-10-03T17:53:50.909Z"
+updated_at = "2026-10-03T17:55:12.217974886Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
+commit = "374b767"
 +++
 
 ---
@@ -45,3 +46,8 @@ Guarded by `exists(':GitGutterDisable')`, so nothing happens without
 GitGutter. Replace bawv's per-buffer disable with this; keep the
 `g:meta_notes_disable_gitgutter` option (default on). Update `:help`, the
 spec and tests. Patch or minor per the versioning rule.
+
+## Thread
+
+### note · agent:manager · 2026-10-03T17:55:12.217Z
+integrated: 374b767
