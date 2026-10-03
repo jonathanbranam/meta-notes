@@ -1632,11 +1632,12 @@ g:meta_notes_checktime_interval (default 0)
     alone, or as the fallback when the watcher isn't available.
                                                 *g:meta_notes_disable_gitgutter*
 g:meta_notes_disable_gitgutter  (default 1)
-    Run |:GitGutterBufferDisable| (vim-gitgutter) on notes buffers, so no
-    signs show in your notes. It is per buffer, never the global
-    `:GitGutterDisable`, so work files keep their signs. It works whether
-    or not autosave and autoreload are on, and does nothing when
-    vim-gitgutter isn't installed. Set to 0 to leave GitGutter alone.
+    When Vim starts with its working directory inside a notes root, run
+    |:GitGutterDisable| (vim-gitgutter) once at VimEnter, so no signs
+    show in the session, work files included. Started outside a notes
+    root, GitGutter is left alone. It works whether or not autosave and
+    autoreload are on, and does nothing when vim-gitgutter isn't
+    installed. Set to 0 to leave GitGutter alone.
                                                 *g:meta_notes_conflict_diff*
 g:meta_notes_conflict_diff      (default 1)
     On a conflict, open a diff against the file on disk. With 0 only a
