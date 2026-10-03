@@ -351,7 +351,14 @@ let g:meta_notes_checktime_interval = 5000   " optional timer, ms
 ```
 
 Changes are noticed on focus (tmux needs `set -g focus-events on`), by an
-`fswatch` or `inotifywait` job, and by the optional timer.
+`fswatch` or `inotifywait` job, and by the optional timer. Install the
+watcher yourself (`meta-notes init` warns when it's missing):
+
+```bash
+brew install fswatch                # macOS
+sudo apt install inotify-tools      # Debian, Ubuntu (provides inotifywait)
+```
+
 `:MetaNotesAutosave`, `:MetaNotesAutoreload` and `:MetaNotesAutoStatus`
 control it at runtime. See `:help meta-notes-autosave`.
 

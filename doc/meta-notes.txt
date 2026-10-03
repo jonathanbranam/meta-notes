@@ -600,6 +600,11 @@ Commands ~
     The skills call `meta-notes` by name, so init warns, with the `ln -s`
     command to fix it, when no `meta-notes` is on your `PATH`.
 
+    init also warns when the file watcher for |g:meta_notes_autoreload| is
+    missing: `fswatch` on macOS (`brew install fswatch`), `inotifywait` on
+    Linux (`sudo apt install inotify-tools` on Debian and Ubuntu; other
+    distributions: their `inotify-tools` package). It installs nothing.
+
     init checks whether the notes root's `CLAUDE.md` or `.claude/CLAUDE.md`
     mentions `meta-notes prime` (|meta-notes-cli-prime|). When neither
     does, it prints the line to add: >
@@ -1581,7 +1586,9 @@ g:meta_notes_watch              (default 1)
     except `.git/`, `.venv/` and `.meta-notes-cache/`, and checks a buffer
     when its file changes. If neither binary is found, a message says so
     once and the timer (below) is the only polling. Install fswatch with
-    `brew install fswatch`; inotifywait comes with `inotify-tools`.
+    `brew install fswatch`; on Debian or Ubuntu, `sudo apt install
+    inotify-tools` provides inotifywait. `meta-notes init` warns when the
+    watcher is missing.
                                                 *g:meta_notes_checktime_interval*
 g:meta_notes_checktime_interval (default 0)
     With autoreload on, run |:checktime| on loaded notes buffers every this

@@ -26,6 +26,7 @@ TEMPLATE_NAMES = ('daily.md', 'weekly.md', 'quarterly.md', 'yearly.md')
 
 # The env fixture stubs init.cli_on_path; keep the real one for its own test
 REAL_CLI_ON_PATH = init.cli_on_path
+REAL_CHECK_WATCHER = init._check_watcher
 
 
 class FakeCommands:
@@ -66,6 +67,7 @@ def env(tmp_path, monkeypatch):
     monkeypatch.delenv('META_NOTES_ROOT', raising=False)
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(init, 'cli_on_path', lambda: True)
+    monkeypatch.setattr(init, '_check_watcher', lambda result: None)
 
 
 @pytest.fixture(autouse=True)
@@ -364,6 +366,57 @@ def test_init_warns_when_cli_not_on_path(tmp_path, skills, monkeypatch):
     assert len(result.warnings) == 1
     assert 'not on PATH' in result.warnings[0]
     assert str(init.CLI_PATH) in result.warnings[0]
+
+
+def _watcher_warnings(monkeypatch, system, found, os_ids=()):
+    """Run the real watcher check with the platform, which and os-release mocked."""
+    monkeypatch.setattr(init.platform, 'system', lambda: system)
+    monkeypatch.setattr(init.shutil, 'which',
+                        lambda name: f'/bin/{name}' if found else None)
+    monkeypatch.setattr(init, '_os_release_ids', lambda: list(os_ids))
+    result = init.InitResult(root='.')
+    REAL_CHECK_WATCHER(result)
+    return result.warnings
+
+
+def test_watcher_found_no_warning(monkeypatch):
+    assert _watcher_warnings(monkeypatch, 'Linux', True) == []
+    assert _watcher_warnings(monkeypatch, 'Darwin', True) == []
+
+
+def test_watcher_missing_macos(monkeypatch):
+    warnings = _watcher_warnings(monkeypatch, 'Darwin', False)
+    assert len(warnings) == 1
+    assert 'fswatch' in warnings[0]
+    assert 'brew install fswatch' in warnings[0]
+    assert 'g:meta_notes_autoreload' in warnings[0]
+
+
+def test_watcher_missing_debian_like(monkeypatch):
+    warnings = _watcher_warnings(monkeypatch, 'Linux', False, ['ubuntu', 'debian'])
+    assert len(warnings) == 1
+    assert 'inotifywait' in warnings[0]
+    assert 'sudo apt install inotify-tools' in warnings[0]
+
+
+def test_watcher_missing_other_linux(monkeypatch):
+    warnings = _watcher_warnings(monkeypatch, 'Linux', False, ['arch'])
+    assert len(warnings) == 1
+    assert 'inotify-tools' in warnings[0]
+    assert 'apt' not in warnings[0]
+
+
+def test_init_reports_watcher_warning(tmp_path, skills, monkeypatch):
+    """Init succeeds and carries the watcher warning."""
+    monkeypatch.setattr(init, '_check_watcher', REAL_CHECK_WATCHER)
+    monkeypatch.setattr(init.platform, 'system', lambda: 'Darwin')
+    monkeypatch.setattr(init.shutil, 'which', lambda name: None)
+    (tmp_path / 'n').mkdir()
+    (tmp_path / 'n' / '.gitignore').write_text('')
+
+    result = init.init(str(tmp_path / 'n'))
+
+    assert any('brew install fswatch' in w for w in result.warnings)
 
 
 def test_cli_on_path_finds_command(tmp_path, monkeypatch):
