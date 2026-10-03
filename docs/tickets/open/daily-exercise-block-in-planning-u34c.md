@@ -32,3 +32,12 @@ exercise-specific: a list of daily must-schedule blocks in the root's
 `CLAUDE.md` (or `.meta-notes` config) that `daily-plan` places in the Time
 Block and `checkin` reminds about when the time passes unplaced. Personal
 roots only, so it ties to zyab.
+
+## Workout tracking (2026-10-03)
+
+Related idea, for later (relayed by the notes advisor, m-0042): the human
+wants workout tracking in the notes system. "I will work on tracking some
+of this stuff later. That's another thing to work on and think about. I
+want to get my workout tracking into this system as well." Today's
+example, logged as a Time Log note: 45 min treadmill run + 20 min
+cool-down walk, 5 miles, 13:22 average pace, 28 min in heart-rate zone 2.
