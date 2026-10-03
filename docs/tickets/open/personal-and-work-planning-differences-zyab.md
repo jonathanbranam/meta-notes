@@ -6,7 +6,7 @@ repos: [meta-notes]
 changes: []
 specs: []
 needs: []
-see: [daily-exercise-block-in-planning-u34c]
+see: [daily-exercise-block-in-planning-u34c, 47rb, 357e, kxxy, bup2, 79z2]
 kind: explore
 tasks: []
 ---
@@ -42,3 +42,15 @@ Prefer what the root's `CLAUDE.md` already handles before adding config.
   don't know how to resolve that yet." This touches the time report's Work
   vs Non-Work split (286n). Home tags they'd use: `#exercise`, `#family`,
   and one for home maintenance (`#maint` or `#home`, undecided).
+
+## Decided, 2026-10-03
+
+The human chose per-root config over `CLAUDE.md` workarounds: "we're going
+to just use meta notes itself to determine whether to change some
+behaviors, depending on whether this is a work repo or a personal repo ...
+We should read it from a file. It probably goes in configuration."
+
+Split into: 47rb (the `mode` key, the foundation), then 357e (time
+report), kxxy (hours and days), bup2 (ceremony skills), 79z2 (init and
+templates). Related ideas that later read the mode: u34c (workout block),
+5zm3 (nudges), nm28 (how long things take), m6jy (Cozi calendar).
