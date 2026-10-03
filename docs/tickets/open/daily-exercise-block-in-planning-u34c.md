@@ -5,8 +5,10 @@ opened: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: [design with the human]
+needs: []
 see: [personal-and-work-planning-differences-zyab]
+kind: explore
+tasks: []
 ---
 
 # Daily planning asks when the day's workout happens

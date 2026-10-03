@@ -5,8 +5,10 @@ opened: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: [design with the human]
+needs: []
 see: [daily-exercise-block-in-planning-u34c]
+kind: explore
+tasks: []
 ---
 
 # Personal and work planning differences
