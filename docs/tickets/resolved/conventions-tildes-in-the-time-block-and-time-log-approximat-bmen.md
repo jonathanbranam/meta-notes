@@ -9,6 +9,7 @@ specs: []
 needs: []
 see: [wn9j, zqqb]
 tasks: [mn-caa0]
+closed: 2026-10-03T14:49:27Z
 ---
 
 # Conventions: tildes in the Time Block and Time Log

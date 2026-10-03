@@ -35,8 +35,8 @@ what you meant to do; Actual records deviations and extras.
 - Text is lowercase except proper names. They aren't real sentences.
 - No Markdown emphasis (`**`, `*`, `_`) in the table: Vim conceal breaks the
   column alignment. Tildes (below) are the one exception.
-- Single tildes wrap an off-plan row's Plan (below), never `~` to mean "approximately"
-  (write `about 9:20` or the time alone instead).
+- Single tildes wrap an off-plan row's Plan. A tilde before a time means
+  approximately (see `meta-notes conventions`).
 
 ## Commands
 
