@@ -174,6 +174,24 @@ def test_time_log_update_split(tmp_path):
         "- Reviewed PRs #dev", "  * start: 11:00", "  * end:   13:00"]
     assert lines_of(path)[10] == "- Lunch #personal"
     assert result.warnings == []
+    assert len(result.written) == 2
+    assert result.written[0]["line"] == 5
+    assert result.written[0]["text"] == "- Work\n  * start: 09:45\n  * end:   11:00"
+    assert result.written[1]["line"] == 8
+    assert result.written[1]["text"] == "- Reviewed PRs #dev\n  * start: 11:00\n  * end:   13:00"
+
+
+def test_time_log_update_written_reports_each_entry(tmp_path):
+    path = make_note(tmp_path)
+    result = time_log.update(
+        path, WORK,
+        "- Work\n  * start: 09:45\n  * end:   10:00\n"
+        "- Work\n  * start: 10:00\n  * end:   11:00\n"
+        "- Work\n  * start: 11:00\n  * end:   13:00")
+    assert len(result.written) == 3
+    assert result.written[0]["line"] == 5
+    assert result.written[1]["line"] == 8
+    assert result.written[2]["line"] == 11
 
 
 def test_time_log_update_merge(tmp_path):
@@ -290,6 +308,17 @@ def test_time_log_cli_update_json_warnings(tmp_path, capsys):
                         "--text", "- Work\n  * start: 09:45\n  * end:   12:30")
     assert code == 0 and out["warnings"] == [
         "*Gap of 30 min* before 'Lunch #personal'"]
+
+
+def test_time_log_cli_update_multi_entry_written(tmp_path, capsys):
+    path = make_note(tmp_path)
+    code, out = run_cli(tmp_path, capsys, "update", path, "--expect", WORK,
+                        "--text", "- Work\n  * start: 09:45\n  * end:   11:00\n"
+                                  "- Reviewed PRs #dev\n  * start: 11:00\n  * end:   13:00")
+    assert code == 0 and out["ok"]
+    assert len(out["written"]) == 2
+    assert out["written"][0]["line"] == 5
+    assert out["written"][1]["line"] == 8
 
 
 def test_time_log_cli_update_invalid_is_error(tmp_path, capsys):

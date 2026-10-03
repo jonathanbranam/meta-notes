@@ -322,6 +322,12 @@ def update(path: str, expect: str, text: str) -> Result:
         entries[max(at - 1, 0):at] + new + entries[at + n:at + n + 1])
     lines[run[0].index:_entry_end(run[-1])] = new_lines
     _write(path, lines)
-    result.written = [{"line": run[0].index + 1,
-                       "text": "\n".join(new_lines)}] if new_lines else []
+    if new:
+        result.written = [
+            {"line": run[0].index + 1 + sum(len(e.lines) for e in new[:i]),
+             "text": "\n".join(new[i].lines)}
+            for i in range(len(new))
+        ]
+    else:
+        result.written = []
     return result
