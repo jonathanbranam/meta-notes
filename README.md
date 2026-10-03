@@ -369,8 +369,9 @@ control it at runtime. See `:help meta-notes-autosave`.
 
 ### GitGutter
 
-If you use vim-gitgutter, the plugin turns it off in notes buffers only
-(`:GitGutterBufferDisable`; work files keep their signs). Set
+If you use vim-gitgutter, the plugin turns it off for the whole session
+(`:GitGutterDisable`) when Vim starts with its working directory inside a
+notes root. Started elsewhere, GitGutter stays on. Set
 `let g:meta_notes_disable_gitgutter = 0` to leave it on. See
 `:help g:meta_notes_disable_gitgutter`.
 

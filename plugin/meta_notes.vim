@@ -105,6 +105,7 @@ augroup meta_notes_autosave
   autocmd FocusGained * call meta_notes#autosave#OnFocusGained()
   autocmd TextChanged * call meta_notes#autosave#OnTextChanged()
   autocmd InsertLeave * call meta_notes#autosave#OnInsertLeave()
+  autocmd VimEnter * call meta_notes#autosave#OnVimEnter()
   autocmd VimLeavePre * call meta_notes#autosave#StopWatchers()
 augroup END
 

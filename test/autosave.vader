@@ -170,25 +170,28 @@ Execute (WatcherCommand excludes git, venv and cache):
     AssertEqual '/r', cmd[-1]
   endif
 
-Execute (GitGutter is disabled per buffer in notes buffers only):
-  let g:gg_calls = []
-  command! GitGutterBufferDisable call add(g:gg_calls, bufname('%'))
-  execute 'edit' g:test_dir . '/notes/project/a.md'
-  Assert len(g:gg_calls) >= 1
-  let g:gg_calls = []
-  execute 'edit' g:test_dir . '/stray/b.md'
-  AssertEqual 0, len(g:gg_calls)
+Execute (GitGutter is disabled for the session when started in a notes root):
+  let g:gg_calls = 0
+  command! GitGutterDisable let g:gg_calls += 1
+  execute 'cd' g:test_dir . '/notes/project'
+  call meta_notes#autosave#OnVimEnter()
+  AssertEqual 1, g:gg_calls
+  execute 'cd' g:test_dir . '/stray'
+  call meta_notes#autosave#OnVimEnter()
+  AssertEqual 1, g:gg_calls
   let g:meta_notes_disable_gitgutter = 0
-  execute 'edit' g:test_dir . '/notes/project/a.md'
-  AssertEqual 0, len(g:gg_calls)
+  execute 'cd' g:test_dir . '/notes/project'
+  call meta_notes#autosave#OnVimEnter()
+  AssertEqual 1, g:gg_calls
   unlet g:meta_notes_disable_gitgutter
-  delcommand GitGutterBufferDisable
+  execute 'cd' g:test_dir
+  delcommand GitGutterDisable
   unlet g:gg_calls
-  bwipeout!
 
 Execute (Without GitGutter nothing errors):
-  execute 'edit' g:test_dir . '/notes/project/a.md'
-  bwipeout!
+  execute 'cd' g:test_dir . '/notes/project'
+  call meta_notes#autosave#OnVimEnter()
+  execute 'cd' g:test_dir
 
 Execute (Cleanup):
   unlet! g:meta_notes_autosave g:meta_notes_autoreload g:meta_notes_watch
