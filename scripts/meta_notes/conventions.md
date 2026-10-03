@@ -141,6 +141,11 @@ to cancel.
 
 ## Editing the Time Block
 
+A tilde before a time means approximately: `home ~9:20`, `until ~10:55`.
+For a row that already happened and didn't go as planned, wrap the Plan
+in single tildes (`~feed the dogs~`), never double. Don't rewrite the Plan;
+give Actual a short summary of what happened instead.
+
 Never edit the daily note's `### Time Block` table yourself. Write its
 Plan and Actual cells with
 `meta-notes time-block update <file> --time 9:30am [--through 10:15am]
@@ -159,6 +164,8 @@ a range set to the same text. Check-ins may use
 `meta-notes checkin actual` instead.
 
 ## Editing the Time Log
+
+A tilde before a time means approximately: `~9:00` for the start or end.
 
 Never edit the entries under the daily note's `### Log` yourself; the user
 usually has the note open in Vim. An entry is a `- ` header line plus its
