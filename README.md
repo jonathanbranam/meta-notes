@@ -192,7 +192,7 @@ This structure is compatible with vim-plug, Vundle, and Pathogen.
 templates (`note`), file operations (`move`, `rename`, `archive`), task
 query (`tasks`), task edits (`task update`, `task add`), one task read as a tree (`task show`), its notes and subtasks written (`task notes`, `task replace`, `task add --under`), time reports (`time`), changed
 notes (`changes`), calendar agendas (`calendar`, `cache clear`), the
-project list (`projects`), ceremony status (`ceremony status`), stay-on-task check-ins (`checkin`), Time Block cell edits (`time-block update`), Time Log edits (`time-log append`, `time-log update`), and the
+project list (`projects`), ceremony status (`ceremony status`), stay-on-task check-ins (`checkin`), Time Block cell and row edits (`time-block update`, `time-block replace`), Time Log edits (`time-log append`, `time-log update`), and the
 skills' shared conventions (`conventions`), and a guide to the notes root
 for agents (`prime`) outside Vim, for shells, agents, and other tools. The Vim
 commands call it. Every command accepts `--json`. It needs Python 3.11 or newer as `python3`. See
@@ -263,6 +263,7 @@ meta-notes ceremony status --date 2026-09-25
 meta-notes checkin wait                   # sleep, then report the Time Block
 meta-notes checkin actual 9:15 "wrote spec" --through 9:45
 meta-notes time-block update plan/daily/26-Q4/2026-10-01\ Thu.md --time 9:30am --plan "write spec" --create
+meta-notes time-block replace plan/daily/26-Q4/2026-10-03\ Sat.md --time 9:00am --through 9:30am --expect "$old" --text "$new"
 meta-notes time-log append plan/daily/26-Q4/2026-10-01\ Thu.md --prev '- Work' --prev-start 09:45 --prev-open --close-prev --text '- Packed #2026-10-ny' --start 13:00
 meta-notes time-log update plan/daily/26-Q4/2026-10-01\ Thu.md --expect "$old" --text "$new"
 meta-notes calendar --date 2026-09-28..2026-10-02  # agenda from the latest export

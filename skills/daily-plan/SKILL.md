@@ -28,8 +28,8 @@ About 10–15 minutes. Say so in one line when you start.
   `meta-notes task update`, with `file`, `line`, and `text` from
   `meta-notes tasks --json` or `grep -n`. Never rewrite them by hand.
 - If `task update` says the line changed, re-query and retry, or ask.
-- Change the Time Block only with `meta-notes time-block update`. Never
-  edit the table by hand.
+- Change the Time Block only with `meta-notes time-block update` (or
+  `replace` for several rows). Never edit the table by hand.
 - Don't work through old or overdue tasks one by one. Mention the count
   and suggest `task-cleanup` instead.
 - Don't read git history or file modification times.
@@ -113,7 +113,8 @@ note.
    --plan '<text>'` (add `--create` for a row the table lacks), never by
    editing the table by hand; it pads to the column and refuses a filled
    cell unless `--expect '<old text>'` matches. When it reports a cell
-   that's too wide, shorten the text.
+   that's too wide, shorten the text. To rewrite or reorder several rows,
+   use `meta-notes time-block replace` (see `meta-notes conventions`).
    - An event's `response` is `yes`, `maybe`, `no-reply`, or null (see the
      `calendar` skill, which also documents `mine`). Write `yes` meetings
      plainly; prefix the others with `(opt) `, e.g. `(opt) mtg: X`.

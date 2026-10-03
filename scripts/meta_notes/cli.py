@@ -557,8 +557,12 @@ def cmd_time_block_update(args, root: str) -> Output:
     try:
         first = checkin.parse_time(args.time)
         last = checkin.parse_time(args.through) if args.through else first
-        result = time_block.update(path, first, last, args.plan, args.actual,
-                                   args.expect, args.create)
+        if args.kind == "replace":
+            result = time_block.replace(path, first, last, args.expect,
+                                        args.text)
+        else:
+            result = time_block.update(path, first, last, args.plan,
+                                       args.actual, args.expect, args.create)
     except time_block.TimeBlockError as e:
         if e.current is None:
             raise CliError(str(e))
@@ -1034,6 +1038,20 @@ def build_parser() -> argparse.ArgumentParser:
                         "overwritten (default: cells must be empty)")
     k.add_argument("--create", action="store_true",
                    help="add the row when it's missing (not with --through)")
+    k = kinds.add_parser("replace", parents=[common],
+                         help="rewrite the rows from --time through "
+                              "--through, all or nothing")
+    k.add_argument("file", metavar="FILE",
+                   help="the note, relative to the notes root")
+    k.add_argument("--time", required=True, type=_clock_value, metavar="TIME",
+                   help="the first row, HH:MM or 9:30am")
+    k.add_argument("--through", required=True, type=_clock_value,
+                   metavar="TIME", help="the last row")
+    k.add_argument("--expect", required=True, metavar="ROWS",
+                   help="the rows now there, one '| time | plan | actual |' "
+                        "per line, compared cell by cell")
+    k.add_argument("--text", required=True, metavar="ROWS",
+                   help="the new rows, same form, padding optional")
     p.set_defaults(handler=cmd_time_block_update)
 
     p = sub.add_parser("time-log", parents=[common],

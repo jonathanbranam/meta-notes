@@ -1310,6 +1310,22 @@ Commands ~
     (|meta-notes-skills|) fills the Plan with it; `checkin actual` fills
     the Actual of today's note.
 
+`meta-notes time-block replace {file} --time {time} --through {time} --expect {rows} --text {rows}`
+    Rewrite the rows from `--time` through `--through` in one call, all or
+    nothing. `--expect` is the rows as the caller read them and `--text`
+    the new rows, each line `| time | plan | actual |` with one cell per
+    header cell; padding is optional, the CLI pads to the file's widths
+    and right-aligns the times. `--expect` is compared cell by cell,
+    stripped; any difference writes nothing and lists each row, column
+    and current text (`current` with `--json`). Every row of the range
+    must be in `--text` (no deleting); new times inside the range are
+    added in time order. Times outside the range, a duplicate time, a
+    wrong cell count and text wider than its column are errors naming the
+    row. `update` and `checkin` find Plan and Actual by the table's
+    header names (any case, any order), not by position; a table without
+    both headers is an error naming the headers it has. With `--json`:
+    `file`, `written` and `created`.
+
 `meta-notes time-log append {file} --text {line} ...`
                                                   *meta-notes-cli-time-log*
 `meta-notes time-log update {file} --expect {text} --text {text}`
@@ -1490,7 +1506,7 @@ note existed before), `created` (whether this command wrote it), and
 also returns `content`, the rendered note. `--version` returns `version`,
 `commit` (the short hash, or null), and `dirty`. Output from template commands
 appears only in `content` or the written note, never on stdout.
-`calendar`, `cache clear`, `conventions`, `ceremony status`, `checkin`, `time-block update`, `time-log append`, `time-log update`, and
+`calendar`, `cache clear`, `conventions`, `ceremony status`, `checkin`, `time-block update`, `time-block replace`, `time-log append`, `time-log update`, and
 `projects` return the fields listed under each command above.
 
 The exit status is non-zero on failure. `--root` and `--json` may come
