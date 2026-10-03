@@ -7,7 +7,7 @@ repos: [meta-notes]
 changes: []
 specs: []
 needs: []
-see: [zqqb]
+see: []
 tasks: []
 ---
 
