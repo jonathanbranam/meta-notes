@@ -367,6 +367,13 @@ sudo apt install inotify-tools      # Debian, Ubuntu (provides inotifywait)
 `:MetaNotesAutosave`, `:MetaNotesAutoreload` and `:MetaNotesAutoStatus`
 control it at runtime. See `:help meta-notes-autosave`.
 
+### GitGutter
+
+If you use vim-gitgutter, the plugin turns it off in notes buffers only
+(`:GitGutterBufferDisable`; work files keep their signs). Set
+`let g:meta_notes_disable_gitgutter = 0` to leave it on. See
+`:help g:meta_notes_disable_gitgutter`.
+
 ## Key Mappings
 
 All plugin mappings are defined in the plugin (not in the user's `.vimrc`) and

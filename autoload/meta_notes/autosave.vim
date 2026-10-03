@@ -141,13 +141,31 @@ endfunction
 
 " Event handlers called from plugin/meta_notes.vim
 
+" Turn GitGutter off for the current buffer when it's a notes buffer.
+" Per buffer, never global, so work files keep their signs.
+function! s:DisableGitGutter() abort
+  if !get(g:, 'meta_notes_disable_gitgutter', 1)
+        \ || !exists(':GitGutterBufferDisable')
+        \ || &buftype !=# ''
+    return
+  endif
+  if !exists('b:meta_notes_root')
+    let b:meta_notes_root = meta_notes#autosave#FindRoot(bufname('%'))
+  endif
+  if b:meta_notes_root !=# ''
+    GitGutterBufferDisable
+  endif
+endfunction
+
 function! meta_notes#autosave#OnBufRead() abort
+  call s:DisableGitGutter()
   if s:Autosave() || s:Autoreload()
     call meta_notes#autosave#Attach(bufnr('%'), 1)
   endif
 endfunction
 
 function! meta_notes#autosave#OnBufEnter() abort
+  call s:DisableGitGutter()
   if s:Autosave() || s:Autoreload() || exists('b:meta_notes_root')
     call meta_notes#autosave#Attach(bufnr('%'), 0)
   endif

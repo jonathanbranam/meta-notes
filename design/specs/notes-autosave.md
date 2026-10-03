@@ -48,3 +48,16 @@ The plugin SHALL provide `:MetaNotesAutosave` and `:MetaNotesAutoreload` (`on`, 
 *Verification*: **non-executable**
 - **WHEN** the user runs `:MetaNotesAutosave on`
 - **THEN** autosave SHALL be on and the state SHALL be shown
+
+### Requirement: GitGutter off in notes buffers  {#r-dc2f}
+Unless `g:meta_notes_disable_gitgutter` is 0 (default 1), the plugin SHALL run `:GitGutterBufferDisable` on notes buffers, on read and on entry, whether or not autosave or autoreload is on. It SHALL do so only when `exists(':GitGutterBufferDisable')`, and SHALL NOT use the global `:GitGutterDisable`.
+
+#### Scenario: Notes buffer  {#s-7773}
+*Verification*: **non-executable**
+- **WHEN** a buffer's file is under a notes root and vim-gitgutter is installed
+- **THEN** `:GitGutterBufferDisable` SHALL run for that buffer
+
+#### Scenario: Other buffer or option off  {#s-982c}
+*Verification*: **non-executable**
+- **WHEN** a buffer is outside a notes root, or `g:meta_notes_disable_gitgutter` is 0, or vim-gitgutter isn't installed
+- **THEN** the plugin SHALL NOT disable GitGutter and SHALL NOT error
