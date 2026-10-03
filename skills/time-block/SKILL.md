@@ -59,6 +59,8 @@ what you meant to do; Actual records deviations and extras.
 - **The plan didn't happen** (a row already past): don't change the Plan,
   it has happened. Wrap it in single tildes, `~write spec~`, and give
   Actual a short summary of what happened instead.
+- **No plan was made** (a row already past with an empty Plan): set the
+  Plan to `no plan` and give Actual a short summary of what happened.
 - **Time Log**: the literal truth, to the minute. Actual is the short
   summary; the log has the detail.
 
