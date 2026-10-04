@@ -1,2 +1,13 @@
 [[tier]]
 tasks = ["mn-3221"]
+
+[[tier]]
+tasks = ["mn-7qet"]
+
+[[tier]]
+tasks = [
+    "mn-8xpc",
+    "mn-qe7b",
+    "mn-kau5",
+    "mn-eyet",
+]

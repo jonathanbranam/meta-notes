@@ -85,3 +85,15 @@
 {"actor":"agent:manager","at":"2026-10-03T23:03:22.847275203Z","from":"open","task":"mn-d368","to":"integrated"}
 {"actor":"human","at":"2026-10-03T23:03:45.186Z","from":"","task":"mn-8f5e","to":"open"}
 {"actor":"agent:manager","at":"2026-10-03T23:06:35.754094448Z","from":"open","task":"mn-8f5e","to":"integrated"}
+{"actor":"human","at":"2026-10-04T03:00:59.480Z","from":"","task":"mn-7qet","to":"pending"}
+{"actor":"external:orchestrator","at":"2026-10-04T03:00:59.641152117Z","from":"pending","task":"mn-7qet","to":"open"}
+{"actor":"human","at":"2026-10-04T03:01:00.075Z","from":"","task":"mn-8xpc","to":"pending"}
+{"actor":"external:orchestrator","at":"2026-10-04T03:01:00.367216201Z","from":"pending","task":"mn-8xpc","to":"open"}
+{"actor":"human","at":"2026-10-04T03:01:00.447Z","from":"","task":"mn-qe7b","to":"pending"}
+{"actor":"external:orchestrator","at":"2026-10-04T03:01:00.623222530Z","from":"pending","task":"mn-qe7b","to":"open"}
+{"actor":"human","at":"2026-10-04T03:01:00.703Z","from":"","task":"mn-kau5","to":"pending"}
+{"actor":"external:orchestrator","at":"2026-10-04T03:01:00.901582220Z","from":"pending","task":"mn-kau5","to":"open"}
+{"actor":"human","at":"2026-10-04T03:01:00.981Z","from":"","task":"mn-eyet","to":"pending"}
+{"actor":"external:orchestrator","at":"2026-10-04T03:01:01.157544884Z","from":"pending","task":"mn-eyet","to":"open"}
+{"actor":"external:orchestrator","at":"2026-10-04T03:01:02.190733991Z","queue":"reprioritized"}
+{"actor":"external:orchestrator","at":"2026-10-04T03:01:02.235784894Z","queue":"reprioritized"}
