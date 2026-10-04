@@ -8,7 +8,7 @@ changes: []
 specs: []
 needs: [47rb]
 see: [zyab]
-tasks: []
+tasks: [mn-kau5]
 ---
 
 # Ceremony skills follow the root mode

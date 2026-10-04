@@ -8,7 +8,7 @@ changes: []
 specs: []
 needs: []
 see: [zyab]
-tasks: []
+tasks: [mn-7qet]
 ---
 
 # Root mode: `mode = "work"` or `"personal"` in `.meta-notes`
