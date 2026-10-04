@@ -2,12 +2,13 @@
 id = "mn-8xpc"
 title = "Time report: work and personal time follow the root mode"
 kind = "feature"
-state = "open"
+state = "integrated"
 created_at = "2026-10-04T03:01:00.075Z"
-updated_at = "2026-10-04T03:01:00.367216201Z"
+updated_at = "2026-10-04T03:09:24.490702057Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 size = "M"
+commit = "ed6c700"
 +++
 
 ---
@@ -58,3 +59,8 @@ whole day as work.
   `#exercise`, `#family`, `#maint`, `#work`.
 - Highlighted tags stay per-mode lists, not config, until a root needs
   its own.
+
+## Thread
+
+### note · agent:manager · 2026-10-04T03:09:24.490Z
+integrated: ed6c700
