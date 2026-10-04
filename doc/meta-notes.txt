@@ -471,6 +471,18 @@ The report for one day has these sections, in order:
 A note with no time log entries says so under `## Time Log` and still
 gets the plan adherence and week summary sections.
 
+                                                *meta-notes-time-mode*
+The report follows the notes root's `mode` (|meta-notes-config|). The
+description above is `work` mode, the default. In a `personal` root,
+untagged time is personal and `#work` marks work. There is no work window,
+so `work duration` is left out everywhere, and `### Work vs Non-Work` is
+replaced by `### Day Total` (`Total logged`, and a `Work` line when there is
+`#work` time); `### Time by Tag` is the breakdown. The highlighted tags
+are `exercise`, `family`, `maint`, and `work`. The aliases are `#mtg`,
+`#waiting`, and `#wk` for `#work`; `#pers` is not an alias. In `--json`,
+`mode` is added, `work_vs_nonwork` is null, and `day_total` has
+`total_minutes` and `work_minutes`.
+
                                                 *meta-notes-time-totals*
 `work duration` is the time in the work window: from the first to the last
 entry not tagged `#personal`, so leading and trailing `#personal` entries

@@ -303,6 +303,8 @@ See `:help meta-notes-cli-calendar` and `:help meta-notes-config`.
 
 A top-level `mode = "work"` or `"personal"` in `.meta-notes` (default
 `work`) says what kind of notes root it is; `meta-notes prime` reports it.
+In a `personal` root, `meta-notes time` counts untagged time as personal and
+`#work` as work (see `:help meta-notes-time-mode`).
 
 ### Agents
 

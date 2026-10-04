@@ -234,3 +234,22 @@ With `--json`, `meta-notes time` SHALL return the report's data as one JSON obje
 *Verification*: **non-executable**
 - **WHEN** the user runs `:MetaNotesTimeReport` in a project note
 - **THEN** it SHALL show an error saying the command is only available in daily notes
+
+### Requirement: Time report follows the root mode  {#r-2a1b}
+`meta-notes time` SHALL read the notes root's mode (`mode` in `.meta-notes`, default `work`; see `design/specs/notes-config.md`) and include it as `mode` in its JSON. In a `work` root, every requirement above applies unchanged. In a `personal` root, untagged time is personal and `#work` marks work time:
+- There is no work window: `#personal` entries are not trimmed from the day's ends, and `work duration` is not shown, in the day, period or day-summary sections. The JSON `work_minutes` is the time tagged `#work`.
+- The day report's Work vs Non-Work section SHALL be replaced by a `### Day Total` section with `Total logged` and, when there is `#work` time, a `Work` line. The JSON `work_vs_nonwork` is null and `day_total` has `total_minutes` and `work_minutes`. Time by Tag is the breakdown by tag.
+- The highlighted tags SHALL be, in this order and with the tag's name as label, `exercise`, `family`, `maint` and `work`; there are no tag groups.
+- Tag aliases SHALL be `#mtg` for `#meeting`, `#waiting` for `#wait`, and `#wk` for `#work`; `#pers` and `#per` are not aliases of `#personal`.
+
+The lists are fixed per mode, not configuration.
+
+#### Scenario: Personal untagged time  {#s-1ed4}
+*Verification*: **non-executable**
+- **WHEN** a day in a personal root has 1 hr untagged, 2 hr `#work` and 1 hr `#exercise`
+- **THEN** the report SHALL show no `work duration` and no Work vs Non-Work, and `### Day Total` SHALL show `Total logged: 4h 0m` and `Work: 2h 0m`
+
+#### Scenario: Work mode unchanged  {#s-8b6e}
+*Verification*: **non-executable**
+- **WHEN** the root has no `mode`, or `mode = "work"`
+- **THEN** the report SHALL be as before, with `work duration` and Work vs Non-Work

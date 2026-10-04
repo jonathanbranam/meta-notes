@@ -450,3 +450,81 @@ def test_main_script_exit_code(tmp_path):
 
     assert result.returncode == 1
     assert "Invalid date" in result.stderr
+
+
+# Tests for a personal root
+
+PERSONAL_LOG = (
+    entry("walk #exercise", "07:00", "08:00")
+    + entry("chores", "08:00", "09:00")
+    + entry("invoices #work", "09:00", "11:00")
+    + entry("dinner #pers", "18:00", "19:00")
+)
+
+
+def test_time_report_personal_day_untagged_is_not_work(tmp_path):
+    path = write_note(tmp_path, date(2026, 10, 5), PERSONAL_LOG)
+    data = build_day_report(str(tmp_path), date(2026, 10, 5), str(path), 'personal')
+    assert data['mode'] == 'personal'
+    assert data['totals']['work_minutes'] == 120
+    assert data['totals']['total_minutes'] == 300
+    assert data['work_vs_nonwork'] is None
+    assert data['day_total'] == {'total_minutes': 300, 'work_minutes': 120}
+    assert 'personal' not in data['by_tag']
+    assert data['by_tag']['pers'] == 60
+
+
+def test_time_report_personal_day_has_no_work_window_or_split(tmp_path):
+    path = write_note(tmp_path, date(2026, 10, 5), PERSONAL_LOG)
+    text = "\n".join(format_day_report(
+        build_day_report(str(tmp_path), date(2026, 10, 5), str(path), 'personal')))
+    assert 'work duration' not in text
+    assert 'Work vs Non-Work' not in text
+    assert '### Day Total' in text
+    assert '- Total logged: 5h 0m' in text
+    assert '- Work: 2h 0m' in text
+    assert '- #exercise: 1h 0m' in text
+
+
+def test_time_report_personal_day_total_omits_work_line_without_work(tmp_path):
+    path = write_note(tmp_path, date(2026, 10, 5),
+                      entry("chores", "08:00", "09:00"))
+    text = "\n".join(format_day_report(
+        build_day_report(str(tmp_path), date(2026, 10, 5), str(path), 'personal')))
+    assert '- Total logged: 1h 0m' in text
+    assert '- Work:' not in text
+
+
+def test_time_report_personal_period_highlights_personal_tags(tmp_path):
+    write_note(tmp_path, date(2026, 10, 5),
+               entry("walk #exercise", "07:00", "08:00")
+               + entry("fix sink #maint", "08:00", "08:30")
+               + entry("a call #wk", "09:00", "10:00")
+               + entry("standup #meeting", "10:00", "10:15"))
+    data = build_period_report(str(tmp_path), date(2026, 10, 5), date(2026, 10, 5),
+                               'personal')
+    assert data['highlighted'] == [
+        {'label': 'exercise', 'minutes': 60},
+        {'label': 'maint', 'minutes': 30},
+        {'label': 'work', 'minutes': 60},
+    ]
+    text = "\n".join(format_period_report(data))
+    assert 'work duration' not in text
+    assert '- total duration:' in text
+
+
+# Tests that work mode is unchanged
+
+def test_time_report_work_mode_default_matches_explicit_work(tmp_path):
+    path = write_note(tmp_path, date(2026, 10, 5), PERSONAL_LOG)
+    default = build_day_report(str(tmp_path), date(2026, 10, 5), str(path))
+    explicit = build_day_report(str(tmp_path), date(2026, 10, 5), str(path), 'work')
+    assert default == explicit
+    assert default['day_total'] is None
+    # untagged and #work time is work; #pers is non-work, trimmed at the edge
+    assert default['totals']['work_minutes'] == 240
+    assert default['work_vs_nonwork']['work_minutes'] == 240
+    assert default['work_vs_nonwork']['nonwork_minutes'] == 60
+    text = "\n".join(format_day_report(default))
+    assert '- work duration:' in text
+    assert '### Work vs Non-Work' in text

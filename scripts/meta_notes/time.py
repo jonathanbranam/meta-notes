@@ -2,9 +2,12 @@
 Time report: the time_report.py report, plus structured results for --json.
 """
 
+import os
 from datetime import date
 
 import time_report
+from meta_notes import config
+from meta_notes.root import SENTINEL
 
 
 def run(root_dir: str, date_text: str | None = None,
@@ -23,7 +26,10 @@ def run(root_dir: str, date_text: str | None = None,
 
     Raises:
         ValueError: If date_text is invalid, or a single day has no daily
-            note.
+            note, or the root's mode is invalid.
     """
-    data = time_report.build_report(root_dir, date_text, today)
+    # A root given by --root may have no sentinel yet: that is work mode
+    has_sentinel = os.path.exists(os.path.join(root_dir, SENTINEL))
+    mode = config.mode(root_dir) if has_sentinel else 'work'
+    data = time_report.build_report(root_dir, date_text, today, mode)
     return time_report.format_report(data), data
