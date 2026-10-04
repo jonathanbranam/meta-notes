@@ -97,3 +97,4 @@
 {"actor":"external:orchestrator","at":"2026-10-04T03:01:01.157544884Z","from":"pending","task":"mn-eyet","to":"open"}
 {"actor":"external:orchestrator","at":"2026-10-04T03:01:02.190733991Z","queue":"reprioritized"}
 {"actor":"external:orchestrator","at":"2026-10-04T03:01:02.235784894Z","queue":"reprioritized"}
+{"actor":"agent:manager","at":"2026-10-04T03:03:58.765975189Z","from":"open","task":"mn-7qet","to":"integrated"}

@@ -2,12 +2,13 @@
 id = "mn-7qet"
 title = "Root mode: mode = work or personal in .meta-notes"
 kind = "feature"
-state = "open"
+state = "integrated"
 created_at = "2026-10-04T03:00:59.480Z"
-updated_at = "2026-10-04T03:00:59.641152117Z"
+updated_at = "2026-10-04T03:03:58.765975189Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 size = "M"
+commit = "1a884d2"
 +++
 
 ---
@@ -62,3 +63,8 @@ Each behaviour that changes is its own ticket: 357e (time report), kxxy
 
 - The key is `mode`, values `"work"` and `"personal"`.
 - Hours and workdays are fixed per mode, not separate keys (kxxy).
+
+## Thread
+
+### note · agent:manager · 2026-10-04T03:03:58.765Z
+integrated: 1a884d2
