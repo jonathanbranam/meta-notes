@@ -24,7 +24,7 @@ import tasks as task_model
 from recurrence import parse_rule
 from tags import canonical_tag
 from meta_notes import (__version__, brief, calendar, ceremony, changes,
-                        checkin, config, conventions, init, note, ops, planning, prime,
+                        checkin, config, conventions, hours, init, note, ops, planning, prime,
                         projects, query, task_show, task_update, task_write, time,
                         time_block, time_log)
 from meta_notes.root import SENTINEL, find_root
@@ -233,6 +233,16 @@ def cmd_cache_clear(args, root: str) -> Output:
                    f"{calendar.CALENDAR_DIR}/"])
 
 
+def _root_mode(root: str) -> str:
+    """The root's mode; a root without .meta-notes (an older one) is work."""
+    if not os.path.isfile(os.path.join(root, SENTINEL)):
+        return "work"
+    try:
+        return config.mode(root)
+    except ValueError as e:
+        raise CliError(str(e))
+
+
 def cmd_note(args, root: str) -> Output:
     if args.kind == "new":
         value = to_root_relative(args.path, root)
@@ -240,9 +250,10 @@ def cmd_note(args, root: str) -> Output:
     else:
         value = args.date
         template_name = None
+    mode = _root_mode(root)
     try:
         result = note.create(args.kind, value, template_name=template_name,
-                             render_only=args.render)
+                             render_only=args.render, mode=mode)
     except note.NoteError as e:
         raise CliError(str(e))
 
@@ -529,7 +540,8 @@ def cmd_checkin_wait(args, root: str) -> Output:
     except ValueError as e:
         raise CliError(str(e))
     every = args.every
-    end = args.end or settings.get("end", checkin.DEFAULT_END)
+    mode = _root_mode(root)
+    end = args.end or settings.get("end", hours.for_mode(mode).checkin_end)
     if every is None:
         every = settings.get("interval", checkin.DEFAULT_INTERVAL)
     try:
@@ -1030,7 +1042,7 @@ def build_parser() -> argparse.ArgumentParser:
                         "interval, or 30)")
     k.add_argument("--end", type=_clock_value, metavar="TIME",
                    help="end of the workday, HH:MM (default: [checkin] "
-                        "end, or 17:30)")
+                        "end, or the mode's: 17:30 work, 21:00 personal)")
     k.add_argument("--date", type=_day_value, metavar="DAY",
                    help="YYYY-MM-DD (default: today)")
     k.set_defaults(handler=cmd_checkin_wait)

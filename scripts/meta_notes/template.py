@@ -164,12 +164,14 @@ def render_line(line: str, context: dict) -> str:
     return VARIABLE_RE.sub(lambda m: _render_variable(m.group(1), context), line)
 
 
-def find_template(filepath: str) -> str | None:
+def find_template(filepath: str, mode: str = "work") -> str | None:
     """
     Find the template for a note.
 
     Args:
         filepath: The note's path relative to the notes root.
+        mode: The root's mode. In a personal root a daily note prefers
+            `daily-personal.md` over `daily.md` in resource/template/.
 
     Returns:
         `<dir>/template.md` if it exists; otherwise, for a note in a plan
@@ -182,6 +184,10 @@ def find_template(filepath: str) -> str | None:
 
     for prefix, kind in PLAN_TEMPLATES:
         if filepath.startswith(prefix):
+            if mode == "personal" and kind == "daily":
+                personal = f"{TEMPLATE_FOLDER}/daily-personal.md"
+                if os.path.isfile(personal):
+                    return personal
             standard = f"{TEMPLATE_FOLDER}/{kind}.md"
             return standard if os.path.isfile(standard) else None
     return None

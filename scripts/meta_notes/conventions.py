@@ -12,6 +12,7 @@ from pathlib import Path
 
 import tasks
 from tags import TAG_ALIASES
+from meta_notes import hours
 
 CONVENTIONS_FILE = Path(__file__).with_name("conventions.md")
 
@@ -41,23 +42,24 @@ def _tag_aliases() -> str:
 MODE_TEXT: dict[str, str] = {}
 
 GENERATORS = {
-    "statuses": _statuses,
-    "tag-aliases": _tag_aliases,
+    "workdays": hours.conventions_text,
+    "statuses": lambda mode: _statuses(),
+    "tag-aliases": lambda mode: _tag_aliases(),
 }
 
 
-def render(text: str) -> str:
+def render(text: str, mode: str = "work") -> str:
     """
     Replace each generated marker in text with its generated block.
 
     Raises:
         KeyError: If a marker names no generator.
     """
-    return MARKER_PATTERN.sub(lambda m: GENERATORS[m.group(1)](), text)
+    return MARKER_PATTERN.sub(lambda m: GENERATORS[m.group(1)](mode), text)
 
 
 def run(mode: str = "work") -> str:
     """The conventions as markdown, with the mode's text appended if any."""
-    text = render(CONVENTIONS_FILE.read_text(encoding="utf-8"))
+    text = render(CONVENTIONS_FILE.read_text(encoding="utf-8"), mode)
     extra = MODE_TEXT.get(mode)
     return text + "\n" + extra.strip("\n") + "\n" if extra else text

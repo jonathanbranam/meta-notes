@@ -9,6 +9,7 @@ specs: []
 needs: [47rb]
 see: [zyab]
 tasks: [mn-qe7b]
+closed: 2026-10-04T03:12:30Z
 ---
 
 # Working hours and days follow the root mode

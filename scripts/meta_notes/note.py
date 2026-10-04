@@ -135,7 +135,8 @@ def _write_new(path: str, content: str) -> bool:
 
 
 def create(kind: str, value: str | None = None, template_name: str | None = None,
-           render_only: bool = False, today: date | None = None) -> NoteResult:
+           render_only: bool = False, today: date | None = None,
+           mode: str = "work") -> NoteResult:
     """
     Create a note from its template, unless it already exists.
 
@@ -147,6 +148,7 @@ def create(kind: str, value: str | None = None, template_name: str | None = None
             template discovery.
         render_only: Render the note without writing anything.
         today: Today's date (default: date.today()).
+        mode: The root's mode; selects the personal daily template.
 
     Returns:
         NoteResult. content is set when the note didn't exist.
@@ -174,7 +176,7 @@ def create(kind: str, value: str | None = None, template_name: str | None = None
         return NoteResult(path, exists=True)
 
     if template_path is None:
-        template_path = template.find_template(path)
+        template_path = template.find_template(path, mode)
 
     result = NoteResult(path, exists=False, template=template_path)
     if template_path is None:

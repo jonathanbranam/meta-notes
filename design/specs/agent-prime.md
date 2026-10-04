@@ -35,7 +35,7 @@ The guide SHALL cover:
 - projects: a single note or a folder with `Home.md`; the common project files `Tasks.md` and `Meetings & Notes.md`, the latter with dated headings, newest first; the `status`, `tag`, and `archived` fields; `#next`, `#review`, and `#deadline`; `meta-notes projects` as the list of projects and `meta-notes project brief` for one project; converting a project to an area with `meta-notes move`
 - areas as ongoing responsibilities that may hold or link to projects and resources; resources as reference material, including notes from general meetings
 - the archive: archiving moves an item to `archive/<original path>`, sets `status: archived` and `archived: <date>` on a project, keeps links resolving, and is done only with `meta-notes archive`; archived items stay searchable
-- the working day: 08:00 to 17:00, Monday to Friday, with no work planned after 17:00; the time block runs to 18:00 so after-work personal events can go in it
+- the working day, by the root's mode, read from the same source as `conventions` and `checkin`: in `work` mode 08:00 to 17:00, Monday to Friday, with no work planned after 17:00, and the time block running to 18:00 so after-work personal events can go in it; in `personal` mode 07:00 to 21:00, every day of the week, with no work cutoff
 - the daily note's time log (an entry bullet naming the activity, with tags, and `start:` and `end:` sub-bullets, times given only as `HH:MM`) and time block table
 - the commands for finding things: `tasks`, `projects`, `project brief`, `changes`, `calendar`, `ceremony status`, and `time`, as one example command line each
 - the shipped skills, by name
@@ -51,6 +51,11 @@ The guide SHALL cover:
 *Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes prime`
 - **THEN** the output SHALL give the working day as 08:00 to 17:00, Monday to Friday
+
+#### Scenario: Personal hours stated  {#s-9711}
+*Verification*: **non-executable**
+- **WHEN** the user runs `meta-notes prime` in a root whose mode is `personal`
+- **THEN** the output SHALL give the day as 07:00 to 21:00, every day of the week, and SHALL NOT say to stop planning work at 17:00
 
 #### Scenario: Archive rule present  {#s-13f3}
 *Verification*: **non-executable**

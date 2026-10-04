@@ -232,4 +232,4 @@ note or marker counts as not done; add the marker line if a note lacks it.
 - Move, rename, or archive notes only with `meta-notes move`, `rename`,
   or `archive`, which update links, and only after the user confirms the
   exact command. Never use `mv` or `git mv`.
-- Workdays are Monday to Friday. Weeks start on Monday.
+- <!-- generated: workdays -->
