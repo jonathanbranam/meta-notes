@@ -2,12 +2,13 @@
 id = "mn-eyet"
 title = "init and templates for a personal root"
 kind = "feature"
-state = "open"
+state = "integrated"
 created_at = "2026-10-04T03:01:00.981Z"
-updated_at = "2026-10-04T03:01:01.157544884Z"
+updated_at = "2026-10-04T03:20:03.698048776Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 size = "M"
+commit = "d79883a"
 +++
 
 ---
@@ -38,3 +39,8 @@ tasks: []
 - The human's personal root (`notes`) then gets `mode = "personal"` and
   its `CLAUDE.md` loses the work hours and the "don't tag `#personal`"
   workaround (a notes-repo change, done after these land).
+
+## Thread
+
+### note · agent:manager · 2026-10-04T03:20:03.698Z
+integrated: d79883a
