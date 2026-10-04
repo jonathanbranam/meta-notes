@@ -11,7 +11,7 @@ from datetime import date
 from pathlib import Path
 
 from time_tracking import TAG_GROUPS
-from meta_notes import conventions, init, note
+from meta_notes import conventions, hours, init, note
 
 PRIME_FILE = Path(__file__).with_name("prime.md")
 
@@ -55,6 +55,7 @@ def _mode(today: date, mode: str) -> str:
 
 GENERATORS = {
     "mode": _mode,
+    "hours": lambda today, mode: hours.prime_text(mode),
     "today-paths": _today_paths,
     "tag-groups": _tag_groups,
     "skills": _skills,

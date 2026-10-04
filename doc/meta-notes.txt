@@ -1309,7 +1309,8 @@ Commands ~
 
     Settings, in the `[checkin]` table of `.meta-notes`:
         interval        minutes between check-ins. Unset: 30.
-        end             end of the workday, `HH:MM`. Unset: `17:30`.
+        end             end of the workday, `HH:MM`. Unset: `17:30` in
+                        a work root, `21:00` in a personal one.
     The `checkin` skill (|meta-notes-skills|) drives these commands.
 
 `meta-notes time-block update {file} --time {time} ...`
@@ -1497,8 +1498,17 @@ The root's mode is a top-level key, set before any table: >
     mode = "work"                   # "work" or "personal"; unset: "work"
 <
 Anything else is an error naming the two choices. `meta-notes prime` states
-the mode, and its `--json` and that of `conventions` carry `mode`. Nothing
-else changes with the mode yet.
+the mode, and its `--json` and that of `conventions` carry `mode`.
+
+The mode sets the working day, from one place (scripts/meta_notes/hours.py)
+that `prime`, `conventions` and `checkin wait` read: `work` is 08:00 to
+17:00, Monday to Friday (the check-in ends at 17:30 unless `[checkin] end`
+says otherwise); `personal` is 07:00 to 21:00, every day of the week, with
+no work cutoff, and the check-in ends at 21:00. These aren't configurable.
+In a personal root, `meta-notes note daily` uses
+`resource/template/daily-personal.md` when it exists (Time Block 7:00am to
+9:00pm, log line `start day:`); the shipped one is
+`templates/daily-personal.md`. `init` doesn't install it yet.
 
 The settings for |meta-notes-cli-calendar|: >
     # meta-notes notes root. Created by `meta-notes init`; keep and commit it.
@@ -1512,7 +1522,8 @@ The settings for |meta-notes-cli-calendar|: >
 The settings for |meta-notes-cli-checkin|: >
     [checkin]
     interval = 30                   # minutes between check-ins; unset: 30
-    end = "17:30"                   # end of the workday; unset: 17:30
+    end = "17:30"                   # end of the workday; unset: 17:30 work,
+                                    # 21:00 personal
 <
 Output ~
                                                 *meta-notes-cli-json*

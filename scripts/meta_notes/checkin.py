@@ -15,7 +15,6 @@ from datetime import date, datetime, time, timedelta
 from meta_notes import note
 
 DEFAULT_INTERVAL = 30
-DEFAULT_END = "17:30"
 # How often wait re-reads the clock, so a sleeping machine wakes to a due
 # check-in within this many seconds
 TICK_SECONDS = 30

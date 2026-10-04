@@ -32,10 +32,7 @@ creates one if needed and prints its path.
 Notes about a project, area, or resource go in that item's notes,
 linked from the daily note.
 
-Work runs 08:00 to 17:00, Monday to Friday; don't plan work after 17:00.
-The time block runs to 18:00 so the last rows can hold after-work
-personal events. Keep them, and keep meetings and personal time the user
-placed in the time block.
+<!-- generated: hours -->
 
 Time log entries go under the daily note's `### Log`, times as `HH:MM`:
 

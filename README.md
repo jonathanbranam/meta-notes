@@ -90,6 +90,7 @@ meta-notes/
 │   │   ├── config.py            # .meta-notes read as TOML config
 │   │   ├── conventions.md       # Conventions text for skills
 │   │   ├── conventions.py       # Conventions, generated parts filled in
+│   │   ├── hours.py             # Working hours and days by root mode
 │   │   ├── init.py              # Notes root setup
 │   │   ├── note.py              # Note paths and creation
 │   │   ├── ops.py               # Move, rename, archive
@@ -128,6 +129,7 @@ meta-notes/
 │   │   ├── test_config.py
 │   │   ├── test_conventions.py
 │   │   ├── test_find_tasks.py
+│   │   ├── test_hours.py
 │   │   ├── test_init.py
 │   │   ├── test_note.py
 │   │   ├── test_notes.py
@@ -304,7 +306,11 @@ See `:help meta-notes-cli-calendar` and `:help meta-notes-config`.
 A top-level `mode = "work"` or `"personal"` in `.meta-notes` (default
 `work`) says what kind of notes root it is; `meta-notes prime` reports it.
 In a `personal` root, `meta-notes time` counts untagged time as personal and
-`#work` as work (see `:help meta-notes-time-mode`).
+`#work` as work (see `:help meta-notes-time-mode`). The mode also sets the
+working day that `prime`, `conventions` and `checkin` use: `work` is 08:00 to
+17:00, Monday to Friday; `personal` is 07:00 to 21:00, every day, and a new
+daily note uses `resource/template/daily-personal.md` when it exists (shipped
+as `templates/daily-personal.md`).
 
 ### Agents
 
