@@ -1,6 +1,6 @@
 ---
 name: daily-plan
-description: Plan one workday in a meta-notes notes root, about 10–15 minutes, in the evening after shutdown or the next morning. Use when the user says "plan my day", "plan tomorrow", "daily plan", or accepts the offer at the end of daily-shutdown. Fills the Time Block Plan column and picks a first block. It does not close out the day (daily-shutdown) or work through old tasks (task-cleanup).
+description: Plan one workday (or, in a personal root, one day) in a meta-notes notes root, about 10–15 minutes, in the evening after shutdown or the next morning. Use when the user says "plan my day", "plan tomorrow", "daily plan", or accepts the offer at the end of daily-shutdown. Fills the Time Block Plan column and picks a first block. It does not close out the day (daily-shutdown) or work through old tasks (task-cleanup).
 ---
 
 # Daily Plan
@@ -22,6 +22,10 @@ About 10–15 minutes. Say so in one line when you start.
    any note.
 2. Run `meta-notes conventions` and follow it for everything below.
 
+3. Read the mode: if the conventions end with a "Personal mode"
+   section, this is a personal root. Where a step below differs for it, it
+   says so; otherwise the steps are the same.
+
 ## Hard rules
 
 - Change existing task and checklist lines only with
@@ -38,19 +42,23 @@ About 10–15 minutes. Say so in one line when you start.
 
 ## Steps
 
-Workdays are Monday to Friday.
+Workdays are Monday to Friday. In a personal root every day is a day:
+the next day is tomorrow, weekends included, you plan inside the
+personal day (07:00 to 21:00), and there is no PR, Slack or email step.
 
 ### 1. Pick the target day
 
 Run `meta-notes ceremony status --json`. If `daily-plan` is not done for
-today, the target is today; otherwise it is the next workday. State the
+today, the target is today; otherwise it is the next workday (tomorrow, in
+a personal root). State the
 choice in one line ("Planning Friday 2026-09-25."). The user can override
 it. Call it TARGET, and the workday before it PREV.
 
 ### 2. Read the previous workday
 
 Run `meta-notes ceremony status --date <PREV> --json`. If `daily-shutdown`
-is not done, say so in one line and continue; don't run the shutdown.
+is not done, say so in one line and continue; don't run the shutdown. A
+personal root has no daily shutdown, so skip this check there.
 
 If PREV's note exists, read from it:
 

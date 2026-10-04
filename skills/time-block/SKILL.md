@@ -31,7 +31,9 @@ what you meant to do; Actual records deviations and extras.
 - Meetings start `mtg:`. Don't move or replace them.
 - Keep `[brackets]`, `(parens)` and other prefixes (`train:`, `pers:`,
   `work:`, `(opt)`) as written. Never invent one; if the meaning matters,
-  ask the user.
+  ask the user. In a personal root (the conventions end with a "Personal
+  mode" section) time is personal by default: `work:` marks the exception
+  and `pers:` isn't needed. At work, `pers:` is the exception.
 - Text is lowercase except proper names. Project names (bridle, meta-notes) stay lowercase. They aren't real sentences.
 - No Markdown emphasis (`**`, `*`, `_`) in the table: Vim conceal breaks the
   column alignment. Tildes (below) are the one exception.

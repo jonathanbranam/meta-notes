@@ -159,3 +159,27 @@ def test_format_status_no_marker(tmp_path, monkeypatch):
     lines, _ = ceremony.run(date(2026, 9, 25))
 
     assert lines[0] == 'daily-plan:     not done (no marker)'
+
+
+# Tests for status by root mode
+
+def test_status_work_mode_reports_all_four_in_order(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    data = ceremony.status(date(2026, 9, 25))
+
+    assert [c['name'] for c in data['ceremonies']] == [
+        'daily-plan', 'daily-shutdown', 'weekly-review', 'weekly-plan']
+    assert data == ceremony.status(date(2026, 9, 25), 'work')
+
+
+def test_status_personal_mode_has_no_daily_shutdown(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    write(tmp_path, DAILY, '- [x] plan complete\n')
+
+    data = ceremony.status(date(2026, 9, 25), 'personal')
+
+    assert [c['name'] for c in data['ceremonies']] == [
+        'daily-plan', 'weekly-review', 'weekly-plan']
+    assert by_name(data)['daily-plan']['done'] is True
+    assert 'daily-shutdown' not in '\n'.join(ceremony.format_status(data))

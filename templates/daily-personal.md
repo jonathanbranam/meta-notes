@@ -6,7 +6,6 @@ filename_pattern: "plan/daily/{{date:%y}}-{{date:Q{{((date.month-1)//3)+1}}}}/{{
 Week Plan: [[plan/week/{{week_start:%y}}-{{week_quarter}}/{{week_start:%Y-%m-%d}}]]
 
 - [ ] plan complete
-- [ ] shutdown complete
 
 ## Tasks Due Today
 

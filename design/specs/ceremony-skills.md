@@ -274,3 +274,21 @@ A skill that needs meetings SHALL run `meta-notes calendar --date <period> --jso
 *Verification*: **non-executable**
 - **WHEN** the command fails because calendar support is not installed
 - **THEN** the skill SHALL say to run `meta-notes init` and SHALL continue from a screenshot if the user provides one
+
+### Requirement: Skills follow the root mode  {#r-cbe0}
+The shipped skills SHALL read the notes root's mode from `meta-notes conventions`, which ends with a "Personal mode" section in a `personal` root and adds nothing in a `work` root, and SHALL branch on it in their text; there is no second set of skills. In a `work` root every requirement above applies unchanged. In a `personal` root: no step SHALL ask about PRs, Slack or email; the next day SHALL be tomorrow, weekends included; `daily-shutdown` SHALL say it is for work roots and stop, and `daily-plan` SHALL run on its own, without reading a previous shutdown; `weekly-review` and `weekly-plan` SHALL be done on Sunday and SHALL cover the seven days Monday to Sunday, and the review SHALL NOT draft a manager summary; free time in the `calendar` skill SHALL be the personal day (07:00 to 21:00) and the skill SHALL NOT look for 1-1s; the `time-block` skill SHALL keep `pers:` and `work:` prefixes as written, with `work:` the exception instead of `pers:`.
+
+#### Scenario: Daily shutdown in a personal root  {#s-ddfd}
+*Verification*: **non-executable**
+- **WHEN** the user asks for a daily shutdown in a personal root
+- **THEN** the skill SHALL say shutdown is for work roots, offer `daily-plan`, and edit nothing
+
+#### Scenario: Weekly review in a personal root  {#s-61c2}
+*Verification*: **non-executable**
+- **WHEN** the weekly review runs on Sunday 2026-09-27 in a personal root
+- **THEN** it SHALL cover 2026-09-21..2026-09-27 and SHALL NOT draft a summary for a manager
+
+#### Scenario: Planning Saturday evening  {#s-e049}
+*Verification*: **non-executable**
+- **WHEN** `daily-plan` runs on Saturday evening in a personal root and Saturday is planned
+- **THEN** it SHALL plan Sunday

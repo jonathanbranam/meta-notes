@@ -1,6 +1,6 @@
 ---
 name: weekly-review
-description: Friday weekly review of the Monday–Friday workweek in a meta-notes notes root, about 60–90 minutes, done by 11:00. Use when the user says "weekly review", "review my week", or "write my weekly summary". Drafts a summary for the user's manager in the weekly note's Review section and flags stale projects and commitments. It does not plan next week (that is weekly-plan).
+description: Weekly review of the week in a meta-notes notes root, about 60–90 minutes: Friday by 11:00 for the Monday–Friday workweek, or Sunday for all seven days in a personal root. Use when the user says "weekly review", "review my week", or "write my weekly summary". Drafts a summary for the user's manager in the weekly note's Review section (a work root; a personal root has none) and flags stale projects and commitments. It does not plan next week (that is weekly-plan).
 ---
 
 # Weekly Review
@@ -10,7 +10,8 @@ summary suitable for sending to the user's manager.
 
 ## Time budget
 
-About 60–90 minutes, finished by 11:00 on Friday. Say so in one line when
+About 60–90 minutes, finished by 11:00 on Friday (on Sunday, in a
+personal root). Say so in one line when
 you start. Each step below can stand alone if the user has less time.
 
 ## Start
@@ -20,12 +21,16 @@ you start. Each step below can stand alone if the user has less time.
    `bin/meta-notes` into a directory on your PATH, for example
    `ln -s <plugin>/bin/meta-notes ~/bin/meta-notes`." Don't read or edit
    any note.
-2. Run `meta-notes conventions` and follow it for everything below.
+2. Run `meta-notes conventions` and follow it for everything below. If
+   it ends with a "Personal mode" section, this is a personal root; steps
+   that differ say so.
 
 ## Hard rules
 
 - The period is Monday to Friday of the current week (MON..FRI). Weekend
-  work isn't reviewed.
+  work isn't reviewed. In a personal root the review is on Sunday and the
+  period is Monday to Sunday (MON..SUN), all seven days; read MON..FRI
+  below as MON..SUN, and "each day MON to FRI" as each of the seven.
 - Change existing task lines only with `meta-notes task update`, with
   `file`, `line`, and `text` from `meta-notes tasks --json`. If it says
   the line changed, re-query and retry, or ask. Never rewrite by hand.
@@ -96,6 +101,10 @@ plus `--due <date>` if it needs one, for example
 
 ### 6. Write the summary
 
+In a personal root there is no manager summary. Write the `## Review`
+section for the user themselves, as the same two parts, and keep it short;
+leave out work-facing phrasing.
+
 Run `meta-notes note weekly` to get (or create) this week's weekly note.
 Write under its `## Review` section (add the heading before `## Notes` if
 missing), in two parts and nothing else:
@@ -126,7 +135,8 @@ Find `review complete` with `grep -n` in the weekly note (add
 check it with `meta-notes task update ... --status x`.
 
 Then remind the user: "Weekly planning is next, usually Friday
-afternoon (`weekly-plan`)." Don't start it.
+afternoon (`weekly-plan`)." In a personal root, say it follows today, on
+Sunday. Don't start it.
 
 ## Stopping early
 

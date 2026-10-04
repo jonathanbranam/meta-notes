@@ -17,7 +17,9 @@ user: "`meta-notes` isn't on your PATH. Link the plugin's
 `ln -s <plugin>/bin/meta-notes ~/bin/meta-notes`." Don't run anything
 else.
 
-This skill reads no notes, so it doesn't run `meta-notes conventions`.
+This skill reads no notes, so it doesn't follow `meta-notes conventions`.
+It runs it only to learn the mode: if it ends with a "Personal mode"
+section, this is a personal root (see "Free time" and "1-1s").
 
 ## Period
 
@@ -81,6 +83,9 @@ EFP; searched 'Enterprise Funding Platform' too").
 
 ## 1-1s
 
+A personal root has no 1-1s: don't apply this rule there; list the
+matching events as they are.
+
 An event is a 1-1 with a person when it matches `--with` for them and
 either:
 
@@ -95,7 +100,8 @@ mention any group meetings with X that were found.
 ## Free time
 
 From an unfiltered agenda, list the gaps between timed events within the
-workday (8:00 to 17:00 unless the user says otherwise). All-day events
+workday (8:00 to 17:00 unless the user says otherwise; in a personal root
+the personal day, 7:00 to 21:00, every day of the week). All-day events
 don't block time unless the title says the user is away.
 
 ## Answer

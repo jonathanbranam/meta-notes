@@ -1,6 +1,6 @@
 ---
 name: daily-shutdown
-description: End-of-workday shutdown for a meta-notes notes root, about 15 minutes. Use when the user says "shutdown", "daily shutdown", "close out today", or "end my day". Collects loose items into tasks, checks PRs, records next steps, fixes today's time log, writes a Follow up list, commits, and marks shutdown complete. It does not plan tomorrow (that is daily-plan).
+description: End-of-workday shutdown for a meta-notes work root (personal roots have none), about 15 minutes. Use when the user says "shutdown", "daily shutdown", "close out today", or "end my day". Collects loose items into tasks, checks PRs, records next steps, fixes today's time log, writes a Follow up list, commits, and marks shutdown complete. It does not plan tomorrow (that is daily-plan).
 ---
 
 # Daily Shutdown
@@ -21,7 +21,11 @@ and ask one thing at a time.
    `ln -s <plugin>/bin/meta-notes ~/bin/meta-notes`." Don't read or edit
    any note.
 2. Run `meta-notes conventions` and follow it for everything below.
-3. Run `meta-notes note daily` to get today's note path (it creates the
+3. If the conventions end with a "Personal mode" section, this is a
+   personal root, which has no daily shutdown: tell the user it is for
+   work roots, offer `daily-plan`, and stop. Everything below is for a
+   work root.
+4. Run `meta-notes note daily` to get today's note path (it creates the
    note if it's missing). Call it TODAY_NOTE.
 
 ## Hard rules

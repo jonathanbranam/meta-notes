@@ -20,7 +20,9 @@ at a time, and save what's decided if the user stops.
    `bin/meta-notes` into a directory on your PATH, for example
    `ln -s <plugin>/bin/meta-notes ~/bin/meta-notes`." Don't read or edit
    any note.
-2. Run `meta-notes conventions` and follow it for everything below.
+2. Run `meta-notes conventions` and follow it for everything below. If
+   it ends with a "Personal mode" section, this is a personal root: the
+   next workday below is simply tomorrow, weekends included.
 
 ## Hard rules
 
@@ -153,6 +155,7 @@ Don't commit; commits happen at shutdown.
 When the user says stop: apply what's decided (fields and task updates),
 record the review as in step 6, and add
 `- [ ] Finish project review #review 📅 <next workday>` to the home note
-(Monday to Friday; on Friday 2026-09-25, `📅 2026-09-28`). Skip
+(Monday to Friday; on Friday 2026-09-25, `📅 2026-09-28`; tomorrow in a
+personal root). Skip
 structural commands not yet confirmed. List what was left undone and end
 without further questions.
