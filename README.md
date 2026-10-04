@@ -389,6 +389,14 @@ sudo apt install inotify-tools      # Debian, Ubuntu (provides inotifywait)
 `:MetaNotesAutosave`, `:MetaNotesAutoreload` and `:MetaNotesAutoStatus`
 control it at runtime. See `:help meta-notes-autosave`.
 
+### NERDTree
+
+A visible NERDTree stays current when files or folders are added, removed or
+renamed in a notes root (agents, `git pull`), reusing the same watcher and
+refreshing only the changed directories. Without a watcher, entering the
+tree window refreshes it. Set `let g:meta_notes_nerdtree_refresh = 0` to turn
+it off. See `:help g:meta_notes_nerdtree_refresh`.
+
 ### GitGutter
 
 If you use vim-gitgutter, the plugin turns it off for the whole session

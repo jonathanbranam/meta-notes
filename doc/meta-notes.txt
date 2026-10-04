@@ -1690,6 +1690,20 @@ g:meta_notes_disable_gitgutter  (default 1)
     root, GitGutter is left alone. It works whether or not autosave and
     autoreload are on, and does nothing when vim-gitgutter isn't
     installed. Set to 0 to leave GitGutter alone.
+                                                *g:meta_notes_nerdtree_refresh*
+g:meta_notes_nerdtree_refresh   (default 1)
+    Keep a visible NERDTree current when files or folders are added,
+    removed or renamed in a notes root, without pressing `R`. It reuses
+    the file watcher (|g:meta_notes_watch|); it starts when you enter a
+    NERDTree window whose root is in a notes root, even with autoreload
+    off. Changed paths queue their parent directory; 300 ms after the
+    last change only those directories are refreshed in the tree, once,
+    and the cursor stays put. Nothing is refreshed in insert mode or on
+    the command line; |CursorHold| tries again. Without a running watcher
+    (no fswatch or inotifywait, or |g:meta_notes_watch| 0) entering the
+    NERDTree window refreshes the tree instead; so does entering a tree
+    in another tab. There is no timer or polling. Does nothing when
+    NERDTree isn't loaded. Set to 0 to turn it off.
                                                 *g:meta_notes_conflict_diff*
 g:meta_notes_conflict_diff      (default 1)
     On a conflict, open a diff against the file on disk. With 0 only a
