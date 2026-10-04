@@ -4,14 +4,14 @@ Time tracking module for markdown files.
 Handles time log parsing, time block parsing, and time calculations.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import InitVar, dataclass, field
 from datetime import date, datetime, time, timedelta
 from typing import Optional
 from collections import defaultdict
 import re
 import sys
 
-from tags import TAG_ALIASES, canonical_tag
+from tags import MODE_TAG_ALIASES, TAG_ALIASES, canonical_tag  # noqa: F401 (TAG_ALIASES re-exported)
 
 
 # Tag groups: tags that share meaning and should be reported together.
@@ -22,6 +22,12 @@ TAG_GROUPS: dict[str, set[str]] = {
     'Break': {'#break'},
     'Slack': {'#slack'},
     'Email': {'#email'},
+}
+
+# A personal root has no groups.
+MODE_TAG_GROUPS: dict[str, dict[str, set[str]]] = {
+    'work': TAG_GROUPS,
+    'personal': {},
 }
 
 # Reverse lookup: normalized tag text → group name
@@ -41,10 +47,11 @@ class Tag:
         Tag('#project-alpha')
     """
     text: str
+    mode: InitVar[str] = 'work'
 
-    def __post_init__(self):
-        """Ensure tag text starts with # and expand any known abbreviations."""
-        self.text = '#' + canonical_tag(self.text)
+    def __post_init__(self, mode: str):
+        """Ensure tag text starts with # and expand the mode's abbreviations."""
+        self.text = '#' + canonical_tag(self.text, mode)
 
 
 @dataclass
@@ -234,12 +241,13 @@ def _parse_datetime(datetime_str: str) -> Optional[datetime]:
         return None
 
 
-def get_tag_group(tag_text: str) -> Optional[str]:
+def get_tag_group(tag_text: str, mode: str = 'work') -> Optional[str]:
     """
     Return the group name for a tag, or None if not in any group.
 
     Args:
         tag_text: Tag text (with or without # prefix).
+        mode: The notes root's mode.
 
     Returns:
         Group name string, or None.
@@ -247,11 +255,13 @@ def get_tag_group(tag_text: str) -> Optional[str]:
     normalized = tag_text.lower()
     if not normalized.startswith('#'):
         normalized = '#' + normalized
-    canonical = TAG_ALIASES.get(normalized, normalized)
+    canonical = MODE_TAG_ALIASES[mode].get(normalized, normalized)
+    if mode != 'work':
+        return None
     return TAG_TO_GROUP.get(canonical)
 
 
-def parse_tags_from_text(text: str) -> list[Tag]:
+def parse_tags_from_text(text: str, mode: str = 'work') -> list[Tag]:
     """
     Extract all tags from text.
 
@@ -259,15 +269,17 @@ def parse_tags_from_text(text: str) -> list[Tag]:
 
     Args:
         text: Text to search for tags.
+        mode: The notes root's mode, which picks the tag aliases.
 
     Returns:
         List of Tag objects found.
     """
     pattern = re.compile(r'#[\w-]+')
-    return [Tag(match) for match in pattern.findall(text)]
+    return [Tag(match, mode) for match in pattern.findall(text)]
 
 
-def calculate_time_by_group(entries: list[TimeLogEntry]) -> dict[str, timedelta]:
+def calculate_time_by_group(entries: list[TimeLogEntry],
+                            mode: str = 'work') -> dict[str, timedelta]:
     """
     Calculate total time spent per tag group.
 
@@ -291,7 +303,7 @@ def calculate_time_by_group(entries: list[TimeLogEntry]) -> dict[str, timedelta]
 
         seen_groups: set[str] = set()
         for tag in entry.tags:
-            group = get_tag_group(tag.text)
+            group = get_tag_group(tag.text, mode)
             if group and group not in seen_groups:
                 group_durations[group] += duration
                 seen_groups.add(group)
@@ -300,7 +312,8 @@ def calculate_time_by_group(entries: list[TimeLogEntry]) -> dict[str, timedelta]
 
 
 def _parse_time_log_lines(lines: list[str], filepath: str,
-                          file_date: Optional[date] = None) -> list[TimeLogEntry]:
+                          file_date: Optional[date] = None,
+                          mode: str = 'work') -> list[TimeLogEntry]:
     """
     Parse time log entries from a list of lines.
 
@@ -321,6 +334,7 @@ def _parse_time_log_lines(lines: list[str], filepath: str,
         lines: Lines of text to parse.
         filepath: Source file path (used for TimeLogEntry metadata).
         file_date: Date of the file, used to resolve bare time strings.
+        mode: The notes root's mode, which picks the tag aliases.
 
     Returns:
         A list of TimeLogEntry objects found in the lines.
@@ -340,7 +354,7 @@ def _parse_time_log_lines(lines: list[str], filepath: str,
             in_log_section = False
             # Save any pending entry
             if current_entry_data:
-                entry = _create_time_log_entry(current_entry_data, filepath)
+                entry = _create_time_log_entry(current_entry_data, filepath, mode)
                 if entry:
                     entries.append(entry)
                 current_entry_data = None
@@ -354,13 +368,13 @@ def _parse_time_log_lines(lines: list[str], filepath: str,
         if line.strip().startswith('-') and not line.strip().startswith('  '):
             # Save previous entry if exists
             if current_entry_data:
-                entry = _create_time_log_entry(current_entry_data, filepath)
+                entry = _create_time_log_entry(current_entry_data, filepath, mode)
                 if entry:
                     entries.append(entry)
 
             # Start new entry
             activity_line = line.strip()[1:].strip()  # Remove leading '-'
-            tags = parse_tags_from_text(activity_line)
+            tags = parse_tags_from_text(activity_line, mode)
 
             # Remove tags from activity text
             activity = re.sub(r'#[\w-]+', '', activity_line).strip()
@@ -401,19 +415,20 @@ def _parse_time_log_lines(lines: list[str], filepath: str,
 
     # Save final entry if exists
     if current_entry_data:
-        entry = _create_time_log_entry(current_entry_data, filepath)
+        entry = _create_time_log_entry(current_entry_data, filepath, mode)
         if entry:
             entries.append(entry)
 
     return entries
 
 
-def find_time_log_entries(filepath: str) -> list[TimeLogEntry]:
+def find_time_log_entries(filepath: str, mode: str = 'work') -> list[TimeLogEntry]:
     """
     Find all time log entries in a markdown file.
 
     Args:
         filepath: Path to the markdown file to search.
+        mode: The notes root's mode, which picks the tag aliases.
 
     Returns:
         A list of TimeLogEntry objects found in the file.
@@ -422,13 +437,14 @@ def find_time_log_entries(filepath: str) -> list[TimeLogEntry]:
         with open(filepath, 'r', encoding='utf-8') as f:
             lines = f.readlines()
         file_date = _extract_date_from_filepath(filepath)
-        return _parse_time_log_lines(lines, filepath, file_date)
+        return _parse_time_log_lines(lines, filepath, file_date, mode)
     except (IOError, UnicodeDecodeError) as e:
         print(f"Warning: Could not read {filepath}: {e}", file=sys.stderr)
         return []
 
 
-def _create_time_log_entry(entry_data: dict, filepath: str) -> Optional[TimeLogEntry]:
+def _create_time_log_entry(entry_data: dict, filepath: str,
+                           mode: str = 'work') -> Optional[TimeLogEntry]:
     """
     Create a TimeLogEntry from parsed entry data.
 
@@ -448,7 +464,7 @@ def _create_time_log_entry(entry_data: dict, filepath: str) -> Optional[TimeLogE
     # Extract additional tags from notes if present
     tags = entry_data.get('tags', [])
     if entry_data.get('notes'):
-        notes_tags = parse_tags_from_text(entry_data['notes'])
+        notes_tags = parse_tags_from_text(entry_data['notes'], mode)
         tags.extend(notes_tags)
 
     return TimeLogEntry(
@@ -711,6 +727,10 @@ PERSONAL_BOUNDARY_TAGS: frozenset[str] = frozenset({'#personal'})
 NON_WORK_TAGS: frozenset[str] = frozenset({'#personal', '#off-task', '#break'})
 
 
+# In a personal root, untagged time is personal and #work marks work.
+PERSONAL_WORK_TAGS: frozenset[str] = frozenset({'#work'})
+
+
 def _has_any_tag(entry: TimeLogEntry, tag_set: frozenset) -> bool:
     """Return True if the entry has any tag from the given set."""
     return any(tag.text.lower() in tag_set for tag in entry.tags)
@@ -733,6 +753,13 @@ def format_duration_long(duration: timedelta) -> str:
     if hours > 0:
         return f"{hours} hr {minutes} min"
     return f"{minutes} min"
+
+
+def _personal_work_time(entries: list[TimeLogEntry]) -> timedelta:
+    """Time in the entries tagged #work: in a personal root, the only work."""
+    return sum((calculate_duration(e.start_time, e.end_time) for e in entries
+                if e.start_time is not None and e.end_time is not None
+                and _has_any_tag(e, PERSONAL_WORK_TAGS)), timedelta())
 
 
 def analyze_work_day(entries: list[TimeLogEntry]) -> Optional[dict]:
@@ -807,6 +834,19 @@ HIGHLIGHTED_TAGS: list[tuple[str, str]] = [
     ('axe', 'axe'),
     ('off-task', 'off-task'),
 ]
+
+# A personal root's highlighted tags.
+PERSONAL_HIGHLIGHTED_TAGS: list[tuple[str, str]] = [
+    ('exercise', 'exercise'),
+    ('family', 'family'),
+    ('maint', 'maint'),
+    ('work', 'work'),
+]
+
+MODE_HIGHLIGHTED_TAGS: dict[str, list[tuple[str, str]]] = {
+    'work': HIGHLIGHTED_TAGS,
+    'personal': PERSONAL_HIGHLIGHTED_TAGS,
+}
 
 
 def duration_minutes(duration: timedelta) -> int:
@@ -887,23 +927,28 @@ def day_log_items(entries: list[TimeLogEntry]) -> list[dict]:
     return items
 
 
-def day_totals(entries: list[TimeLogEntry]) -> dict:
+def day_totals(entries: list[TimeLogEntry], mode: str = 'work') -> dict:
     """
     Total a day's time log.
 
     Args:
         entries: The day's time log entries.
+        mode: The notes root's mode.
 
     Returns:
         Dict with 'work_minutes' (hours worked in the work window, see
-        analyze_work_day), 'total_minutes' (all complete entries),
+        analyze_work_day; in a personal root, the time tagged #work, with
+        no work window), 'total_minutes' (all complete entries),
         'earliest' and 'latest' (HH:MM over every start and end present, or
         None), 'span_minutes' (earliest to latest, or None), and
         'missing_minutes' (span minus total when above
         MISSING_THRESHOLD_MINUTES, otherwise None).
     """
-    analysis = analyze_work_day(entries)
-    work = analysis['hours_worked'] if analysis else timedelta()
+    if mode == 'personal':
+        work = _personal_work_time(entries)
+    else:
+        analysis = analyze_work_day(entries)
+        work = analysis['hours_worked'] if analysis else timedelta()
 
     total = timedelta()
     times: list[datetime] = []
@@ -961,22 +1006,24 @@ def tag_totals(entries: list[TimeLogEntry]) -> dict[str, timedelta]:
     return totals
 
 
-def highlighted_totals(entries: list[TimeLogEntry]) -> list[tuple[str, timedelta]]:
+def highlighted_totals(entries: list[TimeLogEntry],
+                       mode: str = 'work') -> list[tuple[str, timedelta]]:
     """
-    Total the HIGHLIGHTED_TAGS.
+    Total the mode's highlighted tags (HIGHLIGHTED_TAGS for work).
 
     Args:
         entries: Time log entries.
+        mode: The notes root's mode.
 
     Returns:
         (label, duration) pairs in HIGHLIGHTED_TAGS order, leaving out
         items with no time.
     """
-    groups = calculate_time_by_group(entries)
+    groups = calculate_time_by_group(entries, mode)
     tags = {name.lower(): d for name, d in tag_totals(entries).items()}
     result = []
-    for label, name in HIGHLIGHTED_TAGS:
-        if name in TAG_GROUPS:
+    for label, name in MODE_HIGHLIGHTED_TAGS[mode]:
+        if name in MODE_TAG_GROUPS[mode]:
             duration = groups.get(name, timedelta())
         else:
             duration = tags.get(name.lower(), timedelta())

@@ -70,3 +70,16 @@ def test_parse_tags_alias_duplicate_of_canonical():
 
 def test_parse_tags_none():
     assert tags.parse_tags('- [ ] no tags here') == []
+
+
+# Tests for per-mode aliases
+
+def test_tags_canonical_tag_personal_mode_has_no_pers_alias():
+    assert tags.canonical_tag('pers', 'personal') == 'pers'
+    assert tags.canonical_tag('pers') == 'personal'
+
+
+def test_tags_canonical_tag_personal_mode_wk_is_work():
+    assert tags.canonical_tag('#WK', 'personal') == 'work'
+    assert tags.canonical_tag('wk') == 'wk'
+    assert tags.canonical_tag('mtg', 'personal') == 'meeting'

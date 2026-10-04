@@ -83,8 +83,8 @@ def _daily_note_path(notes_root: str, d: date) -> str:
     return str(Path(notes_root) / 'plan' / 'daily' / folder / filename)
 
 
-def _load_days(notes_root: str, start: date,
-               end: date) -> list[tuple[date, list[TimeLogEntry] | None]]:
+def _load_days(notes_root: str, start: date, end: date,
+               mode: str = 'work') -> list[tuple[date, list[TimeLogEntry] | None]]:
     """
     Read the time log of every day from start to end.
 
@@ -92,6 +92,7 @@ def _load_days(notes_root: str, start: date,
         notes_root: Notes root directory.
         start: First day, inclusive.
         end: Last day, inclusive.
+        mode: The notes root's mode.
 
     Returns:
         (date, entries) for each day in order, where entries is None when
@@ -101,12 +102,13 @@ def _load_days(notes_root: str, start: date,
     day = start
     while day <= end:
         path = _daily_note_path(notes_root, day)
-        days.append((day, find_time_log_entries(path) if Path(path).exists() else None))
+        days.append((day, find_time_log_entries(path, mode) if Path(path).exists() else None))
         day += timedelta(days=1)
     return days
 
 
-def build_period_report(notes_root: str, start: date, end: date) -> dict:
+def build_period_report(notes_root: str, start: date, end: date,
+                        mode: str = 'work') -> dict:
     """
     Summarize the time logs from start to end.
 
@@ -114,9 +116,11 @@ def build_period_report(notes_root: str, start: date, end: date) -> dict:
         notes_root: Notes root directory.
         start: First day, inclusive.
         end: Last day, inclusive.
+        mode: The notes root's mode ('personal' has no work window; its
+            work_minutes are the time tagged #work).
 
     Returns:
-        Dict with 'start', 'end', 'work_minutes', 'total_minutes',
+        Dict with 'mode', 'start', 'end', 'work_minutes', 'total_minutes',
         'highlighted' ([{label, minutes}]), 'by_tag' ({tag: minutes},
         alphabetical), and 'days' ([{date, weekday, logged, work_minutes,
         earliest, latest, span_minutes}]).
@@ -124,14 +128,14 @@ def build_period_report(notes_root: str, start: date, end: date) -> dict:
     all_entries: list[TimeLogEntry] = []
     days = []
     work = total = 0
-    for day, entries in _load_days(notes_root, start, end):
+    for day, entries in _load_days(notes_root, start, end, mode):
         # Entries without any time (such as the template's HH:MM
         # placeholders) don't make a day logged
         logged = any(e.start_time or e.end_time for e in entries or [])
         item = {'date': day.isoformat(), 'weekday': day.strftime('%a'),
                 'logged': logged}
         if logged:
-            totals = day_totals(entries)
+            totals = day_totals(entries, mode)
             work += totals['work_minutes']
             total += totals['total_minutes']
             item.update(work_minutes=totals['work_minutes'],
@@ -144,19 +148,21 @@ def build_period_report(notes_root: str, start: date, end: date) -> dict:
 
     by_tag = tag_totals(all_entries)
     return {
+        'mode': mode,
         'start': start.isoformat(),
         'end': end.isoformat(),
         'work_minutes': work,
         'total_minutes': total,
         'highlighted': [{'label': label, 'minutes': duration_minutes(d)}
-                        for label, d in highlighted_totals(all_entries)],
+                        for label, d in highlighted_totals(all_entries, mode)],
         'by_tag': {tag: duration_minutes(by_tag[tag])
                    for tag in sorted(by_tag, key=str.lower)},
         'days': days,
     }
 
 
-def build_day_report(notes_root: str | None, day: date | None, path: str) -> dict:
+def build_day_report(notes_root: str | None, day: date | None, path: str,
+                     mode: str = 'work') -> dict:
     """
     Build the report for one daily note.
 
@@ -165,41 +171,56 @@ def build_day_report(notes_root: str | None, day: date | None, path: str) -> dic
             leave the week out.
         day: The note's date; None to leave the week out.
         path: Path to the daily note.
+        mode: The notes root's mode.
 
     Returns:
-        Dict with 'start' and 'end' (the day), 'kind' ('day'), 'file',
+        Dict with 'mode', 'start' and 'end' (the day), 'kind' ('day'), 'file',
         'entries' (see day_log_items), 'totals' (see day_totals), 'by_tag'
-        ({tag: minutes}, most time first), 'work_vs_nonwork',
+        ({tag: minutes}, most time first), 'work_vs_nonwork' (work mode;
+        None in a personal root, which has 'day_total' instead),
         'plan_adherence' (None without time blocks), and 'week' (see
         build_period_report, or None).
     """
-    entries = find_time_log_entries(path)
+    entries = find_time_log_entries(path, mode)
     blocks = find_time_block_entries(path)
 
     by_tag = tag_totals(entries)
+    totals = day_totals(entries, mode)
     work, nonwork = calculate_work_vs_nonwork(entries)
     logged = work + nonwork
 
     week = None
     if notes_root is not None and day is not None:
         monday = day - timedelta(days=day.weekday())
-        week = build_period_report(notes_root, monday, monday + timedelta(days=6))
+        week = build_period_report(notes_root, monday, monday + timedelta(days=6), mode)
+
+    if mode == 'personal':
+        # Untagged time is personal, so there is no split: a total, with
+        # the #work time as one line
+        work_vs_nonwork = None
+        day_total = {'total_minutes': totals['total_minutes'],
+                     'work_minutes': totals['work_minutes']}
+    else:
+        day_total = None
+        work_vs_nonwork = {
+            'work_minutes': duration_minutes(work),
+            'nonwork_minutes': duration_minutes(nonwork),
+            'total_minutes': duration_minutes(logged),
+            'work_percent': (work / logged * 100) if logged else None,
+        }
 
     return {
+        'mode': mode,
         'start': day.isoformat() if day else None,
         'end': day.isoformat() if day else None,
         'kind': 'day',
         'file': os.path.relpath(path, notes_root) if notes_root is not None else path,
         'entries': day_log_items(entries),
-        'totals': day_totals(entries),
+        'totals': totals,
         'by_tag': {tag: duration_minutes(d) for tag, d in
                    sorted(by_tag.items(), key=lambda x: x[1], reverse=True)},
-        'work_vs_nonwork': {
-            'work_minutes': duration_minutes(work),
-            'nonwork_minutes': duration_minutes(nonwork),
-            'total_minutes': duration_minutes(logged),
-            'work_percent': (work / logged * 100) if logged else None,
-        },
+        'work_vs_nonwork': work_vs_nonwork,
+        'day_total': day_total,
         'plan_adherence': calculate_plan_adherence(blocks) if blocks else None,
         'week': week,
     }
@@ -238,9 +259,10 @@ def format_period_summary(data: dict) -> list[str]:
     Render a period summary (see build_period_report) as text lines.
     """
     lines = [f"## Summary for {data['start']} to {data['end']}", "",
-             "### Total Time", "",
-             _field('-', 'work duration', _minutes(data['work_minutes'])),
-             _field('-', 'total duration', _minutes(data['total_minutes']))]
+             "### Total Time", ""]
+    if data['mode'] != 'personal':
+        lines.append(_field('-', 'work duration', _minutes(data['work_minutes'])))
+    lines.append(_field('-', 'total duration', _minutes(data['total_minutes'])))
     for item in data['highlighted']:
         lines.append(_field('-', item['label'], _minutes(item['minutes'])))
     lines.append("")
@@ -258,8 +280,9 @@ def format_period_summary(data: dict) -> list[str]:
         if not day['logged']:
             lines.append("  * (no log)")
             continue
+        if data['mode'] != 'personal':
+            lines.append(_field('  *', 'work duration', _minutes(day['work_minutes'])))
         lines += [
-            _field('  *', 'work duration', _minutes(day['work_minutes'])),
             _field('  *', 'earliest time', day['earliest']),
             _field('  *', 'latest time', day['latest']),
             _field('  *', 'total time', _minutes(day['span_minutes'])),
@@ -291,9 +314,10 @@ def format_day_report(data: dict) -> list[str]:
         lines.append("")
 
         totals = data['totals']
-        lines += ["### Total Time", "",
-                  _field('-', 'work duration', _minutes(totals['work_minutes'])),
-                  _field('-', 'total duration', _minutes(totals['total_minutes']))]
+        lines += ["### Total Time", ""]
+        if data['mode'] != 'personal':
+            lines.append(_field('-', 'work duration', _minutes(totals['work_minutes'])))
+        lines.append(_field('-', 'total duration', _minutes(totals['total_minutes'])))
         if totals['earliest'] is not None:
             lines += [_field('-', 'earliest time', totals['earliest']),
                       _field('-', 'latest time', totals['latest']),
@@ -310,7 +334,14 @@ def format_day_report(data: dict) -> list[str]:
             lines.append("")
 
         split = data['work_vs_nonwork']
-        if split['total_minutes'] > 0:
+        day_total = data['day_total']
+        if day_total is not None and day_total['total_minutes'] > 0:
+            lines += ["### Day Total", "",
+                      f"- Total logged: {format_duration(timedelta(minutes=day_total['total_minutes']))}"]
+            if day_total['work_minutes'] > 0:
+                lines.append(f"- Work: {format_duration(timedelta(minutes=day_total['work_minutes']))}")
+            lines.append("")
+        elif split is not None and split['total_minutes'] > 0:
             lines += ["### Work vs Non-Work", "",
                       f"- Work time: {format_duration(timedelta(minutes=split['work_minutes']))}",
                       f"- Non-work time: {format_duration(timedelta(minutes=split['nonwork_minutes']))}",
@@ -336,7 +367,7 @@ def format_day_report(data: dict) -> list[str]:
 
 
 def build_report(notes_root: str, date_text: str | None,
-                 today: date | None = None) -> dict:
+                 today: date | None = None, mode: str = 'work') -> dict:
     """
     Build the report selected by a --date value.
 
@@ -344,6 +375,7 @@ def build_report(notes_root: str, date_text: str | None,
         notes_root: Notes root directory.
         date_text: A date-period value, or None for today.
         today: Reference date for None (default: today).
+        mode: The notes root's mode.
 
     Returns:
         The day report (see build_day_report) for a single day, otherwise
@@ -358,8 +390,8 @@ def build_report(notes_root: str, date_text: str | None,
         path = _daily_note_path(notes_root, start)
         if not Path(path).exists():
             raise ValueError(f"Daily note not found: {path}")
-        return build_day_report(notes_root, start, path)
-    data = build_period_report(notes_root, start, end)
+        return build_day_report(notes_root, start, path, mode)
+    data = build_period_report(notes_root, start, end, mode)
     return {'kind': 'period', **data}
 
 

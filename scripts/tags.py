@@ -18,22 +18,36 @@ TAG_ALIASES: dict[str, str] = {
     '#waiting': '#wait',
 }
 
+# Aliases in a personal root, where #pers -> #personal is not wanted
+# (untagged time is personal there) and #wk marks work time.
+PERSONAL_TAG_ALIASES: dict[str, str] = {
+    '#mtg': '#meeting',
+    '#wk': '#work',
+    '#waiting': '#wait',
+}
+
+MODE_TAG_ALIASES: dict[str, dict[str, str]] = {
+    'work': TAG_ALIASES,
+    'personal': PERSONAL_TAG_ALIASES,
+}
+
 TAG_PATTERN = re.compile(r'#([\w-]+)')
 
 
-def canonical_tag(name: str) -> str:
+def canonical_tag(name: str, mode: str = 'work') -> str:
     """
     Return the canonical name of a tag, without the leading #.
 
     Args:
         name: Tag name, with or without #.
+        mode: The notes root's mode, which picks the aliases.
 
     Returns:
         The alias target when the name is a known alias (ignoring case),
         otherwise the name as given.
     """
     bare = name[1:] if name.startswith('#') else name
-    alias = TAG_ALIASES.get('#' + bare.lower())
+    alias = MODE_TAG_ALIASES[mode].get('#' + bare.lower())
     return alias[1:] if alias else bare
 
 

@@ -1522,3 +1522,16 @@ def test_cli_task_update_reports_ancestors(notes_root, capsys):
     assert out['ancestors'] == [{'line': 1, 'old': '- [o] main 📅 2026-10-08',
                                  'new': '- [x] main 📅 2026-10-08'}]
     assert path.read_text().splitlines()[0] == '- [x] main 📅 2026-10-08'
+
+
+def test_time_personal_mode_follows_the_root(daily_note, capsys):
+    """In a personal root the report has no work duration or work split."""
+    sentinel = daily_note / '.meta-notes'
+    sentinel.write_text(sentinel.read_text() + '\nmode = "personal"\n')
+    code, data, _ = run_json(capsys, ['time', '--date', '2026-09-22'])
+
+    assert code == 0
+    assert data['mode'] == 'personal'
+    assert data['work_vs_nonwork'] is None
+    assert 'work duration' not in data['report']
+    assert '### Day Total' in data['report']
