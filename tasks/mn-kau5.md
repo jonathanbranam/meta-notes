@@ -2,12 +2,13 @@
 id = "mn-kau5"
 title = "Ceremony skills follow the root mode"
 kind = "feature"
-state = "open"
+state = "integrated"
 created_at = "2026-10-04T03:01:00.703Z"
-updated_at = "2026-10-04T03:01:00.901582220Z"
+updated_at = "2026-10-04T03:17:17.816499297Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 size = "M"
+commit = "f2f8886"
 +++
 
 ---
@@ -60,3 +61,8 @@ branches in its text, rather than shipping a second set of skills:
 - Personal mode drops the daily shutdown: no `- [ ] shutdown complete` in
   a personal daily note, `daily-shutdown` says it's for work roots, and
   `ceremony status` doesn't report it there. `daily-plan` runs on its own.
+
+## Thread
+
+### note · agent:manager · 2026-10-04T03:17:17.816Z
+integrated: f2f8886
