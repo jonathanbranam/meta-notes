@@ -9,6 +9,7 @@ specs: []
 needs: [47rb]
 see: [zyab]
 tasks: [mn-kau5]
+closed: 2026-10-04T03:16:23Z
 ---
 
 # Ceremony skills follow the root mode

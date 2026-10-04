@@ -46,6 +46,14 @@ A ceremony marker SHALL be a checkbox line whose text, after the checkbox and wi
 - **WHEN** the user runs `meta-notes ceremony status --date 2026-09-21..2026-09-25`
 - **THEN** the command SHALL exit non-zero with a usage error
 
+### Requirement: Ceremony status in a personal root  {#r-0769}
+In a root whose mode is `personal` (see `design/specs/notes-config.md`), a daily note has no `shutdown complete` marker, so `meta-notes ceremony status` SHALL NOT report `daily-shutdown`: the result SHALL have the three other ceremonies. In a `work` root the result SHALL be unchanged.
+
+#### Scenario: Personal root  {#s-1428}
+*Verification*: **non-executable**
+- **WHEN** the user runs `meta-notes ceremony status` in a personal root
+- **THEN** the result SHALL list `daily-plan`, `weekly-review` and `weekly-plan` and no `daily-shutdown`
+
 ### Requirement: Ceremony status output  {#r-3127}
 The text output SHALL be one line per ceremony with its name, `done` or `not done`, and the completion date when there is one, followed by `(no note)` or `(no marker)` when the note or marker is missing. With `--json`, the result SHALL have `date`, `week_start`, and a `ceremonies` list, each entry with `name` (`daily-plan`, `daily-shutdown`, `weekly-review`, `weekly-plan`), `note`, `note_exists`, `marker_present`, `done`, and `completed` (a date or null).
 

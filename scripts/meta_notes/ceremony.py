@@ -82,13 +82,15 @@ def _read_lines(path: str) -> list[str] | None:
         return None
 
 
-def status(day: date) -> dict:
+def status(day: date, mode: str = "work") -> dict:
     """
     Ceremony status for a day and the Monday-to-Sunday week containing it.
 
     Args:
         day: The day. Paths are relative to the current directory, which
             the CLI sets to the notes root.
+        mode: The root's mode. A personal root has no daily shutdown, so
+            that ceremony is left out.
 
     Returns:
         Dict with `date`, `week_start`, and `ceremonies`, a list of dicts
@@ -99,6 +101,8 @@ def status(day: date) -> dict:
     contents = {kind: _read_lines(path) for kind, path in notes.items()}
     ceremonies = []
     for name, kind, text in CEREMONIES:
+        if mode == "personal" and name == "daily-shutdown":
+            continue
         lines = contents[kind]
         marker = find_marker(lines, text) if lines is not None else Marker()
         ceremonies.append({
@@ -130,7 +134,7 @@ def format_status(data: dict) -> list[str]:
     return lines
 
 
-def run(day: date) -> tuple[list[str], dict]:
+def run(day: date, mode: str = "work") -> tuple[list[str], dict]:
     """Ceremony status as (text lines, JSON data)."""
-    data = status(day)
+    data = status(day, mode)
     return format_status(data), data

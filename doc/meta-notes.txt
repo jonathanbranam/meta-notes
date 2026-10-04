@@ -1258,7 +1258,9 @@ Commands ~
     Daily planning and daily shutdown are read from {day}'s daily note,
     weekly review and weekly planning from the week's weekly note, at the
     paths |meta-notes-cli-note| uses. A missing note or marker makes its
-    ceremonies not done; it isn't an error. Writes nothing.
+    ceremonies not done; it isn't an error. Writes nothing. In a `personal`
+    root (|meta-notes-config|) there is no daily shutdown, so it isn't
+    reported.
 
     The output is one line per ceremony: >
         daily-plan:     done
@@ -1567,8 +1569,8 @@ budget, starts by running |meta-notes-cli-conventions|, reads notes through
 focused CLI queries, edits task lines only with |meta-notes-cli-task-update|,
 and can be stopped at any point.
 
-    daily-shutdown  End of each workday, about 15 minutes: collect loose
-                    items into tasks, PR check, a next step per project
+    daily-shutdown  End of each workday (work roots only), about 15
+                    minutes: collect loose items into tasks, PR check, a next step per project
                     worked on, the time-log check, a Follow up list,
                     commit (after you confirm), and `shutdown complete`.
                     Offers daily-plan.
@@ -1602,13 +1604,21 @@ and can be stopped at any point.
                     `--search`. Read-only, with no time budget, and it
                     doesn't run |meta-notes-cli-conventions|.
 
+In a `personal` root (|meta-notes-config|) the skills read the mode from
+|meta-notes-cli-conventions| and follow the personal day: no PR, Slack or
+email steps; the next day is tomorrow, weekends included; `daily-shutdown`
+doesn't apply and `daily-plan` runs on its own; `weekly-review` and
+`weekly-plan` are on Sunday and cover Monday to Sunday, with no manager
+summary; `calendar` free time is 7:00 to 21:00, with no 1-1s; and in
+`time-block` `work:` is the exception instead of `pers:`.
+
 Ceremony markers ~
                                                 *meta-notes-ceremonies*
 The daily and weekly templates carry checklist lines that record whether a
 ceremony was done:
 
     daily note      `- [ ] plan complete`       daily planning
-                    `- [ ] shutdown complete`   daily shutdown
+                    `- [ ] shutdown complete`   daily shutdown (work)
     weekly note     `- [ ] review complete`     weekly review
                     `- [ ] plan complete`       weekly planning
 

@@ -91,3 +91,35 @@ def test_hours_find_template_personal_prefers_daily_personal(tmp_path, monkeypat
     assert template.find_template(path, 'personal') == 'resource/template/daily-personal.md'
     assert template.find_template(path, 'work') == 'resource/template/daily.md'
     assert template.find_template(path) == 'resource/template/daily.md'
+
+
+# Tests for the personal ceremonies
+
+def test_hours_personal_template_has_no_shutdown_marker():
+    text = (REPO / 'templates' / 'daily-personal.md').read_text()
+
+    assert 'plan complete' in text
+    assert 'shutdown complete' not in text
+    assert 'shutdown complete' in (REPO / 'templates' / 'daily.md').read_text()
+
+
+def test_hours_work_conventions_have_no_mode_section():
+    work = conventions.run('work')
+
+    assert 'Personal mode' not in work
+    assert work == conventions.render(
+        conventions.CONVENTIONS_FILE.read_text(encoding='utf-8'), 'work')
+
+
+def test_hours_personal_conventions_end_with_mode_section():
+    text = conventions.run('personal')
+
+    assert '\n## Personal mode\n' in text
+    assert 'no daily shutdown' in text
+    assert text.startswith('# meta-notes conventions')
+
+
+def test_hours_work_prime_has_no_mode_section():
+    from meta_notes import prime
+
+    assert 'Personal mode' not in prime.run(None, mode='work')

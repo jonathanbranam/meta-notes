@@ -1,6 +1,6 @@
 ---
 name: weekly-plan
-description: Plan next workweek (Monday–Friday) in a meta-notes notes root, usually Friday afternoon, about 30 minutes. Use when the user says "weekly plan", "plan next week", or follows the reminder at the end of weekly-review. Works out capacity from next week's calendar, lists deadlines and meetings to schedule, and writes 3–5 priorities into next week's note. It does not review this week (that is weekly-review).
+description: Plan next week in a meta-notes notes root (Monday–Friday, usually Friday afternoon; all seven days on Sunday in a personal root), about 30 minutes. Use when the user says "weekly plan", "plan next week", or follows the reminder at the end of weekly-review. Works out capacity from next week's calendar, lists deadlines and meetings to schedule, and writes 3–5 priorities into next week's note. It does not review this week (that is weekly-review).
 ---
 
 # Weekly Plan
@@ -19,12 +19,16 @@ About 30 minutes. Say so in one line when you start.
    `bin/meta-notes` into a directory on your PATH, for example
    `ln -s <plugin>/bin/meta-notes ~/bin/meta-notes`." Don't read or edit
    any note.
-2. Run `meta-notes conventions` and follow it for everything below.
+2. Run `meta-notes conventions` and follow it for everything below. If
+   it ends with a "Personal mode" section, this is a personal root; steps
+   that differ say so.
 
 ## Hard rules
 
 - The target is next week, Monday to Friday (NEXT_MON..NEXT_FRI), unless
-  the user names another week.
+  the user names another week. In a personal root the plan is made on
+  Sunday and covers Monday to Sunday (NEXT_MON..NEXT_SUN); read
+  NEXT_MON..NEXT_FRI below as NEXT_MON..NEXT_SUN, and list all seven days.
 - Change existing task lines only with `meta-notes task update`, with
   `file`, `line`, and `text` from `meta-notes tasks --json`. Never rewrite
   them by hand.
@@ -59,7 +63,8 @@ Run `meta-notes calendar --date NEXT_MON..NEXT_FRI --json`.
   with whichever they provide.
 
 Ask for working hours if you don't know them (assume 8:00–17:00
-otherwise). For each day, list:
+otherwise; in a personal root the day is 7:00–21:00, from
+`meta-notes prime`). For each day, list:
 
 - meetings
 - free gaps of 90 minutes or more: these are capacity

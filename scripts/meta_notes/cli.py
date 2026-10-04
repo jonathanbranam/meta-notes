@@ -493,7 +493,7 @@ def cmd_task_replace(args, root: str) -> Output:
 
 def cmd_ceremony_status(args, root: str) -> Output:
     day = date.fromisoformat(args.date) if args.date else date.today()
-    lines, data = ceremony.run(day)
+    lines, data = ceremony.run(day, _root_mode(root))
     return Output(data, lines)
 
 

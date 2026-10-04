@@ -339,7 +339,7 @@ re-run it after updating the plugin to link new ones. Each starts from
 
 | Skill | When |
 |-------|------|
-| `daily-shutdown` | End of each workday; offers `daily-plan` |
+| `daily-shutdown` | End of each workday (work roots); offers `daily-plan` |
 | `daily-plan` | After shutdown, or the next morning |
 | `weekly-review` | Friday morning; summary for your manager |
 | `weekly-plan` | Friday afternoon; next week's priorities |
@@ -351,7 +351,11 @@ re-run it after updating the plugin to link new ones. Each starts from
 
 Daily notes carry `- [ ] plan complete` and `- [ ] shutdown complete`,
 weekly notes `- [ ] review complete` and `- [ ] plan complete`. The skills
-check them, and `meta-notes ceremony status` reports them.
+check them, and `meta-notes ceremony status` reports them. In a `personal`
+root (`mode = "personal"` in `.meta-notes`) the skills follow the personal
+day instead: no PR, Slack or email steps, tomorrow is the next day,
+weekly review and plan happen on Sunday and cover seven days, and there is
+no daily shutdown (so no `shutdown complete` marker or status).
 
 ## Autosave and Autoreload
 

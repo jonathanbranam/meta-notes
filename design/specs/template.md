@@ -237,7 +237,7 @@ The shipped weekly template SHALL include `## Review` and `## Plan` sections and
 - **THEN** it SHALL contain `## Review` and `## Plan` headings, one `- [ ] review complete` line, and one `- [ ] plan complete` line
 
 ### Requirement: Personal daily template  {#r-1c17}
-In a root whose mode is `personal`, a new daily note SHALL use `resource/template/daily-personal.md` when it exists, and otherwise `daily.md` as in a work root. The template shipped as `templates/daily-personal.md` SHALL have a Time Block running 7:00am to 9:00pm and the log line `- start day:`; the work template keeps 8:00am to 6:00pm and `- start work:`.
+In a root whose mode is `personal`, a new daily note SHALL use `resource/template/daily-personal.md` when it exists, and otherwise `daily.md` as in a work root. The template shipped as `templates/daily-personal.md` SHALL have a Time Block running 7:00am to 9:00pm and the log line `- start day:`, and no `- [ ] shutdown complete` marker (a personal root has no daily shutdown); the work template keeps 8:00am to 6:00pm and `- start work:`.
 
 #### Scenario: Personal root picks the personal template  {#s-bdd9}
 *Verification*: **non-executable**

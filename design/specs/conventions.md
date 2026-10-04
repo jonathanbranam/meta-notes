@@ -6,7 +6,7 @@ Specifies `meta-notes conventions`, which prints the shared note syntax and edit
 ## Requirements
 
 ### Requirement: Conventions command  {#r-08c2}
-`meta-notes conventions` SHALL print the conventions as markdown to stdout. With `--json`, the result SHALL have `version` (the CLI version), `mode` (the mode of the notes root found, or `work` with none) and `text` (the same markdown). Where the conventions differ by mode, the text SHALL include the mode's part (none yet). The command SHALL work outside a notes root and SHALL NOT read or write notes; it reads only `.meta-notes` for the mode.
+`meta-notes conventions` SHALL print the conventions as markdown to stdout. With `--json`, the result SHALL have `version` (the CLI version), `mode` (the mode of the notes root found, or `work` with none) and `text` (the same markdown). Where the conventions differ by mode, the text SHALL include the mode's part: a `personal` root's conventions end with a "Personal mode" section (the skills' signal for the mode), and a `work` root's conventions SHALL be unchanged. The command SHALL work outside a notes root and SHALL NOT read or write notes; it reads only `.meta-notes` for the mode.
 
 #### Scenario: Outside a notes root  {#s-3307}
 *Verification*: **non-executable**

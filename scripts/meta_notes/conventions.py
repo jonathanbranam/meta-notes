@@ -37,9 +37,24 @@ def _tag_aliases() -> str:
                          break_on_hyphens=False)
 
 
-# Text added to the conventions for a mode where it differs from the other;
-# none yet. Dependent tickets fill it in.
-MODE_TEXT: dict[str, str] = {}
+# Text added to the conventions for a mode where it differs from the other.
+# Work, the default, adds none, so its conventions are unchanged. The skills
+# take a root to be personal when this section is there.
+MODE_TEXT: dict[str, str] = {
+    "personal": """\
+## Personal mode
+
+This notes root is in **personal** mode. The skills follow the personal day:
+
+- No PR, Slack or email steps. The next day is tomorrow, weekends included.
+- There is no daily shutdown, and no `shutdown complete` marker in a daily
+  note. `daily-plan` runs on its own.
+- The weekly review and weekly plan happen on Sunday and cover the seven
+  days Monday to Sunday. The review has no manager summary.
+- Free time is the personal day (07:00 to 21:00); there are no 1-1s.
+- In the Time Block, `work:` marks the exception; time is personal by
+  default, so `pers:` isn't needed.""",
+}
 
 GENERATORS = {
     "workdays": hours.conventions_text,
