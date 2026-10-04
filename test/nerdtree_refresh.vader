@@ -49,6 +49,26 @@ Execute (Nothing is queued without a visible tree):
   AssertEqual 0, len(timer_info())
   AssertEqual [], g:calls
 
+Execute (A hidden or other-tab tree is stale after an event with no visible tree):
+  let g:calls = []
+  new
+  setlocal buftype=nofile filetype=nerdtree
+  let b:NERDTree = {'root': {'findNode': function('StubFind'), 'path': {'str': {-> '/r'}}, 'dir': '/r', 'refresh': function('StubRefresh')}, 'render': function('StubRender')}
+  doautocmd BufEnter
+  let g:gen1 = b:meta_notes_nerd_gen
+  let g:hidden_buf = bufnr('%')
+  hide
+  let g:calls = []
+  call meta_notes#autosave#NerdQueue('/r/open/new-dir')
+  AssertEqual 0, len(timer_info())
+  AssertEqual [], g:calls
+  " Reopening: the generation moved, so a running watcher no longer skips
+  execute 'buffer' g:hidden_buf
+  Assert b:meta_notes_nerd_gen > g:gen1
+  Assert index(g:calls, 'render') >= 0
+  unlet g:gen1 g:hidden_buf
+  bwipeout!
+
 Execute (Opt-out: nothing is queued):
   new
   setlocal buftype=nofile filetype=nerdtree

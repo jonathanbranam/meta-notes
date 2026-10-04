@@ -506,9 +506,15 @@ function! s:NerdWins() abort
         \ && type(getbufvar(v:val.bufnr, "NERDTree", 0)) == v:t_dict')
 endfunction
 
-" Queue the parent of a changed path, when a tree is visible
+" Queue the parent of a changed path, when a tree is visible. With none
+" visible, only move the generation, so a hidden or other-tab tree refreshes
+" when it's entered; no queue and no timer.
 function! meta_notes#autosave#NerdQueue(path) abort
-  if !s:NerdOn() || empty(s:NerdWins())
+  if !s:NerdOn()
+    return
+  endif
+  if empty(s:NerdWins())
+    let s:nerd_gen += 1
     return
   endif
   let s:nerd_dirs[fnamemodify(a:path, ':h')] = 1
