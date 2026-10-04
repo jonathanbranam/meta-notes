@@ -103,3 +103,5 @@
 {"actor":"agent:manager","at":"2026-10-04T03:17:17.816499297Z","from":"open","task":"mn-kau5","to":"integrated"}
 {"actor":"agent:manager","at":"2026-10-04T03:20:03.698048776Z","from":"open","task":"mn-eyet","to":"integrated"}
 {"actor":"human","at":"2026-10-04T12:44:33.276658775Z","from":"planned","task":"mn-7951","to":"integrated"}
+{"actor":"human","at":"2026-10-04T22:54:42.801Z","from":"","task":"mn-rb4z","to":"pending"}
+{"actor":"external:orchestrator","at":"2026-10-04T22:54:47.202091671Z","from":"pending","task":"mn-rb4z","to":"open"}
