@@ -46,8 +46,7 @@ The foundation for zyab. The human decided, 2026-10-03:
 Each behaviour that changes is its own ticket: 357e (time report), kxxy
 (hours and days), bup2 (ceremony skills), 79z2 (init and templates).
 
-## Open with the human
+## Decided with the human, 2026-10-04
 
-- The key's name and values (`mode`, `work`/`personal`).
-- Whether hours and workdays get their own keys now or only mode defaults
-  (kxxy).
+- The key is `mode`, values `"work"` and `"personal"`.
+- Hours and workdays are fixed per mode, not separate keys (kxxy).

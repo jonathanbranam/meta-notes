@@ -39,8 +39,10 @@ whole day as work.
 - Tag aliases (`scripts/tags.py:11-19`): `#pers` -> `#personal` is a work
   idea; personal gets a work alias instead.
 
-## Open with the human
+## Decided with the human, 2026-10-04
 
-- The tag that marks work in a personal root (`#work`?) and its alias.
-- `#maint` or `#home`.
-- Whether highlighted tags should be config rather than per-mode lists.
+- In a personal root, `#work` marks work time.
+- Home maintenance is `#maint` (not `#home`). Personal highlighted tags:
+  `#exercise`, `#family`, `#maint`, `#work`.
+- Highlighted tags stay per-mode lists, not config, until a root needs
+  its own.

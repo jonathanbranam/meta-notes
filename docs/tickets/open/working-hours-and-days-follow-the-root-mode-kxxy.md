@@ -34,8 +34,9 @@ weekends").
   `[checkin] end` key already exists) and the daily template read the same
   value, so 17:00 vs 17:30 can't drift again.
 
-## Open with the human
+## Decided with the human, 2026-10-04
 
-- The personal day's span (e.g. 07:00-21:00) and whether it should be a
-  key (`[day] start`, `end`, `days`) or fixed per mode. YAGNI says per mode
-  until a root wants different hours.
+- Personal: 07:00 to 21:00, every day of the week, fixed by the mode (no
+  `[day]` keys).
+- Update the daily template for it: in a personal root the Time Block runs
+  7:00am to 9:00pm and the log line is "start day:".

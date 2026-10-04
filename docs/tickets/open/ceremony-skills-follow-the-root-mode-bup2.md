@@ -41,8 +41,10 @@ branches in its text, rather than shipping a second set of skills:
   mode `work:` is the exception instead of `pers:`.
 - nm28's review step: weekly at work, maybe monthly at home.
 
-## Open with the human
+## Decided with the human, 2026-10-04
 
-- When the personal weekly review and plan happen.
-- Whether personal mode runs a daily shutdown at all (their `CLAUDE.md`
-  says every workday ends with one).
+- Personal weekly review and weekly plan happen on Sunday; they cover the
+  seven days Monday to Sunday.
+- Personal mode drops the daily shutdown: no `- [ ] shutdown complete` in
+  a personal daily note, `daily-shutdown` says it's for work roots, and
+  `ceremony status` doesn't report it there. `daily-plan` runs on its own.
