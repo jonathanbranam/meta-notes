@@ -160,6 +160,7 @@ function! meta_notes#autosave#OnBufRead() abort
 endfunction
 
 function! meta_notes#autosave#OnBufEnter() abort
+  call s:NerdEnter()
   if s:Autosave() || s:Autoreload() || exists('b:meta_notes_root')
     call meta_notes#autosave#Attach(bufnr('%'), 0)
   endif
@@ -469,14 +470,143 @@ function! meta_notes#autosave#StopWatchers() abort
   call s:StopTimer()
 endfunction
 
-" A path changed: check its buffer, if it's loaded
+" A path changed: check its buffer if it's loaded, else queue its parent
+" directory for the NERDTree refresh
 function! s:WatcherOutput(channel, line) abort
   let l:path = resolve(a:line)
+  let l:loaded = 0
   for l:info in getbufinfo({'bufloaded': 1})
     if l:info.name !=# '' && resolve(fnamemodify(l:info.name, ':p')) ==# l:path
       call s:Check(l:info.bufnr)
+      let l:loaded = 1
     endif
   endfor
+  if !l:loaded
+    call meta_notes#autosave#NerdQueue(l:path)
+  endif
+endfunction
+
+" NERDTree refresh
+" Script state survives a re-source (:MetaNotesReload), so it never starts
+" a second timer.
+if !exists('s:nerd_timer')
+  let s:nerd_timer = -1
+  let s:nerd_dirs = {}
+  let s:nerd_gen = 0
+endif
+
+function! s:NerdOn() abort
+  return get(g:, 'meta_notes_nerdtree_refresh', 1) && exists('g:NERDTree')
+endfunction
+
+" NERDTree windows in the current tab
+function! s:NerdWins() abort
+  return filter(getwininfo(), 'v:val.tabnr == tabpagenr()
+        \ && getbufvar(v:val.bufnr, "&filetype") ==# "nerdtree"
+        \ && type(getbufvar(v:val.bufnr, "NERDTree", 0)) == v:t_dict')
+endfunction
+
+" Queue the parent of a changed path, when a tree is visible
+function! meta_notes#autosave#NerdQueue(path) abort
+  if !s:NerdOn() || empty(s:NerdWins())
+    return
+  endif
+  let s:nerd_dirs[fnamemodify(a:path, ':h')] = 1
+  if s:nerd_timer != -1
+    call timer_stop(s:nerd_timer)
+  endif
+  let s:nerd_timer = timer_start(300, function('s:NerdTimer'))
+endfunction
+
+function! s:NerdTimer(timer) abort
+  let s:nerd_timer = -1
+  call meta_notes#autosave#NerdDrain()
+endfunction
+
+" Refresh the queued directories in the visible trees, rendering once per
+" tree. Waits (keeping the queue) in insert mode and on the command line;
+" CursorHold or the next event tries again.
+function! meta_notes#autosave#NerdDrain() abort
+  if empty(s:nerd_dirs)
+    return
+  endif
+  if !s:NerdOn()
+    let s:nerd_dirs = {}
+    return
+  endif
+  " Not insert mode or the typed command line ('cv' and 'ce' are Ex mode)
+  if mode(1) =~# '^[iR]\|^c$'
+    return
+  endif
+  let l:dirs = keys(s:nerd_dirs)
+  let s:nerd_dirs = {}
+  let s:nerd_gen += 1
+  let l:cur = win_getid()
+  for l:win in s:NerdWins()
+    let l:tree = getbufvar(l:win.bufnr, 'NERDTree')
+    let l:changed = 0
+    for l:dir in l:dirs
+      try
+        let l:node = l:tree.root.findNode(g:NERDTreePath.New(l:dir))
+        if !empty(l:node) && (l:node.isOpen || !empty(l:node.children))
+          call l:node.refresh()
+          let l:changed = 1
+        endif
+      catch
+      endtry
+    endfor
+    call setbufvar(l:win.bufnr, 'meta_notes_nerd_gen', s:nerd_gen)
+    if l:changed
+      call s:NerdRender(l:win.winid, l:tree, l:cur)
+    endif
+  endfor
+endfunction
+
+" Go to a window without BufEnter, so a render doesn't trigger a refresh
+function! s:Goto(winid) abort
+  noautocmd return win_gotoid(a:winid)
+endfunction
+
+" Render a tree from its window, keeping the cursor, and come back
+function! s:NerdRender(winid, tree, back) abort
+  if !s:Goto(a:winid)
+    return
+  endif
+  try
+    let l:view = winsaveview()
+    call a:tree.render()
+    call winrestview(l:view)
+  catch
+  finally
+    call s:Goto(a:back)
+  endtry
+endfunction
+
+function! meta_notes#autosave#OnCursorHold() abort
+  if !empty(s:nerd_dirs)
+    call meta_notes#autosave#NerdDrain()
+  endif
+endfunction
+
+" Entering a NERDTree window: start the root's watcher, and refresh the
+" tree unless a running watcher has kept it current.
+function! s:NerdEnter() abort
+  if !s:NerdOn() || &filetype !=# 'nerdtree' || type(get(b:, 'NERDTree', 0)) != v:t_dict
+    return
+  endif
+  let l:root = meta_notes#autosave#FindRoot(b:NERDTree.root.path.str() . '/_')
+  if l:root !=# ''
+    call s:StartWatcher(l:root)
+    if has_key(s:watchers, l:root) && get(b:, 'meta_notes_nerd_gen', -1) == s:nerd_gen
+      return
+    endif
+  endif
+  let b:meta_notes_nerd_gen = s:nerd_gen
+  try
+    call b:NERDTree.root.refresh()
+    call b:NERDTree.render()
+  catch
+  endtry
 endfunction
 
 " Timer

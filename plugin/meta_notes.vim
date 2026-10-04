@@ -102,6 +102,7 @@ augroup meta_notes_autosave
   autocmd BufReadPost,BufNewFile * call meta_notes#autosave#OnBufRead()
   autocmd BufWritePost * call meta_notes#autosave#OnWritten()
   autocmd BufEnter * call meta_notes#autosave#OnBufEnter()
+  autocmd CursorHold * call meta_notes#autosave#OnCursorHold()
   autocmd FocusGained * call meta_notes#autosave#OnFocusGained()
   autocmd TextChanged * call meta_notes#autosave#OnTextChanged()
   autocmd InsertLeave * call meta_notes#autosave#OnInsertLeave()

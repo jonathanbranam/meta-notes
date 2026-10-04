@@ -1,0 +1,76 @@
+Execute (Setup - stub NERDTree with one visible tree):
+  let g:calls = []
+  function! StubRefresh() dict abort
+    call add(g:calls, 'refresh ' . self.dir)
+  endfunction
+  function! StubRender() dict abort
+    call add(g:calls, 'render')
+  endfunction
+  function! StubFind(path) dict abort
+    return get(g:stub_nodes, a:path, {})
+  endfunction
+  let g:NERDTree = {}
+  let g:NERDTreePath = {'New': {p -> p}}
+  let g:stub_nodes = {
+        \ '/r/open': {'dir': '/r/open', 'isOpen': 1, 'children': [], 'refresh': function('StubRefresh')},
+        \ '/r/loaded': {'dir': '/r/loaded', 'isOpen': 0, 'children': [1], 'refresh': function('StubRefresh')},
+        \ '/r/never': {'dir': '/r/never', 'isOpen': 0, 'children': [], 'refresh': function('StubRefresh')},
+        \ }
+  new
+  setlocal buftype=nofile filetype=nerdtree
+  let b:NERDTree = {'root': {'findNode': function('StubFind'), 'path': {'str': {-> '/r'}}, 'dir': '/r', 'refresh': function('StubRefresh')}, 'render': function('StubRender')}
+  let g:tree_win = win_getid()
+  wincmd p
+  let g:calls = []
+
+Execute (Changed paths queue their parent; a burst is one drain):
+  call meta_notes#autosave#NerdQueue('/r/open/new-dir')
+  call meta_notes#autosave#NerdQueue('/r/open/other.md')
+  call meta_notes#autosave#NerdQueue('/r/never/x.md')
+  call meta_notes#autosave#NerdQueue('/r/loaded/y.md')
+  AssertEqual [], g:calls
+  AssertEqual 1, len(timer_info())
+
+  call timer_stopall()
+  call meta_notes#autosave#NerdDrain()
+  AssertEqual 1, count(g:calls, 'render')
+  Assert index(g:calls, 'refresh /r/open') >= 0
+  Assert index(g:calls, 'refresh /r/loaded') >= 0
+  Assert index(g:calls, 'refresh /r/never') < 0
+  AssertEqual 1, count(g:calls, 'refresh /r/open')
+  AssertNotEqual g:tree_win, win_getid()
+
+Execute (Nothing is queued without a visible tree):
+  let g:calls = []
+  call win_gotoid(g:tree_win)
+  bwipeout!
+  let g:calls = []
+  call meta_notes#autosave#NerdQueue('/r/open/z.md')
+  AssertEqual 0, len(timer_info())
+  AssertEqual [], g:calls
+
+Execute (Opt-out: nothing is queued):
+  new
+  setlocal buftype=nofile filetype=nerdtree
+  let b:NERDTree = {'root': {'findNode': function('StubFind'), 'path': {'str': {-> '/r'}}, 'dir': '/r', 'refresh': function('StubRefresh')}, 'render': function('StubRender')}
+  wincmd p
+  let g:calls = []
+  let g:meta_notes_nerdtree_refresh = 0
+  call meta_notes#autosave#NerdQueue('/r/open/z.md')
+  AssertEqual 0, len(timer_info())
+  AssertEqual [], g:calls
+  unlet g:meta_notes_nerdtree_refresh
+
+Execute (Without NERDTree nothing happens):
+  unlet g:NERDTree
+  call meta_notes#autosave#NerdQueue('/r/open/z.md')
+  AssertEqual 0, len(timer_info())
+  let g:NERDTree = {}
+
+Execute (Cleanup):
+  wincmd p
+  bwipeout!
+  unlet g:NERDTree g:NERDTreePath g:calls g:stub_nodes g:tree_win
+  delfunction StubRefresh
+  delfunction StubRender
+  delfunction StubFind

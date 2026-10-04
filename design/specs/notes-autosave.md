@@ -61,3 +61,16 @@ Unless `g:meta_notes_disable_gitgutter` is 0 (default 1), the plugin SHALL run t
 *Verification*: **non-executable**
 - **WHEN** the working directory is outside a notes root, or `g:meta_notes_disable_gitgutter` is 0, or vim-gitgutter isn't installed
 - **THEN** the plugin SHALL NOT disable GitGutter and SHALL NOT error
+
+### Requirement: NERDTree refresh  {#r-8af1}
+Unless `g:meta_notes_nerdtree_refresh` is 0 (default 1) and only when `exists('g:NERDTree')`, the plugin SHALL, on a file watcher event for a path that is not a loaded buffer, queue the path's parent directory, and 300 ms after the last event (the timer reset per event, never more than one) SHALL refresh those directories in the NERDTree windows of the current tab that have them open or loaded, rendering each tree once and keeping the cursor and the user's window. It SHALL NOT refresh in insert mode or on the command line (CursorHold retries), and SHALL use no timer or process of its own to poll. Entering a NERDTree window SHALL start the watcher for its notes root and, when no watcher is running for it or the tree missed events (another tab), refresh the tree.
+
+#### Scenario: Burst of changes  {#s-973d}
+*Verification*: **non-executable**
+- **WHEN** a folder with files is added under an expanded directory of a visible tree
+- **THEN** that directory SHALL be refreshed and the tree rendered once, after the burst
+
+#### Scenario: Opt-out or no NERDTree  {#s-3860}
+*Verification*: **non-executable**
+- **WHEN** `g:meta_notes_nerdtree_refresh` is 0, or NERDTree isn't loaded
+- **THEN** the plugin SHALL queue nothing and start no timer
