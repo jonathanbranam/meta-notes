@@ -41,3 +41,21 @@ def table(config: dict, name: str) -> dict:
     """A table from the config, or {} when it's missing or not a table."""
     value = config.get(name)
     return value if isinstance(value, dict) else {}
+
+
+MODES = ("work", "personal")
+
+
+def mode(root: str) -> str:
+    """
+    The notes root's mode: "work" (the default when unset) or "personal".
+
+    Raises:
+        ValueError: If `mode` is set to anything else, or the config can't be
+            read; the message names the two choices.
+    """
+    value = load(root).get("mode", "work")
+    if value not in MODES:
+        raise ValueError(f'{SENTINEL}: mode must be "work" or "personal", '
+                         f"not {value!r}")
+    return value

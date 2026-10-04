@@ -68,3 +68,24 @@ def test_config_table_missing(tmp_path):
 def test_config_table_not_a_table(tmp_path):
     """A key that isn't a table is treated as missing."""
     assert config.table({'calendar': 'yes'}, 'calendar') == {}
+
+
+# Tests for mode function
+
+def test_config_mode_absent_is_work(tmp_path):
+    (tmp_path / '.meta-notes').write_text(init.SENTINEL_CONTENT)
+
+    assert config.mode(str(tmp_path)) == 'work'
+
+
+def test_config_mode_personal(tmp_path):
+    (tmp_path / '.meta-notes').write_text('mode = "personal"\n[calendar]\n')
+
+    assert config.mode(str(tmp_path)) == 'personal'
+
+
+def test_config_mode_invalid_names_choices(tmp_path):
+    (tmp_path / '.meta-notes').write_text('mode = "home"\n')
+
+    with pytest.raises(ValueError, match='"work" or "personal"'):
+        config.mode(str(tmp_path))

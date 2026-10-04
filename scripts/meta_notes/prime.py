@@ -27,7 +27,7 @@ PLAN_KINDS = {
 }
 
 
-def _today_paths(today: date) -> str:
+def _today_paths(today: date, mode: str) -> str:
     lines = []
     for kind, label in PLAN_KINDS.items():
         path, _, _ = note.periodic_note(kind, today)
@@ -35,29 +35,34 @@ def _today_paths(today: date) -> str:
     return "\n".join(lines)
 
 
-def _tag_groups(today: date) -> str:
+def _tag_groups(today: date, mode: str) -> str:
     tags = [f"`{tag}`" for group in TAG_GROUPS.values() for tag in sorted(group)]
     return textwrap.fill("Common tags, which `meta-notes time` reports as "
                          "groups: " + ", ".join(tags) + ".", 74,
                          break_on_hyphens=False)
 
 
-def _skills(today: date) -> str:
+def _skills(today: date, mode: str) -> str:
     names = ", ".join(f"`{name}`" for name in init.shipped_skills())
     return textwrap.fill("Skills in `.claude/skills/` run the planning "
                          f"ceremonies and answer calendar questions: {names}.",
                          74, break_on_hyphens=False)
 
 
+def _mode(today: date, mode: str) -> str:
+    return f"This notes root is in **{mode}** mode (`mode` in `.meta-notes`)."
+
+
 GENERATORS = {
+    "mode": _mode,
     "today-paths": _today_paths,
     "tag-groups": _tag_groups,
     "skills": _skills,
-    "conventions": lambda today: conventions.run().removesuffix("\n"),
+    "conventions": lambda today, mode: conventions.run(mode).removesuffix("\n"),
 }
 
 
-def render(text: str, today: date) -> str:
+def render(text: str, today: date, mode: str = "work") -> str:
     """
     Replace each generated marker in text with its generated block.
 
@@ -65,16 +70,18 @@ def render(text: str, today: date) -> str:
         KeyError: If a marker names no generator.
     """
     return conventions.MARKER_PATTERN.sub(
-        lambda m: GENERATORS[m.group(1)](today), text)
+        lambda m: GENERATORS[m.group(1)](today, mode), text)
 
 
-def run(root: str | None, today: date | None = None) -> str:
+def run(root: str | None, today: date | None = None,
+        mode: str = "work") -> str:
     """
     The guide as markdown.
 
     Args:
         root: The notes root, or None when there isn't one.
         today: Today's date (default: date.today()).
+        mode: The root's mode, from config.mode (default: "work").
     """
-    text = render(PRIME_FILE.read_text(encoding="utf-8"), today or date.today())
+    text = render(PRIME_FILE.read_text(encoding="utf-8"), today or date.today(), mode)
     return text if root else NO_ROOT + text

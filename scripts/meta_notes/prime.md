@@ -4,6 +4,8 @@ This is a meta-notes notes root: notes, tasks, and plans as markdown.
 Follow this guide and the conventions below. The user's preferences are
 in the root's `CLAUDE.md` and override this guide.
 
+<!-- generated: mode -->
+
 ## Folders
 
 - `plan/`: daily, weekly, quarterly, and yearly plan notes

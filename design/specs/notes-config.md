@@ -38,3 +38,21 @@ Only commands that use settings SHALL read `.meta-notes` as config. When `.meta-
 *Verification*: **non-executable**
 - **WHEN** `.meta-notes` has a `[calendar]` table and the user runs `meta-notes init --force`
 - **THEN** `.meta-notes` SHALL be unchanged
+
+### Requirement: Root mode  {#r-4b1e}
+`.meta-notes` MAY set the top-level key `mode` to `"work"` or `"personal"`. When it is absent, the mode SHALL be `work`, so existing roots behave as before. Any other value SHALL be an error naming the two choices. Commands that depend on the mode SHALL read it through one accessor, `config.mode(root)`. `meta-notes prime` and `meta-notes conventions` SHALL report it, and `--json` output that depends on the mode SHALL carry `mode`.
+
+#### Scenario: Mode absent  {#s-a3f1}
+*Verification*: **non-executable**
+- **WHEN** `.meta-notes` has no `mode` key and the user runs `meta-notes prime --json`
+- **THEN** `mode` SHALL be `work`
+
+#### Scenario: Personal mode  {#s-c7d2}
+*Verification*: **non-executable**
+- **WHEN** `.meta-notes` has `mode = "personal"` and the user runs `meta-notes prime`
+- **THEN** the guide SHALL state that the root is in personal mode
+
+#### Scenario: Invalid mode  {#s-e905}
+*Verification*: **non-executable**
+- **WHEN** `.meta-notes` has `mode = "home"` and the user runs `meta-notes prime`
+- **THEN** the command SHALL exit non-zero with an error naming `work` and `personal`

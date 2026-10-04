@@ -36,6 +36,10 @@ def _tag_aliases() -> str:
                          break_on_hyphens=False)
 
 
+# Text added to the conventions for a mode where it differs from the other;
+# none yet. Dependent tickets fill it in.
+MODE_TEXT: dict[str, str] = {}
+
 GENERATORS = {
     "statuses": _statuses,
     "tag-aliases": _tag_aliases,
@@ -52,6 +56,8 @@ def render(text: str) -> str:
     return MARKER_PATTERN.sub(lambda m: GENERATORS[m.group(1)](), text)
 
 
-def run() -> str:
-    """The conventions as markdown."""
-    return render(CONVENTIONS_FILE.read_text(encoding="utf-8"))
+def run(mode: str = "work") -> str:
+    """The conventions as markdown, with the mode's text appended if any."""
+    text = render(CONVENTIONS_FILE.read_text(encoding="utf-8"))
+    extra = MODE_TEXT.get(mode)
+    return text + "\n" + extra.strip("\n") + "\n" if extra else text

@@ -1481,6 +1481,13 @@ Only commands that use settings read it. When it isn't valid TOML, those
 commands fail with an error naming `.meta-notes` and the line of the error;
 other commands, and finding the notes root, are unaffected.
 
+The root's mode is a top-level key, set before any table: >
+    mode = "work"                   # "work" or "personal"; unset: "work"
+<
+Anything else is an error naming the two choices. `meta-notes prime` states
+the mode, and its `--json` and that of `conventions` carry `mode`. Nothing
+else changes with the mode yet.
+
 The settings for |meta-notes-cli-calendar|: >
     # meta-notes notes root. Created by `meta-notes init`; keep and commit it.
 

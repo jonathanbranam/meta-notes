@@ -6,7 +6,7 @@ Specifies `meta-notes prime`, which prints a guide to a notes root for an agent 
 ## Requirements
 
 ### Requirement: Prime command  {#r-51db}
-`meta-notes prime` SHALL print the guide as markdown to stdout. With `--json`, the result SHALL have `version` (the CLI version), `root` (the absolute notes root, or null), and `text` (the same markdown). The command SHALL NOT write any file.
+`meta-notes prime` SHALL print the guide as markdown to stdout. With `--json`, the result SHALL have `version` (the CLI version), `root` (the absolute notes root, or null), `mode` (the root's mode), and `text` (the same markdown). Near the top, the guide SHALL state the root's mode. The command SHALL NOT write any file.
 
 #### Scenario: Inside a notes root  {#s-48c1}
 *Verification*: **non-executable**
