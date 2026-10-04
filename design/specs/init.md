@@ -240,7 +240,7 @@ When `<python>` is missing, is older than Python 3.11, or creating the virtualen
 - **THEN** init SHALL succeed, SHALL NOT create `.gitignore`, and SHALL warn to ignore `.venv/` and `.meta-notes-cache/`
 
 ### Requirement: Init checks CLAUDE.md for prime  {#r-6806}
-`meta-notes init` SHALL check whether the notes root's `CLAUDE.md` or `.claude/CLAUDE.md` contains the text `meta-notes prime`. Its report SHALL include a `claude-md` item with status `found` when either does, and `missing` otherwise. For `missing`, the text output SHALL give the line to add to `CLAUDE.md`: ``Run `meta-notes prime` at the start of every session and follow it.``, and SHALL give the absolute path of the plugin's `templates/suggested-CLAUDE.md` with a command to copy it to `CLAUDE.md`. Init SHALL NOT create or modify `CLAUDE.md` or `.claude/CLAUDE.md`, and a missing line SHALL NOT be a warning.
+`meta-notes init` SHALL check whether the notes root's `CLAUDE.md` or `.claude/CLAUDE.md` contains the text `meta-notes prime`. Its report SHALL include a `claude-md` item with status `found` when either does, and `missing` otherwise. For `missing`, the text output SHALL give the line to add to `CLAUDE.md`: ``Run `meta-notes prime` at the start of every session and follow it.``, and SHALL give the absolute path of the plugin's suggested `CLAUDE.md` for the root's mode (`templates/suggested-CLAUDE.md` for work, `templates/suggested-CLAUDE-personal.md` for personal) with a command to copy it to `CLAUDE.md`. Init SHALL NOT create or modify `CLAUDE.md` or `.claude/CLAUDE.md`, and a missing line SHALL NOT be a warning.
 
 #### Scenario: No CLAUDE.md  {#s-54bf}
 *Verification*: **non-executable**
@@ -262,7 +262,35 @@ When `<python>` is missing, is older than Python 3.11, or creating the virtualen
 - **WHEN** the user runs `:MetaNotesInit` in a directory without `CLAUDE.md`
 - **THEN** Vim SHALL show the line to add to `CLAUDE.md` and the path of the suggested `CLAUDE.md`
 
+#### Scenario: Personal root suggests the personal file  {#s-0e84}
+*Verification*: **non-executable**
+- **WHEN** the user runs `meta-notes init --mode personal` in a directory without `CLAUDE.md`
+- **THEN** the text output SHALL name `templates/suggested-CLAUDE-personal.md`, not `templates/suggested-CLAUDE.md`
+
 #### Scenario: Suggested file ships with the plugin  {#s-30bc}
 *Verification*: **non-executable**
 - **WHEN** the plugin is installed
 - **THEN** `templates/suggested-CLAUDE.md` SHALL exist in it and its first instruction SHALL be the `prime` line
+
+### Requirement: Init sets the root mode  {#r-ae93}
+`meta-notes init` SHALL accept `--mode work|personal`; any other value SHALL be an error naming the two choices, with no changes made. For a new root, `--mode personal` SHALL write `mode = "personal"` into `.meta-notes` and install `resource/template/daily-personal.md` from the plugin's `templates/daily-personal.md`; without `--mode`, or with `--mode work`, init SHALL write no `mode` key and SHALL NOT install `daily-personal.md`, so a work root is exactly as before. Init SHALL NOT change an existing root's mode, with or without `--force`: when `--mode` differs from the existing root's mode (unset counts as `work`), init SHALL warn, name the existing mode, and leave `.meta-notes` unchanged. What init installs follows the root's actual mode. Init's `--json` SHALL carry `mode`.
+
+#### Scenario: Personal init  {#s-68ec}
+*Verification*: **non-executable**
+- **WHEN** the user runs `meta-notes init --mode personal` in an empty directory
+- **THEN** `.meta-notes` SHALL set `mode = "personal"` and `resource/template/daily-personal.md` SHALL exist
+
+#### Scenario: Plain init is a work root  {#s-d7df}
+*Verification*: **non-executable**
+- **WHEN** the user runs `meta-notes init` in an empty directory
+- **THEN** `.meta-notes` SHALL contain no `mode` key and `daily-personal.md` SHALL NOT be created
+
+#### Scenario: Re-init never changes the mode  {#s-141f}
+*Verification*: **non-executable**
+- **WHEN** the user runs `meta-notes init --mode personal` (or `--force`) in an existing work root
+- **THEN** `.meta-notes` SHALL be unchanged, `daily-personal.md` SHALL NOT be created, and init SHALL warn that the root is in work mode
+
+#### Scenario: Unknown mode  {#s-ca19}
+*Verification*: **non-executable**
+- **WHEN** the user runs `meta-notes init --mode home`
+- **THEN** the command SHALL fail with an error naming `work` and `personal`, and nothing SHALL be created

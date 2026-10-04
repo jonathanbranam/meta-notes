@@ -158,7 +158,7 @@ meta-notes/
 │       └── templates/           # Vim renderings of the shipped templates
 ├── doc/                 # Vim documentation
 ├── skills/              # Claude Code skills, linked into notes roots by init
-├── templates/           # Planning templates, the cache README, and a suggested CLAUDE.md
+├── templates/           # Planning templates, the cache README, and suggested CLAUDE.md files (work, personal)
 ├── requirements.txt     # Pinned libraries for calendar, generated from uv.lock; init installs it into .venv
 ├── pyproject.toml, uv.lock  # Development environment (uv); see AGENTS.md
 ├── run_tests.sh         # Test runner script
@@ -233,12 +233,19 @@ alone; `init --force` rebuilds it.
 
 init also checks that the root's `CLAUDE.md` loads the agent guide (see
 [Agents](#agents)). When it doesn't, init prints the line to add and the
-`cp` command for `templates/suggested-CLAUDE.md`, a starting `CLAUDE.md`.
+`cp` command for the starting `CLAUDE.md` that matches the root's mode:
+`templates/suggested-CLAUDE.md` (work) or `templates/suggested-CLAUDE-personal.md`.
 It never edits `CLAUDE.md`.
+
+`meta-notes init --mode personal` makes a personal root: it writes
+`mode = "personal"` into the new `.meta-notes` and installs
+`resource/template/daily-personal.md`. Plain `init` makes a work root.
+Re-running init never changes an existing root's mode.
 
 ```bash
 mkdir notes && cd notes && git init && touch .gitignore
 meta-notes init
+meta-notes init --mode personal          # a personal root
 meta-notes init --python ~/.pyenv/versions/3.12.4/bin/python3  # another interpreter
 meta-notes note daily                    # create today's daily note, print its path
 meta-notes note weekly 2026-04-02 --render --json

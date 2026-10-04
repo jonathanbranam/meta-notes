@@ -19,6 +19,7 @@ import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from meta_notes import config
 from meta_notes.root import SENTINEL, find_root
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[2]
@@ -47,6 +48,8 @@ FOLDERS = (
 )
 
 TEMPLATES = ("daily.md", "weekly.md", "quarterly.md", "yearly.md")
+# Installed only in a personal root
+PERSONAL_TEMPLATES = ("daily-personal.md",)
 TEMPLATE_FOLDER = "resource/template"
 SKILLS_FOLDER = ".claude/skills"
 CACHE_README = ".meta-notes-cache/README.md"
@@ -60,9 +63,15 @@ CLAUDE_MD_FILES = ("CLAUDE.md", ".claude/CLAUDE.md")
 PRIME_LINE = "Run `meta-notes prime` at the start of every session and follow it."
 # A starting CLAUDE.md for a notes root; init points to it but never copies it
 SUGGESTED_CLAUDE_MD = TEMPLATES_DIR / "suggested-CLAUDE.md"
+SUGGESTED_CLAUDE_MD_PERSONAL = TEMPLATES_DIR / "suggested-CLAUDE-personal.md"
 
 SENTINEL_CONTENT = (
     "# meta-notes notes root. Created by `meta-notes init`; keep and commit it.\n")
+
+
+def suggested_claude_md(mode: str) -> Path:
+    """The starting CLAUDE.md that matches a root mode."""
+    return SUGGESTED_CLAUDE_MD_PERSONAL if mode == "personal" else SUGGESTED_CLAUDE_MD
 
 
 class InitError(Exception):
@@ -82,6 +91,7 @@ class Item:
 @dataclass
 class InitResult:
     root: str
+    mode: str = "work"
     items: list[Item] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
 
@@ -334,8 +344,28 @@ def _check_claude_md(result: InitResult) -> None:
     result.items.append(Item("claude-md", CLAUDE_MD_FILES[0], "missing"))
 
 
+def _existing_mode(result: InitResult, wanted: str | None) -> str | None:
+    """
+    The mode of an existing root, or None for a new one. Warns, and leaves
+    the file alone, when it differs from the mode asked for.
+    """
+    if not os.path.isfile(SENTINEL):
+        return None
+    try:
+        current = config.mode(os.getcwd())
+    except ValueError:
+        # Not init's to fix; other commands report it
+        return None
+    if wanted is not None and wanted != current:
+        result.warnings.append(
+            f'{SENTINEL} is in {current} mode; --mode {wanted} ignored. '
+            f"init never changes an existing root's mode; edit {SENTINEL} "
+            "to change it")
+    return current
+
+
 def init(target: str, force: bool = False, home: str | None = None,
-         python: str | None = None) -> InitResult:
+         python: str | None = None, mode: str | None = None) -> InitResult:
     """
     Initialize target as a notes root.
 
@@ -346,14 +376,20 @@ def init(target: str, force: bool = False, home: str | None = None,
         home: $HOME, bounding the nesting check's upward search.
         python: Interpreter to build the virtualenv with (default: python3
             on PATH).
+        mode: "work" or "personal", written into a new .meta-notes (work
+            writes nothing). An existing root's mode is never changed; a
+            different mode is a warning.
 
     Returns:
         What was created or found, with paths relative to target.
 
     Raises:
-        InitError: If target is inside another notes root, or a file
-            operation fails.
+        InitError: If target is inside another notes root, mode is not a
+            mode, or a file operation fails.
     """
+    if mode is not None and mode not in config.MODES:
+        raise InitError(
+            f"--mode must be one of: {', '.join(config.MODES)} (not {mode!r})")
     target = os.path.abspath(os.path.expanduser(target))
     check_not_nested(target, home)
 
@@ -361,6 +397,8 @@ def init(target: str, force: bool = False, home: str | None = None,
         os.makedirs(target, exist_ok=True)
         os.chdir(target)
         result = InitResult(root=target)
+        existing = _existing_mode(result, mode)
+        result.mode = existing or mode or "work"
 
         for folder in FOLDERS:
             status = "exists" if os.path.isdir(folder) else "created"
@@ -371,12 +409,19 @@ def init(target: str, force: bool = False, home: str | None = None,
             _copy_shipped("template", name, os.path.join(TEMPLATE_FOLDER, name),
                           force, result)
 
+        if result.mode == "personal":
+            for name in PERSONAL_TEMPLATES:
+                _copy_shipped("template",
+                              name, os.path.join(TEMPLATE_FOLDER, name),
+                              force, result)
+
         if os.path.isfile(SENTINEL):
             result.items.append(Item("sentinel", SENTINEL, "exists"))
         elif os.path.lexists(SENTINEL):
             raise InitError(f"{SENTINEL} exists and is not a file")
         else:
-            Path(SENTINEL).write_text(SENTINEL_CONTENT)
+            Path(SENTINEL).write_text(SENTINEL_CONTENT + (
+                'mode = "personal"\n' if result.mode == "personal" else ""))
             result.items.append(Item("sentinel", SENTINEL, "created"))
 
         skills = shipped_skills()

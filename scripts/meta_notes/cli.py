@@ -713,16 +713,19 @@ def cmd_init(args, root: None) -> Output:
     target = getattr(args, "root", None) or os.getcwd()
     try:
         result = init.init(target, force=args.force, home=os.environ.get("HOME"),
-                           python=args.python)
+                           python=args.python, mode=args.mode)
     except init.InitError as e:
         raise CliError(str(e))
 
     items = [{"kind": i.kind, "path": i.path, "status": i.status}
              for i in result.items]
+    suggested = shlex.quote(str(init.suggested_claude_md(result.mode)))
     text = [INIT_MESSAGES[(i.kind, i.status)].format(i.path)
+            .replace(shlex.quote(str(init.SUGGESTED_CLAUDE_MD)), suggested)
             for i in result.items if (i.kind, i.status) in INIT_MESSAGES]
     text.append("Meta-notes initialization complete!")
-    return Output({"root": result.root, "items": items}, text, result.warnings)
+    return Output({"root": result.root, "mode": result.mode, "items": items},
+                  text, result.warnings)
 
 
 # The plugin checkout: scripts/meta_notes/cli.py -> the plugin directory
@@ -802,6 +805,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--python", metavar="PATH",
                    help="interpreter to build .venv with (default: python3 "
                         "on PATH); ignored when .venv exists, without --force")
+    p.add_argument("--mode", metavar="MODE",
+                   help="work or personal: written to a new .meta-notes "
+                        "(personal also installs daily-personal.md); never "
+                        "changes an existing root's mode")
     p.set_defaults(handler=cmd_init, resolves_root=False)
 
     p = sub.add_parser("move", parents=[common],

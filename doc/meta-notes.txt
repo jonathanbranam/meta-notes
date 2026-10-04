@@ -564,7 +564,7 @@ base Python was removed). It finds the root the way the CLI does
 needs the virtualenv; every other command works on either.
 Commands ~
                                                 *meta-notes-cli-commands*
-`meta-notes init [--root {dir}] [--force] [--python {path}]`
+`meta-notes init [--root {dir}] [--force] [--python {path}] [--mode {mode}]`
                                                 *meta-notes-cli-init*
     Initialize a notes root: the PARA folders, the templates in
     `resource/template/`, the `.meta-notes` sentinel, a link in
@@ -574,6 +574,15 @@ Commands ~
     if missing, otherwise the current directory. It ignores
     `META_NOTES_ROOT`. Run it in the top-level directory of the notes root,
     for example right after `git init`.
+
+    `--mode personal` writes `mode = "personal"` into a new `.meta-notes`
+    and installs `resource/template/daily-personal.md` (see
+    |meta-notes-config|). `--mode work`, or no `--mode`, writes no mode and
+    installs no personal template: a work root. Any other value is an error
+    naming the two choices. init never changes an existing root's mode, even
+    with `--force`; a different `--mode` there is a warning, and what init
+    installs follows the root's actual mode. `:MetaNotesInit` has no mode
+    option; run the command for a personal root.
 
     The cache folder, `.meta-notes-cache/`, holds `ics/`, where you save
     calendar exports for |meta-notes-cli-calendar|, `calendar/`, the parsed
@@ -621,9 +630,10 @@ Commands ~
     mentions `meta-notes prime` (|meta-notes-cli-prime|). When neither
     does, it prints the line to add: >
         Run `meta-notes prime` at the start of every session and follow it.
-<   It also gives the path of `templates/suggested-CLAUDE.md` in the
-    plugin, a starting `CLAUDE.md` with that line and example personal
-    preferences, and the `cp` command to use it. It never creates or edits
+<   It also gives the path of the suggested `CLAUDE.md` in the plugin
+    that matches the root's mode, `templates/suggested-CLAUDE.md` (work) or
+    `templates/suggested-CLAUDE-personal.md` (personal), a starting
+    `CLAUDE.md` with that line and example preferences, and the `cp` command to use it. It never creates or edits
     either file, and a missing line isn't a warning. With `--json`, the check is a `claude-md` item with status
     `found` or `missing`.
 
@@ -1490,7 +1500,8 @@ The `.meta-notes` sentinel is also the notes root's config, read as TOML.
 The comment line `init` writes is valid, empty config, so every setting has
 its default until you add one. Settings are grouped in tables named for the
 command that uses them; unknown tables and keys are ignored. Commit the file
-with your notes. `init` never changes it, even with `--force`.
+with your notes. `init` never changes it, even with `--force`;
+`init --mode personal` writes the mode into a new one.
 
 Only commands that use settings read it. When it isn't valid TOML, those
 commands fail with an error naming `.meta-notes` and the line of the error;
@@ -1510,7 +1521,8 @@ no work cutoff, and the check-in ends at 21:00. These aren't configurable.
 In a personal root, `meta-notes note daily` uses
 `resource/template/daily-personal.md` when it exists (Time Block 7:00am to
 9:00pm, log line `start day:`); the shipped one is
-`templates/daily-personal.md`. `init` doesn't install it yet.
+`templates/daily-personal.md`, which `meta-notes init --mode personal`
+installs. Re-running `init` never changes the mode.
 
 The settings for |meta-notes-cli-calendar|: >
     # meta-notes notes root. Created by `meta-notes init`; keep and commit it.
