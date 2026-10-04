@@ -301,6 +301,9 @@ calendars = ["me@example.com"]  # zip calendars to load (default: all)
 
 See `:help meta-notes-cli-calendar` and `:help meta-notes-config`.
 
+A top-level `mode = "work"` or `"personal"` in `.meta-notes` (default
+`work`) says what kind of notes root it is; `meta-notes prime` reports it.
+
 ### Agents
 
 `meta-notes prime` prints a guide to the notes root for an agent: the

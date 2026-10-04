@@ -9,6 +9,7 @@ specs: []
 needs: []
 see: [zyab]
 tasks: []
+closed: 2026-10-04T03:01:41Z
 ---
 
 # Root mode: `mode = "work"` or `"personal"` in `.meta-notes`

@@ -633,13 +633,8 @@ def cmd_project_brief(args, root: str) -> Output:
     return Output({"project": data}, lines)
 
 
-def cmd_conventions(args, root: None) -> Output:
-    text = conventions.run()
-    return Output({"version": __version__, "text": text},
-                  [text.removesuffix("\n")])
-
-
-def cmd_prime(args, root: None) -> Output:
+def _optional_root_mode(args) -> tuple[str | None, str]:
+    """The notes root, if any, and its mode ("work" with no root)."""
     # Works outside a notes root: an explicit --root or META_NOTES_ROOT must
     # still be valid, but finding no root by search isn't an error
     explicit = getattr(args, "root", None) or os.environ.get("META_NOTES_ROOT")
@@ -647,8 +642,26 @@ def cmd_prime(args, root: None) -> Output:
         found = resolve_root(explicit, None, os.getcwd())
     else:
         found = find_root(os.getcwd(), os.environ.get("HOME"))
-    text = prime.run(found)
-    return Output({"version": __version__, "root": found, "text": text},
+    if not found:
+        return None, "work"
+    try:
+        return found, config.mode(found)
+    except ValueError as e:
+        raise CliError(str(e))
+
+
+def cmd_conventions(args, root: None) -> Output:
+    _, mode = _optional_root_mode(args)
+    text = conventions.run(mode)
+    return Output({"version": __version__, "mode": mode, "text": text},
+                  [text.removesuffix("\n")])
+
+
+def cmd_prime(args, root: None) -> Output:
+    found, mode = _optional_root_mode(args)
+    text = prime.run(found, mode=mode)
+    return Output({"version": __version__, "root": found, "mode": mode,
+                   "text": text},
                   [text.removesuffix("\n")])
 
 

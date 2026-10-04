@@ -177,3 +177,49 @@ def test_prime_explicit_root_must_exist(outside, capsys):
 
     assert code == 1
     assert data['ok'] is False
+
+
+# Tests for mode
+
+def test_prime_run_states_mode(notes_root):
+    text = prime.run(str(notes_root), SATURDAY, 'personal')
+
+    assert 'personal** mode' in text
+
+
+def test_prime_cli_json_mode_defaults_to_work(notes_root, capsys):
+    code, out = run_json(capsys, ['prime'])
+
+    assert code == 0
+    assert out['mode'] == 'work'
+
+
+def test_prime_cli_json_mode_personal(notes_root, capsys):
+    (notes_root / '.meta-notes').write_text('mode = "personal"\n')
+
+    code, out = run_json(capsys, ['prime'])
+
+    assert out['mode'] == 'personal'
+    assert 'personal** mode' in out['text']
+
+
+def test_prime_cli_invalid_mode_fails(notes_root, capsys):
+    (notes_root / '.meta-notes').write_text('mode = "home"\n')
+
+    code, out = run_json(capsys, ['prime'])
+
+    assert code != 0
+    assert 'personal' in out['error']
+
+
+def test_prime_cli_conventions_json_mode(outside, capsys):
+    code, out = run_json(capsys, ['conventions'])
+
+    assert out['mode'] == 'work'
+
+
+def test_conventions_run_appends_mode_text(monkeypatch):
+    monkeypatch.setitem(conventions.MODE_TEXT, 'personal', 'Personal only.')
+
+    assert conventions.run('personal').endswith('\nPersonal only.\n')
+    assert 'Personal only.' not in conventions.run('work')
