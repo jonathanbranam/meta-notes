@@ -9,6 +9,7 @@ specs: []
 needs: [47rb]
 see: [zyab]
 tasks: [mn-eyet]
+closed: 2026-10-04T03:18:22Z
 ---
 
 # init and templates for a personal root

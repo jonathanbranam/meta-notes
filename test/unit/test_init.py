@@ -19,7 +19,7 @@ repo_dir = Path(__file__).parent.parent.parent
 scripts_dir = repo_dir / 'scripts'
 sys.path.insert(0, str(scripts_dir))
 
-from meta_notes import cli, init
+from meta_notes import cli, config, init
 
 FIXTURES = repo_dir / 'test' / 'fixtures' / 'init_templates'
 TEMPLATE_NAMES = ('daily.md', 'weekly.md', 'quarterly.md', 'yearly.md')
@@ -897,3 +897,117 @@ def test_cli_other_commands_find_initialized_root(tmp_path, skills, monkeypatch,
 
     assert code == 0
     assert out['ok'] is True
+
+
+# Tests for init --mode
+
+def test_init_plain_is_work_root(tmp_path, skills):
+    """Plain init writes no mode and no personal template."""
+    root = tmp_path / 'n'
+
+    result = init.init(str(root))
+
+    assert result.mode == 'work'
+    assert (root / '.meta-notes').read_text() == init.SENTINEL_CONTENT
+    assert not (root / 'resource' / 'template' / 'daily-personal.md').exists()
+
+
+def test_init_mode_work_is_same_as_plain(tmp_path, skills):
+    """--mode work writes nothing extra."""
+    root = tmp_path / 'n'
+
+    init.init(str(root), mode='work')
+
+    assert (root / '.meta-notes').read_text() == init.SENTINEL_CONTENT
+    assert not (root / 'resource' / 'template' / 'daily-personal.md').exists()
+
+
+def test_init_mode_personal_writes_mode_and_template(tmp_path, skills):
+    """--mode personal writes mode and installs the personal daily template."""
+    root = tmp_path / 'n'
+
+    result = init.init(str(root), mode='personal')
+
+    assert result.mode == 'personal'
+    assert 'mode = "personal"' in (root / '.meta-notes').read_text()
+    assert config.mode(str(root)) == 'personal'
+    assert (root / 'resource' / 'template' / 'daily-personal.md').read_bytes() \
+        == (init.TEMPLATES_DIR / 'daily-personal.md').read_bytes()
+
+
+def test_init_mode_personal_rerun_keeps_mode(tmp_path, skills):
+    """Re-running a personal root, with or without --mode, leaves it personal."""
+    root = tmp_path / 'n'
+    init.init(str(root), mode='personal')
+    before = (root / '.meta-notes').read_text()
+
+    result = init.init(str(root))
+    init.init(str(root), force=True)
+
+    assert result.mode == 'personal'
+    assert result.warnings == [w for w in result.warnings if 'mode' not in w]
+    assert (root / '.meta-notes').read_text() == before
+
+
+def test_init_mode_conflict_warns_and_changes_nothing(tmp_path, skills):
+    """--mode personal on a work root warns, keeps the file, installs no template."""
+    root = tmp_path / 'n'
+    init.init(str(root))
+
+    result = init.init(str(root), mode='personal', force=True)
+
+    assert result.mode == 'work'
+    assert (root / '.meta-notes').read_text() == init.SENTINEL_CONTENT
+    assert not (root / 'resource' / 'template' / 'daily-personal.md').exists()
+    assert any('work mode' in w and '--mode personal' in w
+               for w in result.warnings)
+
+
+def test_init_mode_conflict_personal_root_asked_work(tmp_path, skills):
+    """--mode work on a personal root warns and keeps it personal."""
+    root = tmp_path / 'n'
+    init.init(str(root), mode='personal')
+
+    result = init.init(str(root), mode='work')
+
+    assert config.mode(str(root)) == 'personal'
+    assert any('personal mode' in w for w in result.warnings)
+
+
+def test_init_mode_invalid_creates_nothing(tmp_path, skills):
+    """A bad mode is an error naming the choices, with nothing created."""
+    with pytest.raises(init.InitError, match='work, personal'):
+        init.init(str(tmp_path / 'n'), mode='home')
+
+    assert not (tmp_path / 'n').exists()
+
+
+def test_cli_init_mode_json_and_suggestion(tmp_path, skills, capsys):
+    """--mode personal reports the mode and suggests the personal CLAUDE.md."""
+    code, out, _ = run_json(
+        capsys, ['init', '--root', str(tmp_path / 'n'), '--mode', 'personal'])
+
+    assert code == 0
+    assert out['mode'] == 'personal'
+
+    code = cli.main(['init', '--root', str(tmp_path / 'm'), '--mode', 'personal'])
+    text = capsys.readouterr().out
+    assert f'cp {init.SUGGESTED_CLAUDE_MD_PERSONAL} CLAUDE.md' in text
+    assert f'cp {init.SUGGESTED_CLAUDE_MD} CLAUDE.md' not in text
+
+
+def test_cli_init_mode_invalid_exits_nonzero(tmp_path, skills, capsys):
+    """The CLI rejects an unknown mode, naming the choices."""
+    code = cli.main(['init', '--root', str(tmp_path / 'n'), '--mode', 'home'])
+
+    assert code != 0
+    assert 'work, personal' in capsys.readouterr().err
+
+
+def test_suggested_personal_claude_md_starts_with_prime_line():
+    """The personal suggestion also starts with the prime line."""
+    lines = [line for line in
+             init.SUGGESTED_CLAUDE_MD_PERSONAL.read_text(encoding='utf-8')
+             .splitlines() if line.strip() and not line.startswith('#')]
+
+    assert lines[0] == init.PRIME_LINE
