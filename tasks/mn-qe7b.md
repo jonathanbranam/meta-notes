@@ -2,12 +2,13 @@
 id = "mn-qe7b"
 title = "Working hours and days follow the root mode"
 kind = "feature"
-state = "open"
+state = "integrated"
 created_at = "2026-10-04T03:01:00.447Z"
-updated_at = "2026-10-04T03:01:00.623222530Z"
+updated_at = "2026-10-04T03:14:04.849362537Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 size = "M"
+commit = "be3b828"
 +++
 
 ---
@@ -52,3 +53,8 @@ weekends").
   `[day]` keys).
 - Update the daily template for it: in a personal root the Time Block runs
   7:00am to 9:00pm and the log line is "start day:".
+
+## Thread
+
+### note · agent:manager · 2026-10-04T03:14:04.849Z
+integrated: be3b828
