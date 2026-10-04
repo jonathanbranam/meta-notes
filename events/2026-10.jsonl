@@ -105,3 +105,4 @@
 {"actor":"human","at":"2026-10-04T12:44:33.276658775Z","from":"planned","task":"mn-7951","to":"integrated"}
 {"actor":"human","at":"2026-10-04T22:54:42.801Z","from":"","task":"mn-rb4z","to":"pending"}
 {"actor":"external:orchestrator","at":"2026-10-04T22:54:47.202091671Z","from":"pending","task":"mn-rb4z","to":"open"}
+{"actor":"agent:manager","at":"2026-10-04T22:57:38.486097195Z","from":"open","task":"mn-rb4z","to":"integrated"}
