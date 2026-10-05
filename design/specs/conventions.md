@@ -6,7 +6,7 @@ Specifies `meta-notes conventions`, which prints the shared note syntax and edit
 ## Requirements
 
 ### Requirement: Conventions command  {#r-08c2}
-`meta-notes conventions` SHALL print the conventions as markdown to stdout. With `--json`, the result SHALL have `version` (the CLI version), `mode` (the mode of the notes root found, or `work` with none) and `text` (the same markdown). Where the conventions differ by mode, the text SHALL include the mode's part: a `personal` root's conventions end with a "Personal mode" section (the skills' signal for the mode), and a `work` root's conventions SHALL be unchanged. The command SHALL work outside a notes root and SHALL NOT read or write notes; it reads only `.meta-notes` for the mode.
+`meta-notes conventions` SHALL print the conventions as markdown to stdout. With `--json`, the result SHALL have `version` (the CLI version), `mode` (the mode of the notes root found, or `work` with none), `text` (the same markdown), and `tag_aliases` (an object mapping alias to target, both without #, for the root's mode). Where the conventions differ by mode, the text SHALL include the mode's part: a `personal` root's conventions end with a "Personal mode" section (the skills' signal for the mode), and a `work` root's conventions SHALL be unchanged. The command SHALL work outside a notes root and SHALL NOT read or write notes; it reads only `.meta-notes` for the mode.
 
 #### Scenario: Outside a notes root  {#s-3307}
 *Verification*: **non-executable**
@@ -16,7 +16,12 @@ Specifies `meta-notes conventions`, which prints the shared note syntax and edit
 #### Scenario: JSON result  {#s-bc2a}
 *Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes conventions --json`
-- **THEN** the result SHALL have `ok` true, `version`, and `text`
+- **THEN** the result SHALL have `ok` true, `version`, `text`, and `tag_aliases`
+
+#### Scenario: Tag aliases in JSON  {#s-8f5d}
+*Verification*: **non-executable**
+- **WHEN** the user runs `meta-notes conventions --json` in a work root
+- **THEN** the result's `tag_aliases` SHALL be an object with alias names (without #) as keys and target names (without #) as values, matching the root's mode (e.g., `mtg` -> `meeting`, `pers` -> `personal` in work mode; `wk` -> `work` in personal mode)
 
 ### Requirement: Conventions content  {#r-5fe9}
 The conventions SHALL cover:
