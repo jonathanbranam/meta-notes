@@ -27,7 +27,7 @@ from meta_notes import (__version__, brief, calendar, ceremony, changes,
                         checkin, config, conventions, hours, init, note, note_write, ops, planning,
                         prime,
                         projects, query, task_show, task_update, task_write, time,
-                        time_block, time_log)
+                        time_block, time_log, ui)
 from meta_notes.root import SENTINEL, find_root
 
 
@@ -232,6 +232,62 @@ def cmd_cache_clear(args, root: str) -> Output:
     return Output({"deleted": deleted, "count": count},
                   [f"Deleted {count} cached calendar file(s) from "
                    f"{calendar.CALENDAR_DIR}/"])
+
+
+def _ui_output(root: str, info: dict, **extra) -> Output:
+    link = ui.url(root, info)
+    data = {"running": True, "url": link, "pid": info["pid"],
+            "host": info.get("host"), "port": info.get("port"),
+            "version": info.get("version"), **extra}
+    return Output(data, [link])
+
+
+def cmd_ui_start(args, root: str) -> Output:
+    try:
+        info = ui.start(root, args.path, args.host, args.port)
+    except ValueError as e:
+        raise CliError(str(e)) from None
+    return _ui_output(root, info)
+
+
+def cmd_ui_stop(args, root: str) -> Output:
+    stopped = ui.stop(root)
+    return Output({"stopped": stopped},
+                  ["Stopped the UI" if stopped else "The UI is not running"])
+
+
+def cmd_ui_status(args, root: str) -> Output:
+    info = ui.status(root)
+    if not info:
+        return Output({"running": False}, ["The UI is not running"])
+    return Output({"running": True, "url": info["url"], "pid": info["pid"],
+                   "host": info.get("host"), "port": info.get("port"),
+                   "version": info.get("version")},
+                  [f"The UI is running at {info['url']}",
+                   f"pid {info['pid']}, version {info.get('version')}"])
+
+
+def cmd_ui_url(args, root: str) -> Output:
+    info = ui.status(root)
+    if not info:
+        raise CliError("The UI is not running: run `meta-notes ui start`")
+    return _ui_output(root, info)
+
+
+def cmd_ui_open(args, root: str) -> Output:
+    info = ui.status(root)
+    started = info is None
+    if started:
+        try:
+            info = ui.start(root, args.path, args.host, args.port)
+        except ValueError as e:
+            raise CliError(str(e)) from None
+    out = _ui_output(root, info, started=started)
+    try:
+        ui.open_url(out.data["url"])
+    except ValueError as e:
+        raise CliError(str(e)) from None
+    return out
 
 
 def _root_mode(root: str) -> str:
@@ -1206,6 +1262,29 @@ def build_parser() -> argparse.ArgumentParser:
                    help="list tasks completed on or after YYYY-MM-DD "
                         "(default: 90 days ago)")
     p.set_defaults(handler=cmd_project_brief)
+
+    p = sub.add_parser("ui", parents=[common],
+                       help="start, stop and open the meta-notes-ui server")
+    kinds = p.add_subparsers(dest="kind", metavar="KIND", parser_class=_Parser)
+    kinds.required = True
+    launch = argparse.ArgumentParser(add_help=False)
+    launch.add_argument("--path", metavar="DIR",
+                        help="the meta-notes-ui clone (default: [ui] path)")
+    launch.add_argument("--host", help="address to bind (default: [ui] host)")
+    launch.add_argument("--port", type=int,
+                        help="port to listen on (default: [ui] port)")
+    for kind, handler, extra, text in (
+            ("start", cmd_ui_start, [launch],
+             "start the server detached; print its URL with the token"),
+            ("stop", cmd_ui_stop, [], "stop the server"),
+            ("status", cmd_ui_status, [],
+             "report whether the server is running"),
+            ("url", cmd_ui_url, [],
+             "print the running server's URL with the token"),
+            ("open", cmd_ui_open, [launch],
+             "start the server if needed and open it in the browser")):
+        k = kinds.add_parser(kind, parents=[common, *extra], help=text)
+        k.set_defaults(handler=handler)
 
     p = sub.add_parser("conventions", parents=[common],
                        help="print the note syntax and editing conventions "

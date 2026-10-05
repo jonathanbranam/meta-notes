@@ -101,6 +101,7 @@ meta-notes/
 │   │   ├── project.py           # Project home notes and fields
 │   │   ├── projects.py          # Project list and warnings
 │   │   ├── query.py             # Task query
+│   │   ├── ui.py                # meta-notes-ui server start, stop, status
 │   │   ├── time.py              # Time report
 │   │   ├── time_block.py        # Time Block Plan and Actual edits
 │   │   ├── time_log.py          # Time Log entry append and replace
@@ -196,7 +197,7 @@ This structure is compatible with vim-plug, Vundle, and Pathogen.
 `bin/meta-notes` performs the plugin's setup (`init`), note creation from
 templates (`note`), race-safe line edits (`note write`), file operations (`move`, `rename`, `archive`), task
 query (`tasks`), task edits (`task update`, `task add`), one task read as a tree (`task show`), its notes and subtasks written (`task notes`, `task replace`, `task add --under`), time reports (`time`), changed
-notes (`changes`), calendar agendas (`calendar`, `cache clear`), the
+notes (`changes`), calendar agendas (`calendar`, `cache clear`), the meta-notes-ui server (`ui start`, `ui stop`, `ui status`, `ui url`, `ui open`), the
 project list (`projects`), ceremony status (`ceremony status`), the planning record (`planning`), stay-on-task check-ins (`checkin`), Time Block cell and row edits (`time-block update`, `time-block replace`), Time Log edits (`time-log append`, `time-log update`), and the
 skills' shared conventions (`conventions`), and a guide to the notes root
 for agents (`prime`) outside Vim, for shells, agents, and other tools. The Vim
@@ -284,6 +285,8 @@ meta-notes calendar --date 2026-09-28..2026-10-02  # agenda from the latest expo
 meta-notes calendar --ics ~/Downloads/export.zip --json
 meta-notes calendar --date 2026-09 --with zach --search 1:1  # filtered
 meta-notes cache clear                    # delete parsed calendars, keep exports
+meta-notes ui open                        # start the meta-notes-ui server ([ui] path) and open it
+meta-notes ui status                      # running or not, url, pid
 meta-notes conventions                    # syntax and rules the skills follow
 meta-notes prime                          # guide to the notes root for agents
 ```
