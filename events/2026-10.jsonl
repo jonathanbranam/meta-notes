@@ -131,3 +131,4 @@
 {"actor":"external:orchestrator","at":"2026-10-05T11:37:31.399606984Z","from":"pending","task":"mn-cru4","to":"open"}
 {"actor":"external:orchestrator","at":"2026-10-05T11:37:31.879310746Z","from":"open","task":"mn-cru4","to":"planned"}
 {"actor":"external:orchestrator","at":"2026-10-05T11:37:32.003871419Z","queue":"reprioritized"}
+{"actor":"agent:manager-1","at":"2026-10-05T11:50:32.231690076Z","from":"planned","task":"mn-cru4","to":"integrated"}
