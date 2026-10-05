@@ -2,12 +2,14 @@
 id = "mn-hsxc"
 title = "Snapshot skip hides real tasks under Tasks Due Today (rg3v)"
 kind = "bug"
-state = "planned"
+state = "integrated"
 created_at = "2026-10-05T23:20:11.721Z"
-updated_at = "2026-10-05T23:20:16.349122609Z"
+updated_at = "2026-10-05T23:26:49.354256076Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 size = "S"
+branch = "bridle/snapshot-fix"
+commit = "61398b3"
 +++
 
 Ticket: docs/tickets/open/snapshot-skip-hides-real-tasks-written-under-tasks-due-today-rg3v.md (read it; it has the evidence and the snapshot format).
@@ -23,3 +25,11 @@ Tests: a snapshot section with both a `- [[link]]` group of copies (skipped, inc
 
 ## Out of scope
 Template changes; editing any notes. Model: Sonnet. Size: s.
+
+## Thread
+
+### note · agent:manager-1 · 2026-10-05T23:26:49.351Z
+integrated: 61398b3 (branch bridle/snapshot-fix)
+
+### note · agent:manager-1 · 2026-10-05T23:26:49.354Z
+cleanup: removed nothing
