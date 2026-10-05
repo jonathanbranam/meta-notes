@@ -368,16 +368,25 @@ SNAPSHOT_HEADINGS = ('## Tasks Due Today', '## Overdue Tasks')
 
 
 def _snapshot_lines(filepath: str, lines: list[str]) -> set[int]:
-    """The line numbers under a snapshot heading of a note in plan/daily/."""
+    """
+    The line numbers of snapshot copies in a note in plan/daily/: the subtree
+    of each top-level `- [[link]]` bullet under a snapshot heading. Top-level
+    lines of any other kind are the human's own and stay.
+    """
     if '/plan/daily/' not in '/' + filepath.replace('\\', '/'):
         return set()
     skipped: set[int] = set()
     in_snapshot = False
+    in_copies = False
     for line_no, line in enumerate(lines, 1):
         if line.startswith('## '):
             in_snapshot = line.rstrip() in SNAPSHOT_HEADINGS
+            in_copies = False
         elif in_snapshot:
-            skipped.add(line_no)
+            if line.strip() and not line[0].isspace():
+                in_copies = line.startswith('- [[')
+            if in_copies:
+                skipped.add(line_no)
     return skipped
 
 
@@ -386,8 +395,8 @@ def find_tasks_in_file(filepath: str) -> list[Task]:
     Find all task lines in a markdown file.
 
     Checkbox lines that aren't tasks (see is_task) are skipped, and so are
-    those under a snapshot heading (SNAPSHOT_HEADINGS) of a note in
-    plan/daily/: they're copies of tasks written elsewhere.
+    those in the copies under a snapshot heading (SNAPSHOT_HEADINGS) of a
+    note in plan/daily/: the subtree of a top-level `- [[link]]` bullet.
 
     Args:
         filepath: Path to the markdown file to search.

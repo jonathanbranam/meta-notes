@@ -198,12 +198,17 @@ A task tagged `#later` (any case) SHALL NOT be selected by any mode unless `--la
 - **THEN** it SHALL be listed in the overdue section
 
 ### Requirement: Daily snapshot sections are not tasks  {#r-a474}
-Task scanning SHALL ignore checkbox lines under the `## Tasks Due Today` and `## Overdue Tasks` headings of a note under `plan/daily/`, up to the next `##` heading. Tasks elsewhere in a daily note SHALL still count. This applies to every command that scans tasks, including the blocks a new daily note renders.
+Task scanning SHALL ignore the snapshot copies under the `## Tasks Due Today` and `## Overdue Tasks` headings of a note under `plan/daily/`, up to the next `##` heading: the whole subtree of each top-level `- [[link]]` bullet. Top-level checkbox lines there, with their notes and subtasks, SHALL still count. Tasks elsewhere in a daily note SHALL still count. This applies to every command that scans tasks, including the blocks a new daily note renders.
 
 #### Scenario: Copies are skipped  {#s-6914}
 *Verification*: **non-executable**
 - **WHEN** a daily note has a task under `## Tasks Due Today`, one under `## Overdue Tasks` and one under `## Notes`, and the user runs `meta-notes tasks --due --overdue`
 - **THEN** only the `## Notes` task SHALL be listed for that note
+
+#### Scenario: Hand-written tasks in a snapshot section count  {#s-d63e}
+*Verification*: **non-executable**
+- **WHEN** a daily note has, under `## Tasks Due Today`, a `- [[link]]` bullet with tasks indented under it and a top-level `- [ ]` task with a due date
+- **THEN** the tasks under the link SHALL be ignored and the top-level task SHALL be listed
 
 ### Requirement: Report layout  {#r-6ee3}
 Tasks SHALL be grouped by file, files sorted by path, and tasks in file order. Each task SHALL be printed as its original line, including its bullet, checkbox, and indentation. In standard format each file SHALL start with a `## [[<link>]]` heading, and in condensed format with a `- [[<link>]]` item and the task lines indented two spaces. When more than one mode is selected, each non-empty section SHALL start with a heading: `# Overdue`, `# Due`, `# Scheduled`, `# Ready`, `# Future`, or `# Undated`. With a single mode, there SHALL be no section heading. Standard format SHALL end with a summary line giving the number of tasks and files.

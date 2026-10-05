@@ -15,8 +15,9 @@ for its due date in queries. A time of day goes with the due date:
 `⏰ 15:00` before the dates, or `📅 2026-10-01 15:00`. It is for humans and
 reminders; a task is due today by its date, whatever its time.
 The `## Tasks Due Today` and `## Overdue Tasks` sections of a daily note
-hold copies made when the note was created. They aren't tasks and queries
-skip them; edit the task at its source.
+hold copies made when the note was created, under top-level `- [[link]]`
+bullets. Those copies aren't tasks and queries skip them; edit the task at
+its source. A top-level `- [ ]` task written there by hand is a real task.
 
 A recurring task has `🔁 every 3 months` (or `every day`, `every 2 weeks`,
 `every year`, `every weekday`, any of them with `when done` after) before
