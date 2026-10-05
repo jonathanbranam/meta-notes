@@ -20,3 +20,6 @@ tasks = ["mn-cru4"]
 
 [[tier]]
 tasks = ["mn-kbfa"]
+
+[[tier]]
+tasks = ["mn-hsxc"]
