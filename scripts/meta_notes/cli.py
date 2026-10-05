@@ -188,6 +188,19 @@ def cmd_archive(args, root: str) -> Output:
 
 
 def cmd_tasks(args, root: str) -> Output:
+    if args.agenda:
+        if set(args.modes or ()) - {"undated"} or args.date or args.at:
+            raise CliError("--agenda combines only with --through and --undated")
+        try:
+            lines, sections, warnings = query.agenda(
+                ".", through=args.through, undated="undated" in (args.modes or ()), later=args.later,
+                tags=args.tags, folder=args.folder, status=args.status,
+                condensed=args.condensed or args.format == "condensed")
+        except ValueError as e:
+            raise CliError(str(e))
+        return Output({"agenda": sections}, lines, warnings)
+    if args.through:
+        raise CliError("--through needs --agenda")
     try:
         lines, tasks, warnings = query.run(
             ".", period=args.date, modes=args.modes, later=args.later,
@@ -917,6 +930,12 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("tasks", parents=[common],
                        help="list tasks (same options and output as find_tasks.py)")
     find_tasks.add_query_arguments(p)
+    p.add_argument("--agenda", action="store_true",
+                   help="Overdue, Today, then a section per day through the "
+                        "horizon (5+ days and through next Monday; on Thu/Fri "
+                        "through the Wednesday after); --undated adds undated tasks")
+    p.add_argument("--through", metavar="DATE",
+                   help="with --agenda: last day, in --date forms")
     p.set_defaults(handler=cmd_tasks)
 
     p = sub.add_parser("time", parents=[common],

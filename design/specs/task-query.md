@@ -238,3 +238,16 @@ With `--group-by tag`, each section SHALL list its tasks under a `## <tag>` head
 *Verification*: **non-executable**
 - **WHEN** the user runs `find_tasks.py --due-on 2026-09-25`
 - **THEN** it SHALL exit non-zero with a usage error on stderr
+
+### Requirement: Agenda preset  {#r-67fe}
+`meta-notes tasks --agenda` SHALL list incomplete tasks in sections: Overdue (due before today), Today, then one section per following day through the horizon, headed `<YYYY-MM-DD> <Weekday>`, and with `--undated` an Undated section of tasks with no date. The horizon SHALL be at least 5 days after today and through the next Monday; on Thursday or Friday, through the following Wednesday. `--through DATE` (the end of any `--date` form) SHALL replace it, and a date before today SHALL be an error. A task is in one section, by its due date; today's timed tasks SHALL stay under Today all day. A started (`🛫`) task with no due date SHALL be under Today; a task due after the horizon SHALL be left out. Text output SHALL omit empty sections; `--json` SHALL give `agenda`, every section in order with `section`, `heading`, `date` and `tasks`, empty ones included. `--tag`, `--folder`, `--later`, `--status` and `--format` SHALL apply; `--date`, `--at` and the modes other than `--undated` SHALL be a usage error, as SHALL `--through` without `--agenda`. Work and personal roots SHALL behave the same.
+
+#### Scenario: Sections by day  {#s-2ef0}
+*Verification*: **non-executable**
+- **WHEN** it is Thursday, a task is due last week, one is due today at a passed time, one is due Friday, and the user runs `meta-notes tasks --agenda`
+- **THEN** they SHALL be under Overdue, Today and `<Friday's date> Fri`, and the last section SHALL be the following Wednesday
+
+#### Scenario: Undated is opt-in  {#s-2638}
+*Verification*: **non-executable**
+- **WHEN** a task has a bare `📅` and the user runs `meta-notes tasks --agenda`, then `--agenda --undated`
+- **THEN** only the second output SHALL list it, under Undated

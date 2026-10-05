@@ -89,6 +89,7 @@ Create one with `meta-notes task add <file> <text> --recur <rule> --due
 ## Commands
 
 ```
+meta-notes tasks --agenda --json   # startup check: overdue, today, each day ahead (--undated adds undated)
 meta-notes tasks --overdue --due --json
 meta-notes projects --warnings
 meta-notes project brief project/kitchen-remodel/

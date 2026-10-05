@@ -256,6 +256,7 @@ meta-notes note write project/a.md --lines 3..4 --expect "$old" --text "$new"
 bin/meta-notes archive 'project/2024-*'
 bin/meta-notes move project/foo area/foo --json
 bin/meta-notes tasks --all --folder project --status all
+meta-notes tasks --agenda                 # overdue, today, each day ahead
 meta-notes tasks --overdue --due          # overdue and due today
 meta-notes tasks --scheduled --date 2026-11 --group-by tag
 meta-notes tasks --overdue --due --at now  # timed tasks due by this moment

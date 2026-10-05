@@ -7,7 +7,7 @@ year, and resolves to an inclusive (START, END) pair of dates.
 
 import calendar
 import re
-from datetime import date
+from datetime import date, timedelta
 
 FORMS = ("YYYY-MM-DD, YYYY-MM-DD..YYYY-MM-DD, YYYY-MM, YYYY-Qn (n = 1-4), "
          "or YYYY")
@@ -87,3 +87,14 @@ def parse_period(text: str | None, today: date | None = None) -> tuple[date, dat
         return date(year, 1, 1), date(year, 12, 31)
 
     raise _error(text)
+
+
+def agenda_horizon(today: date) -> date:
+    """
+    The last day of the agenda: at least 5 days after today and through the
+    next Monday; on Thursday or Friday, through the following Wednesday.
+    """
+    if today.weekday() in (3, 4):
+        return today + timedelta(days=7 - today.weekday() + 2)
+    end = today + timedelta(days=5)
+    return end + timedelta(days=-end.weekday() % 7)

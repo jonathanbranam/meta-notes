@@ -709,8 +709,25 @@ Commands ~
                         `rescheduled`, `canceled`, or `all`.
     --format standard|condensed, --condensed
                         Output format (default: standard).
+    --agenda            Overdue, Today, then a section per following day
+                        (`2026-10-06 Tue`), through the horizon: at least 5
+                        days ahead and through the next Monday; on Thursday
+                        or Friday, through the following Wednesday. Started
+                        (`🛫`) tasks with no due date are under Today, and
+                        today's timed tasks stay there all day. Empty
+                        sections are left out of the text but kept in
+                        `--json` (`agenda`: a list of sections, each with
+                        `tasks`). Combines with `--undated`, `--through`,
+                        `--tag`, `--folder`, `--later`, `--status`; not
+                        with `--date`, `--at` or the other modes.
+    --through {date}    With `--agenda`, the last day (the end of any
+                        |meta-notes-date| form) instead of the horizon.
+    --undated           With `--agenda`, add an Undated section of tasks
+                        with no date.
 
     Example: >
+        meta-notes tasks --agenda
+        meta-notes tasks --agenda --undated --through 2026-10-16
         meta-notes tasks --overdue --due
         meta-notes tasks --ready --date 2026-09-27
         meta-notes tasks --scheduled --date 2026-11
