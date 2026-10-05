@@ -749,7 +749,8 @@ def _optional_root_mode(args) -> tuple[str | None, str]:
 def cmd_conventions(args, root: None) -> Output:
     _, mode = _optional_root_mode(args)
     text = conventions.run(mode)
-    return Output({"version": __version__, "mode": mode, "text": text},
+    return Output({"version": __version__, "mode": mode, "text": text,
+                   "tag_aliases": conventions.tag_aliases_json(mode)},
                   [text.removesuffix("\n")])
 
 

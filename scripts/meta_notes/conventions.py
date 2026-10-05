@@ -11,7 +11,7 @@ import textwrap
 from pathlib import Path
 
 import tasks
-from tags import TAG_ALIASES
+from tags import TAG_ALIASES, MODE_TAG_ALIASES
 from meta_notes import hours
 
 CONVENTIONS_FILE = Path(__file__).with_name("conventions.md")
@@ -35,6 +35,12 @@ def _tag_aliases() -> str:
     return textwrap.fill("Aliases, read as their target in task queries, task "
                          "updates, and time logs: " + ", ".join(items) + ".", 74,
                          break_on_hyphens=False)
+
+
+def tag_aliases_json(mode: str = "work") -> dict[str, str]:
+    """Tag aliases for the mode as {alias: target} without #."""
+    aliases = MODE_TAG_ALIASES[mode]
+    return {alias[1:]: target[1:] for alias, target in aliases.items()}
 
 
 # Text added to the conventions for a mode where it differs from the other.

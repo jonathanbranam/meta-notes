@@ -1279,8 +1279,9 @@ Commands ~
     ceremony markers, and structural changes. The status characters and
     tag aliases are generated from the definitions queries and
     updates use, so the text matches the installed CLI. Works outside a
-    notes root and reads no notes. With `--json`, the object has `version`
-    and `text`, the markdown.
+    notes root and reads no notes. With `--json`, the object has `version`,
+    `mode`, `text` (the markdown), and `tag_aliases` (alias to target
+    mappings without #).
 
 `meta-notes prime`                              *meta-notes-cli-prime*
     Print, as markdown, a guide to the notes root for an agent to read at

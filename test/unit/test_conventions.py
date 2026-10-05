@@ -87,3 +87,36 @@ def test_run_lines_fit_in_80_columns():
 
 def test_render_leaves_other_text_alone():
     assert conventions.render("plain\n") == "plain\n"
+
+
+# Tests for tag_aliases_json function
+
+def test_tag_aliases_json_work_mode():
+    aliases = conventions.tag_aliases_json("work")
+    assert isinstance(aliases, dict)
+    assert "mtg" in aliases
+    assert aliases["mtg"] == "meeting"
+    assert "pers" in aliases
+    assert aliases["pers"] == "personal"
+    assert "waiting" in aliases
+    assert aliases["waiting"] == "wait"
+
+
+def test_tag_aliases_json_personal_mode():
+    aliases = conventions.tag_aliases_json("personal")
+    assert isinstance(aliases, dict)
+    assert "mtg" in aliases
+    assert aliases["mtg"] == "meeting"
+    assert "wk" in aliases
+    assert aliases["wk"] == "work"
+    assert "waiting" in aliases
+    assert aliases["waiting"] == "wait"
+    # #pers is not in personal mode
+    assert "pers" not in aliases
+
+
+def test_tag_aliases_json_no_hashes():
+    aliases = conventions.tag_aliases_json("work")
+    for alias, target in aliases.items():
+        assert not alias.startswith("#"), f"{alias} should not have #"
+        assert not target.startswith("#"), f"{target} should not have #"
