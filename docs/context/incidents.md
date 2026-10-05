@@ -86,3 +86,22 @@ Newest first. Times are UTC. Each entry has:
 - **Follow-up:** none yet. Watch for it again with haiku workers; if it
   recurs, the manager should use sonnet for workers or name the report
   target in the task message.
+
+## 2026-10-05 02:41: meta-notes-ui main red for 40 minutes, 9 merges on red
+
+- **What happened:** mu-d66x (97e0b13) added `server/example.test.ts`, the
+  first test that runs the real `meta-notes` CLI. GitHub CI has no
+  meta-notes, so it failed (`spawn meta-notes ENOENT`) and stayed red
+  through df5f90d: 13 red pushes, 9 merges (v0.3.0 to v0.5.0). The daemon
+  recorded one `ci.completed` (df5f90d, 03:20 UTC) and woke the
+  orchestrator only then. The orchestrator saw CI "in progress" on 97e0b13
+  and never re-checked.
+- **Impact:** main red for about 40 minutes; nine merges broke the rule
+  "never merge while main is red"; no product harm (local checks passed).
+- **Cause:** test needing an external CLI with no CI setup for it; the
+  meta-notes-ui manager can't read CI (its allowlist denies `gh`) and relied
+  on wakes; the daemon's CI watch missed the earlier runs (cause unknown).
+- **Category:** `ci`, `coordination`, `tooling`.
+- **Follow-up:** CI fix in progress (manager's ci-fix worker: check out
+  meta-notes in the workflow, `bin/` on PATH); bridle br-ysmu (missed CI
+  events; a way for managers to read CI without gh).
