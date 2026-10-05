@@ -21,6 +21,26 @@ Newest first. Times are UTC. Each entry has:
   `human-process`.
 - **Follow-up:** the ticket or task, or "none" and why.
 
+## 2026-10-05 11:38: manager couldn't merge mn-cru4 or commit ticket moves (allowlist)
+
+- **What happened:** the manager ran the mn-cru4 merge, push, tag and
+  `bridle task done` as one chained command with `git push -q` and
+  `git rev-parse`; `dontAsk` denied the whole command because those forms
+  aren't on its allowlist (`.bridle/config.toml` `[roles.manager]`). It
+  stopped and wrote "Decision for you" in its turn output, which reaches
+  nobody, then idled. Earlier, its `git add`/`git commit` of three ticket
+  moves (5qab, g8wz, 6dbp) was denied the same way and left uncommitted in
+  the shared clone. Found by the orchestrator checking why a finished
+  task sat unmerged.
+- **Impact:** about 12 minutes' delay on a bug fix; no harm.
+- **Cause:** the manager improvised command forms beyond its allowlist, and
+  reported the denial in its turn output instead of a message. Ticket
+  moves need a commit the manager isn't allowed to make.
+- **Category:** `role`, `config`, `coordination`.
+- **Follow-up:** merged as plain commands (8a7ebea, v2.24.1); the
+  manager's role doc now says to run each git command on its own in the
+  exact form shown, and to leave ticket moves to the orchestrator.
+
 ## 2026-10-05 02:15: meta-notes-ui workers couldn't spawn (worktree setup)
 
 - **What happened:** the first worker for mu-83ya (meta-notes-ui v1.1)

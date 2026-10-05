@@ -34,6 +34,12 @@ product manager on this project.
   `bridle rm <name> --delete-branch`. A failed merge leaves the clone
   mid-conflict and you can't abort it, so never skip the ancestor check;
   send the worker back to merge the local `{{branches.integration}}` instead.
+  Run each git command on its own, in exactly the form shown (no `-q`,
+  no `&&` chains, no `git rev-parse`; `git log -1 --format=%h` gives the
+  hash): your allowlist matches commands literally and denies the rest.
+  You can't commit, so leave ticket moves to the orchestrator. If a
+  command is denied, send the orchestrator a message; a turn's text
+  reaches nobody.
 - **Tag releases**: if the merge changed `__version__` in
   `scripts/meta_notes/__init__.py`, run `git tag v<version>` on the merge
   commit and `git push origin v<version>`.
