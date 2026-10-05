@@ -8,7 +8,7 @@ changes: []
 specs: []
 needs: []
 see: [cru4]
-tasks: []
+tasks: [mn-kbfa]
 ---
 
 ## The ask
@@ -32,7 +32,7 @@ gets the right set in one call, but:
   `--at` is given;
 - started-not-due tasks (🛫) need `--ready`;
 - the daily-note snapshot copies inflate everything until
-  [[docs/tickets/open/tasks-query-counts-the-daily-note-s-due-today-and-overdue-sn-cru4|cru4]] merges.
+  [[docs/tickets/resolved/tasks-query-counts-the-daily-note-s-due-today-and-overdue-sn-cru4|cru4]] merges.
 
 ## Suggestion (the advisor's)
 
@@ -42,6 +42,11 @@ optionally Undated; `--json` too. Open points for the human: the horizon
 rule as a default or `--through`; whether a work root (much longer lists)
 needs it narrowed; whether today's passed timed tasks stay under Today.
 
-## Not ready
+## Decision
 
-Feature for the human's review; no task until they approve.
+The human approved the ticket as written, 2026-10-05 (relayed by the notes
+advisor). The orchestrator settled the open points in task mn-kbfa's brief:
+`tasks --agenda`, the horizon rule as the default with `--through DATE` to
+override, the same in work and personal roots, today's passed timed tasks
+stay under Today, and `--undated` adds an Undated section (off by default).
+The worker records the behaviour in `design/specs/task-query.md`.
