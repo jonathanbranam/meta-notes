@@ -1249,6 +1249,28 @@ Commands ~
     `calendar/` isn't an error. `--json` returns `deleted` (the paths) and
     `count`. It doesn't need the virtualenv.
 
+`meta-notes ui start|stop|status|url|open`         *meta-notes-cli-ui*
+    Manage the meta-notes-ui server, a separate project you install with
+    `git clone` and `npm ci && npm run build`. Settings, in the `[ui]`
+    table of `.meta-notes`: >
+        [ui]
+        path = "~/src/meta-notes-ui"    # the clone; required
+        host = "0.0.0.0"                # optional; --host overrides
+        port = 8787                     # optional; --port overrides
+<
+    `start` makes `.meta-notes-cache/ui/token` (mode 0600) when missing,
+    runs the server detached with its log in `.meta-notes-cache/ui/server.log`,
+    waits for it to write `.meta-notes-cache/ui/server.json`, and prints the
+    URL with `?token=`. It fails when a server is already running for the
+    root, there is no `[ui] path`, no `dist/server/index.js` (run `npm run
+    build`), or no `node`. `stop` sends SIGTERM and waits. `status` reports
+    running or not, the URL (no token), pid and version. `url` prints the
+    running server's URL with the token (for a phone, start with `--host`
+    set to an address it can reach). `open` starts the server if needed and
+    opens the URL with `open` or `xdg-open`. `--json` returns `running`,
+    `url`, `pid`, `host`, `port` and `version`; `stop` returns `stopped`;
+    `open` adds `started`.
+
 `meta-notes conventions`                        *meta-notes-cli-conventions*
     Print, as markdown, the note syntax and editing rules the shipped
     skills follow (|meta-notes-skills|): the task model, status
@@ -1581,7 +1603,7 @@ note existed before), `created` (whether this command wrote it), and
 also returns `content`, the rendered note. `--version` returns `version`,
 `commit` (the short hash, or null), and `dirty`. Output from template commands
 appears only in `content` or the written note, never on stdout.
-`calendar`, `cache clear`, `conventions`, `ceremony status`, `planning`, `checkin`, `time-block update`, `time-block replace`, `time-log append`, `time-log update`, and
+`calendar`, `cache clear`, `ui`, `conventions`, `ceremony status`, `planning`, `checkin`, `time-block update`, `time-block replace`, `time-log append`, `time-log update`, and
 `projects` return the fields listed under each command above.
 
 The exit status is non-zero on failure. `--root` and `--json` may come
