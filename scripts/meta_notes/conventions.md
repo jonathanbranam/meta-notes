@@ -14,6 +14,9 @@ appear in task queries. A done task gets `✅ YYYY-MM-DD`, which stands in
 for its due date in queries. A time of day goes with the due date:
 `⏰ 15:00` before the dates, or `📅 2026-10-01 15:00`. It is for humans and
 reminders; a task is due today by its date, whatever its time.
+The `## Tasks Due Today` and `## Overdue Tasks` sections of a daily note
+hold copies made when the note was created. They aren't tasks and queries
+skip them; edit the task at its source.
 
 A recurring task has `🔁 every 3 months` (or `every day`, `every 2 weeks`,
 `every year`, `every weekday`, any of them with `when done` after) before

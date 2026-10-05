@@ -723,6 +723,9 @@ Commands ~
     Plain checkboxes are checklist items and are ignored. The date after the
     due emoji is the due date. A due emoji with no date after it (a bare
     📅) marks an undated task, so an item worth tracking gets a bare 📅.
+    Checkbox lines under `## Tasks Due Today` and `## Overdue Tasks` in a
+    note under `plan/daily/` are copies of tasks from elsewhere (up to the
+    next `##` heading) and are not tasks.
     A time of day goes with the due date: `⏰ 15:00` (24-hour) or
     `⏰ 3:15pm` (12-hour, as in a Time Block), placed before the dates, or
     `📅 2026-10-01 15:00`. With both, `⏰` is used. `meta-notes tasks --json`

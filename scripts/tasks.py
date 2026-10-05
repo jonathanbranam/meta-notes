@@ -362,11 +362,32 @@ def char_to_status(status_char: str) -> TaskStatus:
         return TaskStatus.INCOMPLETE
 
 
+# Headings of a daily note's snapshot sections, which the daily template
+# fills with copies of tasks from elsewhere
+SNAPSHOT_HEADINGS = ('## Tasks Due Today', '## Overdue Tasks')
+
+
+def _snapshot_lines(filepath: str, lines: list[str]) -> set[int]:
+    """The line numbers under a snapshot heading of a note in plan/daily/."""
+    if '/plan/daily/' not in '/' + filepath.replace('\\', '/'):
+        return set()
+    skipped: set[int] = set()
+    in_snapshot = False
+    for line_no, line in enumerate(lines, 1):
+        if line.startswith('## '):
+            in_snapshot = line.rstrip() in SNAPSHOT_HEADINGS
+        elif in_snapshot:
+            skipped.add(line_no)
+    return skipped
+
+
 def find_tasks_in_file(filepath: str) -> list[Task]:
     """
     Find all task lines in a markdown file.
 
-    Checkbox lines that aren't tasks (see is_task) are skipped.
+    Checkbox lines that aren't tasks (see is_task) are skipped, and so are
+    those under a snapshot heading (SNAPSHOT_HEADINGS) of a note in
+    plan/daily/: they're copies of tasks written elsewhere.
 
     Args:
         filepath: Path to the markdown file to search.
@@ -379,9 +400,10 @@ def find_tasks_in_file(filepath: str) -> list[Task]:
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             lines = f.readlines()
+        snapshot = _snapshot_lines(filepath, lines)
         for node in parse_outline(lines):
             line_num, text = node.line_no, node.text
-            if not is_task(text):
+            if line_num in snapshot or not is_task(text):
                 continue
             start_date, due_date, completed_date = _parse_task_dates(text)
             has_due_emoji = _has_due_emoji(text)

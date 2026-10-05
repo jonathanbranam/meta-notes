@@ -197,6 +197,14 @@ A task tagged `#later` (any case) SHALL NOT be selected by any mode unless `--la
 - **WHEN** the same task exists and the user runs `meta-notes tasks --overdue --later` on 2026-09-25
 - **THEN** it SHALL be listed in the overdue section
 
+### Requirement: Daily snapshot sections are not tasks  {#r-a474}
+Task scanning SHALL ignore checkbox lines under the `## Tasks Due Today` and `## Overdue Tasks` headings of a note under `plan/daily/`, up to the next `##` heading. Tasks elsewhere in a daily note SHALL still count. This applies to every command that scans tasks, including the blocks a new daily note renders.
+
+#### Scenario: Copies are skipped  {#s-6914}
+*Verification*: **non-executable**
+- **WHEN** a daily note has a task under `## Tasks Due Today`, one under `## Overdue Tasks` and one under `## Notes`, and the user runs `meta-notes tasks --due --overdue`
+- **THEN** only the `## Notes` task SHALL be listed for that note
+
 ### Requirement: Report layout  {#r-6ee3}
 Tasks SHALL be grouped by file, files sorted by path, and tasks in file order. Each task SHALL be printed as its original line, including its bullet, checkbox, and indentation. In standard format each file SHALL start with a `## [[<link>]]` heading, and in condensed format with a `- [[<link>]]` item and the task lines indented two spaces. When more than one mode is selected, each non-empty section SHALL start with a heading: `# Overdue`, `# Due`, `# Scheduled`, `# Ready`, `# Future`, or `# Undated`. With a single mode, there SHALL be no section heading. Standard format SHALL end with a summary line giving the number of tasks and files.
 
