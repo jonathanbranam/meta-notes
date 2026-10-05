@@ -2,9 +2,9 @@
 id = "mn-v2f5"
 title = "Add the meta-notes-ui bridle project on the NUC (config, daemon, token)"
 kind = "chore"
-state = "claimed"
+state = "integrated"
 created_at = "2026-10-05T02:10:58.259Z"
-updated_at = "2026-10-05T02:10:58.672524151Z"
+updated_at = "2026-10-05T02:15:11.338752213Z"
 created_by = "external:orchestrator"
 watchers = [
     "external:orchestrator",
@@ -33,3 +33,6 @@ created for the human, priority normal
 
 ### note · external:orchestrator · 2026-10-05T02:10:58.672Z
 To-do for you (normal priority): Add the meta-notes-ui bridle project on the NUC (config, daemon, token). Finish it with `bridle task done mn-v2f5`.
+
+### note · external:orchestrator · 2026-10-05T02:15:11.338Z
+done
