@@ -111,3 +111,4 @@
 {"actor":"agent:manager","at":"2026-10-04T23:01:21.631772956Z","from":"open","task":"mn-ws7t","to":"integrated"}
 {"actor":"human","at":"2026-10-05T00:28:46.406Z","from":"","task":"mn-y6bw","to":"pending"}
 {"actor":"external:orchestrator","at":"2026-10-05T00:28:47.909473266Z","from":"pending","task":"mn-y6bw","to":"open"}
+{"actor":"agent:manager","at":"2026-10-05T00:30:02.714404108Z","from":"open","task":"mn-y6bw","to":"integrated"}
