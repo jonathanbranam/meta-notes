@@ -136,3 +136,4 @@
 {"actor":"external:orchestrator","at":"2026-10-05T23:10:58.507237287Z","from":"pending","task":"mn-kbfa","to":"open"}
 {"actor":"external:orchestrator","at":"2026-10-05T23:10:59.252101266Z","from":"open","task":"mn-kbfa","to":"planned"}
 {"actor":"external:orchestrator","at":"2026-10-05T23:10:59.418734198Z","queue":"reprioritized"}
+{"actor":"agent:manager-1","at":"2026-10-05T23:18:33.111160224Z","from":"planned","task":"mn-kbfa","to":"integrated"}

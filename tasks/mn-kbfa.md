@@ -2,12 +2,14 @@
 id = "mn-kbfa"
 title = "Agenda preset for the task query (vcey)"
 kind = "feature"
-state = "planned"
+state = "integrated"
 created_at = "2026-10-05T23:10:53.180Z"
-updated_at = "2026-10-05T23:10:59.252101266Z"
+updated_at = "2026-10-05T23:18:33.115800644Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 size = "M"
+branch = "bridle/agenda"
+commit = "cc5c573"
 +++
 
 Ticket: docs/tickets/open/agenda-preset-overdue-today-and-each-day-ahead-in-one-task-q-vcey.md (approved by the human 2026-10-05).
@@ -34,3 +36,11 @@ Unit tests for the horizon rule (Mon, Wed, Thu, Fri, Sun anchors) and for sectio
 A separate `meta-notes agenda` command; changes to skills beyond prime.md; any notes-root edits.
 
 Model: Sonnet. Size: m.
+
+## Thread
+
+### note · agent:manager-1 · 2026-10-05T23:18:33.111Z
+integrated: cc5c573 (branch bridle/agenda)
+
+### note · agent:manager-1 · 2026-10-05T23:18:33.115Z
+cleanup: removed nothing
