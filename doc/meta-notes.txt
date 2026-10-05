@@ -675,6 +675,22 @@ Commands ~
         meta-notes note weekly 2026-04-02 --render
         meta-notes note new project/trip/Packing --template checklist
 <
+`meta-notes note write {file} [--lines {A..B}] --expect {text} --text {text} [--create]`
+                                                *meta-notes-cli-note-write*
+    Replace lines {A}..{B} (from 1, inclusive) of a note, or the whole file
+    without `--lines`, with `--text`, only if they are exactly `--expect`.
+    Otherwise nothing is written, the command exits non-zero and shows the
+    current lines (`current`, an array, with `--json`), so it never
+    overwrites a change you made in Vim meanwhile. `--text` may have more or
+    fewer lines than the range; empty deletes them. `--expect` and `--text`
+    take `-` for standard input. Line endings and the trailing newline are
+    kept. `--create` makes a missing file and its folders (use `--expect ''`).
+    {file} must be inside the notes root. With `--json`: `file`, `line`,
+    `end_line` (the range the new text occupies) and `changed`.
+
+    Example: >
+        meta-notes note write project/a.md --lines 3..4 --expect "$old" --text "$new"
+<
 `meta-notes tasks [options]`                     *meta-notes-cli-tasks*
     List tasks. Takes the same options as `scripts/find_tasks.py` and
     prints the same output. With no options, lists the incomplete tasks

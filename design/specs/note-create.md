@@ -191,3 +191,16 @@ without opening a buffer.
 *Verification*: **non-executable**
 - **WHEN** the cursor is on `[[project/lunch/Lunch Ideas]]`, the note doesn't exist, and the user runs `:MetaNotesOpen`
 - **THEN** Vim SHALL open an unsaved buffer for `project/lunch/Lunch Ideas.md` with the content from `meta-notes note new`
+
+### Requirement: Race-safe note write  {#r-ecbe}
+`meta-notes note write <file> --expect <text> --text <text>` SHALL replace lines `A..B` (1-based, inclusive, from `--lines A..B`; the whole file when omitted) of a note inside the notes root with `--text`, only when those lines are exactly `--expect`; otherwise it SHALL write nothing, exit non-zero, and show the current lines (`current`, an array of lines, with `--json`). `--text` MAY have more or fewer lines than the range, and an empty `--text` SHALL delete them. Line endings and the file's trailing newline SHALL be kept. `--create` SHALL make a missing file and its folders, needing `--expect ''`. A path outside the notes root SHALL be an error. With `--json` the command SHALL report `line` and `end_line`, the range the new text now occupies.
+
+#### Scenario: Stale block  {#s-93ef}
+*Verification*: **non-executable**
+- **WHEN** the user runs `note write n.md --lines 2..3 --expect 'b' --text 'x'` and those lines no longer read `b`
+- **THEN** the command SHALL exit non-zero, leave the file unchanged, and show lines 2..3 as they are
+
+#### Scenario: Grow a block  {#s-a92f}
+*Verification*: **non-executable**
+- **WHEN** lines 2..3 match `--expect` and `--text` has three lines
+- **THEN** those lines SHALL be replaced by the three, and `--json` SHALL report `line` 2 and `end_line` 4
