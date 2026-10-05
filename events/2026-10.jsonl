@@ -132,3 +132,7 @@
 {"actor":"external:orchestrator","at":"2026-10-05T11:37:31.879310746Z","from":"open","task":"mn-cru4","to":"planned"}
 {"actor":"external:orchestrator","at":"2026-10-05T11:37:32.003871419Z","queue":"reprioritized"}
 {"actor":"agent:manager-1","at":"2026-10-05T11:50:32.231690076Z","from":"planned","task":"mn-cru4","to":"integrated"}
+{"actor":"human","at":"2026-10-05T23:10:53.180Z","from":"","task":"mn-kbfa","to":"pending"}
+{"actor":"external:orchestrator","at":"2026-10-05T23:10:58.507237287Z","from":"pending","task":"mn-kbfa","to":"open"}
+{"actor":"external:orchestrator","at":"2026-10-05T23:10:59.252101266Z","from":"open","task":"mn-kbfa","to":"planned"}
+{"actor":"external:orchestrator","at":"2026-10-05T23:10:59.418734198Z","queue":"reprioritized"}
