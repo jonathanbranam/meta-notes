@@ -102,6 +102,6 @@ Newest first. Times are UTC. Each entry has:
   meta-notes-ui manager can't read CI (its allowlist denies `gh`) and relied
   on wakes; the daemon's CI watch missed the earlier runs (cause unknown).
 - **Category:** `ci`, `coordination`, `tooling`.
-- **Follow-up:** CI fix in progress (manager's ci-fix worker: check out
-  meta-notes in the workflow, `bin/` on PATH); bridle br-ysmu (missed CI
-  events; a way for managers to read CI without gh).
+- **Follow-up:** CI fixed in ab00d7b (workflow checks out meta-notes,
+  Python 3.11, `bin/` on PATH; green at 03:27 UTC, run 37259312840); bridle
+  br-ysmu (missed CI events; a way for managers to read CI without gh).
