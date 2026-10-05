@@ -105,3 +105,6 @@ Newest first. Times are UTC. Each entry has:
 - **Follow-up:** CI fixed in ab00d7b (workflow checks out meta-notes,
   Python 3.11, `bin/` on PATH; green at 03:27 UTC, run 37259312840); bridle
   br-ysmu (missed CI events; a way for managers to read CI without gh).
+  The manager then merged mu-qcn9 (dc45078) while CI on ab00d7b was still
+  running, before the orchestrator's confirmation; both came out green. Told
+  it to wait for confirmation on each merge until br-ysmu is fixed.
