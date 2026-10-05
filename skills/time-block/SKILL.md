@@ -55,6 +55,10 @@ what you meant to do; Actual records deviations and extras.
 
 ## Rules for the content
 
+- **Events fill every row they span**, not just the first; travel to and
+  from is its own run of rows, then the event's rows (see
+  `meta-notes conventions`). With no known end, use a typical length and
+  tell the user, or ask.
 - **Replan**: rewrite the Plan of rows still ahead. One Plan column is
   enough. Check what the change pushes out: deadlines, pickups, leave-by times.
 - **The plan happened**: leave Actual blank.

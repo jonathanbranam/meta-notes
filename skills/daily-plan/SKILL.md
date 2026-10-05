@@ -115,7 +115,8 @@ note.
 
 1. Run `meta-notes note daily <TARGET>` to get (or create) TARGET's note.
 2. Fill the Plan column of the `### Time Block` table. First place every
-   meeting from step 3's agenda at its times, before planning any other
+   meeting from step 3's agenda at its times (an event fills every row it
+   spans, with travel as its own rows; see `meta-notes conventions`), before planning any other
    work, even if the rest of the plan isn't decided. Then put the most
    important work in the largest free blocks. Write each Plan cell with
    `meta-notes time-block update <note> --time 9:30am [--through 10:15am]

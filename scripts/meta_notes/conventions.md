@@ -155,6 +155,13 @@ stay lowercase. For a row that already happened and didn't go as planned:
 A past row with an empty Plan gets the Plan `no plan` (the day had no plan
 for that block) and a short Actual summary.
 
+An event (meeting, concert, appointment, errand) fills the Plan of every
+row it spans, not just its first. Travel to and from it is its own run of
+rows (`drive to concert` in each 15-minute row it takes), and the event's
+rows follow (`concert`). When the end isn't known, use a typical length and
+tell the user, or ask. One `time-block update --time 7:00pm --through
+8:45pm --plan 'concert'` writes a run.
+
 Never edit the daily note's `### Time Block` table yourself. Write its
 Plan and Actual cells with
 `meta-notes time-block update <file> --time 9:30am [--through 10:15am]
