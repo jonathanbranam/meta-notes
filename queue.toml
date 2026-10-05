@@ -14,3 +14,6 @@ tasks = [
 
 [[tier]]
 tasks = ["mn-6dbp"]
+
+[[tier]]
+tasks = ["mn-cru4"]
