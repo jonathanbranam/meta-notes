@@ -21,6 +21,21 @@ Newest first. Times are UTC. Each entry has:
   `human-process`.
 - **Follow-up:** the ticket or task, or "none" and why.
 
+## 2026-10-05 02:15: meta-notes-ui workers couldn't spawn (worktree setup)
+
+- **What happened:** the first worker for mu-83ya (meta-notes-ui v1.1)
+  failed to spawn: the orchestrator's scaffold set `[worktrees] setup =
+  "npm ci"` in a repo with no `package.json` yet. The manager asked the
+  human (m-0005) to approve a fix. Found by the orchestrator from the
+  manager's note.
+- **Impact:** about 2 minutes, and one question in the human's inbox that
+  the orchestrator answered.
+- **Cause:** the orchestrator wrote config for the repo's future state,
+  not its current one.
+- **Category:** `config`.
+- **Follow-up:** fixed in meta-notes-ui f85fcc5 (`test ! -f
+  package-lock.json || npm ci`), daemon restarted. None further.
+
 ## 2026-10-03 23:03: v2.14.2 merged with the rule worded wrong
 
 - **What happened:** mn-d368 (ticket qb8e) added the rule for an agent's
