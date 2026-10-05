@@ -24,7 +24,8 @@ import tasks as task_model
 from recurrence import parse_rule
 from tags import canonical_tag
 from meta_notes import (__version__, brief, calendar, ceremony, changes,
-                        checkin, config, conventions, hours, init, note, ops, planning, prime,
+                        checkin, config, conventions, hours, init, note, note_write, ops, planning,
+                        prime,
                         projects, query, task_show, task_update, task_write, time,
                         time_block, time_log)
 from meta_notes.root import SENTINEL, find_root
@@ -243,7 +244,34 @@ def _root_mode(root: str) -> str:
         raise CliError(str(e))
 
 
+def _line_range(value: str) -> tuple[int, int]:
+    m = re.fullmatch(r"(\d+)\.\.(\d+)", value)
+    if not m:
+        raise CliError(f"--lines must be A..B, got {value!r}")
+    return int(m.group(1)), int(m.group(2))
+
+
+def cmd_note_write(args, root: str) -> Output:
+    path = to_root_relative(args.file, root)
+    first, last = _line_range(args.lines) if args.lines else (None, None)
+    try:
+        result = note_write.write(
+            path, _block_text(args.expect), _block_text(args.text), first,
+            last, args.create)
+    except note_write.NoteWriteError as e:
+        if e.current is None:
+            raise CliError(str(e))
+        return Output({"file": path, "current": e.current}, e.current,
+                      error=str(e))
+    data = {"file": path, "line": result.line, "end_line": result.end_line,
+            "changed": result.changed}
+    return Output(data, [f"{path}:{result.line}..{result.end_line}"
+                         if result.changed else f"{path}: unchanged"])
+
+
 def cmd_note(args, root: str) -> Output:
+    if args.kind == "write":
+        return cmd_note_write(args, root)
     if args.kind == "new":
         value = to_root_relative(args.path, root)
         template_name = args.template
@@ -897,6 +925,21 @@ def build_parser() -> argparse.ArgumentParser:
     k.add_argument("--template", metavar="NAME",
                    help="use resource/template/NAME.md instead of "
                         "template discovery")
+    k = kinds.add_parser("write", parents=[common],
+                         help="replace a note's lines, only if they are "
+                              "what you expect")
+    k.add_argument("file", metavar="FILE",
+                   help="the note, relative to the notes root")
+    k.add_argument("--lines", metavar="A..B",
+                   help="the lines replaced, 1-based and inclusive "
+                        "(default: the whole file)")
+    k.add_argument("--expect", required=True, metavar="TEXT",
+                   help="those lines as last read, or - for stdin; nothing "
+                        "is written if they differ")
+    k.add_argument("--text", required=True, metavar="TEXT",
+                   help="the new lines, or - for stdin (empty deletes)")
+    k.add_argument("--create", action="store_true",
+                   help="make the file if missing (with --expect '')")
     p.set_defaults(handler=cmd_note)
 
     p = sub.add_parser("task", parents=[common],

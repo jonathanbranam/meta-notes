@@ -93,6 +93,7 @@ meta-notes/
 │   │   ├── hours.py             # Working hours and days by root mode
 │   │   ├── init.py              # Notes root setup
 │   │   ├── note.py              # Note paths and creation
+│   │   ├── note_write.py        # Race-safe line edits of a note
 │   │   ├── ops.py               # Move, rename, archive
 │   │   ├── planning.py          # Planning record
 │   │   ├── prime.md             # Agent guide text
@@ -193,7 +194,7 @@ This structure is compatible with vim-plug, Vundle, and Pathogen.
 ## Command Line
 
 `bin/meta-notes` performs the plugin's setup (`init`), note creation from
-templates (`note`), file operations (`move`, `rename`, `archive`), task
+templates (`note`), race-safe line edits (`note write`), file operations (`move`, `rename`, `archive`), task
 query (`tasks`), task edits (`task update`, `task add`), one task read as a tree (`task show`), its notes and subtasks written (`task notes`, `task replace`, `task add --under`), time reports (`time`), changed
 notes (`changes`), calendar agendas (`calendar`, `cache clear`), the
 project list (`projects`), ceremony status (`ceremony status`), the planning record (`planning`), stay-on-task check-ins (`checkin`), Time Block cell and row edits (`time-block update`, `time-block replace`), Time Log edits (`time-log append`, `time-log update`), and the
@@ -250,6 +251,7 @@ meta-notes init --python ~/.pyenv/versions/3.12.4/bin/python3  # another interpr
 meta-notes note daily                    # create today's daily note, print its path
 meta-notes note weekly 2026-04-02 --render --json
 meta-notes note new "project/trip/Packing" --template checklist
+meta-notes note write project/a.md --lines 3..4 --expect "$old" --text "$new"
 bin/meta-notes archive 'project/2024-*'
 bin/meta-notes move project/foo area/foo --json
 bin/meta-notes tasks --all --folder project --status all
