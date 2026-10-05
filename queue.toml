@@ -11,3 +11,6 @@ tasks = [
     "mn-kau5",
     "mn-eyet",
 ]
+
+[[tier]]
+tasks = ["mn-6dbp"]
