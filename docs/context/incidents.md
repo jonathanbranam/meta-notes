@@ -128,3 +128,19 @@ Newest first. Times are UTC. Each entry has:
   The manager then merged mu-qcn9 (dc45078) while CI on ab00d7b was still
   running, before the orchestrator's confirmation; both came out green. Told
   it to wait for confirmation on each merge until br-ysmu is fixed.
+
+## 2026-10-05 23:19: cru4 fix hid real tasks in daily notes
+
+- **What happened:** the cru4 fix (v2.24.1, 5205e26) skips every line under
+  a daily note's `## Tasks Due Today` and `## Overdue Tasks`. The human also
+  writes real tasks there by hand, so `meta-notes tasks` and `--agenda`
+  stopped listing them. The notes advisor found it the evening after
+  (notes m-0084).
+- **Impact:** about 9 real tasks in the personal root invisible since the
+  morning, two of them due 2026-10-06. The advisor renamed the heading in
+  the 10-05 and 10-06 notes as a workaround; older notes still hidden.
+- **Cause:** the cru4 brief and its verification assumed those sections
+  held only snapshot copies; nobody checked the real notes for hand-written
+  tasks there (the verification counted "2 real tasks" and stopped).
+- **Category:** `regression`, `spec`.
+- **Follow-up:** rg3v (task mn-hsxc): skip only the `- [[link]]` subtrees.
