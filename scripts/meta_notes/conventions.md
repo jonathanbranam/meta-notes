@@ -206,9 +206,10 @@ may take several calls.
 
 Add a task with `meta-notes task add <file> <text> [--due <date>]
 [--time HH:MM] [--recur <rule>] [--start <date>] [--tag <tag>]`; it
-validates the date, time and rule and appends the line (`--line <n>`
-inserts before line n). Follow up items and summaries are written into
-the note directly. Put tags before date markers:
+validates the date, time and rule and adds the line at the end of the
+`## Tasks` section (the end of the file when the note has none;
+`--line <n>` inserts before line n). Follow up items and summaries are
+written into the note directly. Put tags before date markers:
 
 ```markdown
 - [ ] Call Sam about the quote #next 📅 2026-09-28

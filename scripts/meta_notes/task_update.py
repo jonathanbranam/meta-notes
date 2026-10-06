@@ -617,6 +617,27 @@ def new_task_line(text: str, due=None, start=None, time=None, recur=None,
                      recur=recur, add_tags=add_tags)
 
 
+def _tasks_section_end(lines: list[str]) -> int:
+    """The line number to insert at to end the '## Tasks' section, or the
+    end of the file when there is no such heading.
+
+    The section ends after its last non-blank line, before the next heading.
+    """
+    start = next((i for i, line in enumerate(lines)
+                  if re.fullmatch(r'## Tasks[ \t]*', _split_ending(line)[0])),
+                 None)
+    if start is None:
+        return len(lines) + 1
+    last = start
+    for i in range(start + 1, len(lines)):
+        body = _split_ending(lines[i])[0]
+        if re.match(r'#{1,6}\s', body):
+            break
+        if body.strip():
+            last = i
+    return last + 2
+
+
 def add(path: str, text: str, *, due: str | None = None,
         start: str | None = None, time: str | None = None,
         recur: str | None = None, add_tags: list[str] | None = None,
@@ -630,6 +651,7 @@ def add(path: str, text: str, *, due: str | None = None,
         due, start, time, recur, add_tags: As in edit_line, but no 'none'
             or 'undated'.
         line_no: Insert before this line (counting from 1); the default is
+            the end of the '## Tasks' section when the file has one, else
             the end of the file.
 
     Returns:
@@ -652,7 +674,7 @@ def add(path: str, text: str, *, due: str | None = None,
 
     lines = _LINE_PATTERN.findall(content)
     if line_no is None:
-        line_no = len(lines) + 1
+        line_no = _tasks_section_end(lines)
     elif not 1 <= line_no <= len(lines) + 1:
         raise TaskUpdateError(
             f"Line {line_no} is out of range: {path} has {len(lines)} lines")

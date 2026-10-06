@@ -870,3 +870,45 @@ def test_task_update_find_line_two_matches_lists_lines(tmp_path):
 def test_task_update_find_line_missing_file(tmp_path):
     with pytest.raises(TaskUpdateError, match='No such file'):
         task_update.find_line(str(tmp_path / 'none.md'), '- [ ] x')
+
+
+# Tests for add under ## Tasks
+
+def test_add_goes_to_end_of_tasks_section(tmp_path):
+    path = tmp_path / 'd.md'
+    path.write_text('# D\n\n## Tasks\n\n- [ ] a 📅 2026-10-01\n  * note\n\n'
+                    '## Time Block\n\n| a |\n')
+    result = task_update.add(str(path), 'x', due='2026-10-02')
+    assert result.created_line == 7
+    assert path.read_text().split('\n')[6] == '- [ ] x 📅 2026-10-02'
+    assert path.read_text().split('\n')[8] == '## Time Block'
+
+
+def test_add_to_empty_tasks_section(tmp_path):
+    path = tmp_path / 'd.md'
+    path.write_text('## Tasks\n\n## Follow Up\n')
+    result = task_update.add(str(path), 'x', due='2026-10-02')
+    assert result.created_line == 2
+    assert path.read_text() == '## Tasks\n- [ ] x 📅 2026-10-02\n\n## Follow Up\n'
+
+
+def test_add_tasks_section_at_end_of_file_without_newline(tmp_path):
+    path = tmp_path / 'd.md'
+    path.write_text('## Tasks\n- [ ] a 📅 2026-10-01')
+    task_update.add(str(path), 'x', due='2026-10-02')
+    assert path.read_text() == ('## Tasks\n- [ ] a 📅 2026-10-01\n'
+                                '- [ ] x 📅 2026-10-02\n')
+
+
+def test_add_without_tasks_heading_appends(tmp_path):
+    path = tmp_path / 'd.md'
+    path.write_text('## Other\n\ntext\n')
+    task_update.add(str(path), 'x', due='2026-10-02')
+    assert path.read_text() == '## Other\n\ntext\n- [ ] x 📅 2026-10-02\n'
+
+
+def test_add_line_overrides_tasks_section(tmp_path):
+    path = tmp_path / 'd.md'
+    path.write_text('## Tasks\n\n## Other\n')
+    task_update.add(str(path), 'x', due='2026-10-02', line_no=3)
+    assert path.read_text() == '## Tasks\n\n- [ ] x 📅 2026-10-02\n## Other\n'
