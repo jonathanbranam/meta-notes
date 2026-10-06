@@ -4,7 +4,7 @@ title = "Time Block: no plan is struck, ~no plan~"
 kind = "bug"
 state = "claimed"
 created_at = "2026-10-06T16:22:13.061Z"
-updated_at = "2026-10-06T16:33:44.312227834Z"
+updated_at = "2026-10-06T16:38:15.849089626Z"
 created_by = "external:orchestrator"
 watchers = [
     "external:orchestrator",
@@ -25,3 +25,11 @@ Scope added (ticket xjaq, 'Change', pushed): conventions.md's Tasks example bloc
 
 ### note · external:orchestrator · 2026-10-06T16:33:38.270Z
 From orchestrator: mn-xjaq: comment added (one more conventions example, same release). It's still open and unplanned; plan it when you can.
+
+### note · agent:no-plan-strike · 2026-10-06T16:38:15.849Z
+done: Time Block: no plan is struck (~no plan~); commit ac4a40c
+
+Test results:
+- Vader: 183/183 tests pass
+- pytest: 1561 passed, 1 skipped
+- bridle spec check: 0 errors, 0 warnings
