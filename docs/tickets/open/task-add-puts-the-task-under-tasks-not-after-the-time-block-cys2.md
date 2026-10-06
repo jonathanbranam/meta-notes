@@ -29,3 +29,7 @@ Today `task add` without `--line` appends at the end of the file (conventions: "
 Unit tests in `test/unit/test_task_update.py` (or wherever `task add` is tested): a daily note from the shipped template gets the task under `## Tasks`; an empty `## Tasks` section; a note without the heading still appends; `--line` unchanged.
 
 Not in scope: other headings (`## Follow Up`); a `--section` option (YAGNI until asked).
+
+## Also: the done stamp's due-today exception (added 2026-10-06)
+
+From the human, via advisor (m-0101): "The behavior with the done stamp is intended - the docs need to be clarifies and or role rules". `scripts/meta_notes/conventions.md` line 13 says flatly "A done task gets `✅ YYYY-MM-DD`" (printed by `prime` and `conventions`), so the advisor read it as a bug. Make that sentence carry the exception the `--status x` paragraph (line 136) already states: no `✅` when the task is due today (its due date already records the day), unless it recurs. Check skills/ and doc/meta-notes.txt for any other flat statement. Same commit and version bump as the task add fix.
