@@ -2,11 +2,14 @@
 id = "mn-4fsj"
 title = "task add: blank line after the task when the H1 already has a blank line below it (3e6g follow-up)"
 kind = "bug"
-state = "open"
+state = "claimed"
 created_at = "2026-10-06T22:46:17.421Z"
-updated_at = "2026-10-06T22:46:22.236149731Z"
+updated_at = "2026-10-06T22:56:29.757949957Z"
 created_by = "external:orchestrator"
-watchers = ["external:orchestrator"]
+watchers = [
+    "external:orchestrator",
+    "agent:manager-1",
+]
 +++
 
 Follow-up to ticket 3e6g (mn-3e6g, merged 6a0c6bb, v2.26.3). Found by orchestrator on verifying the merge.
