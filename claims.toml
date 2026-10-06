@@ -1,4 +1,9 @@
 [[claim]]
+task = "mn-tmjz"
+claimed_by = "human"
+claimed_at = "2026-10-06T22:42:03.304604119Z"
+
+[[claim]]
 task = "mn-3e6g"
 claimed_by = "agent:manager-1"
 claimed_at = "2026-10-06T22:34:59.856317917Z"
