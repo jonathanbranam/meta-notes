@@ -1039,9 +1039,13 @@ Commands ~
 `meta-notes task add {file} {text} [options]`     *meta-notes-cli-task-add*
     Add an open task line, `- [ ] {text}` and its markers, to {file}, an
     existing note (relative to the notes root, or an absolute path inside
-    it). The line goes at the end of the file, or before line {n} with
-    `--line {n}` (up to one past the last line). The file's line endings
-    are kept, and nothing is written on an error. {text} is one non-empty
+    it). The line goes at the end of the `Tasks` section, a heading of
+    any level (after its last non-blank line, before the next heading of
+    the same or a higher level). With no such heading it goes just below
+    the note's `# ` title and a blank line (the top of the file, after any
+    frontmatter, with no title). `--line {n}` inserts before line {n} (up
+    to one past the last line). The file's line endings are kept, and
+    nothing is written on an error. {text} is one non-empty
     line.
 
     --due {date}        Write `📅 {date}` (`YYYY-MM-DD`).
