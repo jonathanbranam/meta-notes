@@ -144,3 +144,6 @@ Newest first. Times are UTC. Each entry has:
   tasks there (the verification counted "2 real tasks" and stopped).
 - **Category:** `regression`, `spec`.
 - **Follow-up:** rg3v (task mn-hsxc): skip only the `- [[link]]` subtrees.
+  The human then rejected the skip itself (2026-10-06 00:12 UTC: "Every place
+  a task is listed, it should always show up"): a9h9 (task mn-s36r) removes
+  it; the notes advisor cleans the copies out of the notes instead.
