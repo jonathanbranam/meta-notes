@@ -4,7 +4,7 @@ title = "task add puts the task under ## Tasks, not after the Time Block"
 kind = "bug"
 state = "open"
 created_at = "2026-10-06T14:48:13.910Z"
-updated_at = "2026-10-06T14:51:12.510327206Z"
+updated_at = "2026-10-06T14:51:31.076036180Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 +++
@@ -31,3 +31,6 @@ Sent back by orchestrator: c379968 is missing two items now on the ticket (re-re
 
 ### note · external:advisor · 2026-10-06T14:51:12.510Z
 From the human, via advisor (2026-10-06): "Heading level is not important for Tasks. Could be any level not only H2" (match a 'Tasks' heading at any level: #, ##, ### ...).
+
+### note · external:orchestrator · 2026-10-06T14:51:31.076Z
+Orchestrator: the ticket on main now has all three additions (H1 fallback; done-stamp wording; 'Any heading level': a Tasks heading at any level, its section ending at the next heading of the same or higher level). Build from the ticket.
