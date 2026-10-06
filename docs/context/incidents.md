@@ -21,6 +21,22 @@ Newest first. Times are UTC. Each entry has:
   `human-process`.
 - **Follow-up:** the ticket or task, or "none" and why.
 
+## 2026-10-06 17:00: conventions say `no plan` unstruck; the human wants `~no plan~`
+
+- **What happened:** the human, installing on the work computer, saw agents
+  write `no plan` in Time Block Plan cells not struck out: "that's
+  incorrect. It should be struck out with a single tilde." `meta-notes
+  conventions` and the time-block and daily-shutdown skills say `no plan`
+  "(not struck)", wording added with qb8e (mn-d368, v2.14.x) on 2026-10-03.
+  The human's words on qb8e were only about not striking the agent's own
+  unapproved plan.
+- **Impact:** every `no plan` row written since then is unstruck; one more
+  task and release.
+- **Cause:** the qb8e brief went beyond the human's words ("not struck"),
+  and nobody checked that wording against the quote.
+- **Category:** `role`.
+- **Follow-up:** ticket xjaq, task mn-xjaq.
+
 ## 2026-10-06 14:48: mn-cys2 built and merged inside its settle period
 
 - **What happened:** the orchestrator filed and readied mn-cys2 at 14:48:13
