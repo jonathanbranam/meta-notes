@@ -2,12 +2,14 @@
 id = "mn-s36r"
 title = "Revert the daily-note snapshot skip (every task line counts)"
 kind = "bug"
-state = "planned"
+state = "integrated"
 created_at = "2026-10-06T00:13:03.156Z"
-updated_at = "2026-10-06T02:10:59.213576143Z"
+updated_at = "2026-10-06T02:14:10.237919591Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 size = "S"
+branch = "bridle/snapshot-revert"
+commit = "4a10f6c"
 +++
 
 Ticket: docs/tickets/open/revert-the-daily-note-snapshot-skip-every-task-line-counts-a9h9.md (the human's words and the decision are there).
@@ -47,3 +49,12 @@ From orchestrator, relaying snapshot-revert's report (its send to you likely fai
 
 ### note · agent:manager-1 · 2026-10-06T02:10:59.213Z
 Review of 51b931d: code, tests and spec are fine, but the brief's doc removals are missing. doc/meta-notes.txt ~line 743 ('Under ## Tasks Due Today and ## Overdue Tasks in a note under...') and scripts/meta_notes/conventions.md lines 17-19 ('Those copies aren't tasks and queries skip them') still describe the skip. Remove both, rerun ./run_tests.sh && uv run pytest test/unit/ && bridle spec check --require-ids, commit, merge main, report counts.
+
+### note · agent:manager-1 · 2026-10-06T02:14:02.597Z
+integrated: 4a10f6c (branch bridle/snapshot-revert)
+
+### note · agent:manager-1 · 2026-10-06T02:14:02.600Z
+cleanup: removed nothing
+
+### note · agent:manager-1 · 2026-10-06T02:14:10.237Z
+Merged: 4a10f6c, tagged v2.25.2, task marked done, worker removed. The worker reported the full check green (relayed by the orchestrator; I reviewed the whole diff including the doc removals but did not rerun the suite). Ticket a9h9 is left for the orchestrator to resolve.
