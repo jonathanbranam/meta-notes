@@ -1,11 +1,15 @@
 # Incidents
 
-A running log of every failure or problem we find, so patterns show up and
-we learn from them: something the human reports to the orchestrator or an
-advisor, or anything a role discovers (a crash, a stall, a red `main`, a bad
-merge, work that sat stuck, a role that did the wrong thing). The human
-approved this log for meta-notes on 2026-10-03; the format is bridle's
-`docs/context/incidents.md`.
+A running log of incidents: times the system itself failed to work, so
+systemic, repeating patterns show up and we learn from them. A crash or
+stall, a failed install or update, a red `main`, a bad merge, work stuck
+between roles, an agent or role not following a rule or not doing what's
+intended. The human approved this log for meta-notes on 2026-10-03; the
+format is bridle's `docs/context/incidents.md`.
+
+A bug (the product is wrong: behaviour, docs, a convention) is not an
+incident. It gets a bug ticket and task, not an entry here (the human,
+2026-10-06: "Bugs are bugs, and incidents are incidents"; bridle 6vcd).
 
 This is a record, not a to-do list. Work that comes out of an incident is a
 ticket or task, linked from the entry.
