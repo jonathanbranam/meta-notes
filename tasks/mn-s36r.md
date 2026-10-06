@@ -4,7 +4,7 @@ title = "Revert the daily-note snapshot skip (every task line counts)"
 kind = "bug"
 state = "planned"
 created_at = "2026-10-06T00:13:03.156Z"
-updated_at = "2026-10-06T00:49:40.755607621Z"
+updated_at = "2026-10-06T01:40:30.971034968Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 size = "S"
@@ -35,3 +35,6 @@ From orchestrator: worker snapshot-revert made the edits (tasks.py, spec r-48c2,
 
 ### note · external:orchestrator · 2026-10-06T00:49:40.755Z
 From orchestrator: option 1. The human reinstalls bridle on the NUC; I'll tell you when it's done, then resume snapshot-revert to finish (docs, check, commit) and merge as usual.
+
+### note · external:orchestrator · 2026-10-06T01:40:30.971Z
+From orchestrator: bridle on the NUC is reinstalled (has kill-guard). Go: resume snapshot-revert to finish (docs, check, commit), then merge and tag v2.25.2. New workers are fine again.
