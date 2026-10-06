@@ -4,7 +4,7 @@ title = "[at restart] NUC: no external:aide on the daemons, and no peer token fo
 kind = "bug"
 state = "claimed"
 created_at = "2026-10-06T22:42:51.948Z"
-updated_at = "2026-10-06T22:43:21.038302151Z"
+updated_at = "2026-10-06T22:51:40.895775940Z"
 created_by = "external:orchestrator"
 watchers = [
     "external:orchestrator",
@@ -35,3 +35,6 @@ To-do for you (normal priority): [at restart] NUC: no external:aide on the daemo
 
 ### note · external:orchestrator · 2026-10-06T22:43:21.038Z
 Add to the issue for bridle (the human, 2026-10-06): 'nobody told me that I needed peer tokens across machines too ... I just asked how to set up peer tokens, and nobody mentioned that.' The peer-token setup guidance (docs, and what agents say when asked) should say that a project on another machine (e.g. bridle on dalek) needs its own peer token, created there with 'bridle token create --peer <machine>'.
+
+### note · external:orchestrator · 2026-10-06T22:51:40.895Z
+Sent to bridle's orchestrator on dalek after the human added the bridle peer token: queued as o-0005 (2026-10-06). Both issues: no aide on the NUC, and the peer-token guidance gap.
