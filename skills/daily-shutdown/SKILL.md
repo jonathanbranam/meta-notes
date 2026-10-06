@@ -104,8 +104,8 @@ A rough log beats none; accept "don't know".
 
 Then look at the Time Block's Plan cells. If past rows are still empty
 (typically the whole day), confirm with the user, then fill each with
-`no plan` (`meta-notes time-block update <file> --time 9:00am --through
-5:00pm --plan 'no plan'` sets a range in one call), and a short Actual
+`~no plan~` (`meta-notes time-block update <file> --time 9:00am --through
+5:00pm --plan '~no plan~'` sets a range in one call), and a short Actual
 for rows that lack one. It marks a day without a plan. Be flexible: skip
 rows the user says to leave, and don't block shutdown on it.
 

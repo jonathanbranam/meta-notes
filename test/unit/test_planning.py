@@ -44,9 +44,28 @@ def test_planning_day_record_counts_no_plan_and_crossed_out(tmp_path, monkeypatc
         True, True, 1, 1)
 
 
+def test_planning_day_record_counts_struck_no_plan_as_no_plan(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    rows = ('| 9:00am | ~no plan~ | email |\n'
+            '| 10:00am | no plan | x |\n')
+    write(tmp_path, MON, BLOCK.format(rows=rows))
+
+    r = planning.day_record(date(2026, 9, 21))
+
+    assert (r['note_exists'], r['planned'], r['no_plan'], r['crossed_out']) == (
+        True, False, 2, 0)
+
+
 def test_planning_day_record_only_no_plan_is_not_planned(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     write(tmp_path, MON, BLOCK.format(rows='| 9:00am | no plan | x |'))
+
+    assert planning.day_record(date(2026, 9, 21))['planned'] is False
+
+
+def test_planning_day_record_struck_no_plan_is_not_planned(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    write(tmp_path, MON, BLOCK.format(rows='| 9:00am | ~no plan~ | x |'))
 
     assert planning.day_record(date(2026, 9, 21))['planned'] is False
 

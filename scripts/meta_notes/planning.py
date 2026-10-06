@@ -11,6 +11,7 @@ import period
 from meta_notes import ceremony, checkin, note
 
 NO_PLAN = "no plan"
+NO_PLAN_STRUCK = "~no plan~"
 # A Plan cell in single tildes: ~text~, not ~~text~~
 _CROSSED_OUT = re.compile(r"^~(?!~).*(?<!~)~$|^~[^~]~$")
 
@@ -37,10 +38,10 @@ def day_record(day: date) -> dict:
     except ValueError:
         rows = []
     plans = [r.plan for r in rows]
-    record["no_plan"] = sum(p.lower() == NO_PLAN for p in plans)
-    record["crossed_out"] = sum(bool(_CROSSED_OUT.match(p)) for p in plans)
+    record["no_plan"] = sum(p.lower() == NO_PLAN or p == NO_PLAN_STRUCK for p in plans)
+    record["crossed_out"] = sum(bool(_CROSSED_OUT.match(p)) and p != NO_PLAN_STRUCK for p in plans)
     record["planned"] = (ceremony.find_marker(lines, "plan complete").done
-                         or any(p and p.lower() != NO_PLAN for p in plans))
+                         or any(p and p.lower() != NO_PLAN and p != NO_PLAN_STRUCK for p in plans))
     return record
 
 
