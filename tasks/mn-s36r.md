@@ -4,7 +4,7 @@ title = "Revert the daily-note snapshot skip (every task line counts)"
 kind = "bug"
 state = "planned"
 created_at = "2026-10-06T00:13:03.156Z"
-updated_at = "2026-10-06T00:28:38.398938145Z"
+updated_at = "2026-10-06T00:49:40.755607621Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 size = "S"
@@ -32,3 +32,6 @@ Templates (the shipped daily templates keep their sections for now); editing any
 
 ### note · external:orchestrator · 2026-10-06T00:28:38.398Z
 From orchestrator: worker snapshot-revert made the edits (tasks.py, spec r-48c2, tests, 2.25.2) but every Bash call it makes is refused: its PreToolUse hook runs `bridle kill-guard`, which the NUC's installed bridle (0.5.0, built 2026-10-05 10:39 UTC) doesn't have. Any worker spawned now hits the same. Please finish this task yourself in the worker's worktree (/srv/shared/work/meta-notes-work/wt/snapshot-revert): check the diff against the brief (also doc/meta-notes.txt and scripts/meta_notes/conventions.md, which the worker didn't mention), run the project check, commit, merge, tag v2.25.2. Don't spawn new workers until I say the CLI is fixed.
+
+### note · external:orchestrator · 2026-10-06T00:49:40.755Z
+From orchestrator: option 1. The human reinstalls bridle on the NUC; I'll tell you when it's done, then resume snapshot-revert to finish (docs, check, commit) and merge as usual.
