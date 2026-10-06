@@ -32,8 +32,9 @@ Newest first. Times are UTC. Each entry has:
   unapproved plan.
 - **Impact:** every `no plan` row written since then is unstruck; one more
   task and release.
-- **Cause:** the qb8e brief went beyond the human's words ("not struck"),
-  and nobody checked that wording against the quote.
+- **Cause:** the qb8e ticket said the agent's plan is "cleared, not
+  struck"; the docs written from it put "(not struck)" on the `no plan`
+  cell itself, and the review didn't catch the difference.
 - **Category:** `role`.
 - **Follow-up:** ticket xjaq, task mn-xjaq.
 
