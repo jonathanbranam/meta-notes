@@ -905,7 +905,7 @@ def test_add_without_tasks_heading_goes_below_title_and_blank(tmp_path):
     path.write_text('# T\n\ntext\n')
     result = task_update.add(str(path), 'x', due='2026-10-02')
     assert result.created_line == 3
-    assert path.read_text() == '# T\n\n- [ ] x 📅 2026-10-02\ntext\n'
+    assert path.read_text() == '# T\n\n- [ ] x 📅 2026-10-02\n\ntext\n'
 
 
 def test_add_below_title_without_blank_adds_one(tmp_path):

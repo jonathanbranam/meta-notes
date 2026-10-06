@@ -244,9 +244,9 @@ def test_task_update_add_second_task_joins_first_task_list(tmp_path):
     path = write_note(tmp_path, ['# Daily', 'Week Plan: [[link]]'])
     add(str(path), 'buy milk')
     result = add(str(path), 'write spec')
-    assert result.created_line == 4
+    assert result.created_line == 3
     lines = read(path)
-    assert lines == ['# Daily', '', '- [ ] buy milk', '- [ ] write spec', '', 'Week Plan: [[link]]']
+    assert lines == ['# Daily', '', '- [ ] write spec', '- [ ] buy milk', '', 'Week Plan: [[link]]']
 
 
 def test_task_update_add_without_line_with_existing_blank_after_h1(tmp_path):
@@ -255,7 +255,16 @@ def test_task_update_add_without_line_with_existing_blank_after_h1(tmp_path):
     result = add(str(path), 'buy milk')
     assert result.created_line == 3
     lines = read(path)
-    assert lines == ['# Daily', '', '- [ ] buy milk', 'Week Plan: [[link]]']
+    assert lines == ['# Daily', '', '- [ ] buy milk', '', 'Week Plan: [[link]]']
+
+
+def test_task_update_add_twice_stays_together_with_blank_before_paragraph(tmp_path):
+    from meta_notes.task_update import add
+    path = write_note(tmp_path, ['# Daily', '', 'Week Plan: [[link]]'])
+    add(str(path), 'buy milk')
+    add(str(path), 'pay bills')
+    lines = read(path)
+    assert lines == ['# Daily', '', '- [ ] pay bills', '- [ ] buy milk', '', 'Week Plan: [[link]]']
 
 
 def test_task_update_add_without_line_at_eof_no_blank_after(tmp_path):
