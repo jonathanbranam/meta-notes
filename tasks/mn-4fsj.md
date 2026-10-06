@@ -2,9 +2,9 @@
 id = "mn-4fsj"
 title = "task add: blank line after the task when the H1 already has a blank line below it (3e6g follow-up)"
 kind = "bug"
-state = "pending"
+state = "open"
 created_at = "2026-10-06T22:46:17.421Z"
-updated_at = "2026-10-06T22:46:17.421Z"
+updated_at = "2026-10-06T22:46:22.236149731Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 +++
