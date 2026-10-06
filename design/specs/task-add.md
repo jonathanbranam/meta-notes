@@ -5,12 +5,12 @@ Specifies `meta-notes task add`, which writes a new open task line into an exist
 ## Requirements
 
 ### Requirement: Add a task line  {#r-80b1}
-`meta-notes task add <file> <text>` SHALL insert one open task line, `- [ ] <text>` followed by the requested markers, into `<file>`, which SHALL exist and be relative to the notes root or an absolute path inside it. By default the line SHALL go at the end of the `Tasks` section when the file has a heading with that text at any level (after the section's last non-blank line, before the next heading of the same or a higher level, so a subheading stays in the section), else just below the file's first `# ` title and a blank line (adding the blank line when the title is followed by text), else, with no title, at the top of the file after any frontmatter; `--line <n>` SHALL insert it before line `n` (counting from 1, up to one past the last line), moving the later lines down. The text SHALL be one non-empty line. The file's line endings SHALL be kept: the new line SHALL use the ending the file already uses (`\n` for a file with none), and a final line with no newline SHALL get one. Nothing SHALL be written when the command fails.
+`meta-notes task add <file> <text>` SHALL insert one open task line, `- [ ] <text>` followed by the requested markers, into `<file>`, which SHALL exist and be relative to the notes root or an absolute path inside it. By default the line SHALL go at the end of the `Tasks` section when the file has a heading with that text at any level (after the section's last non-blank line, before the next heading of the same or a higher level, so a subheading stays in the section), else just below the file's first `# ` title and a blank line, with a blank line after the task too (unless the next line is already blank or the end of the file), else, with no title, at the top of the file after any frontmatter; `--line <n>` SHALL insert it before line `n` (counting from 1, up to one past the last line), moving the later lines down. The text SHALL be one non-empty line. The file's line endings SHALL be kept: the new line SHALL use the ending the file already uses (`\n` for a file with none), and a final line with no newline SHALL get one. Nothing SHALL be written when the command fails.
 
 #### Scenario: Add to a note with no Tasks heading  {#s-e4b0}
 *Verification*: **non-executable**
-- **WHEN** `project/foo.md` ends with `# foo` and the user runs `meta-notes task add project/foo.md 'call Sam' --due 2026-10-01`
-- **THEN** the file SHALL become `# foo`, a blank line, then `- [ ] call Sam 📅 2026-10-01`
+- **WHEN** `project/foo.md` has `# foo` and a paragraph, and the user runs `meta-notes task add project/foo.md 'call Sam' --due 2026-10-01`
+- **THEN** the file SHALL become `# foo`, a blank line, then `- [ ] call Sam 📅 2026-10-01`, a blank line, then the paragraph
 
 #### Scenario: Add under the Tasks heading  {#s-3dda}
 *Verification*: **non-executable**
