@@ -21,6 +21,25 @@ Newest first. Times are UTC. Each entry has:
   `human-process`.
 - **Follow-up:** the ticket or task, or "none" and why.
 
+## 2026-10-06 14:48: mn-cys2 built and merged inside its settle period
+
+- **What happened:** the orchestrator filed and readied mn-cys2 at 14:48:13
+  (settling until 14:53) and told manager-1 "it can go next". The manager
+  spawned worker add-under-tasks at once; it reported done at 14:50:19 and
+  the manager merged at 14:55:42. The task went `open -> integrated`, never
+  planned or claimed. Found by the advisor; the human: "I figured it wasn't
+  working here at all which is wasn't."
+- **Impact:** the human's two corrections arrived inside the window; the
+  first build missed them and was sent back once (a few minutes, one extra
+  worker round).
+- **Cause:** the daemon checks settling only at ready, the queue and claim;
+  `bridle spawn worker` and `bridle task done` don't check task state. The
+  orchestrator's "it can go next" read as a go.
+- **Category:** `daemon`, `role`.
+- **Follow-up:** bridle zta7 (enforce at spawn and done, default 10m,
+  skip only for a critical fix). The orchestrator no longer tells the
+  manager a task "can go next" while it settles.
+
 ## 2026-10-05 11:38: manager couldn't merge mn-cru4 or commit ticket moves (allowlist)
 
 - **What happened:** the manager ran the mn-cru4 merge, push, tag and
