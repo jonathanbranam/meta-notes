@@ -23,3 +23,6 @@ tasks = ["mn-kbfa"]
 
 [[tier]]
 tasks = ["mn-hsxc"]
+
+[[tier]]
+tasks = ["mn-s36r"]
