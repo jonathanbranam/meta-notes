@@ -957,9 +957,9 @@ def test_tasks_find_tasks_in_file_tree_fields(tmp_path):
     assert found[9].parent.line_no == 2
 
 
-# Tests for daily-note snapshot sections
+# Tests for task line listing
 
-def test_find_tasks_in_file_skips_daily_snapshot_sections(tmp_path):
+def test_find_tasks_in_file_lists_all_task_lines_in_daily_notes(tmp_path):
     daily = tmp_path / "plan" / "daily" / "26-Q4"
     daily.mkdir(parents=True)
     note = daily / "2026-10-06 Tue.md"
@@ -970,10 +970,13 @@ def test_find_tasks_in_file_skips_daily_snapshot_sections(tmp_path):
 
     found = tasks_module.find_tasks_in_file(str(note))
 
-    assert [t.text for t in found] == ["- [ ] c 📅 2026-10-06"]
+    assert [t.text for t in found] == [
+        "  - [ ] a 📅 2026-10-06",
+        "  - [ ] b 📅 2026-10-01",
+        "- [ ] c 📅 2026-10-06"]
 
 
-def test_find_tasks_in_file_keeps_hand_written_tasks_in_snapshot_sections(tmp_path):
+def test_find_tasks_in_file_lists_all_indented_task_lines(tmp_path):
     daily = tmp_path / "plan" / "daily" / "26-Q4"
     daily.mkdir(parents=True)
     note = daily / "2026-10-06 Tue.md"
@@ -990,10 +993,13 @@ def test_find_tasks_in_file_keeps_hand_written_tasks_in_snapshot_sections(tmp_pa
     found = tasks_module.find_tasks_in_file(str(note))
 
     assert [t.text.strip() for t in found] == [
-        "- [ ] mine 📅 2026-10-06", "- [ ] sub 📅 2026-10-07"]
+        "- [ ] a 📅 2026-10-06",
+        "- [ ] nested 📅 2026-10-06",
+        "- [ ] mine 📅 2026-10-06",
+        "- [ ] sub 📅 2026-10-07"]
 
 
-def test_find_tasks_in_file_keeps_snapshot_headings_outside_daily(tmp_path):
+def test_find_tasks_in_file_lists_tasks_outside_daily(tmp_path):
     note = tmp_path / "project.md"
     note.write_text("## Overdue Tasks\n- [ ] b 📅 2026-10-01\n")
 

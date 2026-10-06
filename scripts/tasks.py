@@ -362,41 +362,11 @@ def char_to_status(status_char: str) -> TaskStatus:
         return TaskStatus.INCOMPLETE
 
 
-# Headings of a daily note's snapshot sections, which the daily template
-# fills with copies of tasks from elsewhere
-SNAPSHOT_HEADINGS = ('## Tasks Due Today', '## Overdue Tasks')
-
-
-def _snapshot_lines(filepath: str, lines: list[str]) -> set[int]:
-    """
-    The line numbers of snapshot copies in a note in plan/daily/: the subtree
-    of each top-level `- [[link]]` bullet under a snapshot heading. Top-level
-    lines of any other kind are the human's own and stay.
-    """
-    if '/plan/daily/' not in '/' + filepath.replace('\\', '/'):
-        return set()
-    skipped: set[int] = set()
-    in_snapshot = False
-    in_copies = False
-    for line_no, line in enumerate(lines, 1):
-        if line.startswith('## '):
-            in_snapshot = line.rstrip() in SNAPSHOT_HEADINGS
-            in_copies = False
-        elif in_snapshot:
-            if line.strip() and not line[0].isspace():
-                in_copies = line.startswith('- [[')
-            if in_copies:
-                skipped.add(line_no)
-    return skipped
-
-
 def find_tasks_in_file(filepath: str) -> list[Task]:
     """
     Find all task lines in a markdown file.
 
-    Checkbox lines that aren't tasks (see is_task) are skipped, and so are
-    those in the copies under a snapshot heading (SNAPSHOT_HEADINGS) of a
-    note in plan/daily/: the subtree of a top-level `- [[link]]` bullet.
+    Checkbox lines that aren't tasks (see is_task) are skipped.
 
     Args:
         filepath: Path to the markdown file to search.
@@ -409,10 +379,9 @@ def find_tasks_in_file(filepath: str) -> list[Task]:
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             lines = f.readlines()
-        snapshot = _snapshot_lines(filepath, lines)
         for node in parse_outline(lines):
             line_num, text = node.line_no, node.text
-            if line_num in snapshot or not is_task(text):
+            if not is_task(text):
                 continue
             start_date, due_date, completed_date = _parse_task_dates(text)
             has_due_emoji = _has_due_emoji(text)
