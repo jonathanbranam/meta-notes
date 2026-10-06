@@ -2,14 +2,16 @@
 id = "mn-xjaq"
 title = "Time Block: no plan is struck, ~no plan~"
 kind = "bug"
-state = "claimed"
+state = "integrated"
 created_at = "2026-10-06T16:22:13.061Z"
-updated_at = "2026-10-06T16:38:15.849089626Z"
+updated_at = "2026-10-06T16:38:30.366649252Z"
 created_by = "external:orchestrator"
 watchers = [
     "external:orchestrator",
     "agent:manager-1",
 ]
+branch = "bridle/no-plan-strike"
+commit = "747cdad"
 +++
 
 original id: xjaq
@@ -33,3 +35,12 @@ Test results:
 - Vader: 183/183 tests pass
 - pytest: 1561 passed, 1 skipped
 - bridle spec check: 0 errors, 0 warnings
+
+### note · agent:manager-1 · 2026-10-06T16:38:28.301Z
+integrated: 747cdad (branch bridle/no-plan-strike)
+
+### note · agent:manager-1 · 2026-10-06T16:38:28.306Z
+cleanup: removed nothing
+
+### note · agent:manager-1 · 2026-10-06T16:38:30.366Z
+Merged: 747cdad, tagged v2.26.2, task done, worker removed. Worker reported vader 183/183, pytest 1561 passed 1 skipped, spec check 0 errors (I did not rerun; reviewed the diff, incl. the conventions Tasks example line and planning.py). Ticket xjaq left for the orchestrator to resolve.
