@@ -846,3 +846,27 @@ def test_task_update_text_expect_mismatch_writes_nothing(tmp_path):
     with pytest.raises(TaskUpdateError):
         update(str(path), 1, '- [ ] b 📅 2026-10-01', new_text='c')
     assert path.read_text(encoding='utf-8') == '- [ ] a 📅 2026-10-01\n'
+
+
+# Tests for find_line
+
+def test_task_update_find_line_one_match(tmp_path):
+    path = write_note(tmp_path, ['a', '- [ ] pay $40  ', 'b'])
+    assert task_update.find_line(str(path), '- [ ] pay $40') == 2
+
+
+def test_task_update_find_line_no_match(tmp_path):
+    path = write_note(tmp_path, ['a'])
+    with pytest.raises(TaskUpdateError, match='matches'):
+        task_update.find_line(str(path), '- [ ] x')
+
+
+def test_task_update_find_line_two_matches_lists_lines(tmp_path):
+    path = write_note(tmp_path, ['- [ ] x', 'a', '- [ ] x'], ending='\r\n')
+    with pytest.raises(TaskUpdateError, match=r'2 lines.*: 1, 3'):
+        task_update.find_line(str(path), '- [ ] x')
+
+
+def test_task_update_find_line_missing_file(tmp_path):
+    with pytest.raises(TaskUpdateError, match='No such file'):
+        task_update.find_line(str(tmp_path / 'none.md'), '- [ ] x')

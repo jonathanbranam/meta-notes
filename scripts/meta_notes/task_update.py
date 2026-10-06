@@ -448,6 +448,36 @@ def update_ancestors(lines: list[str], line_no: int) -> list[dict]:
     return changed
 
 
+def find_line(path: str, expect: str) -> int:
+    """
+    The number (from 1) of the one line of a file equal to expect, compared
+    as update's expect is, ignoring trailing whitespace.
+
+    Raises:
+        TaskUpdateError: If the file can't be read, or no line or more than
+            one line matches (the message lists the line numbers).
+    """
+    try:
+        with open(path, encoding='utf-8', newline='') as f:
+            content = f.read()
+    except FileNotFoundError:
+        raise TaskUpdateError(f"No such file: {path}")
+    except (OSError, UnicodeDecodeError) as e:
+        raise TaskUpdateError(f"Could not read {path}: {e}")
+
+    want = expect.rstrip()
+    found = [n for n, line in enumerate(_LINE_PATTERN.findall(content), 1)
+             if _split_ending(line)[0].rstrip() == want]
+    if not found:
+        raise TaskUpdateError(f"No line of {path} matches --expect")
+    if len(found) > 1:
+        numbers = ', '.join(map(str, found))
+        raise TaskUpdateError(
+            f"--expect matches {len(found)} lines of {path}: {numbers}; "
+            f"run it again with {path}:LINE")
+    return found[0]
+
+
 def update(path: str, line_no: int, expect: str, *,
            status: str | None = None, add_tags: list[str] | None = None,
            remove_tags: list[str] | None = None, due: str | None = None,

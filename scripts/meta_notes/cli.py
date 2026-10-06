@@ -440,11 +440,11 @@ def _tag_value(value: str) -> str:
 def cmd_task_update(args, root: str) -> Output:
     prog = "meta-notes task update"
     path, sep, line = args.target.rpartition(":")
-    if not sep or not path or not line.isdigit():
-        raise CliError(f"{prog}: target must be <file>:<line>, got "
-                       f"{args.target!r}")
+    if sep and path and line.isdigit():
+        line_no = int(line)
+    else:
+        path, line_no = args.target, None
     path = to_root_relative(path, root)
-    line_no = int(line)
 
     add_tags, remove_tags = args.add_tags or [], args.remove_tags or []
     both = ({canonical_tag(t).lower() for t in add_tags}
@@ -460,6 +460,8 @@ def cmd_task_update(args, root: str) -> Output:
                        "or --recur")
 
     try:
+        if line_no is None:
+            line_no = task_update.find_line(path, args.expect)
         result = task_update.update(
             path, line_no, args.expect, status=args.status, new_text=args.text,
             add_tags=add_tags, remove_tags=remove_tags, due=args.due, start=args.start,
@@ -1024,12 +1026,15 @@ def build_parser() -> argparse.ArgumentParser:
     kinds.required = True
     k = kinds.add_parser("update", parents=[common],
                          help="edit one checkbox line's text, status, tags, and dates")
-    k.add_argument("target", metavar="FILE:LINE",
+    k.add_argument("target", metavar="FILE[:LINE]",
                    help="the note, relative to the notes root, and the line "
-                        "number (from 1)")
+                        "number (from 1); without it, the one line equal "
+                        "to --expect")
     k.add_argument("--expect", required=True, metavar="TEXT",
                    help="the line as last read; nothing is written if it "
-                        "differs (ignoring trailing whitespace)")
+                        "differs (ignoring trailing whitespace); without "
+                        ":LINE it finds the line, and must match exactly "
+                        "one")
     k.add_argument("--status", choices=STATUS_CHARS, metavar="CHAR",
                    help="set the status character: ' ', x, X, >, -, ., o, "
                         "or O")

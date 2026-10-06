@@ -117,8 +117,10 @@ Never rewrite an existing task line yourself. To change one:
    `meta-notes tasks --tag wait --json`. Each task has `file`, `line`, and
    `text`.
 2. Edit it with
-   `meta-notes task update <file>:<line> --expect <text> <options>`,
-   passing `text` exactly as `--expect`. Options: `--status <c>`,
+   `meta-notes task update <file> --expect <text> <options>`,
+   passing `text` exactly as `--expect`; it finds the line itself. If the
+   text matches more than one line it fails and lists the line numbers:
+   run it again with `<file>:<line>`. Options: `--status <c>`,
    `--text <words>` (replaces the task's words, keeping its dates; tags
    among the old words go too), `--add-tag <tag>`, `--remove-tag <tag>`,
    `--due <YYYY-MM-DD|undated|none>`,
