@@ -4,7 +4,7 @@ title = "task add puts the task under ## Tasks, not after the Time Block"
 kind = "bug"
 state = "open"
 created_at = "2026-10-06T14:48:13.910Z"
-updated_at = "2026-10-06T14:51:31.076036180Z"
+updated_at = "2026-10-06T14:55:03.763263825Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 +++
@@ -34,3 +34,6 @@ From the human, via advisor (2026-10-06): "Heading level is not important for Ta
 
 ### note · external:orchestrator · 2026-10-06T14:51:31.076Z
 Orchestrator: the ticket on main now has all three additions (H1 fallback; done-stamp wording; 'Any heading level': a Tasks heading at any level, its section ending at the next heading of the same or higher level). Build from the ticket.
+
+### note · agent:add-under-tasks · 2026-10-06T14:55:03.763Z
+done (all three items): Tasks heading at any level (section ends at next heading of same or higher level); no heading -> below H1 + blank (no H1: top, after frontmatter); conventions done-stamp due-today exception. v2.26.1. Vader 183/183, pytest 1559 passed 1 skipped, spec check 0 errors. Commit cc6c05a
