@@ -228,6 +228,45 @@ def test_task_write_add_subtask_rejects_bad_text(tmp_path):
         task_write.add_subtask(str(path), 9, '- [ ] other', ' ')
 
 
+# Tests for task add without line (defaults to below H1)
+
+def test_task_update_add_without_line_below_h1_adds_blank_after(tmp_path):
+    from meta_notes.task_update import add
+    path = write_note(tmp_path, ['# Daily', 'Week Plan: [[link]]'])
+    result = add(str(path), 'buy milk')
+    assert result.created_line == 3
+    lines = read(path)
+    assert lines == ['# Daily', '', '- [ ] buy milk', '', 'Week Plan: [[link]]']
+
+
+def test_task_update_add_second_task_joins_first_task_list(tmp_path):
+    from meta_notes.task_update import add
+    path = write_note(tmp_path, ['# Daily', 'Week Plan: [[link]]'])
+    add(str(path), 'buy milk')
+    result = add(str(path), 'write spec')
+    assert result.created_line == 4
+    lines = read(path)
+    assert lines == ['# Daily', '', '- [ ] buy milk', '- [ ] write spec', '', 'Week Plan: [[link]]']
+
+
+def test_task_update_add_without_line_with_existing_blank_after_h1(tmp_path):
+    from meta_notes.task_update import add
+    path = write_note(tmp_path, ['# Daily', '', 'Week Plan: [[link]]'])
+    result = add(str(path), 'buy milk')
+    assert result.created_line == 3
+    lines = read(path)
+    assert lines == ['# Daily', '', '- [ ] buy milk', 'Week Plan: [[link]]']
+
+
+def test_task_update_add_without_line_at_eof_no_blank_after(tmp_path):
+    from meta_notes.task_update import add
+    path = write_note(tmp_path, ['# Daily'])
+    result = add(str(path), 'buy milk')
+    assert result.created_line == 3
+    lines = read(path)
+    assert lines == ['# Daily', '', '- [ ] buy milk']
+
+
 # Tests for partial status of ancestors
 
 def tree_of(statuses):

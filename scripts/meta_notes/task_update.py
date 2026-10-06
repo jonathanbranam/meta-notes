@@ -653,7 +653,16 @@ def _default_insert_point(lines: list[str]) -> tuple[int, bool]:
     if h1 is None:
         return top + 1, False
     if h1 + 1 < len(bodies) and not bodies[h1 + 1].strip():
-        return h1 + 3, False
+        last = h1 + 1
+        for i in range(h1 + 2, len(bodies)):
+            content = bodies[i].lstrip()
+            if not content or tasks.CHECKBOX_PATTERN.match(content):
+                last = i
+            elif content.startswith('  ') or content.startswith('\t'):
+                last = i
+            else:
+                break
+        return h1 + 3 if last == h1 + 1 else last + 1, False
     return h1 + 2, True
 
 
@@ -705,6 +714,10 @@ def add(path: str, text: str, *, due: str | None = None,
     if line_no > len(lines) and lines and not _split_ending(lines[-1])[1]:
         lines[-1] += ending
     lines.insert(line_no - 1, (ending if blank_before else '') + new + ending)
+    if blank_before and line_no < len(lines):
+        next_line = _split_ending(lines[line_no])[0]
+        if next_line.strip():
+            lines.insert(line_no, ending)
     with open(path, 'w', encoding='utf-8', newline='') as f:
         f.write(''.join(lines))
 

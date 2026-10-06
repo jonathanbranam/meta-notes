@@ -1042,11 +1042,12 @@ Commands ~
     it). The line goes at the end of the `Tasks` section, a heading of
     any level (after its last non-blank line, before the next heading of
     the same or a higher level). With no such heading it goes just below
-    the note's `# ` title and a blank line (the top of the file, after any
-    frontmatter, with no title). `--line {n}` inserts before line {n} (up
-    to one past the last line). The file's line endings are kept, and
-    nothing is written on an error. {text} is one non-empty
-    line.
+    the note's `# ` title and a blank line, with a blank line after the
+    task too (unless the next line is already blank or the end of the
+    file) (the top of the file, after any frontmatter, with no title).
+    `--line {n}` inserts before line {n} (up to one past the last line).
+    The file's line endings are kept, and nothing is written on an error.
+    {text} is one non-empty line.
 
     --due {date}        Write `📅 {date}` (`YYYY-MM-DD`).
     --start {date}      Write `🛫 {date}`.
