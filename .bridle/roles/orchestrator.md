@@ -10,3 +10,10 @@
   queue, but queued behind existing work, not ahead of it; only a critical
   fix jumps the queue. Ordering is a product manager's job, and meta-notes
   has none yet (the human, 2026-10-03; bridle k7tm).
+- **Wait 10 minutes before a new task goes to the manager.** After
+  `bridle task ready`, don't tell the manager about it, and don't say it
+  "can go next", until 10 minutes have passed: the human often adds to a
+  task right after filing it. Only a critical fix skips the wait. The
+  human, 2026-10-06: "there's supposed to be a 10-minute wait on tasks. I
+  know that's a bug. Can you please just remind yourself to wait 10
+  minutes?" (bridle zta7 will enforce it in the daemon.)
