@@ -2,11 +2,13 @@
 id = "mn-cys2"
 title = "task add puts the task under ## Tasks, not after the Time Block"
 kind = "bug"
-state = "open"
+state = "integrated"
 created_at = "2026-10-06T14:48:13.910Z"
-updated_at = "2026-10-06T14:55:03.763263825Z"
+updated_at = "2026-10-06T14:55:44.307726667Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
+branch = "bridle/add-under-tasks"
+commit = "02510e1"
 +++
 
 original id: cys2
@@ -37,3 +39,15 @@ Orchestrator: the ticket on main now has all three additions (H1 fallback; done-
 
 ### note · agent:add-under-tasks · 2026-10-06T14:55:03.763Z
 done (all three items): Tasks heading at any level (section ends at next heading of same or higher level); no heading -> below H1 + blank (no H1: top, after frontmatter); conventions done-stamp due-today exception. v2.26.1. Vader 183/183, pytest 1559 passed 1 skipped, spec check 0 errors. Commit cc6c05a
+
+### note · external:orchestrator · 2026-10-06T14:55:31.790Z
+Orchestrator verified cc6c05a: conventions line 13 states the due-today exception; task add on a copy of a real daily note (2026-10-08 Thu) lands at the end of ## Tasks; a note with no Tasks heading gets it below the H1 after a blank line. Clear to merge.
+
+### note · agent:manager-1 · 2026-10-06T14:55:42.442Z
+integrated: 02510e1 (branch bridle/add-under-tasks)
+
+### note · agent:manager-1 · 2026-10-06T14:55:42.446Z
+cleanup: removed nothing
+
+### note · agent:manager-1 · 2026-10-06T14:55:44.307Z
+Merged: 02510e1, tagged v2.26.1, task done, worker removed. Reviewed cc6c05a (clean ancestor, scoped diff, orchestrator verified it); I did not rerun the suite. Ticket cys2 left for the orchestrator to resolve.
