@@ -45,7 +45,7 @@ I should write a note out, probably the same structure as the daily note, but in
 
    # Session Review - 2026-10-06 Tue
 
-   Daily Note: [[plan/daily/26-Q4/2026-10-06 Tue]]
+   `Daily Note: [[plan/daily/26-Q4/2026-10-06 Tue]]`
 
    (one `## <HH:MM>-<HH:MM> <agent/role>` section per session, below)
 
@@ -75,7 +75,7 @@ A candid, short look back at one session with the human, for them to read later.
    - **The system**: meta-notes, bridle, skills, rules: bugs hit, missing commands, friction; say whether it's already filed (with its ticket) or should be.
 3. Be honest and specific; quote the human where it helps. No praise padding, no blame. Don't invent motives: say what the record shows and mark guesses as guesses.
 4. Personal vs work: write in the root you're in; don't copy work detail into a personal root (or the reverse).
-5. Commit the note (only that file) and push, per the root's conventions. Link it from the daily note's Worked On ("session review: [[...]]").
+5. Commit the note (only that file) and push, per the root's conventions. Link it from the daily note's Worked On (`session review: [[...]]`).
 6. Offer the human the 2-4 suggestions in one short message; anything for meta-notes/bridle goes to the orchestrator.
 
 ## Open questions for the human
