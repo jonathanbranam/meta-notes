@@ -617,25 +617,44 @@ def new_task_line(text: str, due=None, start=None, time=None, recur=None,
                      recur=recur, add_tags=add_tags)
 
 
-def _tasks_section_end(lines: list[str]) -> int:
-    """The line number to insert at to end the '## Tasks' section, or the
-    end of the file when there is no such heading.
+def _default_insert_point(lines: list[str]) -> tuple[int, bool]:
+    """Where add puts a line when no line number is given.
 
-    The section ends after its last non-blank line, before the next heading.
+    Returns (line number to insert before, whether a blank line goes first).
+    With a 'Tasks' heading of any level, that is the end of the section: after its last
+    non-blank line, before the next heading of the same or a higher level.
+    Without one, it is just below
+    the first '# ' title and a blank line, else the top of the file (after
+    any frontmatter).
     """
-    start = next((i for i, line in enumerate(lines)
-                  if re.fullmatch(r'## Tasks[ \t]*', _split_ending(line)[0])),
-                 None)
-    if start is None:
-        return len(lines) + 1
-    last = start
-    for i in range(start + 1, len(lines)):
-        body = _split_ending(lines[i])[0]
-        if re.match(r'#{1,6}\s', body):
-            break
-        if body.strip():
-            last = i
-    return last + 2
+    bodies = [_split_ending(line)[0] for line in lines]
+    start = next((i for i, b in enumerate(bodies)
+                  if re.fullmatch(r'#{1,6}[ \t]+Tasks[ \t]*', b)), None)
+    if start is not None:
+        level = bodies[start].index(' ') if ' ' in bodies[start] else \
+            bodies[start].index('\t')
+        last = start
+        for i in range(start + 1, len(lines)):
+            m = re.match(r'(#{1,6})\s', bodies[i])
+            if m and len(m.group(1)) <= level:
+                break
+            if bodies[i].strip():
+                last = i
+        return last + 2, False
+
+    top = 0
+    if bodies and bodies[0].rstrip() == '---':
+        close = next((i for i in range(1, len(bodies))
+                      if bodies[i].rstrip() == '---'), None)
+        if close is not None:
+            top = close + 1
+    h1 = next((i for i in range(top, len(bodies))
+               if re.match(r'# \S', bodies[i])), None)
+    if h1 is None:
+        return top + 1, False
+    if h1 + 1 < len(bodies) and not bodies[h1 + 1].strip():
+        return h1 + 3, False
+    return h1 + 2, True
 
 
 def add(path: str, text: str, *, due: str | None = None,
@@ -651,8 +670,8 @@ def add(path: str, text: str, *, due: str | None = None,
         due, start, time, recur, add_tags: As in edit_line, but no 'none'
             or 'undated'.
         line_no: Insert before this line (counting from 1); the default is
-            the end of the '## Tasks' section when the file has one, else
-            the end of the file.
+            the end of the 'Tasks' section when the file has one, else
+            below the '# ' title and a blank line (or the top of the file).
 
     Returns:
         old is empty, new is the added line, and created_line is its line
@@ -673,8 +692,9 @@ def add(path: str, text: str, *, due: str | None = None,
         raise TaskUpdateError(f"Could not read {path}: {e}")
 
     lines = _LINE_PATTERN.findall(content)
+    blank_before = False
     if line_no is None:
-        line_no = _tasks_section_end(lines)
+        line_no, blank_before = _default_insert_point(lines)
     elif not 1 <= line_no <= len(lines) + 1:
         raise TaskUpdateError(
             f"Line {line_no} is out of range: {path} has {len(lines)} lines")
@@ -684,11 +704,11 @@ def add(path: str, text: str, *, due: str | None = None,
                    if _split_ending(line)[1]), '\n')
     if line_no > len(lines) and lines and not _split_ending(lines[-1])[1]:
         lines[-1] += ending
-    lines.insert(line_no - 1, new + ending)
+    lines.insert(line_no - 1, (ending if blank_before else '') + new + ending)
     with open(path, 'w', encoding='utf-8', newline='') as f:
         f.write(''.join(lines))
 
-    result = UpdateResult(old='', new=new, changed=True, created_line=line_no)
+    result = UpdateResult(old='', new=new, changed=True, created_line=line_no + blank_before)
     if not tasks.is_task(new):
         result.warnings.append(
             f"The line added to {path} has no due emoji or 🛫 date, "

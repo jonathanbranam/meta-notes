@@ -725,9 +725,9 @@ def test_add_appends_with_markers(tmp_path):
                              add_tags=['home'])
     line = '- [ ] change filter #home 🔁 every 3 months ⏰ 09:00 📅 2026-10-01'
     assert result.new == line
-    assert result.created_line == 2
+    assert result.created_line == 3
     assert result.warnings == []
-    assert path.read_text(encoding='utf-8') == f'# foo\n{line}\n'
+    assert path.read_text(encoding='utf-8') == f'# foo\n\n{line}\n'
 
 
 def test_add_inserts_before_line(tmp_path):
@@ -739,7 +739,7 @@ def test_add_inserts_before_line(tmp_path):
 
 def test_add_keeps_crlf_and_adds_final_newline(tmp_path):
     path = write_note(tmp_path, ['a', 'b'], ending='\r\n', final_newline=False)
-    task_update.add(str(path), 'x', due='2026-10-01')
+    task_update.add(str(path), 'x', due='2026-10-01', line_no=3)
     assert path.read_bytes() == 'a\r\nb\r\n- [ ] x 📅 2026-10-01\r\n'.encode()
 
 
@@ -754,7 +754,7 @@ def test_add_without_a_date_warns(tmp_path):
     path = write_note(tmp_path, ['a'])
     result = task_update.add(str(path), 'buy milk')
     assert len(result.warnings) == 1
-    assert path.read_text(encoding='utf-8') == 'a\n- [ ] buy milk\n'
+    assert path.read_text(encoding='utf-8') == '- [ ] buy milk\na\n'
 
 
 def test_add_when_done_rule_needs_no_date(tmp_path):
@@ -900,11 +900,34 @@ def test_add_tasks_section_at_end_of_file_without_newline(tmp_path):
                                 '- [ ] x 📅 2026-10-02\n')
 
 
-def test_add_without_tasks_heading_appends(tmp_path):
+def test_add_without_tasks_heading_goes_below_title_and_blank(tmp_path):
     path = tmp_path / 'd.md'
-    path.write_text('## Other\n\ntext\n')
+    path.write_text('# T\n\ntext\n')
+    result = task_update.add(str(path), 'x', due='2026-10-02')
+    assert result.created_line == 3
+    assert path.read_text() == '# T\n\n- [ ] x 📅 2026-10-02\ntext\n'
+
+
+def test_add_below_title_without_blank_adds_one(tmp_path):
+    path = tmp_path / 'd.md'
+    path.write_text('# T\ntext\n')
+    result = task_update.add(str(path), 'x', due='2026-10-02')
+    assert result.created_line == 3
+    assert path.read_text() == '# T\n\n- [ ] x 📅 2026-10-02\ntext\n'
+
+
+def test_add_without_title_goes_below_frontmatter(tmp_path):
+    path = tmp_path / 'd.md'
+    path.write_text('---\na: 1\n---\ntext\n')
     task_update.add(str(path), 'x', due='2026-10-02')
-    assert path.read_text() == '## Other\n\ntext\n- [ ] x 📅 2026-10-02\n'
+    assert path.read_text() == '---\na: 1\n---\n- [ ] x 📅 2026-10-02\ntext\n'
+
+
+def test_add_without_title_or_frontmatter_goes_to_top(tmp_path):
+    path = tmp_path / 'd.md'
+    path.write_text('text\n')
+    task_update.add(str(path), 'x', due='2026-10-02')
+    assert path.read_text() == '- [ ] x 📅 2026-10-02\ntext\n'
 
 
 def test_add_line_overrides_tasks_section(tmp_path):
@@ -912,3 +935,12 @@ def test_add_line_overrides_tasks_section(tmp_path):
     path.write_text('## Tasks\n\n## Other\n')
     task_update.add(str(path), 'x', due='2026-10-02', line_no=3)
     assert path.read_text() == '## Tasks\n\n- [ ] x 📅 2026-10-02\n## Other\n'
+
+
+def test_add_tasks_heading_at_any_level_keeps_subheadings(tmp_path):
+    path = tmp_path / 'd.md'
+    path.write_text('# T\n\n### Tasks\n- [ ] a 📅 2026-10-01\n'
+                    '#### Sub\n- [ ] b 📅 2026-10-01\n\n## Next\n')
+    result = task_update.add(str(path), 'x', due='2026-10-02')
+    assert result.created_line == 7
+    assert path.read_text().split('\n')[8] == '## Next'

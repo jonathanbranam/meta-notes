@@ -1367,9 +1367,9 @@ def test_task_add_json(notes_root, capsys):
     assert code == 0
     line = '- [ ] call Sam #next 🔁 every week ⏰ 09:00 📅 2026-10-01'
     assert out['file'] == 'project/foo.md'
-    assert out['line'] == 4
+    assert out['line'] == 3
     assert out['text'] == line
-    assert path.read_text().splitlines()[3] == line
+    assert path.read_text().splitlines()[2] == line
     code, out, _ = run_json(capsys, ['tasks', '--all', '--folder', 'project'])
     task = next(t for t in out['tasks'] if t['text'] == line)
     assert task['time'] == '09:00'

@@ -72,15 +72,15 @@ Execute (task add writes a timed recurring task the query reads back):
         \ 'change filter', '--due', '2026-10-01', '--time', '09:00',
         \ '--recur', 'every 3 months'])
   Assert g:result.ok, string(g:result)
-  AssertEqual 2, g:result.line
+  AssertEqual 3, g:result.line
   AssertEqual '- [ ] change filter 🔁 every 3 months ⏰ 09:00 📅 2026-10-01',
-        \ readfile('project/home.md')[1]
+        \ readfile('project/home.md')[2]
 
 Execute (task add with a time and no due date fails):
   let g:result = meta_notes#cli#Run(['task', 'add', 'project/home.md',
         \ 'x', '--time', '09:00'])
   Assert !g:result.ok
-  AssertEqual 2, len(readfile('project/home.md'))
+  AssertEqual 3, len(readfile('project/home.md'))
 
 Execute (Cleanup):
   execute 'cd' g:original_dir
