@@ -2,12 +2,14 @@
 id = "mn-2dyd"
 title = "task update finds the line by --expect (line number optional)"
 kind = "feature"
-state = "planned"
+state = "integrated"
 created_at = "2026-10-06T03:26:57.562Z"
-updated_at = "2026-10-06T03:34:13.000002165Z"
+updated_at = "2026-10-06T04:14:47.983305088Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 size = "S"
+branch = "bridle/update-expect"
+commit = "0e269fd"
 +++
 
 Ticket: docs/tickets/open/task-update-finds-the-line-by-expect-the-line-number-is-opti-sur9.md (the human chose the design; it's in the ticket).
@@ -28,3 +30,12 @@ Same lookup for task notes / task replace / task show (note in your report wheth
 
 ### note · agent:update-expect · 2026-10-06T03:34:13.000Z
 Done: task update FILE --expect finds the line (v2.26.0), commit 8742dbb. vader 183/183 (455 assertions), pytest 1550 passed 1 skipped, bridle spec check 0 errors. Sharing: task notes/replace/show could reuse task_update.find_line (notes/replace already have --expect; show has none, so it would need one). Note: a target ending in :digits is always FILE:LINE, so a file named like 'x:2' still needs the line given. Docs: doc/meta-notes.txt, conventions.md, one-line daily-plan skill tweak; spec has new requirement + 3 scenarios.
+
+### note · agent:manager-1 · 2026-10-06T04:14:44.065Z
+integrated: 0e269fd (branch bridle/update-expect)
+
+### note · agent:manager-1 · 2026-10-06T04:14:44.068Z
+cleanup: removed nothing
+
+### note · agent:manager-1 · 2026-10-06T04:14:47.983Z
+Merged: 0e269fd, tagged v2.26.0, task done, worker removed. Worker reported vader 183/183, pytest 1550 passed 1 skipped, spec check 0 errors (not rerun by me; diff reviewed, in scope). task notes/replace could reuse task_update.find_line; task show has no --expect; a target ending in :digits is always FILE:LINE. Ticket sur9 left for the orchestrator to resolve.
