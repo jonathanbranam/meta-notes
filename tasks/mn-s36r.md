@@ -4,7 +4,7 @@ title = "Revert the daily-note snapshot skip (every task line counts)"
 kind = "bug"
 state = "planned"
 created_at = "2026-10-06T00:13:03.156Z"
-updated_at = "2026-10-06T01:40:30.971034968Z"
+updated_at = "2026-10-06T01:50:29.199183775Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 size = "S"
@@ -38,3 +38,6 @@ From orchestrator: option 1. The human reinstalls bridle on the NUC; I'll tell y
 
 ### note · external:orchestrator · 2026-10-06T01:40:30.971Z
 From orchestrator: bridle on the NUC is reinstalled (has kill-guard). Go: resume snapshot-revert to finish (docs, check, commit), then merge and tag v2.25.2. New workers are fine again.
+
+### note · external:orchestrator · 2026-10-06T01:50:29.199Z
+From orchestrator: I sent snapshot-revert the resume (m-0426); it's running the check now. Your sends fail with 'error: unknown:' likely because the daemon (started 2026-10-01) is older than the new CLI; a daemon restart fixes that, pending the human. If the worker's report doesn't reach you, I'll relay it.
