@@ -33,3 +33,7 @@ Not in scope: other headings (`## Follow Up`); a `--section` option (YAGNI until
 ## Also: the done stamp's due-today exception (added 2026-10-06)
 
 From the human, via advisor (m-0101): "The behavior with the done stamp is intended - the docs need to be clarifies and or role rules". `scripts/meta_notes/conventions.md` line 13 says flatly "A done task gets `✅ YYYY-MM-DD`" (printed by `prime` and `conventions`), so the advisor read it as a bug. Make that sentence carry the exception the `--status x` paragraph (line 136) already states: no `✅` when the task is due today (its due date already records the day), unless it recurs. Check skills/ and doc/meta-notes.txt for any other flat statement. Same commit and version bump as the task add fix.
+
+## Any heading level (added 2026-10-06)
+
+From the human, via advisor: "Heading level is not important for Tasks. Could be any level not only H2". Match the first heading whose text is `Tasks` at any level (`#` to `######`). Its section ends at the next heading of the same or a higher level (fewer or equal `#`), so a subheading inside it stays in the section.
