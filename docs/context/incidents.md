@@ -147,3 +147,21 @@ Newest first. Times are UTC. Each entry has:
   The human then rejected the skip itself (2026-10-06 00:12 UTC: "Every place
   a task is listed, it should always show up"): a9h9 (task mn-s36r) removes
   it; the notes advisor cleans the copies out of the notes instead.
+
+## 2026-10-06 00:20: new workers can't run Bash (kill-guard hook, old CLI)
+
+- **What happened:** worker snapshot-revert (mn-s36r) had every Bash call
+  refused: its PreToolUse hook runs `bridle kill-guard`, which the NUC's
+  installed `bridle` (0.5.0, `~/.cargo/bin`, built 2026-10-05 10:39 UTC)
+  doesn't have. It made its edits, then stopped, unable to test or commit.
+  The orchestrator's `bridle daemon restart --upgrade` then tried to build
+  meta-notes' own commit as bridle and failed (nothing changed).
+- **Impact:** every agent spawned now on the NUC can't use Bash; the revert
+  stalled about 10 minutes. The manager, spawned earlier, is unaffected.
+- **Cause:** version skew between the daemon's agent settings (br-75h2,
+  adb4d30f) and the installed CLI; how the 2026-10-01 daemon renders the new
+  hook is unknown. The upgrade path uses the project's repo, not bridle's.
+- **Category:** `tooling`, `deploy`.
+- **Follow-up:** bridle t3vq (hook the CLI lacks), mtdg (upgrade builds the
+  wrong repo). The manager finishes mn-s36r itself; the human reinstalls
+  bridle on the NUC.
