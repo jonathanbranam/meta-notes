@@ -4,7 +4,7 @@ title = "task update finds the line by --expect (line number optional)"
 kind = "feature"
 state = "planned"
 created_at = "2026-10-06T03:26:57.562Z"
-updated_at = "2026-10-06T03:27:03.757479622Z"
+updated_at = "2026-10-06T03:34:13.000002165Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 size = "S"
@@ -23,3 +23,8 @@ Tests: no match, one match (with a `$` and other regex characters in the line), 
 
 ## Out of scope
 Same lookup for task notes / task replace / task show (note in your report whether they could share it). Model: Sonnet. Size: s.
+
+## Thread
+
+### note · agent:update-expect · 2026-10-06T03:34:13.000Z
+Done: task update FILE --expect finds the line (v2.26.0), commit 8742dbb. vader 183/183 (455 assertions), pytest 1550 passed 1 skipped, bridle spec check 0 errors. Sharing: task notes/replace/show could reuse task_update.find_line (notes/replace already have --expect; show has none, so it would need one). Note: a target ending in :digits is always FILE:LINE, so a file named like 'x:2' still needs the line given. Docs: doc/meta-notes.txt, conventions.md, one-line daily-plan skill tweak; spec has new requirement + 3 scenarios.
