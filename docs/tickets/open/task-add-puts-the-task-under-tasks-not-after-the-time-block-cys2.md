@@ -20,13 +20,13 @@ Today `task add` without `--line` appends at the end of the file (conventions: "
 ## The ask
 
 - Without `--line`, when the note has a `## Tasks` heading, insert the task at the end of that section: after its last non-blank line (after that task's notes and subtasks), before the next heading.
-- No `## Tasks` heading: append at the end of the file, as now.
+- No `## Tasks` heading: put the task at the top of the file, below the H1 title after a blank line (the human, via advisor, 2026-10-06: "It should look for a header called Tasks if that exists it should add tasks there. If it doesn't exist and no line number, tasks should go at the top of the file below the H1 file header after a blank space."). A note with no H1: the top of the file, after any frontmatter.
 - `--line` keeps working as now.
 - Update the conventions text (`scripts/meta_notes/conventions.md`, "Add a task with ...") and `:help` to match; patch version bump.
 
 ## Verify
 
-Unit tests in `test/unit/test_task_update.py` (or wherever `task add` is tested): a daily note from the shipped template gets the task under `## Tasks`; an empty `## Tasks` section; a note without the heading still appends; `--line` unchanged.
+Unit tests in `test/unit/test_task_update.py` (or wherever `task add` is tested): a daily note from the shipped template gets the task under `## Tasks`; an empty `## Tasks` section; a note without the heading gets it below the H1 and a blank line; `--line` unchanged.
 
 Not in scope: other headings (`## Follow Up`); a `--section` option (YAGNI until asked).
 
