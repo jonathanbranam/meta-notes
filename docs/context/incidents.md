@@ -165,7 +165,8 @@ Newest first. Times are UTC. Each entry has:
 - **Cause:** the cru4 brief and its verification assumed those sections
   held only snapshot copies; nobody checked the real notes for hand-written
   tasks there (the verification counted "2 real tasks" and stopped).
-- **Category:** `regression`, `spec`.
+- **Category:** `coordination`, `design` (the human, 2026-10-06: "a
+  failure of communication between agents. It's a failure of design").
 - **Follow-up:** rg3v (task mn-hsxc): skip only the `- [[link]]` subtrees.
   The human then rejected the skip itself (2026-10-06 00:12 UTC: "Every place
   a task is listed, it should always show up"): a9h9 (task mn-s36r) removes
