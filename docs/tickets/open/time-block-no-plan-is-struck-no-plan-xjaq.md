@@ -39,6 +39,11 @@ a past row with an empty Plan.
   `crossed_out`; plain `no plan` in older notes still counts as `no_plan`.
   Test in `test/unit/test_planning.py`.
 - Any other place that writes or matches `no plan` (grep), e.g. docs.
+- `scripts/meta_notes/conventions.md`, "Tasks": the example block gets a
+  third line, a task done on its due date, which keeps just its due date
+  and no `✅`, e.g. `- [x] Book the dentist 📅 2026-09-22`. The human,
+  2026-10-06: "Add another one that shows a completed task that's
+  completed on the same date, so that it's clear".
 - Patch version bump.
 
 Verify: `meta-notes conventions` prints `~no plan~`; `just check` /
