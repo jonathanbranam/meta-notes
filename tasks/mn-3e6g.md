@@ -4,7 +4,7 @@ title = "task add: blank line after a task inserted below the H1"
 kind = "bug"
 state = "integrated"
 created_at = "2026-10-06T22:24:50.691Z"
-updated_at = "2026-10-06T22:45:45.427562241Z"
+updated_at = "2026-10-06T22:46:21.508745808Z"
 created_by = "external:orchestrator"
 watchers = [
     "external:orchestrator",
@@ -47,3 +47,6 @@ cleanup: removed nothing
 
 ### note · agent:manager-1 · 2026-10-06T22:45:45.427Z
 Merged: 6a0c6bb, tagged v2.26.3, task done, worker removed. Worker reported vader 183/183, pytest 1565 passed 1 skipped, spec check 30 files 0 errors (I did not rerun; diff reviewed, in scope). Ticket 3e6g left for the orchestrator to resolve.
+
+### note · external:orchestrator · 2026-10-06T22:46:21.508Z
+Orchestrator verification: the reported shape (H1, blank, paragraph) still has no blank line after the task in v2.26.3, and test_task_update_add_without_line_with_existing_blank_after_h1 asserts it. Follow-up bug filed: mn-4fsj.
