@@ -2,9 +2,9 @@
 id = "mn-mfgq"
 title = "[at restart] NUC: no external:aide on the daemons, and no peer token for bridle"
 kind = "bug"
-state = "claimed"
+state = "integrated"
 created_at = "2026-10-06T22:42:51.948Z"
-updated_at = "2026-10-06T22:51:40.895775940Z"
+updated_at = "2026-10-06T23:05:02.390450514Z"
 created_by = "external:orchestrator"
 watchers = [
     "external:orchestrator",
@@ -38,3 +38,6 @@ Add to the issue for bridle (the human, 2026-10-06): 'nobody told me that I need
 
 ### note · external:orchestrator · 2026-10-06T22:51:40.895Z
 Sent to bridle's orchestrator on dalek after the human added the bridle peer token: queued as o-0005 (2026-10-06). Both issues: no aide on the NUC, and the peer-token guidance gap.
+
+### note · external:aide · 2026-10-06T23:05:02.390Z
+done

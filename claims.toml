@@ -1,14 +1,4 @@
 [[claim]]
-task = "mn-tmjz"
-claimed_by = "human"
-claimed_at = "2026-10-06T22:42:03.304604119Z"
-
-[[claim]]
-task = "mn-mfgq"
-claimed_by = "human"
-claimed_at = "2026-10-06T22:42:52.142929459Z"
-
-[[claim]]
 task = "mn-4fsj"
 claimed_by = "agent:manager-1"
 claimed_at = "2026-10-06T22:56:29.757949957Z"

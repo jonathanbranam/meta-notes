@@ -2,9 +2,9 @@
 id = "mn-tmjz"
 title = "[at restart] Run the bridle gateway on the NUC so it and dalek's gateway can reach each other"
 kind = "feature"
-state = "claimed"
+state = "integrated"
 created_at = "2026-10-06T22:42:03.164Z"
-updated_at = "2026-10-06T22:42:03.439416805Z"
+updated_at = "2026-10-06T23:05:01.768331297Z"
 created_by = "external:orchestrator"
 watchers = [
     "external:orchestrator",
@@ -29,3 +29,6 @@ created for the human, priority normal
 
 ### note · external:orchestrator · 2026-10-06T22:42:03.439Z
 To-do for you (normal priority): [at restart] Run the bridle gateway on the NUC so it and dalek's gateway can reach each other. Finish it with `bridle task done mn-tmjz`.
+
+### note · external:aide · 2026-10-06T23:05:01.768Z
+done
