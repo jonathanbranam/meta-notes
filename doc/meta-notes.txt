@@ -827,7 +827,7 @@ Commands ~
     `--overdue --date {{date:%Y-%m-%d}}`, or run `meta-notes init --force`
     if you haven't edited the templates.
 
-`meta-notes task update {file}:{line} --expect {text} [options]`
+`meta-notes task update {file}[:{line}] --expect {text} [options]`
                                                 *meta-notes-cli-task-update*
     Edit one checkbox line in place: its text, status, tags, and dates. {file} is
     relative to the notes root (or an absolute path inside it), and {line}
@@ -836,6 +836,12 @@ Commands ~
     queries ignore, so `--due undated` turns a checklist item into a task. A
     line that isn't a checkbox, a missing file, or a line out of range is an
     error, and nothing is written.
+
+    The `:{line}` is optional. Without it, the command finds the line equal
+    to `--expect` (compared as below): no match is an error, and more than
+    one match is an error that lists the line numbers, so you run it again
+    with `{file}:{line}`. A target ending in `:` and digits is always
+    {file}:{line}, so a file whose name ends that way needs the line given.
 
     `--expect` is required: the line's text as last read, such as the
     `text` of `meta-notes tasks --json`. If the line now differs (ignoring

@@ -30,7 +30,7 @@ About 10–15 minutes. Say so in one line when you start.
 
 - Change existing task and checklist lines only with
   `meta-notes task update`, with `file`, `line`, and `text` from
-  `meta-notes tasks --json` or `grep -n`. Never rewrite them by hand.
+  `meta-notes tasks --json` (the `line` is optional). Never rewrite them by hand.
 - If `task update` says the line changed, re-query and retry, or ask.
 - Change the Time Block only with `meta-notes time-block update` (or
   `replace` for several rows). Never edit the table by hand. The

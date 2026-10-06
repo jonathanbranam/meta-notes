@@ -755,13 +755,61 @@ def test_task_update_expect_required(task_note, capsys):
     assert '--expect' in out['error']
 
 
-@pytest.mark.parametrize('target', ['project/foo.md', 'project/foo.md:',
-                                    'project/foo.md:x', ':3'])
-def test_task_update_bad_target(task_note, capsys, target):
-    code, out, _ = run_json(capsys, ['task', 'update', target,
+# Without :LINE, --expect finds the line
+
+def test_task_update_no_line_one_match(notes_root, capsys):
+    """One match is updated; regex characters in the line are literal."""
+    path = notes_root / 'project' / 'foo.md'
+    line = '- [ ] pay $40 (a+b) [x] .* 📅 2026-09-22'
+    path.write_text('# foo\n\n- [ ] pay $4 (a+b) [x] .* 📅 2026-09-22\n'
+                    + line + '\n')
+    code, out, _ = run_json(capsys, ['task', 'update', 'project/foo.md',
+                                     '--expect', line, '--status', '-'])
+    assert code == 0
+    assert out['file'] == 'project/foo.md'
+    assert out['line'] == 4
+    assert path.read_text().splitlines()[3] == line.replace('[ ]', '[-]', 1)
+
+
+def test_task_update_no_line_no_match(task_note, capsys):
+    before = task_note.read_bytes()
+    code, out, _ = run_json(capsys, ['task', 'update', 'project/foo.md',
+                                     '--expect', '- [ ] other', '--status', 'x'])
+    assert code == 1
+    assert 'matches' in out['error']
+    assert task_note.read_bytes() == before
+
+
+def test_task_update_no_line_two_matches(notes_root, capsys):
+    path = notes_root / 'project' / 'foo.md'
+    path.write_text(TASK + '\nx\n' + TASK + '\n')
+    before = path.read_bytes()
+    code, out, _ = run_json(capsys, ['task', 'update', 'project/foo.md',
                                      '--expect', TASK, '--status', 'x'])
     assert code == 1
-    assert '<file>:<line>' in out['error']
+    assert '1, 3' in out['error']
+    assert 'project/foo.md:LINE' in out['error']
+    assert path.read_bytes() == before
+
+
+def test_task_update_no_line_colon_in_file_name(notes_root, capsys):
+    path = notes_root / 'project' / 'a:b.md'
+    path.write_text(TASK + '\n')
+    code, out, _ = run_json(capsys, ['task', 'update', 'project/a:b.md',
+                                     '--expect', TASK, '--status', '-'])
+    assert code == 0
+    assert out['file'] == 'project/a:b.md'
+    assert path.read_text() == '- [-] call Sam 📅 2026-09-22\n'
+
+
+def test_task_update_line_given_ignores_other_matches(notes_root, capsys):
+    """FILE:LINE with a duplicated line still updates just that line."""
+    path = notes_root / 'project' / 'foo.md'
+    path.write_text(TASK + '\n' + TASK + '\n')
+    code, out, _ = run_json(capsys, ['task', 'update', 'project/foo.md:2',
+                                     '--expect', TASK, '--status', '-'])
+    assert code == 0
+    assert path.read_text() == TASK + '\n- [-] call Sam 📅 2026-09-22\n'
 
 
 def test_task_update_target_split_on_last_colon(notes_root, capsys):

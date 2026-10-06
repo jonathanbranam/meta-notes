@@ -5,7 +5,7 @@ Specifies `meta-notes task update`, which edits one checkbox line's status, tags
 ## Requirements
 
 ### Requirement: Update targets one checkbox line  {#r-c0ba}
-`meta-notes task update <file>:<line> --expect <text>` SHALL edit line `<line>` (counting from 1) of `<file>`. `<file>` SHALL be relative to the notes root, or an absolute path inside it. The target SHALL be split at its last `:`. The line SHALL be a checkbox line: optional indentation, `-`, `*`, or `+`, whitespace, then `[<char>]`. A checkbox line SHALL be editable whether or not queries count it as a task. The command SHALL fail without writing when the file doesn't exist, the line number is out of range, or the line is not a checkbox line. At least one edit option SHALL be given, or the command SHALL fail with a usage error.
+`meta-notes task update <file>:<line> --expect <text>` (the `:<line>` is optional, see Find the line by --expect) SHALL edit line `<line>` (counting from 1) of `<file>`. `<file>` SHALL be relative to the notes root, or an absolute path inside it. The target SHALL be split at its last `:`. The line SHALL be a checkbox line: optional indentation, `-`, `*`, or `+`, whitespace, then `[<char>]`. A checkbox line SHALL be editable whether or not queries count it as a task. The command SHALL fail without writing when the file doesn't exist, the line number is out of range, or the line is not a checkbox line. At least one edit option SHALL be given, or the command SHALL fail with a usage error.
 
 #### Scenario: Plain checkbox becomes a task  {#s-2770}
 *Verification*: **non-executable**
@@ -39,6 +39,24 @@ Specifies `meta-notes task update`, which edits one checkbox line's status, tags
 *Verification*: **non-executable**
 - **WHEN** line 3 is `- [ ] call Sam 📅 2026-10-01  ` and `--expect` is `- [ ] call Sam 📅 2026-10-01`
 - **THEN** the lines SHALL match and the edit SHALL proceed
+
+### Requirement: Find the line by --expect  {#r-e3db}
+When the target does not end in `:` and digits, the whole target SHALL be the file, and the command SHALL find the line equal to `--expect`, compared as the stale-line guard does. With no matching line it SHALL fail. With one it SHALL edit that line. With more than one it SHALL fail without writing, and the error SHALL list the matching line numbers and tell the caller to run it again with `<file>:<line>`. A target ending in `:` and digits SHALL keep meaning `<file>:<line>`.
+
+#### Scenario: One line matches  {#s-c778}
+*Verification*: **non-executable**
+- **WHEN** exactly one line of `project/foo.md` is `- [ ] pay $40` and the user runs `meta-notes task update project/foo.md --expect '- [ ] pay $40' --status x`
+- **THEN** that line SHALL be marked done
+
+#### Scenario: No line matches  {#s-1f77}
+*Verification*: **non-executable**
+- **WHEN** no line equals `--expect` and no `:<line>` is given
+- **THEN** the command SHALL exit non-zero and the file SHALL be unchanged
+
+#### Scenario: Several lines match  {#s-e19a}
+*Verification*: **non-executable**
+- **WHEN** lines 1 and 3 both equal `--expect` and no `:<line>` is given
+- **THEN** the command SHALL exit non-zero, the file SHALL be unchanged, and the error SHALL name lines 1 and 3 and suggest `<file>:<line>`
 
 ### Requirement: Set status  {#r-7e2b}
 `--status <char>` SHALL set the character between the brackets. It SHALL accept space, `x`, `X`, `>`, `-`, `.`, `o`, and `O`, and reject any other value with a usage error. `x` and `X` SHALL both mean done. `--status '>'` SHALL only set the character; the command SHALL NOT copy the task anywhere.
