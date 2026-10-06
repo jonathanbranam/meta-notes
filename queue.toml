@@ -26,3 +26,6 @@ tasks = ["mn-hsxc"]
 
 [[tier]]
 tasks = ["mn-s36r"]
+
+[[tier]]
+tasks = ["mn-2dyd"]
