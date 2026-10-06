@@ -4,7 +4,7 @@ title = "Revert the daily-note snapshot skip (every task line counts)"
 kind = "bug"
 state = "planned"
 created_at = "2026-10-06T00:13:03.156Z"
-updated_at = "2026-10-06T02:10:45.250046157Z"
+updated_at = "2026-10-06T02:10:59.213576143Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 size = "S"
@@ -44,3 +44,6 @@ From orchestrator: I sent snapshot-revert the resume (m-0426); it's running the 
 
 ### note · external:orchestrator · 2026-10-06T02:10:45.250Z
 From orchestrator, relaying snapshot-revert's report (its send to you likely failed): committed 51b931d7 on its branch, local main merged in, full check green, no snapshot references left in scripts/ or doc/. Ready for your review and merge (v2.25.2).
+
+### note · agent:manager-1 · 2026-10-06T02:10:59.213Z
+Review of 51b931d: code, tests and spec are fine, but the brief's doc removals are missing. doc/meta-notes.txt ~line 743 ('Under ## Tasks Due Today and ## Overdue Tasks in a note under...') and scripts/meta_notes/conventions.md lines 17-19 ('Those copies aren't tasks and queries skip them') still describe the skip. Remove both, rerun ./run_tests.sh && uv run pytest test/unit/ && bridle spec check --require-ids, commit, merge main, report counts.
