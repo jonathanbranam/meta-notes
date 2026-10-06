@@ -63,9 +63,9 @@ The text output SHALL be one line per ceremony with its name, `done` or `not don
 - **THEN** the `daily-shutdown` entry SHALL have `done` true and `completed` `2026-09-25`, and `week_start` SHALL be `2026-09-21`
 
 ### Requirement: Planning record command  {#r-9433}
-`meta-notes planning [--date PERIOD]` SHALL report, for each day of PERIOD (any `--date` form, default today), whether the day's daily note exists, whether the day was planned, the number of Time Block Plan cells that are `no plan`, and the number that are crossed out (wrapped in single tildes), plus totals over the period. A day SHALL count as planned when its `plan complete` marker is checked or any Time Block row has a Plan other than `no plan`. A missing note SHALL give zero counts and SHALL NOT be an error. The command SHALL NOT write any file.
+`meta-notes planning [--date PERIOD]` SHALL report, for each day of PERIOD (any `--date` form, default today), whether the day's daily note exists, whether the day was planned, the number of Time Block Plan cells that are `no plan` or `~no plan~` (both counted as no_plan), and the number that are crossed out (wrapped in single tildes, but not `~no plan~`), plus totals over the period. A day SHALL count as planned when its `plan complete` marker is checked or any Time Block row has a Plan other than `no plan` or `~no plan~`. A missing note SHALL give zero counts and SHALL NOT be an error. The command SHALL NOT write any file.
 
 #### Scenario: A week of planning  {#s-ed00}
 *Verification*: **non-executable**
-- **WHEN** one day's note has a Plan `~write spec~` and a Plan `no plan`, another has none of those, a third has no note, and the user runs `meta-notes planning --date` over those days
+- **WHEN** one day's note has a Plan `~write spec~` and a Plan `~no plan~`, another has none of those, a third has no note, and the user runs `meta-notes planning --date` over those days
 - **THEN** the first day SHALL show 1 no plan and 1 crossed out, the third SHALL show no note, and the totals SHALL add them up

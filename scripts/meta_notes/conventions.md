@@ -33,6 +33,7 @@ sets or removes the rule.
 ```markdown
 - [ ] Order tiles 📅 2026-09-28
 - [x] Call the plumber 📅 ✅ 2026-09-22
+- [x] Book the dentist 📅 2026-09-22
 ```
 
 <!-- generated: statuses -->
@@ -153,10 +154,10 @@ stay lowercase. For a row that already happened and didn't go as planned:
   tildes (`~feed the dogs~`), never double. Don't rewrite the Plan; give
   Actual a short summary of what happened instead.
 - If the Plan was agent-filled and the human never approved it, replace the
-  Plan with `no plan` (not struck) and give Actual a short summary of what
+  Plan with `~no plan~` and give Actual a short summary of what
   happened instead.
 
-A past row with an empty Plan gets the Plan `no plan` (the day had no plan
+A past row with an empty Plan gets the Plan `~no plan~` (the day had no plan
 for that block) and a short Actual summary.
 
 An event (meeting, concert, appointment, errand) fills the Plan of every

@@ -1354,8 +1354,9 @@ Commands ~
     The planning record for each day of {period} (any `--date` form,
     default today): whether the daily note exists, whether the day was
     planned (its `plan complete` marker is checked, or a Time Block row
-    has a Plan other than `no plan`), and how many Time Block Plan cells
-    are `no plan` or crossed out (in single tildes), then totals. A
+    has a Plan other than `no plan` or `~no plan~`), and how many Time Block
+    Plan cells are `no plan` or `~no plan~` (counted as no_plan) or crossed out
+    (wrapped in single tildes, but not `~no plan~`), then totals. A
     missing note counts zero. Writes nothing. Output: >
         2026-09-21: planned, 1 no plan, 2 crossed out
         2026-09-22: no note
