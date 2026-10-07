@@ -33,10 +33,13 @@ Newest first. Times are UTC. Each entry has:
   orchestrator checking an in-flight task after a quiet watcher hour; it
   nudged the worker directly (m-0540).
 - **Impact:** about an hour lost on a small bug fix.
-- **Cause:** unknown. Possibly a task comment doesn't wake an idle worker,
-  and the manager sent no direct message.
-- **Category:** `coordination`.
-- **Follow-up:** none yet; report to bridle if it happens again.
+- **Cause:** a task comment doesn't seem to wake an idle worker, and the
+  manager sent no direct message. It happened again at 00:37 UTC (the
+  manager's "merge main" comment, no turn in 10+ minutes); a direct
+  `bridle send <worker> --task` woke it.
+- **Category:** `coordination`, `daemon`.
+- **Follow-up:** reported to bridle's orchestrator on dalek (o-0007) to
+  file as a bridle bug; the manager was told to message workers directly.
 
 ## 2026-10-06 22:45: mn-3e6g merged without fixing the reported case
 
