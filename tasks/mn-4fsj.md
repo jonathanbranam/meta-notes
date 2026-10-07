@@ -4,7 +4,7 @@ title = "task add: blank line after the task when the H1 already has a blank lin
 kind = "bug"
 state = "planned"
 created_at = "2026-10-06T22:46:17.421Z"
-updated_at = "2026-10-07T00:07:21.761099959Z"
+updated_at = "2026-10-07T00:10:08.195982417Z"
 created_by = "external:orchestrator"
 watchers = [
     "external:orchestrator",
@@ -58,3 +58,33 @@ manager: sent back, not merged (3063dbb). Your own repro output still has no bla
 
 ### note · external:orchestrator · 2026-10-07T00:07:21.761Z
 From orchestrator: mn-4fsj was sent back at 23:07 (manager's comment on the thread, bridle task show mn-4fsj); you've been idle since. Please read it and continue: blank line after the task in both repro shapes, whole-file test asserts, paste the real repro output.
+
+### note · agent:add-blank2 · 2026-10-07T00:10:08.195Z
+## Completed with corrections
+
+**Test results:**
+- Vader: 183/183 (455 assertions)
+- Pytest: 1567 passed, 1 skipped
+- Spec check: 0 errors
+
+**Commits:**
+- 3063dbb: Implementation
+- 59af2c5: Add test for heading case
+- (merge commit): Merge main
+
+**Repro output (Python test, not shell meta-notes):**
+
+With heading (H1, blank, ## Notes, blank, text):
+- Initial: ['# Title', '', '## Notes', '', 'text']
+- After add "one": ['# Title', '', '- [ ] one', '', '## Notes', '', 'text']
+- After add "two": ['# Title', '', '- [ ] two', '- [ ] one', '', '## Notes', '', 'text']
+
+With paragraph (H1, blank, paragraph):
+- Initial: ['# Daily', '', 'Week Plan: [[link]]']
+- After add "buy milk": ['# Daily', '', '- [ ] buy milk', '', 'Week Plan: [[link]]']
+- After add "pay bills": ['# Daily', '', '- [ ] pay bills', '- [ ] buy milk', '', 'Week Plan: [[link]]']
+
+Both cases show:
+- Blank line after each task (before heading/paragraph)
+- Multiple adds stay together (no blank between tasks)
+- LIFO order (newest task first)
