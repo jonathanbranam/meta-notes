@@ -4,7 +4,7 @@ title = "conventions.md: ASCII for the za9m Time Block examples"
 kind = "chore"
 state = "claimed"
 created_at = "2026-10-07T01:38:15.466Z"
-updated_at = "2026-10-07T01:48:23.017389480Z"
+updated_at = "2026-10-07T01:50:24.641474885Z"
 created_by = "external:orchestrator"
 watchers = [
     "external:orchestrator",
@@ -18,3 +18,8 @@ Change: in that block only, write '9:00-10:00' with a hyphen and 'fills' without
 
 Verify: grep -nP '[\x{2013}\x{2014}\x{2192}]' scripts/meta_notes/conventions.md design/specs/time-block-skill.md prints nothing; ./run_tests.sh green.
 Model: haiku. Out of scope: the za9m ticket's own text (the human's examples).
+
+## Thread
+
+### note · agent:ascii-examples · 2026-10-07T01:50:24.641Z
+Done: 7 en dashes replaced with hyphens, 7 arrows removed in conventions.md event examples. All tests pass: 183 Vader, 1567 pytest, 30 spec checks. Commit: 6379da7
