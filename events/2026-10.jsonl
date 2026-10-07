@@ -183,3 +183,7 @@
 {"actor":"external:orchestrator","at":"2026-10-07T01:38:18.847170481Z","from":"pending","task":"mn-nzww","to":"open"}
 {"actor":"agent:manager-1","at":"2026-10-07T01:48:22.644719382Z","from":"open","task":"mn-nzww","to":"planned"}
 {"actor":"agent:manager-1","at":"2026-10-07T01:51:03.233936453Z","from":"planned","task":"mn-nzww","to":"integrated"}
+{"actor":"human","at":"2026-10-07T02:26:44.590Z","from":"","task":"mn-y6mg","to":"pending"}
+{"actor":"human","at":"2026-10-07T02:26:44.716Z","from":"","task":"mn-3p28","to":"pending"}
+{"actor":"external:orchestrator","at":"2026-10-07T02:26:48.515618852Z","from":"pending","task":"mn-y6mg","to":"open"}
+{"actor":"external:orchestrator","at":"2026-10-07T02:26:48.860363850Z","from":"pending","task":"mn-3p28","to":"open"}
