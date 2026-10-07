@@ -178,3 +178,4 @@
 {"actor":"external:orchestrator","at":"2026-10-07T00:25:07.206839339Z","from":"pending","task":"mn-za9m","to":"open"}
 {"actor":"agent:manager-1","at":"2026-10-07T00:48:57.467628424Z","from":"planned","task":"mn-4fsj","to":"integrated"}
 {"actor":"agent:manager-1","at":"2026-10-07T00:49:01.097908687Z","from":"open","task":"mn-za9m","to":"planned"}
+{"actor":"agent:manager-1","at":"2026-10-07T00:51:31.167317380Z","from":"planned","task":"mn-za9m","to":"integrated"}
