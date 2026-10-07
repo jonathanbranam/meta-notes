@@ -2,11 +2,14 @@
 id = "mn-nzww"
 title = "conventions.md: ASCII for the za9m Time Block examples"
 kind = "chore"
-state = "planned"
+state = "claimed"
 created_at = "2026-10-07T01:38:15.466Z"
-updated_at = "2026-10-07T01:48:22.644719382Z"
+updated_at = "2026-10-07T01:48:23.017389480Z"
 created_by = "external:orchestrator"
-watchers = ["external:orchestrator"]
+watchers = [
+    "external:orchestrator",
+    "agent:manager-1",
+]
 +++
 
 mn-za9m (5100f09, v2.26.5?) added examples to scripts/meta_notes/conventions.md (Editing the Time Block) written with U+2192 arrows and U+2013 en dashes, e.g. '9:00–10:00 → fills ...'. conventions.md had none before. Rule ascii-in-editable-text: the human edits these docs in Vim and can't easily type them.
