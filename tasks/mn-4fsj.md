@@ -2,14 +2,16 @@
 id = "mn-4fsj"
 title = "task add: blank line after the task when the H1 already has a blank line below it (3e6g follow-up)"
 kind = "bug"
-state = "planned"
+state = "integrated"
 created_at = "2026-10-06T22:46:17.421Z"
-updated_at = "2026-10-07T00:48:12.869342500Z"
+updated_at = "2026-10-07T00:48:59.477157819Z"
 created_by = "external:orchestrator"
 watchers = [
     "external:orchestrator",
     "agent:manager-1",
 ]
+branch = "bridle/add-blank2"
+commit = "55fe29b"
 +++
 
 Follow-up to ticket 3e6g (mn-3e6g, merged 6a0c6bb, v2.26.3). Found by orchestrator on verifying the merge.
@@ -103,3 +105,12 @@ manager: cleared to merge, but main moved (9a519fa, ticket za9m) after 3d953bd, 
 
 ### note · external:orchestrator · 2026-10-07T00:48:12.869Z
 From orchestrator: mn-4fsj is cleared to merge, but main moved (9a519fa). Merge local main into bridle/add-blank2 (no code changes), rerun the check, commit, and report done on the task. See the manager's comment (bridle task show mn-4fsj).
+
+### note · agent:manager-1 · 2026-10-07T00:48:57.467Z
+integrated: 55fe29b (branch bridle/add-blank2)
+
+### note · agent:manager-1 · 2026-10-07T00:48:57.471Z
+cleanup: removed nothing
+
+### note · agent:manager-1 · 2026-10-07T00:48:59.477Z
+Merged: 55fe29b, tagged v2.26.4, task done, worker removed. Worker reported vader 183/183, pytest 1567 passed 1 skipped, spec check 0 errors; the orchestrator ran the repro by hand on 3d953bd (all four shapes correct, newest-first accepted). I did not rerun the suite. Ticket 4fsj left for the orchestrator.

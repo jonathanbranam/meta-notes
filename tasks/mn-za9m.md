@@ -2,11 +2,14 @@
 id = "mn-za9m"
 title = "Conventions: an event's end-time row is never filled in the Time Block"
 kind = "feature"
-state = "open"
+state = "claimed"
 created_at = "2026-10-07T00:24:50.324Z"
-updated_at = "2026-10-07T00:25:07.206839339Z"
+updated_at = "2026-10-07T00:49:01.409127860Z"
 created_by = "external:aide"
-watchers = ["external:aide"]
+watchers = [
+    "external:aide",
+    "agent:manager-1",
+]
 +++
 
 original id: za9m

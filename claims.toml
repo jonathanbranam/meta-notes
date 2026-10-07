@@ -1,1 +1,4 @@
-claim = []
+[[claim]]
+task = "mn-za9m"
+claimed_by = "agent:manager-1"
+claimed_at = "2026-10-07T00:49:01.409127860Z"
