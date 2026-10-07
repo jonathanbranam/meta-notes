@@ -612,6 +612,17 @@ def _clock_value(value: str) -> str:
     return value
 
 
+def _clock_value_with_tilde(value: str) -> str:
+    """Validate a time value that may have a leading tilde (for time-log)."""
+    try:
+        # Strip tilde before parsing
+        clean = value.lstrip('~')
+        checkin.parse_time(clean)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(str(e))
+    return value
+
+
 def _minutes_value(value: str) -> int:
     if not value.isdigit() or int(value) < 1:
         raise argparse.ArgumentTypeError(
@@ -712,16 +723,38 @@ def _time_log_output(path: str, call) -> Output:
     return Output(data, text, warnings=result.warnings)
 
 
+def _parse_time_with_tilde(text: str | None) -> tuple[__import__('datetime').time, bool] | None:
+	"""Parse a time string and return (time, has_tilde)."""
+	if not text:
+		return None
+	text = text.strip()
+	has_tilde = text.startswith('~')
+	clean = text.lstrip('~')
+	t = checkin.parse_time(clean)
+	return t, has_tilde
+
+
 def cmd_time_log_append(args, root: str) -> Output:
     path = to_root_relative(args.file, root)
-    start = (checkin.parse_time(args.start) if args.start
-             else datetime.now().time().replace(second=0, microsecond=0))
+    if args.start:
+        start, start_tilde = _parse_time_with_tilde(args.start)
+    else:
+        start = datetime.now().time().replace(second=0, microsecond=0)
+        start_tilde = False
+
+    end_result = _parse_time_with_tilde(args.end)
+    end = end_result[0] if end_result else None
+    end_tilde = end_result[1] if end_result else False
+
+    prev_start_result = _parse_time_with_tilde(args.prev_start)
+    prev_start = prev_start_result[0] if prev_start_result else None
+    prev_start_tilde = prev_start_result[1] if prev_start_result else False
+
     return _time_log_output(path, lambda: time_log.append(
-        path, args.text, start,
-        checkin.parse_time(args.end) if args.end else None, args.note,
-        args.prev,
-        checkin.parse_time(args.prev_start) if args.prev_start else None,
-        args.prev_open, args.close_prev, args.first))
+        path, args.text, start, end, args.note,
+        args.prev, prev_start,
+        args.prev_open, args.close_prev, args.first,
+        start_tilde=start_tilde, end_tilde=end_tilde, prev_start_tilde=prev_start_tilde))
 
 
 def cmd_time_log_update(args, root: str) -> Output:
@@ -1237,15 +1270,15 @@ def build_parser() -> argparse.ArgumentParser:
                    help="the note, relative to the notes root")
     k.add_argument("--text", required=True, metavar="TEXT",
                    help="the new entry's header line, '- text #tags'")
-    k.add_argument("--start", type=_clock_value, metavar="TIME",
-                   help="HH:MM or 9:30am (default: now)")
-    k.add_argument("--end", type=_clock_value, metavar="TIME",
-                   help="the new entry's end (default: open)")
+    k.add_argument("--start", type=_clock_value_with_tilde, metavar="TIME",
+                   help="HH:MM or 9:30am (default: now); prefix with ~ for approximately")
+    k.add_argument("--end", type=_clock_value_with_tilde, metavar="TIME",
+                   help="the new entry's end (default: open); prefix with ~ for approximately")
     k.add_argument("--note", action="append", default=[], metavar="TEXT",
                    help="an extra '* note' line; repeat for more")
     k.add_argument("--prev", metavar="LINE",
                    help="the last entry's header line, exactly")
-    k.add_argument("--prev-start", type=_clock_value, metavar="TIME",
+    k.add_argument("--prev-start", type=_clock_value_with_tilde, metavar="TIME",
                    help="the last entry's start")
     k.add_argument("--prev-open", action="store_true",
                    help="the last entry has no end")

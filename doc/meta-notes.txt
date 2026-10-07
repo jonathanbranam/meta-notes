@@ -1441,7 +1441,8 @@ Commands ~
     line plus every indented line under it. Both commands check that the
     log still holds what the caller expects and otherwise write nothing,
     so they don't overwrite what you changed in Vim meanwhile. Times are
-    `HH:MM` or `9:30am`.
+    `HH:MM` or `9:30am`; prefix with `~` (e.g., `~21:55`) to mark them as
+    approximate.
 
     `append` adds one entry at the end. Options: `--text {line}` (the
     header, `- text #tags`), `--start {time}` (default: now), `--end
