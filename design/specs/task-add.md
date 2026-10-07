@@ -28,7 +28,7 @@ Specifies `meta-notes task add`, which writes a new open task line into an exist
 - **THEN** the command SHALL exit non-zero and write nothing
 
 ### Requirement: Dates, time, rule and tags  {#r-18f7}
-`--due` and `--start` SHALL take `YYYY-MM-DD` and write `📅 <date>` and `🛫 <date>`, placed as `task update` places them. `--time HH:MM` SHALL write `⏰ HH:MM` and SHALL require `--due`. `--recur <rule>` SHALL accept a rule `recurrence` supports and write `🔁 <rule>`; unless the rule is `when done`, it SHALL require `--due` or `--start` to step from. `--tag <tag>` (repeatable, with or without `#`) SHALL add a tag before the first date marker. An invalid date, time, rule or tag, or a time or rule without what it needs, SHALL be an error. A line with no `--due` or `--start` SHALL be added with a warning that queries don't list it as a task.
+`--due` SHALL take `YYYY-MM-DD` or `undated` and write `📅 <date>` or a bare `📅` emoji, placed as `task update` places them. `--start` SHALL take `YYYY-MM-DD` and write `🛫 <date>`. `--time HH:MM` SHALL write `⏰ HH:MM` and SHALL require `--due`. `--recur <rule>` SHALL accept a rule `recurrence` supports and write `🔁 <rule>`; unless the rule is `when done`, it SHALL require `--due` or `--start` to step from. `--tag <tag>` (repeatable, with or without `#`) SHALL add a tag before the first date marker. An invalid date, time, rule or tag, or a time or rule without what it needs, SHALL be an error. A line with no `--due` or `--start` SHALL be added with a warning that queries don't list it as a task.
 
 #### Scenario: Timed recurring task  {#s-3202}
 *Verification*: **non-executable**
@@ -49,6 +49,11 @@ Specifies `meta-notes task add`, which writes a new open task line into an exist
 *Verification*: **non-executable**
 - **WHEN** the user runs `--recur 'every other week' --due 2026-10-01`
 - **THEN** the command SHALL exit non-zero with a usage error
+
+#### Scenario: Undated task  {#s-f0f1}
+*Verification*: **non-executable**
+- **WHEN** the user runs `meta-notes task add test.md 'example' --due undated`
+- **THEN** the added line SHALL be `- [ ] example 📅`, a bare due emoji with no date
 
 #### Scenario: No date  {#s-5a15}
 *Verification*: **non-executable**

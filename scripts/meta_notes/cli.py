@@ -1080,8 +1080,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="the note, relative to the notes root; it must exist")
     k.add_argument("text", metavar="TEXT",
                    help="the task's description, without the checkbox")
-    k.add_argument("--due", type=_day_value, metavar="DATE",
-                   help="the due date, YYYY-MM-DD")
+    k.add_argument("--due", type=_due_value, metavar="DATE",
+                   help="YYYY-MM-DD or undated (a bare due emoji)")
     k.add_argument("--start", type=_day_value, metavar="DATE",
                    help="the 🛫 date, YYYY-MM-DD")
     k.add_argument("--time", type=_time_value, metavar="TIME",
