@@ -17,6 +17,11 @@ _START = re.compile(r"^\s+[*-]\s*start:(.*)$")
 _END = re.compile(r"^\s+[*-]\s*end:(.*)$")
 
 
+def _strip_tilde(time_str: str) -> str:
+	"""Remove leading tilde from time string for comparison and parsing."""
+	return time_str.lstrip('~')
+
+
 class TimeLogError(ValueError):
     """An edit that wrote nothing. `current` lists entries to compare."""
 
@@ -32,6 +37,8 @@ class Entry:
     lines: list[str]
     start: datetime | None = None
     end: datetime | None = None
+    start_has_tilde: bool = False
+    end_has_tilde: bool = False
 
     @property
     def header(self) -> str:
@@ -48,8 +55,13 @@ class Result:
     warnings: list[str] = field(default_factory=list)
 
 
-def _parse_stamp(text: str, file_date: date | None) -> datetime | None:
-    return time_tracking._parse_entry_time(text.strip(), file_date)
+def _parse_stamp(text: str, file_date: date | None) -> tuple[datetime | None, bool]:
+	"""Parse a timestamp, optionally prefixed with ~. Returns (datetime, has_tilde)."""
+	text = text.strip()
+	has_tilde = text.startswith('~')
+	clean_text = _strip_tilde(text)
+	dt = time_tracking._parse_entry_time(clean_text, file_date)
+	return dt, has_tilde
 
 
 def parse_entries(lines: list[str], first: int, file_date: date | None,
@@ -77,9 +89,9 @@ def parse_entries(lines: list[str], first: int, file_date: date | None,
     for entry in entries:
         for line in entry.lines[1:]:
             if (m := _START.match(line)) and entry.start is None:
-                entry.start = _parse_stamp(m.group(1), file_date)
+                entry.start, entry.start_has_tilde = _parse_stamp(m.group(1), file_date)
             elif (m := _END.match(line)) and entry.end is None:
-                entry.end = _parse_stamp(m.group(1), file_date)
+                entry.end, entry.end_has_tilde = _parse_stamp(m.group(1), file_date)
     return entries
 
 
@@ -157,14 +169,18 @@ def _check_new(entries: list[Entry], allow_open_last: bool) -> None:
             raise TimeLogError(f"{name!r} ends before it starts")
 
 
-def _stamp(at: time) -> str:
-    return f"{at:%H:%M}"
+def _stamp(at: time, has_tilde: bool = False) -> str:
+	"""Format a time as HH:MM, optionally with a leading tilde."""
+	formatted = f"{at:%H:%M}"
+	return f"~{formatted}" if has_tilde else formatted
 
 
 def append(path: str, text: str, start: time, end: time | None = None,
            notes: list[str] | None = None, prev: str | None = None,
            prev_start: time | None = None, prev_open: bool = False,
-           close_prev: bool = False, first: bool = False) -> Result:
+           close_prev: bool = False, first: bool = False,
+           start_tilde: bool = False, end_tilde: bool = False,
+           prev_start_tilde: bool = False) -> Result:
     """
     Add one entry at the end of the log.
 
@@ -178,6 +194,7 @@ def append(path: str, text: str, start: time, end: time | None = None,
         prev_open: Assert the last entry has no end (else it must have one).
         close_prev: Write the last entry's end as `start` (needs prev_open).
         first: Assert the log is empty; replaces the prev options.
+        start_tilde, end_tilde, prev_start_tilde: Whether to write times with ~ prefix.
 
     Raises:
         TimeLogError: With nothing written, if the guard fails (`current`
@@ -224,14 +241,14 @@ def append(path: str, text: str, start: time, end: time | None = None,
             raise TimeLogError("last entry doesn't match: "
                                + "; ".join(problems), [last.as_dict()])
 
-    new_lines = [text, f"  * start: {_stamp(start)}"]
+    new_lines = [text, f"  * start: {_stamp(start, start_tilde)}"]
     if end is not None:
-        new_lines.append(f"  * end:   {_stamp(end)}")
+        new_lines.append(f"  * end:   {_stamp(end, end_tilde)}")
     new_lines += [f"  * {note}" for note in notes]
 
     result = Result()
     if close_prev:
-        end_line = f"  * end:   {_stamp(start)}"
+        end_line = f"  * end:   {_stamp(start, start_tilde)}"
         for i in range(last.index + 1, _entry_end(last)):
             if _END.match(lines[i]):
                 lines[i] = end_line

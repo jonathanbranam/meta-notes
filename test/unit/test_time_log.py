@@ -326,3 +326,55 @@ def test_time_log_cli_update_invalid_is_error(tmp_path, capsys):
     code, out = run_cli(tmp_path, capsys, "update", path, "--expect", WORK,
                         "--text", "bad")
     assert code == 1 and not out["ok"]
+
+
+# Tests for tilde times
+
+def test_time_log_append_tilde_start(tmp_path):
+    path = make_note(tmp_path)
+    result = append(path, start_tilde=True)
+    out = lines_of(path)
+    assert any("  * start: ~14:00" in line for line in out)
+
+
+def test_time_log_append_tilde_end(tmp_path):
+    path = make_note(tmp_path)
+    result = append(path, end=time(15, 0), end_tilde=True)
+    out = lines_of(path)
+    assert any("  * end:   ~15:00" in line for line in out)
+
+
+def test_time_log_append_tilde_start_and_end(tmp_path):
+    path = make_note(tmp_path)
+    result = append(path, start=time(14, 0), start_tilde=True,
+                    end=time(15, 0), end_tilde=True)
+    out = lines_of(path)
+    assert any("  * start: ~14:00" in line for line in out)
+    assert any("  * end:   ~15:00" in line for line in out)
+
+
+def test_time_log_append_close_prev_tilde(tmp_path):
+    path = make_note(tmp_path)
+    result = append(path, close_prev=True, start_tilde=True)
+    out = lines_of(path)
+    assert "  * end:   ~14:00" in out
+    assert any("  * start: ~14:00" in line for line in out)
+
+
+def test_time_log_append_prev_start_tilde_matches_stored_tilde(tmp_path):
+    """Test that --prev-start without tilde matches stored tilde time."""
+    path = make_note(tmp_path, NOTE.replace(
+        "  * start: 13:30\n", "  * start: ~13:30\n"))
+    result = time_log.append(path, "- Next", time(14, 0),
+                             prev="- Review #dev", prev_start=time(13, 30),
+                             prev_open=True)
+    assert result.written and result.warnings == []
+
+
+def test_time_log_update_tilde_time_validation(tmp_path):
+    """Test that update validates tilde times in --text."""
+    path = make_note(tmp_path)
+    result = time_log.update(path, NOTE.split("### Log\n")[1].split("### Time Block")[0].strip(),
+                             "- Work\n  * start: ~09:45\n  * end:   ~13:00\n"
+                             "- Lunch #personal\n  * start: ~13:00\n  * end:   ~13:30")
+    assert result.written

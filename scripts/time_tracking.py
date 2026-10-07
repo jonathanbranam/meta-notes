@@ -135,6 +135,7 @@ def _parse_entry_time(time_str: str, file_date: Optional[date]) -> Optional[date
     - Bare 24-hour time: '09:10' (combined with file_date)
     - Bare 12-hour time: '3:20pm' (combined with file_date)
     - Full date: '2026-02-14 08:00' or '2026-02-14 Sat 08:00'
+    - Any of the above with a leading tilde: '~09:10', '~3:20pm', etc.
 
     A full date is tried first and its own date is used even when file_date
     differs.
@@ -146,6 +147,9 @@ def _parse_entry_time(time_str: str, file_date: Optional[date]) -> Optional[date
     Returns:
         A datetime object if successfully parsed, None otherwise.
     """
+    # Strip leading tilde (~ means approximately)
+    time_str = time_str.lstrip('~')
+
     # Try full datetime format first
     result = _parse_datetime(time_str)
     if result is not None:
