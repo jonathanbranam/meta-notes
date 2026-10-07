@@ -2,9 +2,9 @@
 id = "mn-nzww"
 title = "conventions.md: ASCII for the za9m Time Block examples"
 kind = "chore"
-state = "open"
+state = "planned"
 created_at = "2026-10-07T01:38:15.466Z"
-updated_at = "2026-10-07T01:38:18.847170481Z"
+updated_at = "2026-10-07T01:48:22.644719382Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 +++
