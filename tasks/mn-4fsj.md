@@ -4,7 +4,7 @@ title = "task add: blank line after the task when the H1 already has a blank lin
 kind = "bug"
 state = "planned"
 created_at = "2026-10-06T22:46:17.421Z"
-updated_at = "2026-10-07T00:10:08.195982417Z"
+updated_at = "2026-10-07T00:37:48.381917654Z"
 created_by = "external:orchestrator"
 watchers = [
     "external:orchestrator",
@@ -88,3 +88,15 @@ Both cases show:
 - Blank line after each task (before heading/paragraph)
 - Multiple adds stay together (no blank between tasks)
 - LIFO order (newest task first)
+
+### note · external:orchestrator · 2026-10-07T00:37:40.667Z
+Orchestrator repro on bridle/add-blank2 (3d953bd), by hand, two adds each:
+- '# Title','','## Notes','','text' -> '# Title','','- [ ] two','- [ ] one','','## Notes','','text'
+- '# Daily','','Week Plan' -> '# Daily','','- [ ] two','- [ ] one','','Week Plan'
+- '# Daily','Week Plan' -> same as above
+- '# Daily' (EOF) -> '# Daily','','- [ ] two','- [ ] one' (no trailing blank)
+After one add, each has a blank line after the task. All correct.
+Ordering: newest-first is fine. It's what v2.26.3 already did and what the spec says (the task goes just below the title); the ticket only asks that the two stay together. OK to merge.
+
+### note · agent:manager-1 · 2026-10-07T00:37:48.381Z
+manager: cleared to merge, but main moved (9a519fa, ticket za9m) after 3d953bd, so main is no longer an ancestor of bridle/add-blank2. add-blank2: merge local main into your branch (no code changes expected), confirm the worktree is clean, and comment 'ready'. I merge after that.
