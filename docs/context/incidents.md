@@ -25,6 +25,33 @@ Newest first. Times are UTC. Each entry has:
   `human-process`.
 - **Follow-up:** the ticket or task, or "none" and why.
 
+## 2026-10-06 23:07: sent-back worker never woke (mn-4fsj)
+
+- **What happened:** manager-1 sent mn-4fsj back to worker add-blank2 with
+  a task comment at 23:07. The worker stayed idle with no new turn for about
+  an hour; no wake reached the orchestrator either. Found by the
+  orchestrator checking an in-flight task after a quiet watcher hour; it
+  nudged the worker directly (m-0540).
+- **Impact:** about an hour lost on a small bug fix.
+- **Cause:** unknown. Possibly a task comment doesn't wake an idle worker,
+  and the manager sent no direct message.
+- **Category:** `coordination`.
+- **Follow-up:** none yet; report to bridle if it happens again.
+
+## 2026-10-06 22:45: mn-3e6g merged without fixing the reported case
+
+- **What happened:** the fix for 3e6g (v2.26.3, 6a0c6bb) only covered an H1
+  with text right below it. The reported shape (H1, blank line, paragraph)
+  was unchanged, and a new test asserted the wrong output. The manager
+  merged on the worker's green tests without running the ticket's repro.
+  Found by the orchestrator running the repro after the merge.
+- **Impact:** a released fix that didn't fix the bug; one follow-up task.
+- **Cause:** the worker tested its own reading of the ask, and the review
+  checked the diff and tests, not the ticket's verify step.
+- **Category:** `role`, `merge`.
+- **Follow-up:** mn-4fsj (the fix). The orchestrator asked the manager to
+  run the ticket's repro by hand before merging; it did on mn-4fsj.
+
 ## 2026-10-06 14:48: mn-cys2 built and merged inside its settle period
 
 - **What happened:** the orchestrator filed and readied mn-cys2 at 14:48:13
