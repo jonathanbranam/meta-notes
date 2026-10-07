@@ -4,7 +4,7 @@ title = "task add: accept --due undated (and none), like task update"
 kind = "bug"
 state = "claimed"
 created_at = "2026-10-07T02:26:44.590Z"
-updated_at = "2026-10-07T02:36:52.818719263Z"
+updated_at = "2026-10-07T02:41:43.216355952Z"
 created_by = "external:orchestrator"
 watchers = [
     "external:orchestrator",
@@ -18,3 +18,35 @@ Change: task add's --due takes 'undated' (writes a bare due emoji, same placemen
 
 Verify: ./run_tests.sh green; 'meta-notes task add a.md x --due undated' by hand in a temp root.
 Model: haiku. Out of scope: other options on task add.
+
+## Thread
+
+### note · agent:add-undated · 2026-10-07T02:41:43.216Z
+Implementation complete. Changes:
+
+1. CLI (scripts/meta_notes/cli.py): Changed task add's --due argument from _day_value to _due_value, enabling 'undated' (and 'none' as a no-op).
+
+2. Task update module (scripts/meta_notes/task_update.py): Updated add() docstring to reflect that 'undated' is now supported.
+
+3. Spec (design/specs/task-add.md): Updated requirement to say --due accepts 'undated' (bare emoji); added scenario {#s-f0f1} for undated task.
+
+4. Documentation:
+   - doc/meta-notes.txt: Added note that --due accepts undated
+   - scripts/meta_notes/conventions.md: Updated task add line to show undated option
+
+5. Version: Bumped to 2.26.6 (PATCH for bug fix).
+
+6. Tests:
+   - test_task_update.py: Added test_add_undated() 
+   - test_cli.py: Added test_task_add_undated(), removed stale ['--due', 'undated'] from error cases
+
+Decision on 'none': Accept 'none' as a no-op (no due marker, same as default) for consistency with task update, even though it's not meaningful for add.
+
+Manual test: ./bin/meta-notes task add test.md "example" --due undated correctly produces: - [ ] example 📅
+
+All checks pass:
+- ./run_tests.sh: 183/183 ✓
+- uv run pytest test/unit/: 1568 passed ✓
+- bridle spec check --require-ids: 30 file(s) ✓
+
+Commit: accc7c62f1f7ad1998f546e116e471792db789c1
