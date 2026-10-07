@@ -161,11 +161,29 @@ A past row with an empty Plan gets the Plan `~no plan~` (the day had no plan
 for that block) and a short Actual summary.
 
 An event (meeting, concert, appointment, errand) fills the Plan of every
-row it spans, not just its first. Travel to and from it is its own run of
-rows (`drive to concert` in each 15-minute row it takes), and the event's
-rows follow (`concert`). When the end isn't known, use a typical length and
-tell the user, or ask. One `time-block update --time 7:00pm --through
-8:45pm --plan 'concert'` writes a run.
+15-minute row during which any part of it is happening. Round the start down
+to the row it falls in. The row beginning exactly at the event's end time is
+never filled, since no part of the event is still happening once that row
+begins. Examples (15-minute grid):
+
+- `9:00–10:00` → fills `9:00am, 9:15am, 9:30am, 9:45am` (`10:00am` is not
+  filled; the meeting is already over by then)
+- `10:05–10:30` → fills `10:00am, 10:15am` (`10:30am` is not filled)
+- `10:35–11:25` → fills `10:30am, 10:45am, 11:00am, 11:15am` (`11:30am`
+  is not filled)
+- `13:05–13:30` → fills `1:00pm, 1:15pm` (`1:30pm` is not filled)
+- `16:05–16:30` → fills `4:00pm, 4:15pm` (`4:30pm` is not filled)
+- `2:00–2:30` (already on row boundaries) → fills `2:00pm, 2:15pm`
+  (`2:30pm` is not filled)
+- `11:50–12:05` (a short meeting spanning one grid line) → fills
+  `11:45am, 12:00pm` (`12:15pm` is not filled)
+
+Travel to and from it is its own run of rows (`drive to concert` in each
+15-minute row it takes), and the event's rows follow (`concert`). When the
+end isn't known, use a typical length and tell the user, or ask. One
+`time-block update --time 7:00pm --through 8:45pm --plan 'concert'` writes
+a run. The `--through` option names the last filled row (the row before the
+event's end time).
 
 Never edit the daily note's `### Time Block` table yourself. Write its
 Plan and Actual cells with

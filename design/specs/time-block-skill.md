@@ -30,3 +30,11 @@ The skill SHALL replan only rows that haven't happened; leave Actual blank when 
 *Verification*: **non-executable**
 - **WHEN** a past row has an empty Plan
 - **THEN** the skill SHALL set the Plan to `~no plan~` and put a short summary in Actual
+
+### Requirement: Event fills rows with exclusive end {#r-7acb}
+An event fills the Plan of every 15-minute row during which any part of it is happening. The row beginning exactly at the event's end time is never filled, since no part of the event is still happening once that row begins.
+
+#### Scenario: Event end time is exclusive  {#s-8627}
+*Verification*: **non-executable**
+- **WHEN** filling an event's rows in the Time Block
+- **THEN** the skill SHALL round the start down to the row it falls in, fill every row until (but not including) the row at the end time, and document this behavior with worked examples in `meta-notes conventions`
