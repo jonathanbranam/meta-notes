@@ -656,13 +656,11 @@ def _default_insert_point(lines: list[str]) -> tuple[int, bool]:
         last = h1 + 1
         for i in range(h1 + 2, len(bodies)):
             content = bodies[i].lstrip()
-            if not content or tasks.CHECKBOX_PATTERN.match(content):
+            if content.startswith('  ') or content.startswith('\t'):
                 last = i
-            elif content.startswith('  ') or content.startswith('\t'):
-                last = i
-            else:
+            elif content or tasks.CHECKBOX_PATTERN.match(content):
                 break
-        return h1 + 3 if last == h1 + 1 else last + 1, False
+        return last + 2, False
     return h1 + 2, True
 
 
@@ -702,6 +700,7 @@ def add(path: str, text: str, *, due: str | None = None,
 
     lines = _LINE_PATTERN.findall(content)
     blank_before = False
+    using_default = line_no is None
     if line_no is None:
         line_no, blank_before = _default_insert_point(lines)
     elif not 1 <= line_no <= len(lines) + 1:
@@ -718,6 +717,28 @@ def add(path: str, text: str, *, due: str | None = None,
         next_line = _split_ending(lines[line_no])[0]
         if next_line.strip():
             lines.insert(line_no, ending)
+
+    # Add blank line after task when using default insert point below H1
+    # Only apply in the H1 with blank case (not when no H1 or H1 without blank)
+    if using_default and not blank_before and line_no < len(lines):
+        bodies = [_split_ending(line)[0] for line in lines]
+        top = 0
+        if bodies and bodies[0].rstrip() == '---':
+            close = next((i for i in range(1, len(bodies))
+                          if bodies[i].rstrip() == '---'), None)
+            if close is not None:
+                top = close + 1
+        h1 = next((i for i in range(top, len(bodies))
+                   if re.match(r'# \S', bodies[i])), None)
+
+        # Only add blank when inserting below H1 with blank line after it
+        if h1 is not None and h1 + 1 < len(bodies) and not bodies[h1 + 1].strip():
+            next_content = _split_ending(lines[line_no])[0]
+            next_is_blank = not next_content.strip()
+            next_is_same_level_task = (next_content and next_content[0] not in ' \t'
+                                        and tasks.CHECKBOX_PATTERN.match(next_content))
+            if not next_is_blank and not next_is_same_level_task:
+                lines.insert(line_no, ending)
     with open(path, 'w', encoding='utf-8', newline='') as f:
         f.write(''.join(lines))
 
