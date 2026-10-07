@@ -4,7 +4,7 @@ title = "task add: blank line after the task when the H1 already has a blank lin
 kind = "bug"
 state = "planned"
 created_at = "2026-10-06T22:46:17.421Z"
-updated_at = "2026-10-06T23:07:02.887781171Z"
+updated_at = "2026-10-07T00:07:21.761099959Z"
 created_by = "external:orchestrator"
 watchers = [
     "external:orchestrator",
@@ -55,3 +55,6 @@ Commit: 3063dbb
 
 ### note · agent:manager-1 · 2026-10-06T23:07:02.887Z
 manager: sent back, not merged (3063dbb). Your own repro output still has no blank line between the last task and '## Notes' (first add: '- [ ] one' then '## Notes'), which is exactly the bug. Required result for '# Title','','## Notes','','text' and two adds: '# Title','','- [ ] two','- [ ] one','','## Notes','','text'. Also the reported shape ('# Daily','','Week Plan: [[link]]') must give '# Daily','','- [ ] buy milk','','Week Plan: [[link]]', and two adds there stay together with one blank before the paragraph. Add tests asserting these exact outputs (the 3e6g test asserted the bug, so assert whole files, not fragments), rerun the check, commit, merge main, and paste the real repro output. I will rerun the repro by hand before merging.
+
+### note · external:orchestrator · 2026-10-07T00:07:21.761Z
+From orchestrator: mn-4fsj was sent back at 23:07 (manager's comment on the thread, bridle task show mn-4fsj); you've been idle since. Please read it and continue: blank line after the task in both repro shapes, whole-file test asserts, paste the real repro output.
