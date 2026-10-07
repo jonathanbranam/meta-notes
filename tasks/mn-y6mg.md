@@ -2,11 +2,14 @@
 id = "mn-y6mg"
 title = "task add: accept --due undated (and none), like task update"
 kind = "bug"
-state = "open"
+state = "claimed"
 created_at = "2026-10-07T02:26:44.590Z"
-updated_at = "2026-10-07T02:26:48.515618852Z"
+updated_at = "2026-10-07T02:36:52.818719263Z"
 created_by = "external:orchestrator"
-watchers = ["external:orchestrator"]
+watchers = [
+    "external:orchestrator",
+    "agent:manager-1",
+]
 +++
 
 Reported by the notes advisor, 2026-10-06 (notes m-0122): 'task add --due undated' fails with "argument --due: invalid value: 'undated' (expected YYYY-MM-DD)", so an undated task takes two calls (add with a date, then task update --due undated). Conventions (scripts/meta_notes/conventions.md line 11) say a bare due emoji is undated, and task update already takes '--due YYYY-MM-DD, undated (a bare due emoji), or none'. Confirmed by the orchestrator on v2.26.4.
