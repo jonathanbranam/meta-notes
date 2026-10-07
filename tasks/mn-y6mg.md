@@ -2,14 +2,16 @@
 id = "mn-y6mg"
 title = "task add: accept --due undated (and none), like task update"
 kind = "bug"
-state = "claimed"
+state = "integrated"
 created_at = "2026-10-07T02:26:44.590Z"
-updated_at = "2026-10-07T02:41:43.216355952Z"
+updated_at = "2026-10-07T02:42:01.761096058Z"
 created_by = "external:orchestrator"
 watchers = [
     "external:orchestrator",
     "agent:manager-1",
 ]
+branch = "bridle/add-undated"
+commit = "2b3a306"
 +++
 
 Reported by the notes advisor, 2026-10-06 (notes m-0122): 'task add --due undated' fails with "argument --due: invalid value: 'undated' (expected YYYY-MM-DD)", so an undated task takes two calls (add with a date, then task update --due undated). Conventions (scripts/meta_notes/conventions.md line 11) say a bare due emoji is undated, and task update already takes '--due YYYY-MM-DD, undated (a bare due emoji), or none'. Confirmed by the orchestrator on v2.26.4.
@@ -50,3 +52,12 @@ All checks pass:
 - bridle spec check --require-ids: 30 file(s) ✓
 
 Commit: accc7c62f1f7ad1998f546e116e471792db789c1
+
+### note · agent:manager-1 · 2026-10-07T02:41:59.408Z
+integrated: 2b3a306 (branch bridle/add-undated)
+
+### note · agent:manager-1 · 2026-10-07T02:41:59.412Z
+cleanup: removed nothing
+
+### note · agent:manager-1 · 2026-10-07T02:42:01.761Z
+Merged: 2b3a306, tagged v2.26.6, task done, worker removed. Worker reported vader 183/183, pytest 1568 passed, spec check 0 errors, and its hand run of 'task add --due undated' gave '- [ ] example 📅'. 'none' is accepted as a no-op (edit_line removes a marker that isn't there; no test for it). I did not rerun the suite. Ticket left for the orchestrator.
