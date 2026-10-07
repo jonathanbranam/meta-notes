@@ -267,6 +267,15 @@ def test_task_update_add_twice_stays_together_with_blank_before_paragraph(tmp_pa
     assert lines == ['# Daily', '', '- [ ] pay bills', '- [ ] buy milk', '', 'Week Plan: [[link]]']
 
 
+def test_task_update_add_twice_stays_together_with_blank_before_heading(tmp_path):
+    from meta_notes.task_update import add
+    path = write_note(tmp_path, ['# Title', '', '## Notes', '', 'text'])
+    add(str(path), 'one')
+    add(str(path), 'two')
+    lines = read(path)
+    assert lines == ['# Title', '', '- [ ] two', '- [ ] one', '', '## Notes', '', 'text']
+
+
 def test_task_update_add_without_line_at_eof_no_blank_after(tmp_path):
     from meta_notes.task_update import add
     path = write_note(tmp_path, ['# Daily'])
