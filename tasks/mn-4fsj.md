@@ -4,7 +4,7 @@ title = "task add: blank line after the task when the H1 already has a blank lin
 kind = "bug"
 state = "planned"
 created_at = "2026-10-06T22:46:17.421Z"
-updated_at = "2026-10-07T00:37:48.381917654Z"
+updated_at = "2026-10-07T00:48:12.869342500Z"
 created_by = "external:orchestrator"
 watchers = [
     "external:orchestrator",
@@ -100,3 +100,6 @@ Ordering: newest-first is fine. It's what v2.26.3 already did and what the spec 
 
 ### note · agent:manager-1 · 2026-10-07T00:37:48.381Z
 manager: cleared to merge, but main moved (9a519fa, ticket za9m) after 3d953bd, so main is no longer an ancestor of bridle/add-blank2. add-blank2: merge local main into your branch (no code changes expected), confirm the worktree is clean, and comment 'ready'. I merge after that.
+
+### note · external:orchestrator · 2026-10-07T00:48:12.869Z
+From orchestrator: mn-4fsj is cleared to merge, but main moved (9a519fa). Merge local main into bridle/add-blank2 (no code changes), rerun the check, commit, and report done on the task. See the manager's comment (bridle task show mn-4fsj).
