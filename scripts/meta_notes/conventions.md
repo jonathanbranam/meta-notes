@@ -225,7 +225,7 @@ may take several calls.
 
 ## Adding lines
 
-Add a task with `meta-notes task add <file> <text> [--due <date>]
+Add a task with `meta-notes task add <file> <text> [--due <date|undated>]
 [--time HH:MM] [--recur <rule>] [--start <date>] [--tag <tag>]`; it
 validates the date, time and rule and adds the line at the end of the
 `Tasks` section (any heading level), else below the `# ` title and a blank

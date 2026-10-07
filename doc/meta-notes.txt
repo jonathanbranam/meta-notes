@@ -1049,7 +1049,8 @@ Commands ~
     The file's line endings are kept, and nothing is written on an error.
     {text} is one non-empty line.
 
-    --due {date}        Write `📅 {date}` (`YYYY-MM-DD`).
+    --due {date}        Write `📅 {date}` (`YYYY-MM-DD`), or `📅` alone for
+                        undated.
     --start {date}      Write `🛫 {date}`.
     --time {HH:MM}      Write `⏰ {HH:MM}` (24-hour). Needs `--due`.
     --recur {rule}      Write `🔁 {rule}` (`every 3 months`, `every week

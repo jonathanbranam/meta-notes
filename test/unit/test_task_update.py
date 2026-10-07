@@ -763,6 +763,13 @@ def test_add_when_done_rule_needs_no_date(tmp_path):
     assert result.new == '- [ ] x 🔁 every week when done'
 
 
+def test_add_undated(tmp_path):
+    path = write_note(tmp_path, ['# foo'])
+    result = task_update.add(str(path), 'example', due='undated')
+    assert result.new == '- [ ] example 📅'
+    assert result.created_line == 3
+
+
 @pytest.mark.parametrize('kwargs', [
     {'text': ''},
     {'text': 'a\nb'},

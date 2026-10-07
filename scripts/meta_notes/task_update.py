@@ -674,8 +674,9 @@ def add(path: str, text: str, *, due: str | None = None,
     Args:
         path: The file, which must exist.
         text: The task's description, one line, without the checkbox.
-        due, start, time, recur, add_tags: As in edit_line, but no 'none'
-            or 'undated'.
+        due: YYYY-MM-DD or 'undated', as in edit_line. Other keywords like
+            'none' are not meaningful for add (no due marker is the default).
+        start, time, recur, add_tags: As in edit_line.
         line_no: Insert before this line (counting from 1); the default is
             the end of the 'Tasks' section when the file has one, else
             below the '# ' title and a blank line (or the top of the file).

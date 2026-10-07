@@ -1387,7 +1387,6 @@ def test_task_add_text_output_and_line(task_note, notes_root, capsys):
     ['--time', '09:00'],
     ['--recur', 'every week'],
     ['--recur', 'every other week', '--due', '2026-10-01'],
-    ['--due', 'undated'],
     ['--time', 'none', '--due', '2026-10-01'],
     ['--due', '2026-10-01', '--line', '99'],
 ])
@@ -1403,6 +1402,15 @@ def test_task_add_warns_without_date(task_note, capsys):
     code, out, _ = run_json(capsys, ['task', 'add', 'project/foo.md', 'x'])
     assert code == 0
     assert len(out['warnings']) == 1
+
+
+def test_task_add_undated(task_note, notes_root, capsys):
+    code, out, _ = run_json(capsys, ['task', 'add', 'project/foo.md', 'example',
+                                     '--due', 'undated', '--root', str(notes_root)])
+    assert code == 0
+    assert out['text'] == '- [ ] example 📅'
+    line = out['line'] - 1
+    assert task_note.read_text().splitlines()[line] == '- [ ] example 📅'
 
 
 # Tests for tasks --json tree fields and task show
