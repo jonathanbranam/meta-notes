@@ -105,3 +105,49 @@ So, replacing the proposed shape where they differ:
   when the note is created (the human used to create daily notes only on
   the day). How fresh the note's forecast should be isn't decided.
 - **Hold: the human wants to review the revised shape before work starts.**
+
+## Revised shape (orchestrator, 2026-10-07, for the human's review)
+
+- **Command name.** Suggestions: `local` (recommended: short, and the
+  human's own word), `location` (reads like setting one), `place`,
+  `outside`, `sky`. Below uses `local`.
+- **Subcommands.** `meta-notes local weather` (high/low in F, chance and
+  amount of rain, a short description) and `meta-notes local sun` (sunrise,
+  sunset). Plain `meta-notes local` prints both; that's what the daily
+  template uses. Options on all three: `--date DAY` (default today),
+  `--location "Mason, OH"` or `--location 45040` (for travel; overrides the
+  config), `--json`.
+- **Config.** One location in `.meta-notes`:
+  `[local]` with `location = "Mason, OH"` or `location = "45040"`. No
+  lat/lon to look up.
+- **API.** Open-Meteo for both steps, no key, standard library only:
+  its geocoding search turns a ZIP or a city into coordinates (checked
+  2026-10-07: `45040` and `Mason` with state Ohio both give Mason, OH), then
+  its forecast gives the day's temperatures, rain, sunrise and sunset. The
+  geocoded coordinates are cached in `.meta-notes-cache/`, so a configured
+  place is looked up once. A city with no state that matches several places
+  is an error that lists them.
+- **Daily note.** `templates/daily.md` and `daily-personal.md` get a
+  `{{% ... %}}` line running `meta-notes local --date {{date}}`, under a
+  `### Weather` heading near the top (heading name open). With no `[local]`
+  table or no network the line prints a short "weather unavailable:
+  <reason>" instead, so creating a note never fails because of it.
+- **Freshness (recommended: a snapshot).** The block runs once, when the
+  note is created, and the line says when it was fetched ("as of 9:40 PM
+  Tue"). A note made the evening before has a 12-hour-old forecast, which is
+  fine for planning; for a newer one, run `meta-notes local` (or ask the
+  agent) on the day. Not now (YAGNI): refreshing the note's line
+  automatically, a skill step that rewrites it. Sunrise and sunset don't go
+  stale.
+- **Units.** Fahrenheit and inches only. Celsius is a later option if
+  asked for.
+- **Rejected:** lat/lon config (the human doesn't know theirs); NWS
+  `api.weather.gov` (US only, needs a separate geocoder); Nominatim and
+  zippopotam.us (a second service for what Open-Meteo already does); the
+  shutdown or plan skills writing the line (the human chose the template).
+
+### Questions for the human
+
+1. Name `local`, with subcommands `weather` and `sun`? (Recommended.)
+2. Freshness: a snapshot when the note is created, stamped with the fetch
+   time, and the CLI for anything newer? (Recommended.)
