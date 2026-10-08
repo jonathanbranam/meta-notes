@@ -1461,7 +1461,8 @@ Commands ~
     is an error that shows the likely entries, `~` marking lines that
     differ (`current` in `--json`); two matches is an error too. Each new
     entry needs a header, a valid `start:` and an `end:` that is valid and
-    not before its start; only the log's last entry may be open. Any
+    not before its start; only the log's last entry may be open (an
+    empty `end:` line counts as open and is kept). Any
     failure writes nothing.
 
     A gap or overlap with a neighbouring entry is written anyway and

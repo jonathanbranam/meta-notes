@@ -52,11 +52,21 @@ Specifies `meta-notes time-log append` and `meta-notes time-log update`, which a
 - **THEN** the command SHALL fail, leave the file unchanged, and show the entry with the `end:` line marked `~`
 
 ### Requirement: Validate new entries  {#r-3e0c}
-Each entry in `update`'s `--text` SHALL have a `- ` header, a valid `start:`, and an `end:` that is valid when present and not before its own start. Only the log's last entry MAY lack an `end:`. Lines of `--text` outside an entry, and blank lines, SHALL be errors. Any failure SHALL reject the whole update.
+Each entry in `update`'s `--text` SHALL have a `- ` header, a valid `start:`, and an `end:` that is valid when present and not before its own start. Only the log's last entry MAY lack an `end:`; an empty `end:` line (`* end:` with no time) counts as missing and is kept as written. Lines of `--text` outside an entry, and blank lines, SHALL be errors. Any failure SHALL reject the whole update.
 
 #### Scenario: Open entry in the middle  {#s-34ff}
 *Verification*: **non-executable**
 - **WHEN** `--text` has an entry with no `end:` and an entry after it in the log
+- **THEN** the command SHALL fail and write nothing
+
+#### Scenario: Open last entry with empty end line  {#s-d2e1}
+*Verification*: **non-executable**
+- **WHEN** `--text` ends with an entry whose `* end:` line is empty and the log has nothing after it
+- **THEN** the command SHALL write the entry with the empty `* end:` line as given
+
+#### Scenario: Empty end line in the middle  {#s-979c}
+*Verification*: **non-executable**
+- **WHEN** `--text` has an entry whose `* end:` line is empty and an entry after it in the log
 - **THEN** the command SHALL fail and write nothing
 
 ### Requirement: Gaps and overlaps warn  {#r-6fd4}
