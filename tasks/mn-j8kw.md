@@ -2,11 +2,13 @@
 id = "mn-j8kw"
 title = "Syntax: the ### Time Block heading loses its markdown heading highlight in daily notes"
 kind = "bug"
-state = "planned"
+state = "integrated"
 created_at = "2026-10-08T03:25:40.378Z"
-updated_at = "2026-10-08T03:47:24.363280372Z"
+updated_at = "2026-10-08T03:47:44.247256819Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
+commit = "b74df41"
+summary = "Time Block region now starts after the heading newline (lookbehind), so the ### Time Block line keeps markdownH3; cell highlights unchanged. Vader test and spec scenario added. v2.28.1."
 +++
 
 original id: j8kw
@@ -31,3 +33,6 @@ Tests:
 
 Spec: design/specs/time-log.md new scenario s-6f8d (r-e44b). Help: doc/meta-notes.txt.
 No CHANGELOG exists in this repo, so none added.
+
+### note · agent:manager-2 · 2026-10-08T03:47:42.470Z
+integrated: b74df41
