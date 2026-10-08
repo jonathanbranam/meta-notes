@@ -1164,7 +1164,7 @@ Commands ~
     daily note has the section. `outlook weather` and `outlook sun` print
     only their line, with no heading, and fail with an error when the
     outlook can't be made. Plain `outlook` never fails: with no location
-    or no network it prints the heading and
+    or no network it prints the heading, a blank line and
     `- Weather: unavailable ({reason})` and exits 0, so creating a note
     never fails because of it. It needs the network and nothing else:
     Open-Meteo for the place and forecast (no key), and the US National
@@ -1177,6 +1177,7 @@ Commands ~
     `Mason, OH`, or a ZIP code. A city alone that matches several places is
     an error listing them. Output: >
         ### Outlook (as of 9:40 PM Tue)
+
         - Weather: 72/55, rain 60% 3-8 PM, 0.3 in, 4h sun
         - Temps: 51 ▂▁▁▁▁▁▂▃▄▅▆▇██▇▆▅▄▃▃▂▂▂▂ 72 (low 6 AM, high 2 PM)
         - Sun: 7:41 AM - 7:02 PM
@@ -1200,7 +1201,9 @@ Commands ~
     when it exists, tomorrow's; with {day}, only that day's. It replaces the
     time in the heading and the lines the command writes (`Weather`,
     `Temps`, `Sun`, `Alert`, `Moon`, `Wind`, `Freeze`, `UV`) and keeps any
-    other line under the heading. The write is guarded like
+    other line in the section (up to the next heading). It leaves one blank
+    line after the heading and one before the next heading, whether the
+    note had none, one or several. The write is guarded like
     |meta-notes-cli-note-write|. A note that is missing, has no Outlook
     heading, or can't get an outlook (no network) is left unchanged; each
     note's status is printed. The `daily-plan` skill runs it.

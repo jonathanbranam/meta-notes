@@ -384,11 +384,11 @@ def run(root: str, day: date, location: str | None,
             raise OutlookError(str(e)) from None
         reason = str(e)
         line = f"- Weather: unavailable ({reason})"
-        return [HEADING, line], {"date": day.isoformat(),
+        return [HEADING, "", line], {"date": day.isoformat(),
                                  "unavailable": reason, "lines": [line[2:]]}
     if only:
         return lines, data
-    return [f"{HEADING} (as of {data['as_of']})"] + lines, data
+    return [f"{HEADING} (as of {data['as_of']})", ""] + lines, data
 
 
 # Refresh
@@ -402,8 +402,10 @@ def refresh_note(root: str, day: date, location: str | None) -> dict:
     """
     Rewrite the Outlook section of `day`'s daily note.
 
-    The heading's time and the lines the command writes are replaced; any
-    other line under the heading is kept, after them. The write is guarded
+    The section runs from the heading to the next heading. Its time and the
+    lines the command writes are replaced; any other line in it is kept,
+    after them. A blank line follows the heading, and the next heading,
+    whatever the note had. The write is guarded
     with note_write's --expect check.
 
     Returns:
@@ -424,18 +426,24 @@ def refresh_note(root: str, day: date, location: str | None) -> dict:
     if start is None:
         return {**result, "status": "no heading"}
     end = start + 1
-    while end < len(lines) and lines[end].strip() \
-            and not lines[end].startswith("#"):
+    while end < len(lines) and not lines[end].startswith("#"):
         end += 1
     try:
         fresh, _ = run(root, day, location)
     except OutlookError as e:
         return {**result, "status": f"failed: {e}"}
     kept = [l for l in lines[start + 1:end] if not l.startswith(GENERATED)]
+    while kept and not kept[0].strip():
+        kept.pop(0)
+    while kept and not kept[-1].strip():
+        kept.pop()
+    # One blank line after the heading and one before the next heading,
+    # however many the note had.
+    tail = [""] if end < len(lines) else []
     try:
         written = note_write.write(
-            path, "\n".join(lines[start:end]), "\n".join(fresh + kept),
-            start + 1, end)
+            path, "\n".join(lines[start:end]) + "\n",
+            "\n".join(fresh + kept + tail) + "\n", start + 1, end)
     except note_write.NoteWriteError as e:
         return {**result, "status": f"failed: {e}"}
     return {**result, "status": "refreshed" if written.changed
