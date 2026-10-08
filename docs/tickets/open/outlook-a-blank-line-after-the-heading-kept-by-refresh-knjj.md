@@ -8,7 +8,7 @@ changes: []
 specs: []
 needs: []
 see: [pqwv]
-tasks: []
+tasks: [mn-knjj]
 ---
 
 ## The ask
@@ -46,3 +46,16 @@ writes (`- Weather:`, `- Temps:`, `- Sun:`, `- Alert:`, `- Moon:`,
 Tests: a new note has the blank line; refresh of a note with the blank
 line keeps it and doesn't duplicate; refresh of an older note without it
 still works; a hand-written line in the section survives. Patch version.
+
+## The human, 2026-10-08 (to the meta-notes aide)
+
+> Yeah, that's fine. I'm not so worried about old notes since I don't
+> have any yet, really, but I think we should make it flexible either
+> way. If somebody deletes that line or adds a line, it should do the
+> refresh appropriately.
+
+So: refresh must not depend on the exact blank-line layout. With the
+blank line after the heading deleted, or extra blank lines added, it
+still finds the whole section, replaces only its labeled lines, keeps
+everything else, and leaves one blank line after the heading. Tests for
+both cases.
