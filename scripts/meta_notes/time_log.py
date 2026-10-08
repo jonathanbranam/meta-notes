@@ -157,7 +157,7 @@ def _check_new(entries: list[Entry], allow_open_last: bool) -> None:
         if entry.start is None:
             raise TimeLogError(
                 f"{name!r} has an invalid start: {raw['start']!r}")
-        if raw["end"] is None:
+        if not raw["end"]:
             if i != len(entries) - 1 or not allow_open_last:
                 raise TimeLogError(
                     f"{name!r} has no 'end:' line; only the log's last "

@@ -258,6 +258,27 @@ def test_time_log_update_last_entry_may_be_open(tmp_path):
     assert "  * start: 13:35" in lines_of(path)
 
 
+def test_time_log_update_empty_end_last_entry_kept(tmp_path):
+    open_end = NOTE.replace("  * start: 13:30\n", "  * start: 13:30\n  * end:\n")
+    path = make_note(tmp_path, open_end)
+    result = time_log.update(
+        path, "- Review #dev\n  * start: 13:30\n  * end:",
+        "- Review2 #dev\n  * start: 13:30\n  * end:")
+    assert lines_of(path)[11:14] == [
+        "- Review2 #dev", "  * start: 13:30", "  * end:"]
+    assert result.written == [
+        {"line": 12,"text": "- Review2 #dev\n  * start: 13:30\n  * end:"}]
+
+
+def test_time_log_update_empty_end_non_last_entry_refused(tmp_path):
+    path = make_note(tmp_path)
+    text = ("- Work\n  * start: 09:45\n  * end:\n"
+            "- Lunch #personal\n  * start: 13:00\n  * end:   13:30")
+    with pytest.raises(time_log.TimeLogError, match="only the log's last"):
+        time_log.update(path, WORK, text)
+    assert Path(path).read_text() == NOTE
+
+
 def test_time_log_update_warns_on_gap_and_overlap(tmp_path):
     path = make_note(tmp_path)
     result = time_log.update(path, WORK,
