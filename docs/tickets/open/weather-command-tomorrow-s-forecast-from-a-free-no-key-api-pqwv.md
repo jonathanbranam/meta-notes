@@ -346,3 +346,16 @@ today's daily note and, when it exists, tomorrow's; `--date DAY` updates
 that day's note instead (e.g. a note made days ahead). This replaces
 `--update <note>` as the main form (a note path may still be accepted).
 Both open questions are answered.
+
+## Approved, 2026-10-08
+
+The human, to the orchestrator directly, 2026-10-08 ~10:10 PM: "Weather is a go"
+
+The orchestrator splits the build in two (worker context size):
+
+1. mn-pqwv: `meta-notes outlook` (config, geocoding, forecast, alerts,
+   the note lines and switches, `--json`) and the `### Outlook` section in
+   the daily templates.
+2. A follow-up task: `meta-notes outlook refresh [--date DAY]` (today and,
+   when it exists, tomorrow by default) and the `daily-plan` skill step
+   that runs it. Blocked by 1.
