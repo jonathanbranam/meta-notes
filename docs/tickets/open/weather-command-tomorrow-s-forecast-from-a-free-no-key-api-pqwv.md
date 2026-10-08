@@ -287,3 +287,23 @@ Revised example (orchestrator):
 The `Weather:` line drops the "F" (Fahrenheit is the only unit) and the
 stamp; the `Sun:` line is just the two times. `--update` matches the
 heading by `### Outlook` at the start of the line and rewrites its time.
+
+## The human on options, 2026-10-08 (to the meta-notes aide)
+
+> Let's add in a few config and default config options. Let's make
+> weather, sun, and alert default on, but have a configuration to turn
+> them off. I forget whatever else you had. You had a couple interesting
+> things. Go ahead and add options for moon phase and winds, but I'm
+> going to turn those off to start with. Add options for first freeze or
+> freeze warnings, whatever you have there. That's fine, and that'd be
+> good. Those would be fun things to play around with.
+
+So: each line is a switch in `[outlook]` in `.meta-notes`. On by default:
+`weather`, `sun`, `alert`. Off by default: `moon` (phase), `wind` (speed
+and gusts), `freeze` (first freeze of the season / freeze warnings; NWS
+freeze and frost warnings already come through `alert`, so `freeze` is
+the forecast-based "first night at or below 32" note). This replaces
+"Not now" for wind, moon and frost. Still open: question 2 (daily-plan
+refresh), and whether the other items the aide listed (UV, air quality,
+golden hour, times of the high and low) also become off-by-default
+options. Still on hold.
