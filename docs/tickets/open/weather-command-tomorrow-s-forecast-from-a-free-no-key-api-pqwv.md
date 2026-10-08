@@ -276,3 +276,14 @@ So: the "as of" time moves to the `### Outlook` heading (e.g.
 `--update` rewrites the heading's time too; the `- Weather:` line gets
 shorter. Not yet an approval of the rest: question 2 (daily-plan
 refreshes today's and tomorrow's Outlook) is unanswered. Still on hold.
+
+Revised example (orchestrator):
+
+    ### Outlook (as of 9:40 PM Tue)
+    - Weather: 72/55, rain 60% 3-8 PM, 0.3 in, 4h sun
+    - Sun: 7:41 AM - 7:02 PM
+    - Alert: Severe Thunderstorm Warning until 6:00 PM
+
+The `Weather:` line drops the "F" (Fahrenheit is the only unit) and the
+stamp; the `Sun:` line is just the two times. `--update` matches the
+heading by `### Outlook` at the start of the line and rewrites its time.
