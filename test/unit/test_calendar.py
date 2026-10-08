@@ -9,6 +9,7 @@ America/New_York unless a test says otherwise.
 
 import builtins
 import json
+import re
 import os
 import sys
 import zipfile
@@ -233,6 +234,85 @@ def test_calendar_load_settings_invalid_values(root, setting):
 
     with pytest.raises(ValueError, match=r'\[calendar\] in \.meta-notes'):
         calendar.load_settings(str(root))
+
+
+# Tests for downloads pickup
+
+def downloads_config(root, folder, pattern='*.zip'):
+    set_config(root, f'downloads = "{folder}"\n'
+                     f'downloads_pattern = "{pattern}"\n')
+
+
+def make_download(folder, name, modified):
+    folder.mkdir(exist_ok=True)
+    path = write_zip(folder / name, {'me.ics': vcalendar([vevent(
+        'a', '20260928T090000', '20260928T100000', 'Meeting')])},
+        modified=modified)
+    return path
+
+
+def test_calendar_downloads_matching_file_moved_and_renamed(root, tmp_path):
+    dl = tmp_path / 'dl'
+    make_download(dl, 'Google Calendar.zip', date(2026, 9, 25))
+    downloads_config(root, dl, 'Google*.zip')
+
+    _, data, _ = run(root)
+
+    assert not (dl / 'Google Calendar.zip').exists()
+    names = [p.name for p in ics_dir(root).iterdir()]
+    assert len(names) == 1
+    assert re.fullmatch(r'2026-09-2\d_\d{4}\.zip', names[0])
+    assert data['source']['path'] == str(ics_dir(root) / names[0])
+    assert titles(data, '2026-09-28') == ['Meeting']
+
+
+def test_calendar_downloads_non_matching_file_left(root, tmp_path):
+    dl = tmp_path / 'dl'
+    other = make_download(dl, 'other.zip', date(2026, 9, 25))
+    downloads_config(root, dl, 'Google*.zip')
+
+    with pytest.raises(ValueError, match='No calendar export'):
+        run(root)
+
+    assert other.exists()
+    assert list(ics_dir(root).iterdir()) == []
+
+
+def test_calendar_downloads_same_minute_not_overwritten(root, tmp_path):
+    dl = tmp_path / 'dl'
+    make_download(dl, 'a.zip', date(2026, 9, 25))
+    make_download(dl, 'b.zip', date(2026, 9, 25))
+    downloads_config(root, dl)
+
+    run(root)
+
+    assert len(list(ics_dir(root).iterdir())) == 2
+    assert list(dl.iterdir()) == []
+
+
+def test_calendar_downloads_missing_folder_warns_and_uses_cache(root, tmp_path):
+    write_zip(ics_dir(root) / 'a.zip', {'me.ics': vcalendar([vevent(
+        'a', '20260928T090000', '20260928T100000', 'Cached')])},
+        modified=date(2026, 9, 25))
+    downloads_config(root, tmp_path / 'nope')
+
+    _, data, warnings = run(root)
+
+    assert titles(data, '2026-09-28') == ['Cached']
+    assert any('downloads folder' in w for w in warnings)
+
+
+def test_calendar_downloads_moved_file_is_newest(root, tmp_path):
+    dl = tmp_path / 'dl'
+    write_zip(ics_dir(root) / 'old.zip', {'me.ics': vcalendar([vevent(
+        'a', '20260928T090000', '20260928T100000', 'Old')])},
+        modified=date(2026, 9, 24))
+    make_download(dl, 'new.zip', date(2026, 9, 26))
+    downloads_config(root, dl)
+
+    _, data, _ = run(root)
+
+    assert titles(data, '2026-09-28') == ['Meeting']
 
 
 # Tests for export discovery
