@@ -8,7 +8,7 @@ changes: []
 specs: []
 needs: []
 see: []
-tasks: [[mn-pqwv, mn-j7e3]]
+tasks: [mn-pqwv, mn-j7e3]
 ---
 
 ## The ask
