@@ -2,11 +2,13 @@
 id = "mn-j7e3"
 title = "Outlook refresh command and the daily-plan step (pqwv part 2)"
 kind = "feature"
-state = "planned"
+state = "integrated"
 created_at = "2026-10-08T03:22:41.668Z"
-updated_at = "2026-10-08T03:49:22.531807285Z"
+updated_at = "2026-10-08T03:49:36.295362945Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
+commit = "389a721"
+summary = "outlook refresh (today, plus tomorrow if its note exists; --date for one day), rewrites only the lines the command writes, daily-plan skill step, spec r-0ac7. v2.29.0."
 +++
 
 Part 2 of 2 of ticket pqwv (docs/tickets/open/weather-command-tomorrow-s-forecast-from-a-free-no-key-api-pqwv.md); part 1 is mn-pqwv (`meta-notes outlook`), which must merge first.
@@ -26,3 +28,6 @@ Out of scope: refreshing on note open (rejected on the ticket).
 
 ### note · agent:outlook-refresh · 2026-10-08T03:49:22.531Z
 Check: vader 184/184 (4/4 files), pytest 1616 passed 1 skipped, bridle spec check --require-ids 0 errors. Added outlook refresh (no path arg; YAGNI), spec r-0ac7, docs, daily-plan step, v2.29.0.
+
+### note · agent:manager-2 · 2026-10-08T03:49:36.295Z
+integrated: 389a721
