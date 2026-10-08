@@ -151,3 +151,60 @@ So, replacing the proposed shape where they differ:
 1. Name `local`, with subcommands `weather` and `sun`? (Recommended.)
 2. Freshness: a snapshot when the note is created, stamped with the fetch
    time, and the CLI for anything newer? (Recommended.)
+
+## The human's answers, 2026-10-07 evening (to the meta-notes aide)
+
+On the name, freshness and heading:
+
+> ok, I'm not a huge fan of "local" suggest other options; also, yes I
+> think we should update the weather information in a note over time, if
+> it is created a few days ahead, we have a syntax output for the command
+> I think and then exact match that and update it.
+>
+> '### Today' is good; ### Forecast ### Weather... hnmmmm
+
+After the aide suggested almanac, day, forecast, outlook and today:
+
+> ooo! outlook and almanac are both great. ### Outlook reads well too;
+> ### Almanac idk
+
+On what goes in it (the aide's list: core line always, extras only when
+notable):
+
+> Yeah, out of those, highs and lows are good. Rain and when is fantastic.
+> Sunrise and sunset hours of sunshine. I think those all sound really
+> good, and I'll go with that for now.
+>
+> I think the only other thing that I get interested in is when the high
+> is and when the low is, but this is going to be way too much information
+> to put in every note. Super weather lights are good. Other things I don't
+> really care about: pollen, moon phase, and first frost. I'm not gardening
+> right now, but when I am, that's nice. Snow amount is the same as rain
+> amount. If there's snow, show that.
+
+("Super weather lights" is speech-to-text for severe weather alerts.)
+
+> I really want to check the weather the day ahead, always.
+>
+> I think we're going to start creating those daily notes a day or two in
+> advance.
+
+So, replacing the revised shape where they differ:
+
+- **Name:** `meta-notes outlook` (subcommands `weather` and `sun`; plain
+  `outlook` prints both), writing a `### Outlook` section in the daily
+  templates.
+- **Content:** high and low; rain chance, amount and when ("rain after
+  3 PM"); snow amount when there's snow; sunshine (hours or sunny/cloudy);
+  sunrise and sunset; severe weather alerts only when there is one (NWS,
+  US only). Not now: times of the high and low (too much for every note;
+  maybe in `--json` or a detail view), wind, UV, air quality, pollen,
+  moon phase, frost.
+- **Refreshing:** the line has a fixed, exactly-matchable format with an
+  "as of" time; `meta-notes outlook --update <note>` replaces it in place
+  (race-safe write; no change and a message when the line isn't there).
+  Daily notes will often be made a day or two ahead, so the refresh
+  matters; the aide suggested daily-plan run it on the day's and the next
+  day's notes. Not decided who runs it.
+- **Hold:** the orchestrator revises the shape once more for the human's
+  look before work starts.
