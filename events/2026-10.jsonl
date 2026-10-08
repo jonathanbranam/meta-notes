@@ -218,3 +218,4 @@
 {"actor":"external:aide","at":"2026-10-08T11:51:06.220888729Z","from":"pending","task":"mn-ary9","to":"open"}
 {"actor":"external:aide","at":"2026-10-08T11:51:06.276221081Z","from":"open","task":"mn-ary9","to":"planned"}
 {"actor":"human","at":"2026-10-08T12:41:27.153Z","from":"","task":"mn-knjj","to":"pending"}
+{"actor":"external:orchestrator","at":"2026-10-08T12:41:46.443772416Z","from":"pending","task":"mn-knjj","to":"open"}
