@@ -55,3 +55,12 @@ On fixing it with an agent rule:
 So the fix has to live in meta-notes itself and work in a notes root
 without bridle; an agent rule (or a bridle-only hook) isn't the fix. The
 notes rule `expect-what-you-read` was reverted at the human's request.
+
+## The human, 2026-10-08: no Claude Code hooks (via the notes advisor, m-0720)
+
+> I cannot use Claude Code hooks at work. So that is not a viable
+> solution for me. So that is not ready to work. Do not implement that.
+
+Constraint: no Claude Code hooks. The fix has to live in the meta-notes
+CLI itself and work in a notes root without bridle. zk5p (the guard hook)
+is not to be implemented.

@@ -47,3 +47,12 @@ Verify: unit tests for the hook (a refused `--expect "$(sed ...)"`, a
 refused backtick form, an allowed literal and an allowed `"$old"`), and an
 init test for the settings.json merge. `./run_tests.sh` and pytest green
 once. Model: Sonnet (shell-argument matching needs care). Size: S.
+
+## The human, 2026-10-08: no Claude Code hooks (via the notes advisor, m-0720)
+
+> I cannot use Claude Code hooks at work. So that is not a viable
+> solution for me. So that is not ready to work. Do not implement that.
+
+Constraint: no Claude Code hooks. The fix has to live in the meta-notes
+CLI itself and work in a notes root without bridle. zk5p (the guard hook)
+is not to be implemented.
