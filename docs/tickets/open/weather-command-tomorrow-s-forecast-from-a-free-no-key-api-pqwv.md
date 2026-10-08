@@ -13,8 +13,6 @@ tasks: []
 
 ## The ask
 
-## The ask
-
 From the human, via the notes advisor (notes m-0119), 2026-10-06 21:36
 EDT:
 
