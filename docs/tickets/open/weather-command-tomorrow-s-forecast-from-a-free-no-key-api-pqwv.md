@@ -307,3 +307,25 @@ the forecast-based "first night at or below 32" note). This replaces
 refresh), and whether the other items the aide listed (UV, air quality,
 golden hour, times of the high and low) also become off-by-default
 options. Still on hold.
+
+## The human on the other options, 2026-10-08 (to the meta-notes aide)
+
+> I think that's enough. I really don't care about UV index, air quality,
+> or golden hour unless I'm on vacation, and we can handle that
+> differently anyway. If I'm traveling, you could add UV index, sure. I'm
+> turned off by default. Times of the high and low: I actually really
+> like that, but what I really want to see is a little chart from
+> midnight to midnight or something that would show that. Either you
+> could do a little sparkline chart in the sky, and that would be amazing.
+
+So: `uv` is one more option, off by default (useful when traveling). No
+air quality or golden hour. The times of the high and low become a
+temperature sparkline from midnight to midnight, one character per hour,
+with the low and high and their times, e.g.
+
+    - Temps: 51 ▂▁▁▁▁▁▂▃▄▅▆▇██▇▆▅▄▃▃▂▂▂▂ 72 (low 6 AM, high 2 PM)
+
+("in the sky" is likely speech-to-text; unclear.) The sparkline needs
+Unicode block characters, so the round-3 "plain ASCII" rule gets an
+exception for this line. Whether the sparkline is on or off by default
+isn't said. Question 2 (daily-plan refresh) is still open. Still on hold.
