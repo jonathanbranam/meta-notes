@@ -2,9 +2,9 @@
 id = "mn-ex6w"
 title = "Calendar downloads: a failed move leaves a copy each run; one setting instead of two"
 kind = "bug"
-state = "open"
+state = "planned"
 created_at = "2026-10-08T14:47:32.410Z"
-updated_at = "2026-10-08T14:51:20.112341779Z"
+updated_at = "2026-10-08T14:58:12.146603092Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
 priority = "high"
