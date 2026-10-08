@@ -8,7 +8,7 @@ changes: []
 specs: []
 needs: []
 see: []
-tasks: [mn-pqwv, mn-j7e3]
+tasks: [mn-pqwv]
 ---
 
 ## The ask
@@ -354,6 +354,6 @@ The orchestrator splits the build in two (worker context size):
 1. mn-pqwv: `meta-notes outlook` (config, geocoding, forecast, alerts,
    the note lines and switches, `--json`) and the `### Outlook` section in
    the daily templates.
-2. A follow-up task: `meta-notes outlook refresh [--date DAY]` (today and,
+2. mn-j7e3: `meta-notes outlook refresh [--date DAY]` (today and,
    when it exists, tomorrow by default) and the `daily-plan` skill step
    that runs it. Blocked by 1.
