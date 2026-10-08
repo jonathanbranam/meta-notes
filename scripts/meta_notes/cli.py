@@ -24,7 +24,7 @@ import tasks as task_model
 from recurrence import parse_rule
 from tags import canonical_tag
 from meta_notes import (__version__, brief, calendar, ceremony, changes,
-                        checkin, config, conventions, hours, init, note, note_write, ops, planning,
+                        checkin, config, conventions, hours, init, note, note_write, ops, outlook, planning,
                         prime,
                         projects, query, task_show, task_update, task_write, time,
                         time_block, time_log, ui)
@@ -237,6 +237,18 @@ def cmd_calendar(args, root: str) -> Output:
         raise CliError(str(e))
     return Output(data, lines, warnings,
                   notices=[f"Deleted: {path}" for path in data["pruned"]])
+
+
+def cmd_outlook(args, root: str) -> Output:
+    day = date.fromisoformat(args.date) if args.date else date.today()
+    only = getattr(args, "kind", None)
+    try:
+        # Plain `outlook` never fails: it runs in note templates
+        lines, data = outlook.run(root, day, args.location, only,
+                                  lenient=only is None)
+    except ValueError as e:
+        raise CliError(str(e))
+    return Output(data, lines)
 
 
 def cmd_cache_clear(args, root: str) -> Output:
@@ -1006,6 +1018,23 @@ def build_parser() -> argparse.ArgumentParser:
                    help="only events whose title, location, or description "
                         "contains TEXT (repeatable)")
     p.set_defaults(handler=cmd_calendar)
+
+    p = sub.add_parser("outlook", parents=[common],
+                       help="the day's weather, sun and alerts for a place")
+    p.add_argument("--date", type=_day_value, metavar="DAY",
+                   help="YYYY-MM-DD (default: today)")
+    p.add_argument("--location", metavar="PLACE",
+                   help='"Mason, OH" or a ZIP code (default: location in '
+                        "[outlook] in .meta-notes)")
+    kinds = p.add_subparsers(dest="kind", metavar="KIND", parser_class=_Parser)
+    for kind, text in (("weather", "only the Weather line"),
+                       ("sun", "only the Sun line")):
+        k = kinds.add_parser(kind, parents=[common], help=text)
+        k.add_argument("--date", type=_day_value, metavar="DAY",
+                       default=argparse.SUPPRESS)
+        k.add_argument("--location", metavar="PLACE",
+                       default=argparse.SUPPRESS)
+    p.set_defaults(handler=cmd_outlook)
 
     p = sub.add_parser("cache", parents=[common],
                        help="manage .meta-notes-cache/")

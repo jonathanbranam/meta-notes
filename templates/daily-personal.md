@@ -7,6 +7,7 @@ Week Plan: [[plan/week/{{week_start:%y}}-{{week_quarter}}/{{week_start:%Y-%m-%d}
 
 - [ ] plan complete
 
+{{% python scripts/meta_notes/__main__.py outlook --date {{date:%Y-%m-%d}} %}}
 ## Tasks Due Today
 
 {{% python scripts/find_tasks.py --due --date {{date:%Y-%m-%d}} --condensed %}}

@@ -93,6 +93,7 @@ meta-notes/
 │   │   ├── hours.py             # Working hours and days by root mode
 │   │   ├── init.py              # Notes root setup
 │   │   ├── note.py              # Note paths and creation
+│   │   ├── outlook.py           # Weather, sun and alerts for a place
 │   │   ├── note_write.py        # Race-safe line edits of a note
 │   │   ├── ops.py               # Move, rename, archive
 │   │   ├── planning.py          # Planning record
@@ -140,6 +141,7 @@ meta-notes/
 │   │   ├── test_project.py
 │   │   ├── test_projects.py
 │   │   ├── test_ops.py
+│   │   ├── test_outlook.py
 │   │   ├── test_prime.py
 │   │   ├── test_query.py
 │   │   ├── test_recurrence.py
@@ -197,7 +199,7 @@ This structure is compatible with vim-plug, Vundle, and Pathogen.
 `bin/meta-notes` performs the plugin's setup (`init`), note creation from
 templates (`note`), race-safe line edits (`note write`), file operations (`move`, `rename`, `archive`), task
 query (`tasks`), task edits (`task update`, `task add`), one task read as a tree (`task show`), its notes and subtasks written (`task notes`, `task replace`, `task add --under`), time reports (`time`), changed
-notes (`changes`), calendar agendas (`calendar`, `cache clear`), the meta-notes-ui server (`ui start`, `ui stop`, `ui status`, `ui url`, `ui open`), the
+notes (`changes`), calendar agendas (`calendar`, `cache clear`), the day's weather, sun and alerts (`outlook`), the meta-notes-ui server (`ui start`, `ui stop`, `ui status`, `ui url`, `ui open`), the
 project list (`projects`), ceremony status (`ceremony status`), the planning record (`planning`), stay-on-task check-ins (`checkin`), Time Block cell and row edits (`time-block update`, `time-block replace`), Time Log edits (`time-log append`, `time-log update`), and the
 skills' shared conventions (`conventions`), and a guide to the notes root
 for agents (`prime`) outside Vim, for shells, agents, and other tools. The Vim
@@ -286,6 +288,8 @@ meta-notes calendar --date 2026-09-28..2026-10-02  # agenda from the latest expo
 meta-notes calendar --ics ~/Downloads/export.zip --json
 meta-notes calendar --date 2026-09 --with zach --search 1:1  # filtered
 meta-notes cache clear                    # delete parsed calendars, keep exports
+meta-notes outlook --location 45040       # weather, temps, sun, alerts
+meta-notes outlook sun --date 2026-10-09  # one line
 meta-notes ui open                        # start the meta-notes-ui server ([ui] path) and open it
 meta-notes ui status                      # running or not, url, pid
 meta-notes conventions                    # syntax and rules the skills follow
@@ -331,6 +335,24 @@ working day that `prime`, `conventions` and `checkin` use: `work` is 08:00 to
 17:00, Monday to Friday; `personal` is 07:00 to 21:00, every day, and a new
 daily note uses `resource/template/daily-personal.md` when it exists (shipped
 as `templates/daily-personal.md`).
+
+### Outlook
+
+`meta-notes outlook` prints a day's weather, a temperature sparkline, sun
+times and National Weather Service alerts (US) for a place, and the daily
+note templates run it into an `### Outlook` section. No key; it uses
+Open-Meteo. Set your place in `.meta-notes`; each line has an on/off
+switch:
+
+```toml
+[outlook]
+location = "Mason, OH"   # or a ZIP code; --location overrides it
+sun = true               # weather, temps, sun, alert are on by default
+moon = false             # moon, wind, freeze, uv are off by default
+```
+
+With no location or no network, a note still gets a single
+`- Weather: unavailable (...)` line. See `:help meta-notes-cli-outlook`.
 
 ### Agents
 
