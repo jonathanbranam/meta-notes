@@ -8,7 +8,7 @@ changes: []
 specs: []
 needs: []
 see: [rgev]
-tasks: []
+tasks: [mn-ex6w]
 ---
 
 ## The ask
@@ -56,3 +56,20 @@ simply is no new export; that's normal).
 
 Tests for 1 (simulate a source that can't be deleted: no copy left, one
 warning, idempotent across runs) and 2. Version per versioning.md.
+
+## The human's design for 1, 2026-10-08 (replaces "Wanted" under 1)
+
+> 1) we need to not only copy a file b/c it might match one we have
+> already
+> 2) check if the latest file matches (idk, size only? timestamps won't
+> match, SHA / hash it)
+> 3) if the latest Downloads file is newer and SHA doesn't match, copy it
+> over.
+
+So: before copying, hash (e.g. SHA-256) the newest matching file in the
+downloads folder and compare it with the exports already in the cache.
+Copy it in only if it's newer than the newest cached export and its hash
+matches none of them. Then remove the original when that's allowed (a
+move); when it isn't (the agent's sandbox), leave it, with no copy made
+and no repeated warning, since the cache already has it. Repeated runs
+never make duplicates. Size alone isn't enough; the hash decides.
