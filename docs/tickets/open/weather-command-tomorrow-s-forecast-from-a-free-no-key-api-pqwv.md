@@ -208,3 +208,59 @@ So, replacing the revised shape where they differ:
   day's notes. Not decided who runs it.
 - **Hold:** the orchestrator revises the shape once more for the human's
   look before work starts.
+
+## Revised shape, round 3 (orchestrator, 2026-10-08, for the human's review)
+
+Everything from round 2 that the human didn't change still holds: Open-Meteo
+for geocoding and the forecast, no key, standard library only; one location
+in `.meta-notes`; `--location` for travel; Fahrenheit and inches.
+
+- **Commands.**
+  - `meta-notes outlook [--date DAY] [--location PLACE] [--json]` prints
+    the Outlook lines (below). `--date` defaults to today.
+  - `meta-notes outlook weather` and `meta-notes outlook sun` print only
+    their line.
+  - `meta-notes outlook --update <note>` refetches for the note's date and
+    replaces its Outlook lines in place (race-safe, like `note write`).
+    When the note has no Outlook lines it changes nothing and says so.
+- **Config.** `[outlook]` in `.meta-notes`, `location = "Mason, OH"` or
+  `location = "45040"`.
+- **What the note gets.** A `### Outlook` section in `templates/daily.md`
+  and `daily-personal.md`, filled by
+  `{{% python scripts/... --date {{date:%Y-%m-%d}} %}}` (the existing
+  template support), near the top. Example:
+
+      ### Outlook
+      - Weather: 72/55 F, rain 60% 3-8 PM 0.3 in, 4 h sun (as of 9:40 PM Tue)
+      - Sun: up 7:41 AM, down 7:02 PM
+      - Alert: Severe Thunderstorm Warning until 6:00 PM
+
+  - Rain shows only when the chance is 20% or more; "when" is the span of
+    hours at 40% or more. Snow replaces rain the same way ("snow 80%
+    6 AM-noon 2.1 in") when snow is forecast.
+  - The `Alert:` line appears only when the US National Weather Service
+    has an active alert for the point (`api.weather.gov`, no key; skipped
+    outside the US). One line per alert.
+  - Plain ASCII, so the lines are easy to edit in Vim.
+  - With no `[outlook]` table or no network, a single
+    `- Weather: unavailable (<reason>)` line, so creating a note never fails.
+- **Refresh, matched exactly.** `--update` replaces only the lines under
+  `### Outlook` that start with `- Weather:`, `- Sun:` or `- Alert:`, and
+  leaves anything else you wrote there alone. The "as of" time shows how
+  fresh the forecast is.
+- **Who refreshes (recommended).** The `daily-plan` skill runs
+  `meta-notes outlook --update` on the day's note and the next day's
+  note (when they exist). It runs every day in both modes, and in work
+  roots after the shutdown, so the next day is always checked the evening
+  before. Not the shutdown skill: personal roots have none.
+- **Not now:** times of the high and low (too much for every note; in
+  `--json` only), wind, UV, air quality, pollen, moon phase, frost,
+  Celsius.
+- **Rejected:** `local` and `location` (the human didn't like them);
+  `### Almanac` (the human wasn't sure); refreshing when a note is opened
+  in Vim (opening a note shouldn't need the network).
+
+### Questions for the human
+
+1. The note lines above (format and thresholds): OK? (Recommended.)
+2. `daily-plan` refreshes today's and tomorrow's Outlook? (Recommended.)
