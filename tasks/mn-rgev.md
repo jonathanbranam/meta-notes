@@ -2,11 +2,14 @@
 id = "mn-rgev"
 title = "Calendar: pick up exports from a Calendar Downloads folder and move them into the cache"
 kind = "feature"
-state = "open"
+state = "claimed"
 created_at = "2026-10-08T01:55:45.801Z"
-updated_at = "2026-10-08T01:56:05.528360486Z"
+updated_at = "2026-10-08T02:06:59.063535568Z"
 created_by = "external:aide"
-watchers = ["external:aide"]
+watchers = [
+    "external:aide",
+    "agent:manager-1",
+]
 +++
 
 original id: rgev
