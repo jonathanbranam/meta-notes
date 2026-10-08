@@ -284,3 +284,67 @@ def test_outlook_cli_json_has_lines(root, net):
     code, data = run('outlook', '--date', '2026-10-09')
     assert code == 0 and data['date'] == '2026-10-09'
     assert 'Sun: 7:41 AM - 7:02 PM' in data['lines']
+
+
+# Tests for refresh
+
+def make_note(root, day, body):
+    from meta_notes import note
+    path = root / note.periodic_note('daily', day)[0]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(body)
+    return path
+
+
+OLD = ('# Daily\n\n### Outlook (as of 1:00 AM Mon)\n- Weather: old\n'
+       '- Sun: old\n- my own line\n\n## Tasks\n')
+
+
+def test_outlook_refresh_today_and_tomorrow(root, net):
+    from datetime import timedelta
+    today = date.today()
+    a = make_note(root, today, OLD)
+    b = make_note(root, today + timedelta(days=1), OLD)
+    code, data = run('outlook', 'refresh')
+    assert code == 0
+    assert [n['status'] for n in data['notes']] == ['refreshed', 'refreshed']
+    for p in (a, b):
+        text = p.read_text()
+        assert '- Weather: old' not in text and '- Sun: 7:41 AM' in text
+        assert '(as of 1:00 AM Mon)' not in text
+        assert '- my own line\n\n## Tasks\n' in text
+
+
+def test_outlook_refresh_tomorrow_missing(root, net):
+    make_note(root, date.today(), OLD)
+    code, data = run('outlook', 'refresh')
+    assert code == 0 and len(data['notes']) == 1
+
+
+def test_outlook_refresh_date_only_that_day(root, net):
+    other = make_note(root, date.today(), OLD)
+    target = make_note(root, DAY, OLD)
+    code, data = run('outlook', 'refresh', '--date', '2026-10-09')
+    assert [n['date'] for n in data['notes']] == ['2026-10-09']
+    assert other.read_text() == OLD and target.read_text() != OLD
+
+
+def test_outlook_refresh_no_heading_unchanged(root, net):
+    body = '# Daily\n\n## Tasks\n'
+    p = make_note(root, DAY, body)
+    code, data = run('outlook', 'refresh', '--date', '2026-10-09')
+    assert data['notes'][0]['status'] == 'no heading'
+    assert p.read_text() == body
+
+
+def test_outlook_refresh_no_note(root, net):
+    code, data = run('outlook', 'refresh', '--date', '2026-10-09')
+    assert code == 0 and data['notes'][0]['status'] == 'no note'
+
+
+def test_outlook_refresh_failure_leaves_note(root, net):
+    (root / '.meta-notes').write_text(SENTINEL)
+    p = make_note(root, DAY, OLD)
+    code, data = run('outlook', 'refresh', '--date', '2026-10-09')
+    assert data['notes'][0]['status'].startswith('failed: no location')
+    assert p.read_text() == OLD

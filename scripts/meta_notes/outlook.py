@@ -389,3 +389,68 @@ def run(root: str, day: date, location: str | None,
     if only:
         return lines, data
     return [f"{HEADING} (as of {data['as_of']})"] + lines, data
+
+
+# Refresh
+
+GENERATED = tuple(f"- {n}:" for n in
+                  ("Weather", "Temps", "Sun", "Alert", "Moon", "Wind",
+                   "Freeze", "UV"))
+
+
+def refresh_note(root: str, day: date, location: str | None) -> dict:
+    """
+    Rewrite the Outlook section of `day`'s daily note.
+
+    The heading's time and the lines the command writes are replaced; any
+    other line under the heading is kept, after them. The write is guarded
+    with note_write's --expect check.
+
+    Returns:
+        {"date", "path", "status"}, status one of "refreshed", "unchanged",
+        "no note", "no heading", or "failed: <reason>" (note untouched).
+    """
+    from meta_notes import note, note_write
+
+    path = note.periodic_note("daily", day)[0]
+    result = {"date": day.isoformat(), "path": path}
+    try:
+        with open(os.path.join(root, path), encoding="utf-8") as f:
+            lines = f.read().splitlines()
+    except FileNotFoundError:
+        return {**result, "status": "no note"}
+    start = next((i for i, l in enumerate(lines)
+                  if l.startswith(HEADING)), None)
+    if start is None:
+        return {**result, "status": "no heading"}
+    end = start + 1
+    while end < len(lines) and lines[end].strip() \
+            and not lines[end].startswith("#"):
+        end += 1
+    try:
+        fresh, _ = run(root, day, location)
+    except OutlookError as e:
+        return {**result, "status": f"failed: {e}"}
+    kept = [l for l in lines[start + 1:end] if not l.startswith(GENERATED)]
+    try:
+        written = note_write.write(
+            path, "\n".join(lines[start:end]), "\n".join(fresh + kept),
+            start + 1, end)
+    except note_write.NoteWriteError as e:
+        return {**result, "status": f"failed: {e}"}
+    return {**result, "status": "refreshed" if written.changed
+            else "unchanged"}
+
+
+def refresh(root: str, day: date | None, location: str | None) -> list[dict]:
+    """
+    Refresh today's note and, when it exists, tomorrow's; or only `day`'s.
+    """
+    if day:
+        return [refresh_note(root, day, location)]
+    today = date.today()
+    results = [refresh_note(root, today, location)]
+    tomorrow = refresh_note(root, today + timedelta(days=1), location)
+    if tomorrow["status"] != "no note":
+        results.append(tomorrow)
+    return results

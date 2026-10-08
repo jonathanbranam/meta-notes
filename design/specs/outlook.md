@@ -54,3 +54,16 @@ The command SHALL use Open-Meteo for geocoding and the forecast and the National
 *Verification*: **non-executable**
 - **WHEN** a daily note is created with no network
 - **THEN** the note SHALL be created with `- Weather: unavailable (<reason>)` under the Outlook heading
+
+### Requirement: Outlook refresh  {#r-0ac7}
+The CLI SHALL provide `meta-notes outlook refresh [--date DAY] [--location PLACE] [--json]`. With no `--date` it SHALL refresh today's daily note and, when it exists, tomorrow's; with `--date` it SHALL refresh only that day's note. Refresh SHALL rewrite the time in the `### Outlook (as of ...)` heading and replace the lines under it that the command writes, keep any other line there, and write through the guarded note write. A note that is missing, has no `### Outlook` heading, or whose outlook can't be made SHALL be left unchanged, with a status line saying why.
+
+#### Scenario: Today and tomorrow  {#s-0ad8}
+*Verification*: **non-executable**
+- **WHEN** the user runs `meta-notes outlook refresh` and tomorrow's daily note exists
+- **THEN** both notes SHALL have a new heading time and new Outlook lines, and a line the user wrote under the heading SHALL remain
+
+#### Scenario: No heading  {#s-0ae9}
+*Verification*: **non-executable**
+- **WHEN** the note has no `### Outlook` heading
+- **THEN** the note SHALL be unchanged and the status SHALL be `no heading`

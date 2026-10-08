@@ -72,6 +72,12 @@ weekly note (the `weekly-plan` entry's `note` in
 
 ### 3. Gather
 
+- Outlook: run `meta-notes outlook refresh` (today's note and tomorrow's,
+  when it exists), and `meta-notes outlook refresh --date <TARGET>` if
+  TARGET is later. It changes only the `### Outlook` section. Tell the
+  user the forecast in one line from TARGET's note; if a status says
+  `failed`, say so and go on.
+
 - Meetings: run `meta-notes calendar --date <TARGET> --json`.
   - `ok` true: use its `days[0].events` as TARGET's meetings. Tell the
     user in one line how old the export is (`source.age_days`) and pass
