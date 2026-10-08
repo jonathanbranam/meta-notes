@@ -11,6 +11,13 @@ see: []
 tasks: [mn-zk5p]
 ---
 
+## On hold
+
+Not viable (the human, via the notes advisor, 2026-10-08): "I cannot use
+Claude Code hooks at work. So that is not a viable solution for me. So that
+is not ready to work. Do not implement that." Task mn-zk5p dropped. The fix
+must live in the meta-notes CLI itself; see t85d and ybu6.
+
 ## The ask
 
 Approved by the human, via the notes advisor (2026-10-08): "I like number
