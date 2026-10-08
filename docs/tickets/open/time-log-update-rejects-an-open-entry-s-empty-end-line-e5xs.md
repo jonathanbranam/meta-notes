@@ -13,7 +13,7 @@ tasks: []
 
 ## The ask
 
-## The bug
+## The ask
 
 `meta-notes time-log update` refuses replacement text whose last entry has an empty `* end:` line:
 
