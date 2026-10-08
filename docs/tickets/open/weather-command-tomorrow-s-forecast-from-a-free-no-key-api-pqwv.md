@@ -357,3 +357,9 @@ The orchestrator splits the build in two (worker context size):
 2. mn-j7e3: `meta-notes outlook refresh [--date DAY]` (today and,
    when it exists, tomorrow by default) and the `daily-plan` skill step
    that runs it. Blocked by 1.
+
+## Approval
+
+The human, 2026-10-08 (to the meta-notes aide): "Weather approved." The
+shape as recorded above, through "The human's answers to the last
+questions". Off hold.
