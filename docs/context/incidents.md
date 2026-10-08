@@ -25,6 +25,20 @@ Newest first. Times are UTC. Each entry has:
   `human-process`.
 - **Follow-up:** the ticket or task, or "none" and why.
 
+## 2026-10-08 22:31: worker started inside the settle period (meta-notes-ui mu-sq42)
+
+- **What happened:** the orchestrator readied and queued mu-sq42 at 22:30;
+  `bridle queue` showed it "settling until" 22:33. manager-1 spawned worker
+  phoneui at 22:31 anyway and merged at 22:34. Found reading the events
+  after the merge.
+- **Impact:** none this time (the human added nothing to the task), but the
+  10-minute window the human asked for was skipped.
+- **Cause:** the settle period is shown, not enforced at spawn; the manager
+  doesn't check it.
+- **Category:** `daemon`, `role`.
+- **Follow-up:** bridle zta7 (enforce the settle period at worker spawn);
+  manager-1 told to wait for it until then.
+
 ## 2026-10-06 23:07: sent-back worker never woke (mn-4fsj)
 
 - **What happened:** manager-1 sent mn-4fsj back to worker add-blank2 with
