@@ -6,12 +6,12 @@ Specifies `meta-notes outlook`, which prints a day's weather, temperatures, sun 
 ## Requirements
 
 ### Requirement: Outlook command  {#r-0a1c}
-The CLI SHALL provide `meta-notes outlook [--date DAY] [--location PLACE] [--json]`, which prints the heading `### Outlook (as of <time> <Day>)` and one `- Name: ...` line for each line that is on. `--date` SHALL default to today. `--location` SHALL be a city and state as in `Mason, OH`, or a ZIP code, and SHALL override the configured location. `meta-notes outlook weather` and `meta-notes outlook sun` SHALL print only their own line, without a heading, and SHALL fail with an error when the outlook can't be made.
+The CLI SHALL provide `meta-notes outlook [--date DAY] [--location PLACE] [--json]`, which prints the heading `### Outlook (as of <time> <Day>)`, a blank line, and one `- Name: ...` line for each line that is on. `--date` SHALL default to today. `--location` SHALL be a city and state as in `Mason, OH`, or a ZIP code, and SHALL override the configured location. `meta-notes outlook weather` and `meta-notes outlook sun` SHALL print only their own line, without a heading, and SHALL fail with an error when the outlook can't be made.
 
 #### Scenario: Default output  {#s-0a2d}
 *Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes outlook` with a configured location
-- **THEN** the output SHALL be the heading followed by the Weather, Temps and Sun lines, and an Alert line for each active alert
+- **THEN** the output SHALL be the heading, a blank line, then the Weather, Temps and Sun lines, and an Alert line for each active alert
 
 #### Scenario: One line  {#s-0a3e}
 *Verification*: **non-executable**
@@ -48,7 +48,7 @@ The command SHALL use Open-Meteo for geocoding and the forecast and the National
 - **THEN** the second run SHALL make no geocoding request
 
 ### Requirement: Outlook in note templates  {#r-0aa5}
-`templates/daily.md` and `templates/daily-personal.md` SHALL fill a `### Outlook` section near the top through a `{{% python ... outlook --date <note date> %}}` block. When there is no location or no network, `meta-notes outlook` without a subcommand SHALL print the heading and one `- Weather: unavailable (<reason>)` line and exit 0, so creating a note never fails.
+`templates/daily.md` and `templates/daily-personal.md` SHALL fill a `### Outlook` section near the top through a `{{% python ... outlook --date <note date> %}}` block. When there is no location or no network, `meta-notes outlook` without a subcommand SHALL print the heading, a blank line and one `- Weather: unavailable (<reason>)` line and exit 0, so creating a note never fails.
 
 #### Scenario: Offline  {#s-0ab6}
 *Verification*: **non-executable**
@@ -56,7 +56,12 @@ The command SHALL use Open-Meteo for geocoding and the forecast and the National
 - **THEN** the note SHALL be created with `- Weather: unavailable (<reason>)` under the Outlook heading
 
 ### Requirement: Outlook refresh  {#r-0ac7}
-The CLI SHALL provide `meta-notes outlook refresh [--date DAY] [--location PLACE] [--json]`. With no `--date` it SHALL refresh today's daily note and, when it exists, tomorrow's; with `--date` it SHALL refresh only that day's note. Refresh SHALL rewrite the time in the `### Outlook (as of ...)` heading and replace the lines under it that the command writes, keep any other line there, and write through the guarded note write. A note that is missing, has no `### Outlook` heading, or whose outlook can't be made SHALL be left unchanged, with a status line saying why.
+The CLI SHALL provide `meta-notes outlook refresh [--date DAY] [--location PLACE] [--json]`. With no `--date` it SHALL refresh today's daily note and, when it exists, tomorrow's; with `--date` it SHALL refresh only that day's note. Refresh SHALL rewrite the time in the `### Outlook (as of ...)` heading and replace the lines under it that the command writes, keep any other line there, and write through the guarded note write. A note that is missing, has no `### Outlook` heading, or whose outlook can't be made SHALL be left unchanged, with a status line saying why. The section SHALL run from the heading to the next heading, and refresh SHALL NOT depend on the blank lines in it: it SHALL leave exactly one blank line after the heading and one before the next heading, whether the note had none, one or several.
+
+#### Scenario: Blank lines missing or extra  {#s-0af1}
+*Verification*: **non-executable**
+- **WHEN** a note's Outlook section has no blank line after the heading, or several
+- **THEN** refresh SHALL leave one blank line after the heading, with no duplicated or lost lines
 
 #### Scenario: Today and tomorrow  {#s-0ad8}
 *Verification*: **non-executable**

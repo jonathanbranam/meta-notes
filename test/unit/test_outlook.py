@@ -191,7 +191,8 @@ def test_outlook_geocode_no_match(root, net):
 def test_outlook_run_default_lines(root, net):
     lines, data = outlook.run(str(root), DAY, None)
     assert lines[0].startswith('### Outlook (as of ')
-    assert lines[1:] == [
+    assert lines[1] == ''
+    assert lines[2:] == [
         '- Weather: 72/51, rain 60% 3-8 PM, 0.3 in, 4h sun',
         '- ' + outlook.temps_line(FORECAST['hourly']),
         '- Sun: 7:41 AM - 7:02 PM',
@@ -204,7 +205,7 @@ def test_outlook_run_switches_turn_lines_off_and_on(root, net):
         CONFIG + 'weather = false\ntemps = false\nalert = false\n'
         'moon = true\nwind = true\nuv = true\nfreeze = true\n')
     lines, _ = outlook.run(str(root), DAY, None)
-    assert [l.split(':')[0] for l in lines[1:]] == [
+    assert [l.split(':')[0] for l in lines[2:]] == [
         '- Sun', '- Moon', '- Wind', '- UV']
     assert '- Wind: 12 mph, gusts 25' in lines
 
@@ -236,7 +237,8 @@ def test_outlook_run_no_config_is_unavailable_when_lenient(root, net):
     (root / '.meta-notes').write_text(SENTINEL)
     lines, data = outlook.run(str(root), DAY, None, lenient=True)
     assert lines[0] == '### Outlook'
-    assert lines[1].startswith('- Weather: unavailable (no location')
+    assert lines[1] == ''
+    assert lines[2].startswith('- Weather: unavailable (no location')
     assert net['calls'] == []
 
 
@@ -245,7 +247,7 @@ def test_outlook_run_no_network_is_unavailable_when_lenient(root, monkeypatch):
         raise outlook.OutlookError('no network (offline)')
     monkeypatch.setattr(outlook, 'fetch_json', down)
     lines, _ = outlook.run(str(root), DAY, None, lenient=True)
-    assert lines[1] == '- Weather: unavailable (no network (offline))'
+    assert lines[2] == '- Weather: unavailable (no network (offline))'
 
 
 def test_outlook_run_bad_switch_value(root, net):
@@ -296,7 +298,7 @@ def make_note(root, day, body):
     return path
 
 
-OLD = ('# Daily\n\n### Outlook (as of 1:00 AM Mon)\n- Weather: old\n'
+OLD = ('# Daily\n\n### Outlook (as of 1:00 AM Mon)\n\n- Weather: old\n'
        '- Sun: old\n- my own line\n\n## Tasks\n')
 
 
@@ -313,6 +315,37 @@ def test_outlook_refresh_today_and_tomorrow(root, net):
         assert '- Weather: old' not in text and '- Sun: 7:41 AM' in text
         assert '(as of 1:00 AM Mon)' not in text
         assert '- my own line\n\n## Tasks\n' in text
+
+
+def refreshed(root, body):
+    p = make_note(root, DAY, body)
+    run('outlook', 'refresh', '--date', '2026-10-09')
+    return p.read_text()
+
+
+def test_outlook_refresh_keeps_blank_line_without_duplicates(root, net):
+    text = refreshed(root, OLD)
+    assert text.count('- Weather:') == 1 and text.count('- Sun:') == 1
+    head = text.split('\n')
+    assert head[2].startswith('### Outlook') and head[3] == ''
+    assert '- my own line\n\n## Tasks\n' in text
+
+
+def test_outlook_refresh_adds_missing_blank_lines(root, net):
+    old = ('# Daily\n\n### Outlook (as of 1:00 AM Mon)\n- Weather: old\n'
+           '- my own line\n## Tasks\n')
+    text = refreshed(root, old)
+    assert text.split('\n')[3] == '' and text.count('- Weather:') == 1
+    assert '- my own line\n\n## Tasks\n' in text
+
+
+def test_outlook_refresh_collapses_extra_blank_lines(root, net):
+    old = ('# Daily\n\n### Outlook (as of 1:00 AM Mon)\n\n\n- Weather: old\n'
+           '\n- my own line\n\n\n\n## Tasks\n')
+    text = refreshed(root, old)
+    assert text.count('- Weather:') == 1
+    assert text.split('\n')[3] == '' and text.split('\n')[4].startswith('- ')
+    assert '- my own line\n\n## Tasks\n' in text
 
 
 def test_outlook_refresh_tomorrow_missing(root, net):
