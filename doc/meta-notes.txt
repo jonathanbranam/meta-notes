@@ -1241,15 +1241,20 @@ Commands ~
         stale_days      warn when the export is older than this many
                         days. Unset: 3.
         calendars       names of the zip calendars to load. Unset: all.
-        downloads       a folder outside the notes root (`~` is expanded)
-                        where exports are saved, such as `~/Downloads`.
-        downloads_pattern  a glob in `downloads` for the exports, such as
-                        `Google*.zip`. With both set, each run moves the
-                        matching files into `ics/` first, renamed for
+        downloads       a folder outside the notes root and a glob for the
+                        exports in it, as one path (`~` is expanded), such
+                        as `~/Downloads/Google*.zip`. Each run takes the
+                        newest matching file; if it is newer than the
+                        newest cached export and its SHA-256 matches none
+                        of them, it is copied into `ics/`, renamed for
                         the file's modification time to the minute, like
                         `2026-10-08_0915.zip` (seconds or `-2` are added
-                        if that name is taken). A missing folder or a
-                        failed move warns; the cache is still used.
+                        if that name is taken). The original is then
+                        deleted; where that is not allowed (a sandbox) it
+                        is left, and nothing is copied again. A missing
+                        folder warns; the cache is still used. The older
+                        `downloads` folder plus `downloads_pattern` glob
+                        pair is still read.
 
     Every occurrence overlapping a day in {period} is listed, with
     recurrence rules, excluded dates, and moved or changed occurrences
@@ -1665,8 +1670,7 @@ The settings for |meta-notes-cli-calendar|: >
     timezone = "America/New_York"   # display timezone; unset: system local
     stale_days = 3                  # unset: 3
     calendars = ["me@example.com"]  # zip members to load; unset: all
-    downloads = "~/Downloads"       # unset: nothing is picked up
-    downloads_pattern = "Google*.zip"  # glob in downloads; needs both
+    downloads = "~/Downloads/Google*.zip"  # folder and glob; unset: nothing is picked up
 <
 The settings for |meta-notes-cli-outlook|: >
     [outlook]

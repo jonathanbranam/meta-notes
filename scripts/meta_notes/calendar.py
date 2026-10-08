@@ -49,8 +49,7 @@ class Settings:
     tz: tzinfo
     stale_days: int
     calendars: list[str] | None
-    downloads: str | None = None
-    downloads_pattern: str | None = None
+    downloads: str | None = None   # folder and glob: ~/Downloads/Google*.zip
 
 
 def _local_timezone() -> tzinfo:
@@ -113,8 +112,12 @@ def load_settings(root: str) -> Settings:
         if value is not None and not isinstance(value, str):
             raise ValueError(f"{key} in {where} must be a string")
 
+    if downloads and pattern:   # the older two-key form
+        downloads = downloads.rstrip("/") + "/" + pattern
+    elif pattern:
+        downloads = None
     return Settings(email or None, tz, stale_days, calendars,
-                    downloads or None, pattern or None)
+                    downloads or None)
 
 
 def _free_name(ics_dir: Path, moment: datetime, suffix: str) -> Path:
@@ -129,36 +132,52 @@ def _free_name(ics_dir: Path, moment: datetime, suffix: str) -> Path:
     return ics_dir / f"{stem}-{n}{suffix}"
 
 
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with open(path, "rb") as f:
+        for block in iter(lambda: f.read(1 << 20), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
 def pick_up_downloads(settings: Settings, ics_dir: Path) -> list[str]:
     """
-    Move exports matching downloads_pattern from the downloads folder into
-    ics_dir, named for the file's own modification time (the download time,
-    which the move keeps, so the newest download is the newest export).
+    Copy the newest export matching the downloads setting into ics_dir,
+    named for the file's modification time, when it is newer than the newest
+    cached export and its hash matches none of them. Then remove the
+    original if that is allowed; if not (a sandbox), leave it: the cache has
+    it, so later runs copy nothing.
 
     Returns:
         Warnings; a failure never stops the calendar running from the cache.
     """
-    if not settings.downloads or not settings.downloads_pattern:
+    if not settings.downloads:
         return []
-    folder = Path(os.path.expanduser(settings.downloads))
+    pattern = Path(os.path.expanduser(settings.downloads))
+    folder = pattern.parent
     if not folder.is_dir():
         return [f"The calendar downloads folder {folder} was not found"]
-    warnings = []
     try:
-        matches = sorted(p for p in folder.glob(settings.downloads_pattern)
-                         if p.is_file())
-    except (OSError, ValueError) as e:
-        return [f"Could not search the calendar downloads folder {folder}: {e}"]
-    for path in matches:
-        try:
-            moment = datetime.fromtimestamp(path.stat().st_mtime,
-                                            settings.tz)
+        matches = [p for p in folder.glob(pattern.name) if p.is_file()]
+        if not matches:
+            return []
+        newest = max(matches, key=lambda p: (p.stat().st_mtime_ns, p.name))
+        cached = find_exports(ics_dir)
+        if cached and newest.stat().st_mtime_ns <= cached[0].mtime_ns:
+            return []
+        digest = _sha256(newest)
+        if not any(e.size == newest.stat().st_size and _sha256(e.path) == digest
+                   for e in cached):
+            moment = datetime.fromtimestamp(newest.stat().st_mtime, settings.tz)
             ics_dir.mkdir(parents=True, exist_ok=True)
-            shutil.move(str(path), _free_name(ics_dir, moment, path.suffix))
-        except OSError as e:
-            warnings.append(f"Could not move {path} into the calendar "
-                            f"cache: {e}")
-    return warnings
+            shutil.copy2(newest, _free_name(ics_dir, moment, newest.suffix))
+    except (OSError, ValueError) as e:
+        return [f"Could not pick up calendar exports from {folder}: {e}"]
+    try:
+        newest.unlink()
+    except OSError:
+        pass
+    return []
 
 
 def _selection(calendars: list[str] | None) -> list[str] | None:

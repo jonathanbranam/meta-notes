@@ -239,8 +239,7 @@ def test_calendar_load_settings_invalid_values(root, setting):
 # Tests for downloads pickup
 
 def downloads_config(root, folder, pattern='*.zip'):
-    set_config(root, f'downloads = "{folder}"\n'
-                     f'downloads_pattern = "{pattern}"\n')
+    set_config(root, f'downloads = "{folder}/{pattern}"\n')
 
 
 def make_download(folder, name, modified):
@@ -278,16 +277,83 @@ def test_calendar_downloads_non_matching_file_left(root, tmp_path):
     assert list(ics_dir(root).iterdir()) == []
 
 
-def test_calendar_downloads_same_minute_not_overwritten(root, tmp_path):
+def test_calendar_downloads_only_newest_match_copied(root, tmp_path):
     dl = tmp_path / 'dl'
     make_download(dl, 'a.zip', date(2026, 9, 25))
-    make_download(dl, 'b.zip', date(2026, 9, 25))
+    make_download(dl, 'b.zip', date(2026, 9, 26))
     downloads_config(root, dl)
 
     run(root)
 
-    assert len(list(ics_dir(root).iterdir())) == 2
+    assert len(list(ics_dir(root).iterdir())) == 1
+    assert [p.name for p in dl.iterdir()] == ['a.zip']
+
+
+def test_calendar_downloads_two_key_form_still_read(root, tmp_path):
+    dl = tmp_path / 'dl'
+    make_download(dl, 'Google Calendar.zip', date(2026, 9, 25))
+    set_config(root, f'downloads = "{dl}"\n'
+                     'downloads_pattern = "Google*.zip"\n')
+
+    run(root)
+
+    assert len(list(ics_dir(root).iterdir())) == 1
     assert list(dl.iterdir()) == []
+
+
+def test_calendar_downloads_undeletable_source_copied_once(
+        root, tmp_path, monkeypatch):
+    dl = tmp_path / 'dl'
+    src = make_download(dl, 'Google Calendar.zip', date(2026, 9, 25))
+    downloads_config(root, dl)
+
+    def refuse(self, *args, **kwargs):
+        raise PermissionError('sandbox')
+    monkeypatch.setattr(Path, 'unlink', refuse)
+
+    _, _, first = run(root)
+    names = sorted(p.name for p in ics_dir(root).iterdir() if p.suffix == '.zip')
+    _, _, second = run(root)
+    _, _, third = run(root)
+
+    assert src.exists()
+    assert len(names) == 1
+    assert sorted(p.name for p in ics_dir(root).iterdir()
+                  if p.suffix == '.zip') == names
+    assert not any('Could not' in w for w in first + second + third)
+
+
+def test_calendar_downloads_undeletable_source_reuses_parsed_cache(
+        root, tmp_path, monkeypatch):
+    dl = tmp_path / 'dl'
+    make_download(dl, 'Google Calendar.zip', date(2026, 9, 25))
+    downloads_config(root, dl)
+
+    def refuse(self, *args, **kwargs):
+        raise PermissionError('sandbox')
+    monkeypatch.setattr(Path, 'unlink', refuse)
+
+    _, first, _ = run(root)
+    _, second, _ = run(root)
+
+    assert first['source']['cached'] is False
+    assert second['source']['cached'] is True
+
+
+def test_calendar_downloads_same_content_not_copied_again(root, tmp_path):
+    dl = tmp_path / 'dl'
+    src = make_download(dl, 'one.zip', date(2026, 9, 25))
+    downloads_config(root, dl)
+    run(root)
+    # A newer download with the same bytes, as a re-download would be
+    again = dl / 'two.zip'
+    again.write_bytes((next(ics_dir(root).iterdir())).read_bytes())
+    set_mtime(again, date(2026, 9, 26))
+
+    run(root)
+
+    assert len(list(ics_dir(root).iterdir())) == 1
+    assert not again.exists()
 
 
 def test_calendar_downloads_missing_folder_warns_and_uses_cache(root, tmp_path):
