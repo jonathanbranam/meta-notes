@@ -38,9 +38,10 @@ if meta_notes#time_tracking#IsInDailyNote()
   " Time Block cell highlights: the "### Time Block" section of a daily note,
   " up to the next heading of level 3 or higher. Each highlight covers one
   " table cell (the text between two pipes). The heading line itself is left
-  " to the markdown heading group.
+  " to the markdown heading group: the region starts after its newline (the
+  " lookbehind), so the heading never matches it.
   syntax region metaNotesTimeBlock transparent keepend
-        \ start=/^###\s\+Time Block\s*$/hs=e+1 end=/^#\{1,3}\s/me=s-1
+        \ start=/\(^###\s\+Time Block\s*\n\)\@<=/ end=/^#\{1,3}\s/me=s-1
         \ contains=@metaNotesTimeBlockCells,metaNotesTagMeeting,metaNotesTagDev,metaNotesTagPersonal,metaNotesTagAdmin,metaNotesTagBreak,metaNotesTagActivity,metaNotesBreak,metaNotesOffPlan
   syntax cluster metaNotesTimeBlockCells contains=metaNotesTimeBlockMtg,metaNotesTimeBlockBracket,metaNotesTimeBlockTilde,metaNotesTimeBlockParen,metaNotesTimeBlockTrain,metaNotesTimeBlockPers,metaNotesTimeBlockWork
   syntax match metaNotesTimeBlockMtg /|\zs[^|]*mtg:[^|]*\ze|/ contained contains=TOP

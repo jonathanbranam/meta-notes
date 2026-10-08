@@ -121,6 +121,11 @@ In a daily note (a `.md` file under `plan/daily/`), the plugin SHALL highlight t
 - **WHEN** `mtg:` and a closing `]` are in different cells, or the two `~` are in different cells or on different lines
 - **THEN** no cell SHALL be highlighted for that pair
 
+#### Scenario: The heading keeps its heading highlight  {#s-6f8d}
+*Verification*: **non-executable**
+- **WHEN** a daily note has a `### Time Block` heading line
+- **THEN** that line SHALL carry the markdown heading highlight (`markdownH3`) and NOT a `metaNotesTimeBlock` group, and the cells below it SHALL still be highlighted
+
 #### Scenario: Outside the Time Block  {#s-a231}
 *Verification*: **non-executable**
 - **WHEN** the same cells are in another section of a daily note, or in a note that is not a daily note

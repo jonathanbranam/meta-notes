@@ -117,6 +117,12 @@ Execute (Cells in a non-daily note are not highlighted):
   Assert TB(5, 'mtg:') !~# 'TimeBlock\a'
   Assert TB(6, '[break]') !~# 'TimeBlock\a'
 
+Execute (The Time Block heading keeps its markdown heading highlight):
+  edit plan/daily/2026-09-28.md
+  Assert TB(3, '###') =~# 'markdownH3'
+  Assert TB(3, '###') !~# 'TimeBlock\a'
+  Assert TB(5, 'mtg:') =~# 'metaNotesTimeBlockMtg'
+
 Execute (Cleanup):
   " Wipe the test note by name: a bare bwipeout! here would wipe Vader's
   " workbench, the current buffer at the start of each block.
