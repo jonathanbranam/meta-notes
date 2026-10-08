@@ -329,3 +329,20 @@ with the low and high and their times, e.g.
 Unicode block characters, so the round-3 "plain ASCII" rule gets an
 exception for this line. Whether the sparkline is on or off by default
 isn't said. Question 2 (daily-plan refresh) is still open. Still on hold.
+
+## The human's answers to the last questions, 2026-10-08 (to the meta-notes aide)
+
+> Oh yeah, I want to see the spark line. It's really cool.
+
+> I think the daily plan should refresh the outlook, and I think you
+> probably covered this, but there should be a command to refresh the
+> outlook. By default, it could run today, and if there's a note for
+> tomorrow, update tomorrow also. It should also take a date, so we can
+> run it on a note in the future.
+
+So: the temperature sparkline (`temps`) is on by default. `daily-plan`
+refreshes the Outlook. The refresh command, with no arguments, updates
+today's daily note and, when it exists, tomorrow's; `--date DAY` updates
+that day's note instead (e.g. a note made days ahead). This replaces
+`--update <note>` as the main form (a note path may still be accepted).
+Both open questions are answered.
