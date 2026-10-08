@@ -73,3 +73,14 @@ matches none of them. Then remove the original when that's allowed (a
 move); when it isn't (the agent's sandbox), leave it, with no copy made
 and no repeated warning, since the cache already has it. Repeated runs
 never make duplicates. Size alone isn't enough; the hash decides.
+
+The human, on the effect today:
+
+> sounds right; the current solution it's copying the file every time it
+> runs and the cache isn't working at all (due to the sandbox)
+
+Every run in the sandbox makes a new export file with a new name, so the
+parsed-calendar cache (keyed by the export's name, size and mtime) never
+hits and every `meta-notes calendar` reparses. The hash check above fixes
+both. Test: two runs in a row with an undeletable source reuse the cache
+on the second.
