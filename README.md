@@ -312,7 +312,14 @@ email = "me@example.com"        # hide events you declined
 timezone = "America/New_York"   # display timezone (default: system)
 stale_days = 3                  # warn when the export is older
 calendars = ["me@example.com"]  # zip calendars to load (default: all)
+downloads = "~/Downloads"       # optional: where your browser saves exports
+downloads_pattern = "Google*.zip"  # which files there are calendar exports
 ```
+
+With both `downloads` and `downloads_pattern` set, each run first moves
+matching files from that folder into `ics/`, named for the file's
+modification time to the minute (`2026-10-08_0915.zip`; seconds or `-2` are
+added if the name is taken). A missing folder only warns.
 
 See `:help meta-notes-cli-calendar` and `:help meta-notes-config`.
 

@@ -16,6 +16,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import zipfile
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone, tzinfo
@@ -48,6 +49,8 @@ class Settings:
     tz: tzinfo
     stale_days: int
     calendars: list[str] | None
+    downloads: str | None = None
+    downloads_pattern: str | None = None
 
 
 def _local_timezone() -> tzinfo:
@@ -103,7 +106,59 @@ def load_settings(root: str) -> Settings:
             or not all(isinstance(c, str) for c in calendars)):
         raise ValueError(f"calendars in {where} must be a list of names")
 
-    return Settings(email or None, tz, stale_days, calendars)
+    downloads = table.get("downloads")
+    pattern = table.get("downloads_pattern")
+    for key, value in (("downloads", downloads),
+                       ("downloads_pattern", pattern)):
+        if value is not None and not isinstance(value, str):
+            raise ValueError(f"{key} in {where} must be a string")
+
+    return Settings(email or None, tz, stale_days, calendars,
+                    downloads or None, pattern or None)
+
+
+def _free_name(ics_dir: Path, moment: datetime, suffix: str) -> Path:
+    """An unused name in ics_dir: to the minute, then seconds, then -N."""
+    base = moment.strftime("%Y-%m-%d_%H%M")
+    for stem in (base, moment.strftime("%Y-%m-%d_%H%M%S")):
+        if not (ics_dir / (stem + suffix)).exists():
+            return ics_dir / (stem + suffix)
+    n = 2
+    while (ics_dir / f"{stem}-{n}{suffix}").exists():
+        n += 1
+    return ics_dir / f"{stem}-{n}{suffix}"
+
+
+def pick_up_downloads(settings: Settings, ics_dir: Path) -> list[str]:
+    """
+    Move exports matching downloads_pattern from the downloads folder into
+    ics_dir, named for the file's own modification time (the download time,
+    which the move keeps, so the newest download is the newest export).
+
+    Returns:
+        Warnings; a failure never stops the calendar running from the cache.
+    """
+    if not settings.downloads or not settings.downloads_pattern:
+        return []
+    folder = Path(os.path.expanduser(settings.downloads))
+    if not folder.is_dir():
+        return [f"The calendar downloads folder {folder} was not found"]
+    warnings = []
+    try:
+        matches = sorted(p for p in folder.glob(settings.downloads_pattern)
+                         if p.is_file())
+    except (OSError, ValueError) as e:
+        return [f"Could not search the calendar downloads folder {folder}: {e}"]
+    for path in matches:
+        try:
+            moment = datetime.fromtimestamp(path.stat().st_mtime,
+                                            settings.tz)
+            ics_dir.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(path), _free_name(ics_dir, moment, path.suffix))
+        except OSError as e:
+            warnings.append(f"Could not move {path} into the calendar "
+                            f"cache: {e}")
+    return warnings
 
 
 def _selection(calendars: list[str] | None) -> list[str] | None:
@@ -737,6 +792,7 @@ def run(root: str, period: str | None = None, ics: str | None = None,
     ics_dir = Path(root, ICS_DIR)
     cal_dir = Path(root, CALENDAR_DIR)
     cal_dir.mkdir(parents=True, exist_ok=True)
+    warnings += pick_up_downloads(settings, ics_dir)
     exports = find_exports(ics_dir)
     entries = read_entries(cal_dir)
 

@@ -24,6 +24,7 @@ The command SHALL read these settings from the `[calendar]` table in `.meta-note
 - `timezone`: an IANA timezone name in which times are shown and days are divided. When unset, the system's local timezone SHALL be used. An unknown name SHALL be an error.
 - `stale_days`: a whole number of days after which an export is stale. When unset, 3.
 - `calendars`: a list of calendar names to load from a zip export. When unset, all.
+- `downloads` and `downloads_pattern`: a folder outside the notes root (`~` expanded) and a glob for the exports in it. Both are optional; see "Downloads pickup".
 
 #### Scenario: Timezone conversion  {#s-c08c}
 *Verification*: **non-executable**
@@ -166,6 +167,19 @@ The text output SHALL show ` [maybe]` or ` [no-reply]` when `response` is `maybe
 *Verification*: **non-executable**
 - **WHEN** an event has 30 people and a room as attendees
 - **THEN** `attendee_count` SHALL be 30 and `attendees` SHALL list the first 20 people with their responses
+
+### Requirement: Downloads pickup  {#r-1b0f}
+When `downloads` and `downloads_pattern` are both set, each run SHALL first move (not copy) every file in the `downloads` folder matching the glob into `<root>/.meta-notes-cache/ics/`, keeping its extension and its modification time, and naming it for that modification time to the minute as `YYYY-MM-DD_HHMM`. When that name is taken it SHALL add seconds, then `-N`, and SHALL NOT overwrite. A missing folder or a failed move SHALL warn, and the command SHALL still run from the cache. The command SHALL NOT watch the folder outside a run.
+
+#### Scenario: Matching file  {#s-7ffa}
+*Verification*: **non-executable**
+- **WHEN** `downloads_pattern = "Google*.zip"` and the folder holds `Google Calendar.zip` and `other.zip`
+- **THEN** `Google Calendar.zip` SHALL be moved to `ics/` as a timestamped name, and `other.zip` SHALL stay
+
+#### Scenario: Missing folder  {#s-4f05}
+*Verification*: **non-executable**
+- **WHEN** `downloads` names a folder that does not exist
+- **THEN** the output SHALL include a warning and the agenda SHALL come from the cache
 
 ### Requirement: Stale export warning  {#r-39d6}
 When the export used is older than `stale_days` days, the command SHALL succeed and SHALL warn with the export's age in days. The same SHALL apply to a cached calendar used without its export, using the export's recorded modification time.
