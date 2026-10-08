@@ -1155,6 +1155,43 @@ Commands ~
     fails if `git` isn't available, the notes root isn't a git
     repository, or the notes root isn't the top level of its repository.
 
+`meta-notes outlook [weather|sun] [--date {day}] [--location {place}]`
+                                                *meta-notes-cli-outlook*
+    Print the day's weather, temperatures, sun times and weather alerts
+    for a place, as the lines of an `### Outlook` section. {day} is
+    YYYY-MM-DD (default today). The daily note templates run it, so a new
+    daily note has the section. `outlook weather` and `outlook sun` print
+    only their line, with no heading, and fail with an error when the
+    outlook can't be made. Plain `outlook` never fails: with no location
+    or no network it prints the heading and
+    `- Weather: unavailable ({reason})` and exits 0, so creating a note
+    never fails because of it. It needs the network and nothing else:
+    Open-Meteo for the place and forecast (no key), and the US National
+    Weather Service for alerts (US places only). Fahrenheit, miles per
+    hour and inches. The coordinates of a place are cached in
+    `.meta-notes-cache/`. The forecast is at most about 16 days ahead.
+
+    The place is `location` in the `[outlook]` table of |meta-notes-config|,
+    or `--location {place}` (for travel): a city and state, as in
+    `Mason, OH`, or a ZIP code. A city alone that matches several places is
+    an error listing them. Output: >
+        ### Outlook (as of 9:40 PM Tue)
+        - Weather: 72/55, rain 60% 3-8 PM, 0.3 in, 4h sun
+        - Temps: 51 ▂▁▁▁▁▁▂▃▄▅▆▇██▇▆▅▄▃▃▂▂▂▂ 72 (low 6 AM, high 2 PM)
+        - Sun: 7:41 AM - 7:02 PM
+        - Alert: Severe Thunderstorm Warning until 6:00 PM
+<   Rain shows when the chance is 20% or more, with the hours at 40% or
+    more; snow replaces it when snow is forecast. `Temps` has one block
+    per hour from midnight to midnight and is the one line that isn't
+    ASCII. Alerts are one line each and only when there is one. `--json`
+    returns `date`, `place`, `as_of`, `lines`, and the `daily` and `hourly`
+    forecast values.
+
+    Each line is a switch in `[outlook]`; `weather`, `temps`, `sun` and
+    `alert` are on, `moon` (phase and percent lit), `wind` (speed and
+    gusts), `freeze` (the low, only when it is 32 or less) and `uv` (the
+    day's top index) are off by default.
+
 `meta-notes calendar [--date {period}] [--ics {path}] [filters]`
                                                 *meta-notes-cli-calendar*
     Print a day-by-day agenda for {period} (default today, in the
@@ -1614,6 +1651,18 @@ The settings for |meta-notes-cli-calendar|: >
     calendars = ["me@example.com"]  # zip members to load; unset: all
     downloads = "~/Downloads"       # unset: nothing is picked up
     downloads_pattern = "Google*.zip"  # glob in downloads; needs both
+<
+The settings for |meta-notes-cli-outlook|: >
+    [outlook]
+    location = "Mason, OH"          # or a ZIP code; unset: outlook is unavailable
+    weather = true                  # the lines; these four are on by default
+    temps = true
+    sun = true
+    alert = true
+    moon = false                    # these four are off by default
+    wind = false
+    freeze = false
+    uv = false
 <
 The settings for |meta-notes-cli-checkin|: >
     [checkin]
