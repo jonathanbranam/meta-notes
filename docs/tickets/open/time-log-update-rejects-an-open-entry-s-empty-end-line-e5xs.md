@@ -13,8 +13,6 @@ tasks: []
 
 ## The ask
 
-## The ask
-
 `meta-notes time-log update` refuses replacement text whose last entry has an empty `* end:` line:
 
     Error: '- Next2' has an invalid end: ''
