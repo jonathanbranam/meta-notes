@@ -214,3 +214,6 @@
 {"actor":"external:orchestrator","at":"2026-10-08T11:17:17.803126773Z","from":"pending","task":"mn-zk5p","to":"open"}
 {"actor":"human","at":"2026-10-08T11:18:02.728Z","from":"","task":"mn-ybu6","to":"pending"}
 {"actor":"external:orchestrator","at":"2026-10-08T11:21:11.032981864Z","from":"open","task":"mn-zk5p","to":"dropped"}
+{"actor":"human","at":"2026-10-08T11:51:06.096Z","from":"","task":"mn-ary9","to":"pending"}
+{"actor":"external:aide","at":"2026-10-08T11:51:06.220888729Z","from":"pending","task":"mn-ary9","to":"open"}
+{"actor":"external:aide","at":"2026-10-08T11:51:06.276221081Z","from":"open","task":"mn-ary9","to":"planned"}
