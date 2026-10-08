@@ -2,9 +2,9 @@
 id = "mn-j8kw"
 title = "Syntax: the ### Time Block heading loses its markdown heading highlight in daily notes"
 kind = "bug"
-state = "pending"
+state = "open"
 created_at = "2026-10-08T03:25:40.378Z"
-updated_at = "2026-10-08T03:25:40.378Z"
+updated_at = "2026-10-08T03:26:02.719895064Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
 +++
