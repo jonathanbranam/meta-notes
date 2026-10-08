@@ -25,8 +25,12 @@ command running `meta-notes` (or `bin/meta-notes`) when `--expect`, or any
 other check argument (time-log's `--prev`, for example), holds a command
 substitution: `$(...)` or backticks. The refusal message says why in one
 line: the expected text must be what you read earlier, written out
-literally; computing it at write time turns the check off. It names the
-rule `expect-what-you-read`.
+literally; computing it at write time turns the check off. The message
+stands on its own (no bridle rule names): it must work in a root without
+bridle, such as the human's work repo. The human, via aide, 2026-10-08:
+the fix must live in meta-notes, not depend on an agent rule ("it's also
+going to depend on the agent following the rule, which I am not convinced
+is the right way to fix this").
 
 - The hook is a CLI subcommand (for example `meta-notes hook expect-guard`)
   that reads the PreToolUse JSON on stdin and blocks with exit 2 and the
