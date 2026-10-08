@@ -7,8 +7,8 @@ repos: [meta-notes]
 changes: []
 specs: []
 needs: []
-see: []
-tasks: []
+see: [zk5p, t85d]
+tasks: [mn-ybu6]
 ---
 
 ## The ask
@@ -22,9 +22,10 @@ aide as m-0713), asking for this ticket:
 > solution so that these kinds of things are prevented or much harder to
 > happen by accident.
 
-Related: the advisor also asked the notes orchestrator (notes m-0127) for
-a guard hook and a revision-token design; the human approved the guard
-hook there. Link that work to this ticket rather than duplicate it.
+Related, already filed from the advisor's earlier message (notes m-0127):
+zk5p (guard hook, idea 3; approved by the human) and t85d (revision
+token, idea 1). This ticket is the incident write-up and the analysis
+across all five ideas; build ideas 1 and 3 under those tickets.
 
 The advisor's write-up, verbatim:
 
