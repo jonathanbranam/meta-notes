@@ -264,3 +264,15 @@ in `.meta-notes`; `--location` for travel; Fahrenheit and inches.
 
 1. The note lines above (format and thresholds): OK? (Recommended.)
 2. `daily-plan` refreshes today's and tomorrow's Outlook? (Recommended.)
+
+## The human on round 3, 2026-10-08 (to the meta-notes aide)
+
+> Yeah, let's put the "as of" in the Outlook line, I think, and then
+> that'll apply to everything else underneath it. Shorten up that first
+> weather line a little bit.
+
+So: the "as of" time moves to the `### Outlook` heading (e.g.
+`### Outlook (as of 9:40 PM Tue)`), covering every line under it, and
+`--update` rewrites the heading's time too; the `- Weather:` line gets
+shorter. Not yet an approval of the rest: question 2 (daily-plan
+refreshes today's and tomorrow's Outlook) is unanswered. Still on hold.
