@@ -4,7 +4,7 @@ title = "Outlook refresh command and the daily-plan step (pqwv part 2)"
 kind = "feature"
 state = "planned"
 created_at = "2026-10-08T03:22:41.668Z"
-updated_at = "2026-10-08T03:45:09.884338671Z"
+updated_at = "2026-10-08T03:49:22.531807285Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 +++
@@ -21,3 +21,8 @@ Model: Sonnet. Size: M.
 Files likely touched: scripts/meta_notes/outlook.py, scripts/meta_notes/cli.py, skills/daily-plan/SKILL.md, test/unit/test_outlook.py, README.md, doc/meta-notes.txt, version.
 Verify: ./run_tests.sh green once; tests for: today plus tomorrow, tomorrow missing, --date, user lines under the heading kept, no heading.
 Out of scope: refreshing on note open (rejected on the ticket).
+
+## Thread
+
+### note · agent:outlook-refresh · 2026-10-08T03:49:22.531Z
+Check: vader 184/184 (4/4 files), pytest 1616 passed 1 skipped, bridle spec check --require-ids 0 errors. Added outlook refresh (no path arg; YAGNI), spec r-0ac7, docs, daily-plan step, v2.29.0.
