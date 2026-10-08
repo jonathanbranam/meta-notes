@@ -4,7 +4,7 @@ title = "Weather command: tomorrow's forecast from a free no-key API"
 kind = "feature"
 state = "open"
 created_at = "2026-10-08T03:22:20.510Z"
-updated_at = "2026-10-08T03:22:41.429382029Z"
+updated_at = "2026-10-08T03:37:37.707529047Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 +++
@@ -27,3 +27,16 @@ Model: Sonnet. Size: L (keep your context well under 200K; read only the files y
 Files likely touched: new scripts/meta_notes/outlook.py, scripts/meta_notes/cli.py, scripts/meta_notes/config.py, templates/daily*.md, test/unit/test_outlook.py, test/unit/test_cli.py (if it lists commands), README.md, doc/meta-notes.txt, scripts/meta_notes/__init__.py (version).
 Verify: ./run_tests.sh green once. One manual live run of `meta-notes outlook --location 45040` is fine; report its output in your done note.
 Out of scope, in the follow-up task: the refresh command and the daily-plan skill step. Not now: Celsius, air quality, golden hour.
+
+## Thread
+
+### note · agent:outlook · 2026-10-08T03:37:37.707Z
+Done on branch bridle/outlook. Version 2.28.0.
+Checks (once, after merging local main): ./run_tests.sh Success 183/183 (assertions 455/455); uv run pytest test/unit/: 1610 passed, 1 skipped; bridle spec check --require-ids: 31 files, 0 errors, 0 warnings.
+New: scripts/meta_notes/outlook.py, test/unit/test_outlook.py (29 tests, canned JSON, no live calls), design/specs/outlook.md. Updated: cli.py, both daily templates, template and init fixtures, README, doc/meta-notes.txt.
+Live run (meta-notes outlook --location 45040, no alerts active):
+### Outlook (as of 11:35 PM Wed)
+- Weather: 80/42, 10h sun
+- Temps: 42 ▂▂▁▁▁▁▁▁▁▂▄▆▇▇█████▇▇▆▆▆ 80 (low 7 AM, high 4 PM)
+- Sun: 7:39 AM - 7:10 PM
+Notes: plain `outlook` (no subcommand) always exits 0 and prints "### Outlook" + "- Weather: unavailable (reason)" on failure; `outlook weather|sun` error out instead. The "as of" time uses the place's timezone; --date defaults to the system's today. `freeze` shows "Freeze: low N" when the low is 32 or less (no first-of-season tracking: that needs history). Moon phase is computed locally (no API). Alerts failing leave the rest of the section intact. Part 2 can match lines starting "- Weather:", "- Temps:", "- Sun:", "- Alert:", "- Moon:", "- Wind:", "- Freeze:", "- UV:" and the heading "### Outlook".
