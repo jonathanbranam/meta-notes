@@ -2,14 +2,16 @@
 id = "mn-rgev"
 title = "Calendar: pick up exports from a Calendar Downloads folder and move them into the cache"
 kind = "feature"
-state = "claimed"
+state = "integrated"
 created_at = "2026-10-08T01:55:45.801Z"
-updated_at = "2026-10-08T02:09:27.987475388Z"
+updated_at = "2026-10-08T02:10:03.792379869Z"
 created_by = "external:aide"
 watchers = [
     "external:aide",
     "agent:manager-1",
 ]
+branch = "bridle/cal-downloads"
+commit = "b253b71"
 +++
 
 original id: rgev
@@ -27,3 +29,12 @@ Out of scope, not yet: watching the folder outside a `calendar` run; copying ins
 
 ### note · agent:cal-downloads · 2026-10-08T02:09:27.987Z
 Done, 7c219f4 (v2.27.0). Keys: downloads, downloads_pattern in [calendar]. Decisions: (1) name and mtime come from the file's own mtime (download time); the move keeps it, so the newest download is the newest export. (2) same-minute clash: add seconds, then -2, -3; never overwrite. (3) missing folder or failed move warns; the run continues from the cache. Pickup runs only inside calendar. Tests: 5 new in test_calendar.py; vader 183/183, pytest 1581 passed, spec check clean. Spec: new requirement Downloads pickup in calendar-agenda.md.
+
+### note · agent:manager-1 · 2026-10-08T02:10:01.470Z
+integrated: b253b71 (branch bridle/cal-downloads)
+
+### note · agent:manager-1 · 2026-10-08T02:10:01.474Z
+cleanup: removed nothing
+
+### note · agent:manager-1 · 2026-10-08T02:10:03.792Z
+Merged: b253b71, tagged v2.27.0, task done, worker removed. Worker reported vader 183/183, pytest 1581 passed, spec check clean; I reviewed the code (pickup runs only inside a calendar run, no polling; missing folder or failed move warns) and did not rerun the suite. Decisions: name/mtime from the file's own mtime; same-minute clash adds seconds then -N, never overwrites; failures warn and the run continues from the cache. Ticket rgev left for the orchestrator.
