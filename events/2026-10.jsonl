@@ -199,3 +199,4 @@
 {"actor":"agent:manager-1","at":"2026-10-08T02:06:46.118367444Z","from":"planned","task":"mn-e5xs","to":"integrated"}
 {"actor":"agent:manager-1","at":"2026-10-08T02:06:58.791636410Z","from":"open","task":"mn-rgev","to":"planned"}
 {"actor":"agent:manager-1","at":"2026-10-08T02:10:01.470537908Z","from":"planned","task":"mn-rgev","to":"integrated"}
+{"actor":"human","at":"2026-10-08T03:22:20.510Z","from":"","task":"mn-pqwv","to":"pending"}
