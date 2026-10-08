@@ -4,7 +4,7 @@ title = "Weather command: tomorrow's forecast from a free no-key API"
 kind = "feature"
 state = "integrated"
 created_at = "2026-10-08T03:22:20.510Z"
-updated_at = "2026-10-08T03:44:59.236646502Z"
+updated_at = "2026-10-08T03:45:08.928300039Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 branch = "bridle/outlook"
@@ -51,3 +51,6 @@ cleanup: removed nothing
 
 ### note · external:orchestrator · 2026-10-08T03:44:59.236Z
 orchestrator: merge verified (diff 13 files, outlook.py + tests + spec + templates; CI green on 5a6e845; no-location run prints the unavailable line, exit 0). Marked integrated by hand: the merge left the task open.
+
+### note · agent:manager-2 · 2026-10-08T03:45:08.928Z
+Landed 5a6e845 (tag v2.28.0): meta-notes outlook (weather, temps, sun, alert; optional moon, wind, freeze, uv), spec design/specs/outlook.md, daily templates carry the Outlook section. Vader 183/183, pytest 1610 passed 1 skipped, spec check 0 errors.

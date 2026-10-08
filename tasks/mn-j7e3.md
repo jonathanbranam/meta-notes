@@ -2,9 +2,9 @@
 id = "mn-j7e3"
 title = "Outlook refresh command and the daily-plan step (pqwv part 2)"
 kind = "feature"
-state = "open"
+state = "planned"
 created_at = "2026-10-08T03:22:41.668Z"
-updated_at = "2026-10-08T03:22:42.185934963Z"
+updated_at = "2026-10-08T03:45:09.884338671Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 +++
