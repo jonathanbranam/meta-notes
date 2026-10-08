@@ -231,3 +231,18 @@ Newest first. Times are UTC. Each entry has:
   human's go, so the land path that marks a task integrated didn't run.
 - **Category:** `workflow`.
 - **Follow-up:** none yet; asked manager-2 how it merged.
+
+## 2026-10-08 (night): --expect computed at write time changed a finished task (notes)
+
+- **What happened:** the notes advisor ran `meta-notes task update` with
+  `--expect "$(sed -n ${n}p file)"` on line numbers grepped before its own
+  3-line insert. `--expect` compared the line with itself, so the check
+  passed on the wrong line and a finished task's date changed. It used this
+  pattern all evening.
+- **Impact:** one wrong-line edit in the notes root (fixed by the advisor,
+  notes 98583f5); every such edit that night ran without the check.
+- **Cause:** `--expect` text copied from the file at write time, not from
+  what was read earlier; stale line numbers after the advisor's own insert.
+- **Category:** `agent-behaviour`, `cli-design`.
+- **Follow-up:** notes rule `expect-what-you-read`; ticket zk5p (guard hook,
+  task mn-zk5p); question ticket t85d (revision tokens).
