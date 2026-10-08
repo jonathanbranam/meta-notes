@@ -2,11 +2,14 @@
 id = "mn-e5xs"
 title = "time-log update rejects an open entry's empty end line"
 kind = "bug"
-state = "open"
+state = "claimed"
 created_at = "2026-10-08T01:53:01.699Z"
-updated_at = "2026-10-08T01:54:11.770186162Z"
+updated_at = "2026-10-08T02:03:45.710246848Z"
 created_by = "external:orchestrator"
-watchers = ["external:orchestrator"]
+watchers = [
+    "external:orchestrator",
+    "agent:manager-1",
+]
 +++
 
 original id: e5xs
