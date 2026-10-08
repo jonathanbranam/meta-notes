@@ -7,9 +7,9 @@ created_at = "2026-10-08T11:17:17.586Z"
 updated_at = "2026-10-08T11:21:11.032981864Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
+ticket = "zk5p"
 +++
 
-original id: zk5p
 docs/tickets/open/guard-hook-refuse-a-meta-notes-expect-computed-at-write-time-zk5p.md
 
 ## Thread

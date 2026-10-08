@@ -9,9 +9,9 @@ created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 branch = "bridle/tag-aliases"
 commit = "3113f23"
+ticket = "6dbp"
 +++
 
-original id: 6dbp
 docs/tickets/open/conventions-json-tag-aliases-as-data-6dbp.md
 
 ## Thread

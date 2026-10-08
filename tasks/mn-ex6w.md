@@ -11,9 +11,9 @@ priority = "high"
 priority_at = "2026-10-08T14:51:20.112341779Z"
 commit = "4cf5e5e"
 summary = 'Calendar downloads: copy only the newest matching export when newer and its hash matches nothing cached; delete the original if allowed, else leave it; single downloads = "~/Downloads/<glob>" setting, old two keys still read. Item 3 (say when nothing matches) not done, optional. v2.30.0.'
+ticket = "ex6w"
 +++
 
-original id: ex6w
 docs/tickets/open/calendar-downloads-a-failed-move-leaves-a-copy-each-run-one-ex6w.md
 
 ## Thread

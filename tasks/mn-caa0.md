@@ -8,9 +8,9 @@ updated_at = "2026-10-03T14:51:38.987718123Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 commit = "afe6438"
+ticket = "bmen"
 +++
 
-original id: bmen
 docs/tickets/open/conventions-tildes-in-the-time-block-and-time-log-approximat-bmen.md
 
 ## Thread

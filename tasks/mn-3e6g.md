@@ -12,9 +12,9 @@ watchers = [
 ]
 branch = "bridle/add-blank"
 commit = "6a0c6bb"
+ticket = "3e6g"
 +++
 
-original id: 3e6g
 docs/tickets/open/task-add-blank-line-after-a-task-inserted-below-the-h1-3e6g.md
 
 ## Thread

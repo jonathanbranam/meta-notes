@@ -9,9 +9,9 @@ created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 size = "S"
 commit = "a8e9c87"
+ticket = "5rhr"
 +++
 
-original id: 5rhr
 
 Ticket docs/tickets/open/time-log-update-entry-count-5rhr.md. Small: count entries in time-log update's result. PATCH bump; resolve the ticket with bridle ticket resolve.
 

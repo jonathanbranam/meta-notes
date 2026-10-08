@@ -9,9 +9,9 @@ created_by = "external:aide"
 watchers = ["external:aide"]
 commit = "bf93c02"
 summary = "outlook prints a blank line after the heading; refresh tolerates a missing or extra blank line, keeps hand-written lines, leaves one blank after the heading. Spec s-0af1. v2.29.1."
+ticket = "knjj"
 +++
 
-original id: knjj
 docs/tickets/open/outlook-a-blank-line-after-the-heading-kept-by-refresh-knjj.md
 
 ## Thread

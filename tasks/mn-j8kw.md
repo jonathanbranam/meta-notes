@@ -9,9 +9,9 @@ created_by = "external:aide"
 watchers = ["external:aide"]
 commit = "b74df41"
 summary = "Time Block region now starts after the heading newline (lookbehind), so the ### Time Block line keeps markdownH3; cell highlights unchanged. Vader test and spec scenario added. v2.28.1."
+ticket = "j8kw"
 +++
 
-original id: j8kw
 docs/tickets/open/syntax-the-time-block-heading-loses-its-markdown-heading-hig-j8kw.md
 
 ## Thread

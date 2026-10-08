@@ -9,9 +9,9 @@ created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 branch = "bridle/add-under-tasks"
 commit = "02510e1"
+ticket = "cys2"
 +++
 
-original id: cys2
 docs/tickets/open/task-add-puts-the-task-under-tasks-not-after-the-time-block-cys2.md
 
 ## Thread

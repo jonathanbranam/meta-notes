@@ -12,9 +12,9 @@ watchers = [
 ]
 branch = "bridle/no-plan-strike"
 commit = "747cdad"
+ticket = "xjaq"
 +++
 
-original id: xjaq
 docs/tickets/open/time-block-no-plan-is-struck-no-plan-xjaq.md
 
 ## Thread

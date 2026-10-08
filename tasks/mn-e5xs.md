@@ -12,9 +12,9 @@ watchers = [
 ]
 branch = "bridle/open-end"
 commit = "a34ee28"
+ticket = "e5xs"
 +++
 
-original id: e5xs
 
 time-log update rejects an open entry's empty end line (ticket docs/tickets/open/time-log-update-rejects-an-open-entry-s-empty-end-line-e5xs.md; it has the repro).
 

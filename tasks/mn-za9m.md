@@ -12,9 +12,9 @@ watchers = [
 ]
 branch = "bridle/event-end-row"
 commit = "5100f09"
+ticket = "za9m"
 +++
 
-original id: za9m
 docs/tickets/open/conventions-an-event-s-end-time-row-is-never-filled-in-the-t-za9m.md
 
 ## Thread

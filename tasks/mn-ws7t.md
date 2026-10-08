@@ -8,9 +8,9 @@ updated_at = "2026-10-04T23:01:21.631772956Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 commit = "a2d9d52"
+ticket = "ws7t"
 +++
 
-original id: ws7t
 docs/tickets/open/nerdtree-stays-stale-when-reopened-or-in-another-tab-after-c-ws7t.md
 
 ## Thread

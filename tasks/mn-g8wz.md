@@ -9,9 +9,9 @@ created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 branch = "bridle/ui-cmd"
 commit = "145de1c"
+ticket = "g8wz"
 +++
 
-original id: g8wz
 docs/tickets/open/meta-notes-ui-start-stop-status-and-open-the-meta-notes-ui-s-g8wz.md
 
 ## Thread

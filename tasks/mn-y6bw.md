@@ -8,9 +8,9 @@ updated_at = "2026-10-05T00:30:02.714404108Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 commit = "f4db3c5"
+ticket = "y6bw"
 +++
 
-original id: y6bw
 docs/tickets/open/conventions-an-event-fills-every-time-block-row-it-spans-tra-y6bw.md
 
 ## Thread

@@ -9,9 +9,9 @@ created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 branch = "bridle/snapshot-tasks"
 commit = "8a7ebea"
+ticket = "cru4"
 +++
 
-original id: cru4
 docs/tickets/open/tasks-query-counts-the-daily-note-s-due-today-and-overdue-sn-cru4.md
 
 ## Thread

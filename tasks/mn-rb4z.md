@@ -8,9 +8,9 @@ updated_at = "2026-10-04T22:57:38.486097195Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 commit = "320d54d"
+ticket = "rb4z"
 +++
 
-original id: rb4z
 docs/tickets/open/nerdtree-refreshes-when-folders-and-files-are-added-in-a-not-rb4z.md
 
 ## Thread

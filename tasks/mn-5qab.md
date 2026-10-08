@@ -9,9 +9,9 @@ created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 branch = "bridle/note-write"
 commit = "8c46cd6"
+ticket = "5qab"
 +++
 
-original id: 5qab
 docs/tickets/open/note-write-race-safe-raw-edit-of-a-note-s-lines-5qab.md
 
 ## Thread

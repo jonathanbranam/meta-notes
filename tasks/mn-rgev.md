@@ -12,9 +12,9 @@ watchers = [
 ]
 branch = "bridle/cal-downloads"
 commit = "b253b71"
+ticket = "rgev"
 +++
 
-original id: rgev
 
 Calendar: pick up exports from a Calendar Downloads folder and move them into the cache. The ticket (docs/tickets/open/calendar-*-rgev.md) is the spec: config keys, move-and-rename with a minute timestamp and no colon, and the three points for you to settle and note.
 
