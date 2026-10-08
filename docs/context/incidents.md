@@ -219,3 +219,15 @@ Newest first. Times are UTC. Each entry has:
 - **Follow-up:** bridle t3vq (hook the CLI lacks), mtdg (upgrade builds the
   wrong repo). The manager finishes mn-s36r itself; the human reinstalls
   bridle on the NUC.
+
+## 2026-10-08 03:37: merged task left open (mn-pqwv)
+
+- **What happened:** manager-2 merged mn-pqwv (5a6e845, v2.28.0), but the
+  task stayed `open` (never planned or claimed), so its dependent mn-j7e3
+  stayed blocked and `bridle ready` was empty. The manager asked the
+  orchestrator to move it.
+- **Impact:** a few minutes; the orchestrator ran `bridle task done` by hand.
+- **Cause:** unknown. The task was started straight from `open` after the
+  human's go, so the land path that marks a task integrated didn't run.
+- **Category:** `workflow`.
+- **Follow-up:** none yet; asked manager-2 how it merged.
