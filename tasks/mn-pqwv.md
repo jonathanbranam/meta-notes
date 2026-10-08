@@ -2,11 +2,13 @@
 id = "mn-pqwv"
 title = "Weather command: tomorrow's forecast from a free no-key API"
 kind = "feature"
-state = "open"
+state = "integrated"
 created_at = "2026-10-08T03:22:20.510Z"
-updated_at = "2026-10-08T03:37:37.707529047Z"
+updated_at = "2026-10-08T03:44:59.236646502Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
+branch = "bridle/outlook"
+commit = "5a6e845"
 +++
 
 original id: pqwv
@@ -40,3 +42,12 @@ Live run (meta-notes outlook --location 45040, no alerts active):
 - Temps: 42 ▂▂▁▁▁▁▁▁▁▂▄▆▇▇█████▇▇▆▆▆ 80 (low 7 AM, high 4 PM)
 - Sun: 7:39 AM - 7:10 PM
 Notes: plain `outlook` (no subcommand) always exits 0 and prints "### Outlook" + "- Weather: unavailable (reason)" on failure; `outlook weather|sun` error out instead. The "as of" time uses the place's timezone; --date defaults to the system's today. `freeze` shows "Freeze: low N" when the low is 32 or less (no first-of-season tracking: that needs history). Moon phase is computed locally (no API). Alerts failing leave the rest of the section intact. Part 2 can match lines starting "- Weather:", "- Temps:", "- Sun:", "- Alert:", "- Moon:", "- Wind:", "- Freeze:", "- UV:" and the heading "### Outlook".
+
+### note · external:orchestrator · 2026-10-08T03:44:59.094Z
+integrated: 5a6e845 (branch bridle/outlook)
+
+### note · external:orchestrator · 2026-10-08T03:44:59.099Z
+cleanup: removed nothing
+
+### note · external:orchestrator · 2026-10-08T03:44:59.236Z
+orchestrator: merge verified (diff 13 files, outlook.py + tests + spec + templates; CI green on 5a6e845; no-location run prints the unavailable line, exit 0). Marked integrated by hand: the merge left the task open.

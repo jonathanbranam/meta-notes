@@ -205,3 +205,4 @@
 {"actor":"external:orchestrator","at":"2026-10-08T03:22:42.185934963Z","from":"pending","task":"mn-j7e3","to":"open"}
 {"actor":"human","at":"2026-10-08T03:25:40.378Z","from":"","task":"mn-j8kw","to":"pending"}
 {"actor":"external:orchestrator","at":"2026-10-08T03:26:02.719895064Z","from":"pending","task":"mn-j8kw","to":"open"}
+{"actor":"external:orchestrator","at":"2026-10-08T03:44:59.094855296Z","from":"open","task":"mn-pqwv","to":"integrated"}
