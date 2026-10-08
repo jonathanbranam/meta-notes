@@ -290,6 +290,7 @@ meta-notes calendar --date 2026-09 --with zach --search 1:1  # filtered
 meta-notes cache clear                    # delete parsed calendars, keep exports
 meta-notes outlook --location 45040       # weather, temps, sun, alerts
 meta-notes outlook sun --date 2026-10-09  # one line
+meta-notes outlook refresh                # update today's and tomorrow's notes
 meta-notes ui open                        # start the meta-notes-ui server ([ui] path) and open it
 meta-notes ui status                      # running or not, url, pid
 meta-notes conventions                    # syntax and rules the skills follow
@@ -352,7 +353,9 @@ moon = false             # moon, wind, freeze, uv are off by default
 ```
 
 With no location or no network, a note still gets a single
-`- Weather: unavailable (...)` line. See `:help meta-notes-cli-outlook`.
+`- Weather: unavailable (...)` line. `meta-notes outlook refresh` rewrites
+the section in today's and tomorrow's notes (`--date DAY`: that day's),
+keeping lines you added; the `daily-plan` skill runs it. See `:help meta-notes-cli-outlook`.
 
 ### Agents
 

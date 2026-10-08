@@ -240,8 +240,14 @@ def cmd_calendar(args, root: str) -> Output:
 
 
 def cmd_outlook(args, root: str) -> Output:
-    day = date.fromisoformat(args.date) if args.date else date.today()
     only = getattr(args, "kind", None)
+    if only == "refresh":
+        results = outlook.refresh(
+            root, date.fromisoformat(args.date) if args.date else None,
+            args.location)
+        return Output({"notes": results},
+                      [f"{r['path']}: {r['status']}" for r in results])
+    day = date.fromisoformat(args.date) if args.date else date.today()
     try:
         # Plain `outlook` never fails: it runs in note templates
         lines, data = outlook.run(root, day, args.location, only,
@@ -1028,7 +1034,10 @@ def build_parser() -> argparse.ArgumentParser:
                         "[outlook] in .meta-notes)")
     kinds = p.add_subparsers(dest="kind", metavar="KIND", parser_class=_Parser)
     for kind, text in (("weather", "only the Weather line"),
-                       ("sun", "only the Sun line")):
+                       ("sun", "only the Sun line"),
+                       ("refresh", "rewrite the Outlook in today's and "
+                                   "tomorrow's daily notes (--date: that "
+                                   "day's)")):
         k = kinds.add_parser(kind, parents=[common], help=text)
         k.add_argument("--date", type=_day_value, metavar="DAY",
                        default=argparse.SUPPRESS)

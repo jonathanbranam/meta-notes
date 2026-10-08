@@ -1193,6 +1193,18 @@ Commands ~
     gusts), `freeze` (the low, only when it is 32 or less) and `uv` (the
     day's top index) are off by default.
 
+`meta-notes outlook refresh [--date {day}] [--location {place}]`
+                                        *meta-notes-cli-outlook-refresh*
+    Rewrite the `### Outlook` section of a daily note with a fresh forecast,
+    for notes made days ahead. With no {day} it refreshes today's note and,
+    when it exists, tomorrow's; with {day}, only that day's. It replaces the
+    time in the heading and the lines the command writes (`Weather`,
+    `Temps`, `Sun`, `Alert`, `Moon`, `Wind`, `Freeze`, `UV`) and keeps any
+    other line under the heading. The write is guarded like
+    |meta-notes-cli-note-write|. A note that is missing, has no Outlook
+    heading, or can't get an outlook (no network) is left unchanged; each
+    note's status is printed. The `daily-plan` skill runs it.
+
 `meta-notes calendar [--date {period}] [--ics {path}] [filters]`
                                                 *meta-notes-cli-calendar*
     Print a day-by-day agenda for {period} (default today, in the
