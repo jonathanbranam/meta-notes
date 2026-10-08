@@ -212,3 +212,4 @@
 {"actor":"agent:manager-2","at":"2026-10-08T03:49:36.295362945Z","from":"planned","task":"mn-j7e3","to":"integrated"}
 {"actor":"human","at":"2026-10-08T11:17:17.586Z","from":"","task":"mn-zk5p","to":"pending"}
 {"actor":"external:orchestrator","at":"2026-10-08T11:17:17.803126773Z","from":"pending","task":"mn-zk5p","to":"open"}
+{"actor":"human","at":"2026-10-08T11:18:02.728Z","from":"","task":"mn-ybu6","to":"pending"}
