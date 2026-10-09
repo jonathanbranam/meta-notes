@@ -25,6 +25,20 @@ Newest first. Times are UTC. Each entry has:
   `human-process`.
 - **Follow-up:** the ticket or task, or "none" and why.
 
+## 2026-10-09 03:00: main red from a date-dependent test (mn-9by4)
+
+- **What happened:** CI failed on 34b7f06, a ticket-only commit.
+  `test_outlook_refresh_date_only_that_day` made one note for
+  `date.today()` and another for the fixed DAY 2026-10-09; once the UTC
+  date reached 2026-10-09 they were the same file. Found by the
+  `ci_failed` wake; manager-2 had no `gh` access to read the log.
+- **Impact:** main red about 5 minutes; every run that UTC day would have
+  failed.
+- **Cause:** a test mixing today's date with a fixed date that later
+  became today.
+- **Category:** `ci`.
+- **Follow-up:** mn-9by4 (deb8253): the other note uses DAY + 1 day.
+
 ## 2026-10-08 22:31: worker started inside the settle period (meta-notes-ui mu-sq42)
 
 - **What happened:** the orchestrator readied and queued mu-sq42 at 22:30;
