@@ -2,9 +2,9 @@
 id = "mn-7tfg"
 title = "Conflict diff closes and silently discards the newer disk write (autosave.vim, manual :w)"
 kind = "bug"
-state = "pending"
+state = "planned"
 created_at = "2026-10-09T20:00:53.146Z"
-updated_at = "2026-10-09T20:00:53.146Z"
+updated_at = "2026-10-09T21:22:57.821442734Z"
 created_by = "external:orchestrator@dalek"
 watchers = ["external:orchestrator@dalek"]
 +++
