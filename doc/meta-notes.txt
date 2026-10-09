@@ -1923,5 +1923,11 @@ may ask whether to overwrite, which is your decision. A successful write
 resumes autosave and closes the diff. Closing the split yourself just ends
 diff mode. A file deleted on disk gives a warning; the buffer is kept.
 
+A manual |:w| is guarded the same way (with autosave or autoreload on): if
+the file changed on disk since Vim read it, or since the diff was last
+shown, the write is refused with a message and the diff is opened or
+refreshed to the latest disk contents. Write again, with the disk
+unchanged, to go on; Vim's own overwrite prompt then decides.
+
 ==============================================================================
 vim:ft=help:tw=78:ts=4:et:

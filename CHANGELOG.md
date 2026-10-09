@@ -6,6 +6,13 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 2.31.0 - 2026-10-09
+
+- Fixed: with autosave or autoreload on, a manual `:w` of a notes buffer
+  whose file changed on disk is refused first, with a diff of disk against
+  your buffer; an open diff is refreshed (and you are told) when the file
+  changes again. The conflict diff also no longer drops the file's first line.
+
 ## 2.30.0 - 2026-10-08
 
 - Changed: calendar `downloads` now takes one setting, a folder and a glob

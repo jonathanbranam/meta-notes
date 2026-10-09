@@ -121,6 +121,7 @@ function! s:SetBufferAutocmds(buf, active) abort
     if a:active
       autocmd FileChangedShell <buffer> call meta_notes#autosave#OnChangedShell()
       autocmd FileChangedShellPost <buffer> call meta_notes#autosave#OnChangedShellPost()
+      autocmd BufWritePre <buffer> call meta_notes#autosave#OnWritePre()
     endif
   augroup END
 endfunction
@@ -352,15 +353,79 @@ endfunction
 " Conflicts: unsaved edits and the file changed on disk
 
 function! s:Conflict(buf) abort
-  if !bufloaded(a:buf) || getbufvar(a:buf, 'meta_notes_conflict', 0)
+  if !bufloaded(a:buf)
+    return
+  endif
+  let l:seen = s:DiskStamp(a:buf)
+  if getbufvar(a:buf, 'meta_notes_conflict', 0)
+    " Already in conflict: the disk changed again under an open diff
+    if l:seen !=# getbufvar(a:buf, 'meta_notes_seen', '')
+      call setbufvar(a:buf, 'meta_notes_seen', l:seen)
+      call s:RefreshDiff(a:buf)
+      call s:Message(s:Name(a:buf) . ' changed on disk again;'
+            \ . ' the diff shows the latest. Resolve, then :w', 1)
+    endif
     return
   endif
   call setbufvar(a:buf, 'meta_notes_conflict', 1)
+  call setbufvar(a:buf, 'meta_notes_seen', l:seen)
   call s:Message(s:Name(a:buf) . ' changed on disk and has unsaved edits;'
         \ . ' autosave paused. Resolve, then :w', 1)
   if get(g:, 'meta_notes_conflict_diff', 1) && bufnr('%') == a:buf
     call s:OpenDiff(a:buf)
   endif
+endfunction
+
+" BufWritePre, set per notes buffer: a manual :w of a buffer whose file
+" changed on disk since Vim read it (or since the diff was last shown) is
+" not written. The diff of disk against the buffer is shown or refreshed
+" first; a second :w, with the disk unchanged since, goes through to Vim's
+" own overwrite check. Only a write of the buffer's own file is guarded.
+function! meta_notes#autosave#OnWritePre() abort
+  let l:buf = bufnr('%')
+  if (!s:Autosave() && !s:Autoreload()) || !meta_notes#autosave#IsNotesBuffer(l:buf)
+        \ || fnamemodify(expand('<afile>'), ':p') !=# fnamemodify(bufname(l:buf), ':p')
+        \ || !filereadable(expand('<afile>:p'))
+    return
+  endif
+  let l:disk = s:DiskStamp(l:buf)
+  if l:disk ==# getbufvar(l:buf, 'meta_notes_stamp', '')
+    return
+  endif
+  if getbufvar(l:buf, 'meta_notes_conflict', 0)
+        \ && l:disk ==# getbufvar(l:buf, 'meta_notes_seen', '')
+    return
+  endif
+  call s:Conflict(l:buf)
+  throw 'meta-notes: ' . s:Name(l:buf) . ' not written: it changed on disk.'
+        \ . ' Review the diff, then :w again to overwrite'
+endfunction
+
+" Reload the scratch buffer with the file as it is on disk now, or open the
+" diff when it has been closed
+function! s:RefreshDiff(buf) abort
+  let l:scratch = getbufvar(a:buf, 'meta_notes_diff', 0)
+  if !get(g:, 'meta_notes_conflict_diff', 1)
+    return
+  endif
+  if !l:scratch || !bufexists(l:scratch)
+    if bufnr('%') == a:buf
+      call s:OpenDiff(a:buf)
+    endif
+    return
+  endif
+  let l:file = fnamemodify(bufname(a:buf), ':p')
+  let l:cur = win_getid()
+  let l:wins = win_findbuf(l:scratch)
+  if empty(l:wins) || !filereadable(l:file) || !win_gotoid(l:wins[0])
+    return
+  endif
+  setlocal modifiable
+  silent! %delete _
+  silent! execute 'read ++edit' fnameescape(l:file)
+  setlocal nomodifiable
+  call win_gotoid(l:cur)
+  diffupdate
 endfunction
 
 " Open a scratch split with the file as it is on disk and diff it
@@ -376,7 +441,6 @@ function! s:OpenDiff(buf) abort
   let &l:filetype = l:ft
   silent! file `='meta-notes://disk/' . fnamemodify(l:file, ':t')`
   silent! execute 'read ++edit' fnameescape(l:file)
-  silent! 1delete _
   setlocal nomodifiable
   let l:scratch = bufnr('%')
   diffthis
@@ -407,6 +471,7 @@ function! s:ClearConflict(buf) abort
     return
   endif
   call setbufvar(a:buf, 'meta_notes_conflict', 0)
+  call setbufvar(a:buf, 'meta_notes_seen', '')
   let l:scratch = getbufvar(a:buf, 'meta_notes_diff', 0)
   if l:scratch && bufexists(l:scratch)
     silent! execute 'bwipeout' l:scratch
