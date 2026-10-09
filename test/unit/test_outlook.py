@@ -355,7 +355,8 @@ def test_outlook_refresh_tomorrow_missing(root, net):
 
 
 def test_outlook_refresh_date_only_that_day(root, net):
-    other = make_note(root, date.today(), OLD)
+    from datetime import timedelta
+    other = make_note(root, DAY + timedelta(days=1), OLD)
     target = make_note(root, DAY, OLD)
     code, data = run('outlook', 'refresh', '--date', '2026-10-09')
     assert [n['date'] for n in data['notes']] == ['2026-10-09']
