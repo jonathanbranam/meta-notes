@@ -37,3 +37,17 @@ Proposed (the aide; for the orchestrator to refine):
   2.x (or everything) from tags and merge messages. Aide's recommendation:
   a one-time short backfill of the 2.x minor versions, one line each, so
   recent changes (outlook, calendar downloads, recurrence) are findable.
+
+## The human's answers, 2026-10-08 (to the meta-notes aide)
+
+> It should include new functionality and changes to options and
+> existing functionality.
+>
+> I think backfill but how far? Idk how far back 2.0 is but that sounds
+> fine.
+
+So: entries cover new functionality, and changes to options and to
+existing behaviour (fixes too, where a user would notice). Backfill from
+v2.0.0 (2026-09-30; 60 tags, v2.0.0 to v2.30.0), from the tags and merge
+messages, one entry per version. Earlier versions (v0.1.0 2026-09-25 to
+v1.x) aren't backfilled. Ready for a task.
