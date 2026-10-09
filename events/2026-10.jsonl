@@ -226,3 +226,4 @@
 {"actor":"agent:manager-2","at":"2026-10-08T14:58:12.146603092Z","from":"open","task":"mn-ex6w","to":"planned"}
 {"actor":"agent:manager-2","at":"2026-10-08T15:01:31.703428973Z","from":"planned","task":"mn-ex6w","to":"integrated"}
 {"actor":"human","at":"2026-10-09T03:00:10.188Z","from":"","task":"mn-psgg","to":"pending"}
+{"actor":"external:orchestrator","at":"2026-10-09T03:00:34.462912738Z","from":"pending","task":"mn-psgg","to":"open"}
