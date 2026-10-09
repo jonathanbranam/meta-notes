@@ -25,6 +25,23 @@ Newest first. Times are UTC. Each entry has:
   `human-process`.
 - **Follow-up:** the ticket or task, or "none" and why.
 
+## 2026-10-09 11:58: unqueued tasks built inside the 10-minute wait (meta-notes-ui mu-xhyt, mu-u4b9)
+
+- **What happened:** the orchestrator readied and planned mu-u4b9 at 11:57
+  and held back queueing it until 12:08. manager-1 spawned a worker on it
+  anyway and merged at 12:06. Earlier, mu-xhyt (readied 11:22) was merged
+  at 11:29: the daemon's settle ended at 11:26, about 4 minutes after the
+  task was created, not 10. Found from manager-1's merge notes.
+- **Impact:** none this time (the human added nothing), but the 10-minute
+  window the human asked for was skipped twice in an hour.
+- **Cause:** a planned task is claimable without being in the queue, and the
+  daemon's settle period is shorter than 10 minutes; manager-1 starts any
+  startable task.
+- **Category:** `daemon`, `role`.
+- **Follow-up:** bridle zta7 (enforce the wait). Until then the orchestrator
+  plans a task only after its 10 minutes, and told manager-1 to start only
+  queued tasks.
+
 ## 2026-10-09 03:00: main red from a date-dependent test (mn-9by4)
 
 - **What happened:** CI failed on 34b7f06, a ticket-only commit.
