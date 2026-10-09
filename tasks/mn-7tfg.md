@@ -2,11 +2,13 @@
 id = "mn-7tfg"
 title = "Conflict diff closes and silently discards the newer disk write (autosave.vim, manual :w)"
 kind = "bug"
-state = "planned"
+state = "integrated"
 created_at = "2026-10-09T20:00:53.146Z"
-updated_at = "2026-10-09T21:30:14.818889639Z"
+updated_at = "2026-10-09T21:30:56.564182449Z"
 created_by = "external:orchestrator@dalek"
 watchers = ["external:orchestrator@dalek"]
+commit = "f17ad50"
+summary = "BufWritePre guard on notes buffers: a manual :w is refused with a diff when the disk changed since read or since the diff was shown; an open diff is refreshed and the user told when the disk changes again. Diff no longer drops the first disk line. Vim's own overwrite prompt remains on a second :w. Spec notes-autosave, doc, CHANGELOG. v2.31.0."
 +++
 
 Filed by orchestrator for the human (via email to the bridle mail bridge, 2026-10-09 ~4:00 PM ET, SES hbkhpn5humocnkivtqe9m18sv4c8aa53t16tvo81: "Please file this as a bug report on the meta-notes project."). The report, verbatim:
@@ -103,3 +105,6 @@ edit with no backup and no recovery path.
 Done on bridle/autosave-conflict, commit 9e37673 (version 2.31.0).
 Fix: BufWritePre on notes buffers (autosave or autoreload on; no timers). A :w of the buffer's own file is refused with a message when disk stamp != stamp read and != stamp last shown in the diff; it opens the diff or refreshes the open scratch buffer ("changed on disk again"). A second :w with disk unchanged passes the plugin guard; Vim's own overwrite prompt remains (Vim prompts even on :w!, cannot be avoided without BufWriteCmd). Also fixed: OpenDiff dropped the first disk line (read ++edit adds no blank line).
 Checks: ./run_tests.sh 185/185 (467 assertions); uv run pytest test/unit/ 1623 passed, 1 skipped; bridle spec check --require-ids 0 errors. Spec notes-autosave.md, doc, CHANGELOG updated.
+
+### note · agent:manager-2 · 2026-10-09T21:30:56.564Z
+integrated: f17ad50
