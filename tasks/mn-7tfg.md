@@ -4,7 +4,7 @@ title = "Conflict diff closes and silently discards the newer disk write (autosa
 kind = "bug"
 state = "planned"
 created_at = "2026-10-09T20:00:53.146Z"
-updated_at = "2026-10-09T21:22:57.821442734Z"
+updated_at = "2026-10-09T21:30:14.818889639Z"
 created_by = "external:orchestrator@dalek"
 watchers = ["external:orchestrator@dalek"]
 +++
@@ -96,3 +96,10 @@ edit with no backup and no recovery path.
   `s:Conflict()`/`s:OpenDiff()` so the user always sees a diff — current
   on-disk contents vs. their buffer — before choosing to overwrite,
   instead of a bare y/n prompt with no diff available.
+
+## Thread
+
+### note · agent:autosave-conflict · 2026-10-09T21:30:14.818Z
+Done on bridle/autosave-conflict, commit 9e37673 (version 2.31.0).
+Fix: BufWritePre on notes buffers (autosave or autoreload on; no timers). A :w of the buffer's own file is refused with a message when disk stamp != stamp read and != stamp last shown in the diff; it opens the diff or refreshes the open scratch buffer ("changed on disk again"). A second :w with disk unchanged passes the plugin guard; Vim's own overwrite prompt remains (Vim prompts even on :w!, cannot be avoided without BufWriteCmd). Also fixed: OpenDiff dropped the first disk line (read ++edit adds no blank line).
+Checks: ./run_tests.sh 185/185 (467 assertions); uv run pytest test/unit/ 1623 passed, 1 skipped; bridle spec check --require-ids 0 errors. Spec notes-autosave.md, doc, CHANGELOG updated.
