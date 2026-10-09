@@ -95,6 +95,45 @@ Execute (A conflict opens a diff against the disk, and a write closes it):
   Assert !&diff
   bwipeout!
 
+Execute (A manual write is guarded: it shows a diff first, then goes through):
+  let g:meta_notes_conflict_diff = 1
+  let f = g:test_dir . '/notes/project/a.md'
+  call writefile(['one', 'two'], f)
+  execute 'edit' f
+  let notes_buf = bufnr('%')
+  call setline(1, 'mine')
+  sleep 1100m
+  call writefile(['theirs, and longer', 'x'], f)
+  let caught = ''
+  try
+    write
+  catch
+    let caught = v:exception
+  endtry
+  Assert caught =~# 'not written'
+  AssertEqual ['theirs, and longer', 'x'], readfile(f)
+  AssertEqual 1, b:meta_notes_conflict
+  let scratch = b:meta_notes_diff
+  Assert scratch > 0
+  AssertEqual ['theirs, and longer', 'x'], getbufline(scratch, 1, '$')
+  " The disk changes again under the open diff: the diff is refreshed
+  call writefile(['third version', 'x', 'y'], f)
+  let caught = ''
+  try
+    write
+  catch
+    let caught = v:exception
+  endtry
+  Assert caught =~# 'not written'
+  AssertEqual ['third version', 'x', 'y'], getbufline(scratch, 1, '$')
+  " Disk unchanged since the diff was shown: no more refusals (Vim's own
+  " overwrite prompt is the human's decision), and a write ends the conflict
+  call meta_notes#autosave#OnWritePre()
+  Assert exists('b:meta_notes_diff')
+  doautocmd BufWritePost
+  AssertEqual 0, b:meta_notes_conflict
+  bwipeout!
+
 Execute (FileChangedShell reloads an unmodified notes buffer):
   let g:meta_notes_autoreload = 1
   let g:meta_notes_watch = 0

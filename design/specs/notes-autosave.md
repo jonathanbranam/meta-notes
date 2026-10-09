@@ -41,6 +41,14 @@ When a notes buffer has unsaved edits and its file changed on disk, the plugin S
 - **WHEN** the user resolves a conflict and writes the buffer
 - **THEN** autosave SHALL resume for that buffer and the diff SHALL close
 
+### Requirement: Manual writes are guarded  {#r-b6b5}
+While autosave or autoreload is on, a write of a notes buffer to its own file (`:w`) SHALL be refused with a message when the file changed on disk since Vim read it or since the conflict diff was last shown. The refusal SHALL open the diff of disk against the buffer (when `g:meta_notes_conflict_diff` is on), or refresh an open diff to the current disk contents and message that the file changed again. A further write with the disk unchanged since SHALL NOT be refused by the plugin. The guard SHALL use a `BufWritePre` autocommand on notes buffers only, with no timer.
+
+#### Scenario: Disk changed again under an open diff  {#s-9c28}
+*Verification*: **non-executable**
+- **WHEN** a conflict diff is open and the file changes on disk again, and the user writes
+- **THEN** the write SHALL be refused, the diff SHALL show the latest disk contents, and the user SHALL be messaged
+
 ### Requirement: Runtime control  {#r-6462}
 The plugin SHALL provide `:MetaNotesAutosave` and `:MetaNotesAutoreload` (`on`, `off` or `toggle`, default toggle) and `:MetaNotesAutoStatus`, which shows autosave, autoreload, the watcher binary, the timer interval and the conflict diff setting.
 
