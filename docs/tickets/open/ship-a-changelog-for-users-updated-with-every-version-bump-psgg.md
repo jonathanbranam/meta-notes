@@ -9,7 +9,7 @@ changes: []
 specs: []
 needs: []
 see: []
-tasks: []
+tasks: [mn-psgg]
 ---
 
 ## The ask
@@ -51,3 +51,5 @@ existing behaviour (fixes too, where a user would notice). Backfill from
 v2.0.0 (2026-09-30; 60 tags, v2.0.0 to v2.30.0), from the tags and merge
 messages, one entry per version. Earlier versions (v0.1.0 2026-09-25 to
 v1.x) aren't backfilled. Ready for a task.
+
+The human, confirming the audience: "As you said - user facing things". Entries describe what a user of the plugin and CLI sees or must do; internal changes (tests, refactors, agent/bridle workflow, specs) stay out.
