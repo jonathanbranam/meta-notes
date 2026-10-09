@@ -213,7 +213,8 @@ always runs on `python3` itself. Only `calendar` needs the virtualenv; every
 other command works on either.
 
 `meta-notes --version` (or `:MetaNotesVersion` in Vim) shows the installed
-version and, for a git checkout, its commit.
+version and, for a git checkout, its commit. See `CHANGELOG.md` for what
+changed in each version.
 
 Link it into a directory on your `PATH`; the shipped Claude Code skills call
 `meta-notes` by name, and `init` warns if it isn't found. For example, with
