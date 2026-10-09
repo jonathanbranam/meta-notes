@@ -25,6 +25,27 @@ Newest first. Times are UTC. Each entry has:
   `human-process`.
 - **Follow-up:** the ticket or task, or "none" and why.
 
+## 2026-10-09 21:22: mn-7tfg built and merged 8 minutes after ready, past a hold
+
+- **What happened:** the dalek orchestrator filed mn-7tfg (the human's
+  emailed bug report) as pending at 20:00, meaning to wait for the human's
+  go. The NUC orchestrator readied it at 21:22 under the small-bug-fix rule,
+  without asking dalek why it was left pending. The daemon told manager-2
+  "Plan it or queue it"; manager-2 planned it within 5 seconds, a worker
+  built it, and it merged at 21:30 (f17ad50, v2.31.0). Dalek's hold (m-0804)
+  arrived 28 seconds before the merge, as a message, after manager-2 had
+  started merging. Found from manager-2's note m-0806.
+- **Impact:** the 10-minute wait was skipped again, and a fix landed that
+  dalek meant to hold for the human. Checks and CI were green; nothing broke.
+- **Cause:** two orchestrators acting on one task with no handoff, and the
+  same gap as the entry below: a readied task can be planned and claimed at
+  once (bridle zta7 not built yet). manager-2 is a new manager and never got
+  the "start only queued tasks" note sent to manager-1.
+- **Category:** `coordination`, `role`, `daemon`.
+- **Follow-up:** bridle zta7. Manager-2 told to wait 10 minutes after ready
+  before planning; the orchestrators ask each other before readying a task
+  the other filed pending.
+
 ## 2026-10-09 11:58: unqueued tasks built inside the 10-minute wait (meta-notes-ui mu-xhyt, mu-u4b9)
 
 - **What happened:** the orchestrator readied and planned mu-u4b9 at 11:57
