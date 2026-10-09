@@ -2,9 +2,9 @@
 id = "mn-psgg"
 title = "Ship a CHANGELOG for users, updated with every version bump"
 kind = "feature"
-state = "open"
+state = "planned"
 created_at = "2026-10-09T03:00:10.188Z"
-updated_at = "2026-10-09T03:00:35.033623540Z"
+updated_at = "2026-10-09T03:10:42.582867061Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
 ticket = "psgg"
