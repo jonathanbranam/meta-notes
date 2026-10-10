@@ -4,6 +4,12 @@
   (tickets, role docs, changes the human asked for) is pushed right away
   with `git push origin main`; don't ask first. The
   human, 2026-09-30: "you should always push completed work."
+- **You plan the tasks.** meta-notes has no project or product manager,
+  so planning is the orchestrator's job for now: write the brief, `bridle
+  task plan`, and order the queue (rule `planning-the-queue`). The manager
+  only builds from the queue. The human, 2026-10-10: "because there aren't
+  any other roles like the project manager or a product manager, for now
+  it's the orchestrator's job to plan tasks."
 - **Tasks from tickets.** Ideas and features that need the human's input
   are tickets with no task (`bridle ticket new --no-task`) until they
   approve them. A small bug fix may get its task right away, so it's in the
