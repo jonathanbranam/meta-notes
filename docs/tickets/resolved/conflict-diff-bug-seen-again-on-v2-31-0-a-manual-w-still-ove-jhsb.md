@@ -8,11 +8,10 @@ repos: [meta-notes]
 changes: []
 specs: []
 needs: []
-see: [7tfg]
+see: []
 tasks: []
+closed: 2026-10-11T21:18:15Z
 ---
-
-## The ask
 
 ## The ask
 
@@ -33,3 +32,7 @@ Asked whether this was before the mn-7tfg fix, the human said, verbatim (via the
 ## Likely fix direction
 
 Close the second-:w gap: a write of a notes buffer whose disk stamp moved since the last diff shown should never reach Vim's bare W12 prompt without a current diff (for example, handle FileChangedShell / the W12 path for notes buffers, or keep refusing until the user has seen the latest disk contents). Also check the sequence in the report (a second agent write while the diff is open, then :w) against v2.31.0 in a vader test.
+
+## Resolution (2026-10-11): duplicate of mn-7tfg, no task
+
+The human corrected the timing, verbatim (via the bridle aide, m-0820, ~5:25 PM ET): "I found that issue at work on Friday I believe e. For meta notes." They hit it on Friday 2026-10-09, before v2.31.0 merged (5:30 PM ET that day); it was filed as mn-7tfg at about 4:00 PM ET and fixed in v2.31.0. Today's email only re-sent that report. Nothing to build. If it happens again on v2.31.0 or later, file a new ticket. The second-:w gap noted above is known and documented in the mn-7tfg fix; it gets a ticket only if the human asks.
