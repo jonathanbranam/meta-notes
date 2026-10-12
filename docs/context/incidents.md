@@ -25,6 +25,25 @@ Newest first. Times are UTC. Each entry has:
   `human-process`.
 - **Follow-up:** the ticket or task, or "none" and why.
 
+## 2026-10-12 02:25: meta-notes daemon crash-looped on the 0.6.2 upgrade
+
+- **What happened:** during the human's upgrade to bridle 0.6.2 the
+  meta-notes daemon exited at start 36+ times (systemd restart loop, unit
+  stuck "activating") with `workflow directory
+  /Volumes/Data/work/bridle/bridle/workflow is missing or unreadable`. The
+  human saw it, removed the `workflow` line from each project config and the
+  global config (07c710d here) and restarted; all four NUC daemons came back
+  on 0.6.2 by 02:35. The orchestrator found the error in `.bridle/daemon.log`.
+- **Impact:** meta-notes daemon down about 10 minutes; agents were idle, no
+  work lost. Orchestrator waiters re-armed several times.
+- **Cause:** a `workflow` path from the Mac (/Volumes/...) in config, which
+  the NUC can't read; 0.6.2 treats an unreadable workflow directory as fatal.
+- **Category:** `config`, `daemon`.
+- **Follow-up:** none; fixed by the human. Separately, every project logs
+  `upgrade_failed` at `workflow_checkout` (fetching tag v0.6.2 from the
+  project's own remote); non-fatal, falls back to the previous tag's
+  workflow; reported to the human.
+
 ## 2026-10-09 21:22: mn-7tfg built and merged 8 minutes after ready, past a hold
 
 - **What happened:** the dalek orchestrator filed mn-7tfg (the human's
