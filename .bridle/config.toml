@@ -5,10 +5,6 @@
 # There's no `project` key: bridle names the project after the repo
 # directory ("meta-notes"), and an unknown key stops the daemon from starting.
 
-# L1 base layer, from the human's bridle checkout (the interim form until
-# workflow can be a git url).
-workflow = "/Volumes/Data/work/bridle/bridle/workflow"
-
 # No packs yet. The Python (uv, stdlib-only) and Vim (vader) rules live
 # in this project's .bridle/rules/ for now and move into python/vim packs
 # once bridle has them.
