@@ -25,6 +25,27 @@ Newest first. Times are UTC. Each entry has:
   `human-process`.
 - **Follow-up:** the ticket or task, or "none" and why.
 
+## 2026-10-13 21:43: meta-notes-ui manager's Bash denied after a daemon restart
+
+- **What happened:** after the orchestrator restarted the meta-notes-ui
+  daemon (21:34, to load the human's new `[budget]` limits) and spawned
+  manager-2, the manager merged mu-nqwt (ecd0dd8) but reported "push
+  refused: owned by nuc" and that it could not run `npm run check`. On the
+  orchestrator's follow-up, every Bash call was denied, even `git fetch`.
+  vesta is `nuc`, and origin/main already had ecd0dd8, so the refusal was
+  most likely the same denial misread. Found by the orchestrator reading
+  `bridle agent logs manager-2`.
+- **Impact:** a question sent to the human that needed nothing from them
+  (m-0599); v0.20.0 untagged and the ticket open about 30 minutes; the
+  orchestrator tagged, verified and resolved by hand. The merge went in on
+  the worker's check report alone.
+- **Cause:** unknown. The worker spawned at the same time ran Bash fine.
+  Possibly the manager's permission mode or settings after the restart.
+- **Category:** `daemon`, `role`.
+- **Follow-up:** none yet; the webpush worker still needs `bridle rm
+  webpush --delete-branch` (the human's), and manager-2 needs a restart to
+  see whether Bash comes back.
+
 ## 2026-10-12 02:25: meta-notes daemon crash-looped on the 0.6.2 upgrade
 
 - **What happened:** during the human's upgrade to bridle 0.6.2 the
