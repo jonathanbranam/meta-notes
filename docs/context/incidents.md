@@ -372,3 +372,11 @@ Newest first. Times are UTC. Each entry has:
 - **Follow-up:** the human runs `bridle project take-over` per project
   (asked via aide, m-0859). A rename that updated owners itself would
   avoid this; not filed.
+- **Later (01:55):** the take-overs (01:29-01:35) gave meta-notes-ui,
+  dotfiles-local and notes fresh daemon databases (old ones in
+  `.bridle/db-backups/`), and the daemons didn't load the ticket rows from
+  `bridle/state`: `task list` was empty on all three though the state
+  branches hold 41, 5 and 1 tasks. Messages on those daemons are gone
+  (backups only). Fix asked of the human via aide (m-0869): `bridle daemon
+  rebuild --project <name>` for each. A take-over that rebuilt rows itself
+  would avoid this; not filed.
