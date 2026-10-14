@@ -2,9 +2,9 @@
 id = "mn-h7uc"
 title = "Vim: MetaNotesTaskList, a read-only task list buffer like MetaNotesTimeReport"
 kind = "feature"
-state = "pending"
+state = "planned"
 created_at = "2026-10-14T20:23:16.453Z"
-updated_at = "2026-10-14T20:23:29.563140448Z"
+updated_at = "2026-10-14T20:24:04.075586736Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
 ticket = "h7uc"
