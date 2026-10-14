@@ -238,3 +238,6 @@
 {"actor":"agent:manager-2","at":"2026-10-09T21:22:57.821442734Z","from":"open","task":"mn-7tfg","to":"planned"}
 {"actor":"agent:manager-2","at":"2026-10-09T21:30:56.564182449Z","from":"planned","task":"mn-7tfg","to":"integrated"}
 {"actor":"external:aide","at":"2026-10-14T01:53:51.057388047Z","from":"claimed","task":"mn-ary9","to":"integrated"}
+{"actor":"human","at":"2026-10-14T16:04:57.226Z","from":"","task":"mn-mdtd","to":"pending"}
+{"actor":"external:aide","at":"2026-10-14T16:04:57.349184412Z","from":"pending","task":"mn-mdtd","to":"open"}
+{"actor":"external:aide","at":"2026-10-14T16:04:57.404828278Z","from":"open","task":"mn-mdtd","to":"planned"}
