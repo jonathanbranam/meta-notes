@@ -37,12 +37,16 @@ Newest first. Times are UTC. Each entry has:
   dotfiles-local took the same upgrade and are fine.
 - **Impact:** no orchestrator waiter on meta-notes and no aide access, so
   nothing on meta-notes is watched. No work in flight there.
-- **Cause:** unknown. The database was not replaced (same `bridle.db`), so
-  it isn't the take-over's fresh-DB problem.
+- **Cause:** unknown; see Later.
 - **Category:** `daemon`.
-- **Follow-up:** the human re-pairs tokens (`bridle token pair`), asked via
-  aide (notes m-0008). Bridle bug to be filed by aide or dalek's
-  orchestrator.
+- **Follow-up:** the human re-paired tokens (`bridle token pair`) at
+  11:10; aide filed bridle br-nbgp.
+- **Later (11:15):** the restart had also emptied the daemon's records:
+  no ticket rows (19 open ticket files), message ids back to m-0001,
+  state "nothing pushed yet". So the cause is probably one reset, not a
+  token bug alone; `bridle.db` keeping its name misled the first look.
+  Rebuild (`bridle daemon rebuild --project meta-notes`) asked of the human
+  via aide (m-0006).
 
 ## 2026-10-14 02:59: wakes and mail cross-wired between vesta and dalek
 
