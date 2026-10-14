@@ -25,6 +25,25 @@ Newest first. Times are UTC. Each entry has:
   `human-process`.
 - **Follow-up:** the ticket or task, or "none" and why.
 
+## 2026-10-14 10:49: meta-notes daemon refuses every external token after the v0.7.2 upgrade
+
+- **What happened:** the meta-notes daemon restarted itself for the
+  upgrade to bridle v0.7.2 at 10:49 and since then answers 401 "invalid
+  token" to every external token for meta-notes in credentials.toml (aide,
+  orchestrator, advisor, mail). Only the human token works; the daemon
+  log shows the restart wrote a new one ("wrote human token"). Reported by
+  meta-notes' aide through the notes daemon (m-0007); confirmed by the
+  orchestrator's waiter and `bridle status`. notes, meta-notes-ui and
+  dotfiles-local took the same upgrade and are fine.
+- **Impact:** no orchestrator waiter on meta-notes and no aide access, so
+  nothing on meta-notes is watched. No work in flight there.
+- **Cause:** unknown. The database was not replaced (same `bridle.db`), so
+  it isn't the take-over's fresh-DB problem.
+- **Category:** `daemon`.
+- **Follow-up:** the human re-pairs tokens (`bridle token pair`), asked via
+  aide (notes m-0008). Bridle bug to be filed by aide or dalek's
+  orchestrator.
+
 ## 2026-10-14 02:59: wakes and mail cross-wired between vesta and dalek
 
 - **What happened:** dalek's daemon forwards its own wakes to the vesta
