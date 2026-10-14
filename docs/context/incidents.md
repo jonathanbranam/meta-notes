@@ -40,9 +40,10 @@ Newest first. Times are UTC. Each entry has:
   rename and `bridle token pair` (2026-10-13 ~01:30 and 21:50) maps
   `external:orchestrator` to the wrong home daemon.
 - **Category:** `daemon`, `coordination`.
-- **Follow-up:** none filed yet. Told dalek's orchestrator meta-notes-ui
-  is vesta's (o-0004). If it happens again, file a bridle bug on visitor
-  forwarding.
+- **Follow-up:** bridle br-nncj, filed by dalek's orchestrator
+  (2026-10-14 10:01) after the wakes kept coming (m-0002 to m-0022).
+  dalek gets its own wakes too, so the ones here are extra copies. Told
+  dalek's orchestrator meta-notes-ui is vesta's (o-0004).
 
 ## 2026-10-13 21:43: meta-notes-ui manager's Bash denied after a daemon restart
 
