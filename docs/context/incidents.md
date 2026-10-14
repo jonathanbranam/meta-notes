@@ -352,3 +352,23 @@ Newest first. Times are UTC. Each entry has:
 - **Category:** `agent-behaviour`, `cli-design`.
 - **Follow-up:** notes rule `expect-what-you-read`; ticket zk5p (guard hook,
   task mn-zk5p); question ticket t85d (revision tokens).
+
+## 2026-10-14 01:01: pushes refused on vesta after the nuc -> vesta rename
+
+- **What happened:** the human renamed this machine `nuc` -> `vesta` in
+  `~/.bridle/config.toml` (`[machine]`, `[machines]`, `[projects]`) at
+  00:59. `owner.toml` on `bridle/state` still says `host = "nuc"` in all
+  four projects here (meta-notes, notes, dotfiles-local, meta-notes-ui), so
+  the pre-push hook refuses every push of `main` from vesta. Reported by
+  the notes advisor (m-0178) and by the notes daemon's failed automatic
+  push (m-0180).
+- **Impact:** nothing reaches origin from this machine until ownership
+  moves; the notes advisor holds 2 commits. No work lost.
+- **Cause:** the rename changed the machine's name in config but not the
+  owner recorded on each project's state branch. Possibly also behind the
+  2026-10-13 21:43 "push refused: owned by nuc" above, which was put down
+  to the Bash denial.
+- **Category:** `config`, `daemon`.
+- **Follow-up:** the human runs `bridle project take-over` per project
+  (asked via aide, m-0859). A rename that updated owners itself would
+  avoid this; not filed.
