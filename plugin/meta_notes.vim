@@ -90,6 +90,7 @@ command! MetaNotesVersion call meta_notes#cli#ShowVersion()
 
 " Time tracking
 command! MetaNotesTimeReport call meta_notes#time_tracking#ShowReport()
+command! MetaNotesTaskList call meta_notes#task_list#Show()
 
 " Autosave and autoreload of notes buffers (off by default; see
 " :help meta-notes-autosave)
@@ -120,6 +121,7 @@ augroup meta_notes_mappings
   autocmd FileType markdown nnoremap <buffer> <localleader>n  :MetaNotesDaily<CR>
   autocmd FileType markdown nnoremap <buffer> <localleader>np :MetaNotesDailyPrev<CR>
   autocmd FileType markdown nnoremap <buffer> <localleader>nn :MetaNotesDailyNext<CR>
+  autocmd FileType markdown nnoremap <buffer> <localleader>t  :MetaNotesTaskList<CR>
 augroup END
 
 " Restore cpo

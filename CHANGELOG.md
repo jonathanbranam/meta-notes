@@ -6,6 +6,12 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 2.32.0 - 2026-10-14
+
+- New: `:MetaNotesTaskList` (`<localleader>t` in markdown) shows the task
+  agenda in a readonly `Task List` buffer; `<CR>` on a task opens its file
+  at its line.
+
 ## 2.31.0 - 2026-10-09
 
 - Fixed: with autosave or autoreload on, a manual `:w` of a notes buffer

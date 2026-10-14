@@ -218,6 +218,13 @@ TIME TRACKING ~
     daily note for that date under the current directory, is shown as an
     error message. See |meta-notes-time-report|.
 
+                                                *:MetaNotesTaskList*
+:MetaNotesTaskList
+    Show `meta-notes tasks --agenda` (|meta-notes-cli-tasks|) in a readonly
+    `Task List` window, reusing it if open: a heading per day, the file as
+    a wiki link, then its tasks. The notes root is Vim's current
+    directory. Press <CR> on a task line to open its file at its line.
+
                                                 *meta-notes-timeblock-hl*
 Time Block highlights ~
 
@@ -270,6 +277,7 @@ Markdown mappings (buffer-local): ~
     <localleader>n      Open today's daily note (|:MetaNotesDaily|)
     <localleader>np     Navigate to previous daily note (|:MetaNotesDailyPrev|)
     <localleader>nn     Navigate to next daily note (|:MetaNotesDailyNext|)
+    <localleader>t      Show the task list (|:MetaNotesTaskList|)
 
 ==============================================================================
 6. TEMPLATES                                    *meta-notes-templates*

@@ -73,6 +73,7 @@ meta-notes/
 │       ├── cli.vim          # Runs bin/meta-notes and decodes its JSON
 │       ├── file_ops.vim     # File operations (archive, rename) via the CLI
 │       ├── notes.vim        # Note navigation; opens notes via the CLI
+│       ├── task_list.vim    # Task list buffer (agenda, jump to task)
 │       ├── template.vim     # Runs {{% vim %}} blocks in rendered notes
 │       └── time_tracking.vim # Time tracking functionality
 ├── after/               # After-directory for syntax highlighting
@@ -467,6 +468,7 @@ mappings are buffer-local (`<buffer>`) maps set from `autocmd FileType` in `plug
 | `<localleader>n` | `:MetaNotesDaily` | Open today's daily note |
 | `<localleader>np` | `:MetaNotesDailyPrev` | Navigate to previous daily note |
 | `<localleader>nn` | `:MetaNotesDailyNext` | Navigate to next daily note |
+| `<localleader>t` | `:MetaNotesTaskList` | Show the task agenda; `<CR>` on a task opens it |
 
 ## Development Workflow
 
