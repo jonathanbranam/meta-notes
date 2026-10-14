@@ -52,6 +52,10 @@ Newest first. Times are UTC. Each entry has:
   (mn-3p28, mn-4fsj, mn-pqwv). With the human's go via aide, the
   orchestrator demoted them to `####` on `bridle/state` (fea3dca). Parser
   and error-message bugs filed with bridle by aide.
+- **Resolved (11:40):** the rebuild had read the daemon's stale local
+  `.bridle/state` worktree; aide fast-forwarded it to fea3dca at the
+  human's request, and the second rebuild loaded 84 rows. Tokens all 200.
+  Old message history is gone (backups only).
 
 ## 2026-10-14 02:59: wakes and mail cross-wired between vesta and dalek
 
