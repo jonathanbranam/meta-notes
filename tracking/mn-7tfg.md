@@ -4,7 +4,7 @@ title = "Conflict diff closes and silently discards the newer disk write (autosa
 kind = "bug"
 state = "integrated"
 created_at = "2026-10-09T20:00:53.146Z"
-updated_at = "2026-10-09T21:30:56.564182449Z"
+updated_at = "2026-10-14T01:54:37.905584404Z"
 created_by = "external:orchestrator@dalek"
 watchers = ["external:orchestrator@dalek"]
 commit = "f17ad50"
@@ -108,3 +108,6 @@ Checks: ./run_tests.sh 185/185 (467 assertions); uv run pytest test/unit/ 1623 p
 
 ### note · agent:manager-2 · 2026-10-09T21:30:56.564Z
 integrated: f17ad50
+
+### note · external:aide · 2026-10-14T01:54:37.905Z
+The human, via aide, 2026-10-13 ~10:00 PM ET, re keep or revert (orchestrator m-0812): "keep it yes". Kept as released in v2.31.0.
