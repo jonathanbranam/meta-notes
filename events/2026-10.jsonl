@@ -246,3 +246,4 @@
 {"actor":"external:orchestrator","at":"2026-10-14T20:24:03.428339355Z","from":"pending","task":"mn-h7uc","to":"open"}
 {"actor":"external:orchestrator","at":"2026-10-14T20:24:04.075586736Z","from":"open","task":"mn-h7uc","to":"planned"}
 {"actor":"external:orchestrator","at":"2026-10-14T20:24:04.476006284Z","queue":"reprioritized"}
+{"actor":"external:orchestrator","at":"2026-10-14T20:33:06.632809721Z","from":"planned","task":"mn-h7uc","to":"integrated"}
