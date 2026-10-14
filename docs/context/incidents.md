@@ -41,6 +41,12 @@ Newest first. Times are UTC. Each entry has:
   the worker's check report alone.
 - **Cause:** unknown. The worker spawned at the same time ran Bash fine.
   Possibly the manager's permission mode or settings after the restart.
+  Found 2026-10-14 02:10: managers run `--permission-mode dontAsk` with a
+  narrow `--allowedTools` (`bridle *`, read-only git, `git merge --no-ff`,
+  `git tag v*`, `git push origin main|v*`). No `git add`/`commit`, no `npm`,
+  and a chained or `cd ... &&` command never matches, so it is denied.
+  meta-notes-ui manager-1 hit the same after landing mu-9faf (resolve
+  uncommitted, spawn refused); the orchestrator committed for it.
 - **Category:** `daemon`, `role`.
 - **Follow-up:** none yet; the webpush worker still needs `bridle rm
   webpush --delete-branch` (the human's), and manager-2 needs a restart to
