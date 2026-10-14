@@ -47,6 +47,11 @@ Newest first. Times are UTC. Each entry has:
   token bug alone; `bridle.db` keeping its name misled the first look.
   Rebuild (`bridle daemon rebuild --project meta-notes`) asked of the human
   via aide (m-0006).
+- **Later (11:30):** the rebuild failed: "parsing task file: malformed
+  thread", naming no file. Cause: headings inside thread comments
+  (mn-3p28, mn-4fsj, mn-pqwv). With the human's go via aide, the
+  orchestrator demoted them to `####` on `bridle/state` (fea3dca). Parser
+  and error-message bugs filed with bridle by aide.
 
 ## 2026-10-14 02:59: wakes and mail cross-wired between vesta and dalek
 
