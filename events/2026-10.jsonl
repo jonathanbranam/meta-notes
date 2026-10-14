@@ -241,3 +241,4 @@
 {"actor":"human","at":"2026-10-14T16:04:57.226Z","from":"","task":"mn-mdtd","to":"pending"}
 {"actor":"external:aide","at":"2026-10-14T16:04:57.349184412Z","from":"pending","task":"mn-mdtd","to":"open"}
 {"actor":"external:aide","at":"2026-10-14T16:04:57.404828278Z","from":"open","task":"mn-mdtd","to":"planned"}
+{"actor":"external:aide","at":"2026-10-14T19:37:48.946598824Z","from":"claimed","task":"mn-mdtd","to":"integrated"}
