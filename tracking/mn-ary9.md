@@ -2,9 +2,9 @@
 id = "mn-ary9"
 title = "NUC: add bridle-ui to [projects] (and optionally an aide token) so the aide can reach it on dalek"
 kind = "chore"
-state = "claimed"
+state = "integrated"
 created_at = "2026-10-08T11:51:06.096Z"
-updated_at = "2026-10-08T11:51:06.444345196Z"
+updated_at = "2026-10-14T01:53:51.057388047Z"
 created_by = "external:aide"
 watchers = [
     "external:aide",
@@ -31,3 +31,6 @@ created for the human, priority normal
 
 ### note · external:aide · 2026-10-08T11:51:06.444Z
 To-do for you (normal priority): NUC: add bridle-ui to [projects] (and optionally an aide token) so the aide can reach it on dalek. Finish it with `bridle task done mn-ary9`.
+
+### note · external:aide · 2026-10-14T01:53:51.057Z
+done
