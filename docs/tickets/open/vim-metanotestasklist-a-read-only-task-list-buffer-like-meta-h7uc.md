@@ -72,3 +72,29 @@ instead of reusing it.
 ### Related
 
 - [[project/meta-notes/Port tasks and time_log features into meta-notes]]
+
+## Brief (orchestrator, 2026-10-14)
+
+Decisions: mapping `<localleader>t` (free; buffer-local markdown map in
+`plugin/meta_notes.vim`'s FileType autocmd, rule `key-mappings`). Include
+item 4 in this version: `<CR>` in the Task List buffer opens the task's
+file at its line (from `tasks --agenda --json`'s `file`/`line`); it's
+small and it's what makes the list useful.
+
+- Goal: `:MetaNotesTaskList` shows `meta-notes tasks --agenda` in a
+  reused readonly `Task List` scratch buffer (`buftype=nofile`,
+  `filetype=markdown`), same create-or-reuse logic as
+  `meta_notes#time_tracking#ShowReport()`. Render from `--json`, keeping
+  each task's file and line per buffer line for the jump; the text
+  should read like the CLI's agenda (headings per day, task lines).
+- Files: new `autoload/meta_notes/task_list.vim`; `plugin/meta_notes.vim`
+  (command, mapping); `doc/` help (command and mapping); README key
+  mappings table and project structure; `test/task_list.vader`;
+  CHANGELOG and version per rule `versioning`. No Python change unless
+  `tasks --agenda --json` lacks file/line (say so if it does).
+- Verify: the vader test renders a fixture root's agenda into the buffer,
+  reuses it on a second call, and `<CR>` on a task line opens its file at
+  its line; `./run_tests.sh` green.
+- Out of scope: editing tasks from the buffer, filters or arguments
+  (agenda only), conceal tricks.
+- Model: Sonnet (Vimscript plus a vader test; small but not mechanical).
