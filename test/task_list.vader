@@ -1,0 +1,38 @@
+" Tests for MetaNotesTaskList command
+
+Execute (Setup - Create temporary test directory):
+  let g:test_dir = tempname()
+  call mkdir(g:test_dir . '/project', 'p')
+  let g:original_dir = getcwd()
+  execute 'cd' g:test_dir
+  call writefile(['# meta-notes notes root'], '.meta-notes')
+  call writefile(['# A', '', '- [ ] first task', '- [ ] due task [due:: 2999-01-01]'], 'project/a.md')
+  call writefile(['- [ ] later task 📅 2999-01-01'], 'project/b.md')
+  call writefile(['- [ ] dated task 📅 ' . strftime('%Y-%m-%d')], 'project/c.md')
+
+Execute (MetaNotesTaskList shows the agenda and reuses its buffer):
+  MetaNotesTaskList
+  AssertEqual 'Task List', bufname('%')
+  AssertEqual 'markdown', &filetype
+  Assert !&modifiable
+  Assert index(getline(1, '$'), '## [[project/c]]') >= 0, string(getline(1, '$'))
+  Assert match(getline(1, '$'), 'dated task') >= 0
+  let g:nr = bufnr('%')
+  close
+  MetaNotesTaskList
+  AssertEqual g:nr, bufnr('%')
+  close
+
+Execute (<CR> on a task line opens its file at its line):
+  MetaNotesTaskList
+  call search('dated task')
+  execute "normal \<CR>"
+  AssertEqual g:test_dir . '/project/c.md', expand('%:p')
+  AssertEqual 1, line('.')
+  execute 'bwipeout!' g:nr
+  bwipeout!
+
+Execute (Cleanup):
+  execute 'cd' g:original_dir
+  call delete(g:test_dir, 'rf')
+  unlet g:test_dir g:original_dir g:nr

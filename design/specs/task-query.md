@@ -256,3 +256,16 @@ With `--group-by tag`, each section SHALL list its tasks under a `## <tag>` head
 *Verification*: **non-executable**
 - **WHEN** a task has a bare `📅` and the user runs `meta-notes tasks --agenda`, then `--agenda --undated`
 - **THEN** only the second output SHALL list it, under Undated
+
+### Requirement: Task list buffer in Vim  {#r-089f}
+`:MetaNotesTaskList` (mapped to `<localleader>t` in markdown buffers) SHALL run `meta-notes tasks --agenda --json` in Vim's current directory and show the agenda in a readonly scratch buffer named `Task List` (`buftype=nofile`, `filetype=markdown`), reusing the buffer and its window when they exist. The buffer SHALL have a heading per non-empty agenda section, the task's file as a wiki link, and the task lines. `<CR>` on a task line SHALL open that task's file at its line.
+
+#### Scenario: Show and reuse  {#s-585f}
+*Verification*: **non-executable**
+- **WHEN** `:MetaNotesTaskList` is run twice
+- **THEN** one `Task List` buffer SHALL hold the current agenda
+
+#### Scenario: Jump to a task  {#s-c292}
+*Verification*: **non-executable**
+- **WHEN** `<CR>` is pressed on a task line in the `Task List` buffer
+- **THEN** the task's file SHALL open with the cursor on the task's line
