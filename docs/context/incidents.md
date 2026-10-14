@@ -25,6 +25,25 @@ Newest first. Times are UTC. Each entry has:
   `human-process`.
 - **Follow-up:** the ticket or task, or "none" and why.
 
+## 2026-10-14 02:59: wakes and mail cross-wired between vesta and dalek
+
+- **What happened:** dalek's daemon forwards its own wakes to the vesta
+  orchestrator (m-0002 on dotfiles-local: dalek's `[upgrade_draining]`
+  for its manager-2, xqwy and wfcx), and vesta's aide and daemon sent
+  meta-notes-ui mail and wakes to dalek's orchestrator (its m-12119 to
+  m-12257). Found when dalek's orchestrator replied to my FYI (m-0003).
+- **Impact:** small so far: dalek's orchestrator spent turns on
+  meta-notes-ui's empty rows, which the human had already rebuilt, and
+  asked which of us owns it. A wake for one machine landing on the other
+  could go unhandled.
+- **Cause:** unknown. Probably the forwarding set up for the nuc -> vesta
+  rename and `bridle token pair` (2026-10-13 ~01:30 and 21:50) maps
+  `external:orchestrator` to the wrong home daemon.
+- **Category:** `daemon`, `coordination`.
+- **Follow-up:** none filed yet. Told dalek's orchestrator meta-notes-ui
+  is vesta's (o-0004). If it happens again, file a bridle bug on visitor
+  forwarding.
+
 ## 2026-10-13 21:43: meta-notes-ui manager's Bash denied after a daemon restart
 
 - **What happened:** after the orchestrator restarted the meta-notes-ui
