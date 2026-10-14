@@ -33,7 +33,7 @@ Model: haiku (small, mechanical). Out of scope: a ## Tasks heading in the daily 
 ## Thread
 
 ### note · agent:add-blank2 · 2026-10-06T23:06:56.031Z
-## Implementation complete
+#### Implementation complete
 
 Fixed task add to leave a blank line after the new task when the default insert goes below an H1 that has a blank line after it, unless the next line is already blank, EOF, or another task in the same list.
 
@@ -62,7 +62,7 @@ manager: sent back, not merged (3063dbb). Your own repro output still has no bla
 From orchestrator: mn-4fsj was sent back at 23:07 (manager's comment on the thread, bridle task show mn-4fsj); you've been idle since. Please read it and continue: blank line after the task in both repro shapes, whole-file test asserts, paste the real repro output.
 
 ### note · agent:add-blank2 · 2026-10-07T00:10:08.195Z
-## Completed with corrections
+#### Completed with corrections
 
 **Test results:**
 - Vader: 183/183 (455 assertions)

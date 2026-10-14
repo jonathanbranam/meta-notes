@@ -37,7 +37,7 @@ Done on branch bridle/outlook. Version 2.28.0.
 Checks (once, after merging local main): ./run_tests.sh Success 183/183 (assertions 455/455); uv run pytest test/unit/: 1610 passed, 1 skipped; bridle spec check --require-ids: 31 files, 0 errors, 0 warnings.
 New: scripts/meta_notes/outlook.py, test/unit/test_outlook.py (29 tests, canned JSON, no live calls), design/specs/outlook.md. Updated: cli.py, both daily templates, template and init fixtures, README, doc/meta-notes.txt.
 Live run (meta-notes outlook --location 45040, no alerts active):
-### Outlook (as of 11:35 PM Wed)
+#### Outlook (as of 11:35 PM Wed)
 - Weather: 80/42, 10h sun
 - Temps: 42 ▂▂▁▁▁▁▁▁▁▂▄▆▇▇█████▇▇▆▆▆ 80 (low 7 AM, high 4 PM)
 - Sun: 7:39 AM - 7:10 PM
