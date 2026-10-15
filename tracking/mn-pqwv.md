@@ -9,9 +9,9 @@ created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 branch = "bridle/outlook"
 commit = "5a6e845"
+ticket = "pqwv"
 +++
 
-original id: pqwv
 
 `meta-notes outlook`: the day's weather, sun and alerts for the daily note. The ticket (docs/tickets/open/weather-command-tomorrow-s-forecast-from-a-free-no-key-api-pqwv.md) is the spec. Read it all: later sections replace earlier ones. Settled shape: rounds 2 and 3, "Revised example", and the human's answers on options, other options and the last questions.
 

@@ -5,6 +5,8 @@ kind = "feature"
 state = "integrated"
 created_at = "2026-09-28T23:49:27.404Z"
 updated_at = "2026-09-29T01:48:36.281766Z"
+created_by = "agent:manager"
+watchers = ["agent:manager"]
 +++
 
 The human wants this in the plugin; their write-up follows verbatim. It changes skills/daily-plan/SKILL.md (a product skill shipped by the plugin) and, if it describes the skill, the matching spec (openspec/specs/ceremony-skills or similar).

@@ -5,6 +5,8 @@ kind = "bug"
 state = "integrated"
 created_at = "2026-09-28T23:49:27.385Z"
 updated_at = "2026-09-29T01:48:36.227693Z"
+created_by = "agent:manager"
+watchers = ["agent:manager"]
 +++
 
 The human wants this fixed in the plugin. Their write-up follows verbatim.

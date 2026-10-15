@@ -5,6 +5,8 @@ kind = "feature"
 state = "integrated"
 created_at = "2026-09-28T23:57:03.812Z"
 updated_at = "2026-09-29T01:48:36.379097Z"
+created_by = "agent:manager"
+watchers = ["agent:manager"]
 +++
 
 Time Block highlights in daily notes (the human's request, 2026-09-28).

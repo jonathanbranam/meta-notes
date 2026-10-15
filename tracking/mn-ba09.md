@@ -5,6 +5,8 @@ kind = "feature"
 state = "integrated"
 created_at = "2026-09-30T04:19:24.778Z"
 updated_at = "2026-09-30T04:24:39.044345Z"
+created_by = "agent:recur-design"
+watchers = ["agent:recur-design"]
 commit = "0d6c2f8"
 summary = "Design proposal only: tickets/recurrence-and-time-of-day.md (merge 0d6c2f8). Recommends Obsidian Tasks recurrence syntax, completion spawning the next occurrence, a separate time-of-day marker, and an --at query; 10 open questions for the human on the thread. Nothing built."
 +++
