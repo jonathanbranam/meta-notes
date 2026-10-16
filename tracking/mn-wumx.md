@@ -4,7 +4,7 @@ title = "[at next reboot] start vesta's orchestrator by hand in vesta-home"
 kind = "chore"
 state = "claimed"
 created_at = "2026-10-16T01:59:35.583Z"
-updated_at = "2026-10-16T01:59:36.119073633Z"
+updated_at = "2026-10-16T02:01:55.044551301Z"
 created_by = "external:aide"
 watchers = [
     "external:aide",
@@ -23,3 +23,6 @@ created for the human, priority normal
 
 ### note · external:aide · 2026-10-16T01:59:36.119Z
 To-do for you (normal priority): [at next reboot] start vesta's orchestrator by hand in vesta-home. Finish it with `bridle ticket done mn-wumx`.
+
+### note · external:aide · 2026-10-16T02:01:55.044Z
+vesta-home mail bridge installed by the human 2026-10-15 ~10:00 PM ET; bridle-mail-vesta-home.service active. Left: the test emails, and the reboot start until br-rnhp.
