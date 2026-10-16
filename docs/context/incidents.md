@@ -25,6 +25,23 @@ Newest first. Times are UTC. Each entry has:
   `human-process`.
 - **Follow-up:** the ticket or task, or "none" and why.
 
+## 2026-10-16 14:30: orchestrator down after meta-notes' supervisor stopped it and failed to relaunch
+
+- **What happened:** the orchestrator had moved to vesta-home overnight and
+  wrote its handover there (h-0001), but the meta-notes daemon still had
+  `[orchestrator] enabled = true`. At 14:30 it stopped the session for a
+  missed `handover done` and relaunched 4 times with its relative launcher
+  `.bridle/claude-orchestrator` in the vesta-home pane: "no such file or
+  directory". Reported by the human, via aide (vesta-home m-0005).
+- **Impact:** no orchestrator from 14:30 until the human restarted it by
+  hand (17:23); nothing was in flight.
+- **Cause:** the orchestrator's move to vesta-home left supervision on
+  meta-notes, whose launcher path only resolves in its own repo.
+- **Category:** `config`, `daemon`.
+- **Follow-up:** the human moved supervision (meta-notes d0e70a0,
+  vesta-home 684ec51; both daemons restarted 17:25). A move that carried
+  supervision with it would avoid this; not filed.
+
 ## 2026-10-14 10:49: meta-notes daemon refuses every external token after the v0.7.2 upgrade
 
 - **What happened:** the meta-notes daemon restarted itself for the
