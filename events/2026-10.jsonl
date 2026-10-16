@@ -250,3 +250,4 @@
 {"actor":"human","at":"2026-10-16T00:01:59.559Z","from":"","task":"mn-m4bk","to":"pending"}
 {"actor":"external:aide","at":"2026-10-16T00:01:59.658192217Z","from":"pending","task":"mn-m4bk","to":"open"}
 {"actor":"external:aide","at":"2026-10-16T00:01:59.702862326Z","from":"open","task":"mn-m4bk","to":"planned"}
+{"actor":"external:aide","at":"2026-10-16T01:04:11.497268466Z","from":"claimed","task":"mn-m4bk","to":"integrated"}
