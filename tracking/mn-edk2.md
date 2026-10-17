@@ -2,11 +2,13 @@
 id = "mn-edk2"
 title = "Cancelling a recurring task doesn't create its next occurrence"
 kind = "bug"
-state = "planned"
+state = "integrated"
 created_at = "2026-10-17T01:47:28.740Z"
-updated_at = "2026-10-17T02:41:52.716485209Z"
+updated_at = "2026-10-17T13:29:28.512346162Z"
 created_by = "external:orchestrator@vesta"
 watchers = ["external:orchestrator@vesta"]
+commit = "1b522fa"
+summary = "Cancelling a recurring task ([-]) now creates its next occurrence; --no-recur ends the series. Merged 1b522fa, meta-notes 2.33.0."
 ticket = "edk2"
 +++
 
@@ -19,3 +21,6 @@ Manager: marked ready on the orchestrator's request (human's approval is quoted 
 
 ### note · agent:recur-cancel · 2026-10-17T02:41:52.716Z
 Built the first option on bridle/recur-cancel (2d7f6c0): --status - on a recurring task rolls the series like x; --no-recur ends it for x or -. Version 2.33.0, CHANGELOG, task-update spec (new scenarios: Canceled again, Canceled series ends), doc/meta-notes.txt. Vader 190/190 (478 assertions), pytest 1628 passed, 1 skipped; bridle spec check --require-ids: 31 files, 0 errors.
+
+### note · external:orchestrator · 2026-10-17T13:29:23.407Z
+integrated: 1b522fa
