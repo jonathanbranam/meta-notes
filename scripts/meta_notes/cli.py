@@ -1128,8 +1128,8 @@ def build_parser() -> argparse.ArgumentParser:
     k.add_argument("--recur", type=_recur_value, metavar="RULE",
                    help="set the 🔁 rule (like 'every 3 months') or none")
     k.add_argument("--no-recur", action="store_true",
-                   help="mark a recurring task done without adding its next "
-                        "occurrence")
+                   help="end a recurring task's series: mark it done or "
+                        "canceled (x or -) without adding its next occurrence")
     k.add_argument("--no-completed", action="store_true",
                    help="don't add a ✅ date when marking the task done "
                         "(not allowed on a recurring task)")

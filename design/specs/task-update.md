@@ -257,7 +257,7 @@ On success, the text output SHALL be `<file>:<line>` followed by the old line pr
 - **THEN** the JSON SHALL have `ok` true, `file` `project/foo.md`, `line` 3, `old` `- [ ] call Sam 📅 2026-09-22`, `new` `- [x] call Sam 📅 2026-09-22 ✅ 2026-09-25`, and `changed` true
 
 ### Requirement: Complete a recurring task  {#r-0b86}
-A line is recurring when it has a `🔁` rule that `recurrence` supports and a date to step from: its due date, else its start date, or none for a `when done` rule. When `--status` changes a recurring line from a status that is not done to done, the command SHALL mark it done as usual (stamping `✅ <today>`), compute the next date, and insert a new line directly above the target, in the same write. The new line SHALL be the done line with `[ ]`, no `✅`, and the same indentation, bullet, tags, `🔁` rule and time (`⏰`, or a time after the due date). A rule without `when done` SHALL step from the due date after this call's edits, else the start date, even when the result is already past; a `when done` rule SHALL step from today. The new line's due date SHALL be the next date (a bare due emoji is dated); with both a due and a start date the start date SHALL move by the same number of days, and with only a start date it SHALL be the next date. Done lines SHALL stay in place, so the target moves to `<line>+1`. A line already done and set to done again, and every other status, SHALL NOT insert a line. Reopening a done line SHALL NOT remove a line inserted earlier. When the target is the last line of a file with no final newline, the inserted line SHALL take the file's line ending and the target SHALL keep having none. A line with a `🔁` rule that is unsupported, or valid but without a date to step from, SHALL complete as any other line and report a warning that no next occurrence was made.
+A line is recurring when it has a `🔁` rule that `recurrence` supports and a date to step from: its due date, else its start date, or none for a `when done` rule. When `--status` changes a recurring line from a status that is neither done nor canceled to done (`x` or `X`) or canceled (`-`), the command SHALL set the status as usual (stamping `✅ <today>` only for done), compute the next date, and insert a new line directly above the target, in the same write. Cancelling a recurring task thus skips that occurrence and carries the series on. The new line SHALL be the done line with `[ ]`, no `✅`, and the same indentation, bullet, tags, `🔁` rule and time (`⏰`, or a time after the due date). A rule without `when done` SHALL step from the due date after this call's edits, else the start date, even when the result is already past; a `when done` rule SHALL step from today. The new line's due date SHALL be the next date (a bare due emoji is dated); with both a due and a start date the start date SHALL move by the same number of days, and with only a start date it SHALL be the next date. Done lines SHALL stay in place, so the target moves to `<line>+1`. A line already done or canceled and set to done or canceled again, and every other status, SHALL NOT insert a line. Reopening a done line SHALL NOT remove a line inserted earlier. When the target is the last line of a file with no final newline, the inserted line SHALL take the file's line ending and the target SHALL keep having none. A line with a `🔁` rule that is unsupported, or valid but without a date to step from, SHALL complete as any other line and report a warning that no next occurrence was made.
 
 #### Scenario: Done twice  {#s-8659}
 *Verification*: **non-executable**
@@ -266,8 +266,13 @@ A line is recurring when it has a `🔁` rule that `recurrence` supports and a d
 
 #### Scenario: Canceled  {#s-edbd}
 *Verification*: **non-executable**
-- **WHEN** line 3 is a recurring task and the user runs `--status -`
-- **THEN** only line 3 SHALL change and no line SHALL be inserted
+- **WHEN** today is 2026-09-25, line 3 is `- [ ] water plants 🔁 every day 📅 2026-09-25`, and the user runs `--status -`
+- **THEN** line 3 SHALL become `- [-] water plants 🔁 every day 📅 2026-09-25` with no `✅` date, the inserted line above it SHALL be `- [ ] water plants 🔁 every day 📅 2026-09-26`, and the target SHALL be line 4
+
+#### Scenario: Canceled again  {#s-5aa6}
+*Verification*: **non-executable**
+- **WHEN** line 3 is `- [-] water plants 🔁 every day 📅 2026-09-25` and the user runs `--status -` on it
+- **THEN** only line 3 SHALL be written, unchanged, and no line SHALL be inserted
 
 #### Scenario: Completed late  {#s-adbd}
 *Verification*: **non-executable**
@@ -290,12 +295,17 @@ A line is recurring when it has a `🔁` rule that `recurrence` supports and a d
 - **THEN** the inserted line SHALL keep the two-space indentation and end with CRLF, and the done line SHALL have no line ending
 
 ### Requirement: No next occurrence  {#r-aa0c}
-`--no-recur` SHALL complete a recurring line without inserting the next occurrence; the line keeps its `🔁` rule and gets its `✅` date. It SHALL have no effect on a line that is not recurring.
+`--no-recur` SHALL end the series: when `--status` marks a recurring line done (`x` or `X`) or canceled (`-`) from another status, the command SHALL NOT insert the next occurrence. The line keeps its `🔁` rule; a done line gets its `✅` date, and a canceled line gets none. It SHALL have no effect on a line that is not recurring, nor on a status other than done or canceled.
 
 #### Scenario: Finished series  {#s-4d2f}
 *Verification*: **non-executable**
 - **WHEN** line 3 is `- [ ] replace filter 🔁 every 3 months 📅 2026-07-01` and the user runs `--status x --no-recur`
 - **THEN** line 3 SHALL become the done line and no line SHALL be inserted
+
+#### Scenario: Canceled series ends  {#s-f790}
+*Verification*: **non-executable**
+- **WHEN** line 3 is `- [ ] water plants 🔁 every day 📅 2026-09-25` and the user runs `--status - --no-recur`
+- **THEN** line 3 SHALL become `- [-] water plants 🔁 every day 📅 2026-09-25` and no line SHALL be inserted
 
 ### Requirement: Set the recurrence rule  {#r-3ea6}
 `--recur <rule>` SHALL accept a rule `recurrence` supports (such as `every 3 months` or `every week when done`) or `none`; any other value SHALL be a usage error. A rule SHALL be written as `🔁 <rule>`, replacing the line's existing `🔁` marker and rule, or else placed before the first `🛫`, due, `⏰`, or `✅` date emoji, or at the end of the line if it has none. `none` SHALL remove every `🔁` marker and its rule. The rule is applied before `--status`, so `--status x --recur none` completes without inserting a line.
