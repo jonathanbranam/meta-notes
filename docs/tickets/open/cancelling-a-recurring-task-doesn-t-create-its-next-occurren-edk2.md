@@ -43,3 +43,9 @@ A test: `task update --status -` on a `🔁 every day` task with a due date adds
 line; with `--no-recur` it doesn't.
 
 Model: Haiku (small change and a test).
+
+## Approval
+
+The human, via aide (notes), 2026-10-17 ~02:00 UTC (vesta-home m-0015): "Agree for edk2 you mean
+cancelling right? [-]". Aide confirmed: cancelling with `[-]` on a recurring task rolls the series
+like `[x]`, with `--no-recur` to end it. Build the first option above.
