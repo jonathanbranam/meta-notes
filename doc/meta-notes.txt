@@ -897,8 +897,8 @@ Commands ~
                         one, else before the first date emoji; `none`
                         removes the marker and its rule. An unsupported
                         rule is a usage error.
-    --no-recur          Mark a recurring task done without adding its next
-                        occurrence (for a series that is finished).
+    --no-recur          End a recurring task's series: marking it done or
+                        canceled (`x` or `-`) adds no next occurrence.
     --no-completed      Don't add a ✅ date when marking the task done. It
                         is a usage error on a recurring task.
 
@@ -912,17 +912,20 @@ Commands ~
     `-` (canceled) and `>` (rescheduled), removes every ✅ date: the task
     wasn't done.
 
-    Marking a recurring task done (a `🔁` rule and a due or start date, or
-    `when done`) always stamps `✅ {today}`, even when due today, and adds
-    the next occurrence as a new open line directly above the done line, in
-    the same write: the same line with `[ ]`, no ✅, and its due date
+    Marking a recurring task done or canceled (`x`, `X` or `-`, from another
+    status; a `🔁` rule and a due or start date, or `when done`) adds the
+    next occurrence as a new open line directly above it, so cancelling one
+    day skips it and the series carries on. Marking it done always stamps
+    `✅ {today}`, even when due today; a canceled line gets no ✅. Unless
+    `--no-recur` is given, the same write has the new line: the same line
+    with `[ ]`, no ✅, and its due date
     stepped (a start date moves by as many days, and the time `⏰` is kept).
     A rule without `when done` steps from the due date (else the start
     date), even when that is already past: `every 3 months 📅 2026-07-01`
     done on 2026-10-05 gives 2026-10-01. `when done` steps from today. Done
     lines stay where they are, so the task is now on the next line down and
     the lines after it have moved: re-read the file. Setting a done task
-    done again, or any other status, adds nothing; reopening a done task
+    done or canceled again, or any other status, adds nothing; reopening a done task
     doesn't remove the line added earlier. An unsupported rule, or a rule
     with nothing to step from, completes the line with a warning and adds
     nothing. The output then lists `{file}:{line} created` and the new line

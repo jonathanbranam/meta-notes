@@ -1327,6 +1327,26 @@ def test_task_update_created_is_null_without_a_spawn(task_note, capsys):
     assert out['created'] is None
 
 
+def test_task_update_cancel_recur_rolls_unless_no_recur(notes_root, capsys):
+    path = notes_root / 'project' / 'foo.md'
+    line = '- [ ] water plants 🔁 every day 📅 2026-09-25'
+    path.write_text(line + '\n')
+
+    code, out, _ = run_json(capsys, ['task', 'update', 'project/foo.md:1',
+                                     '--expect', line, '--status', '-'])
+    assert code == 0
+    assert out['created']['text'] == '- [ ] water plants 🔁 every day 📅 2026-09-26'
+    assert path.read_text().splitlines()[0] == out['created']['text']
+
+    path.write_text(line + '\n')
+    code, out, _ = run_json(capsys, ['task', 'update', 'project/foo.md:1',
+                                     '--expect', line, '--status', '-',
+                                     '--no-recur'])
+    assert code == 0
+    assert out['created'] is None
+    assert path.read_text() == '- [-] water plants 🔁 every day 📅 2026-09-25\n'
+
+
 def test_task_update_no_recur_and_recur_options(notes_root, capsys):
     path = notes_root / 'project' / 'foo.md'
     line = '- [ ] call Sam 🔁 every week 📅 2026-09-22'

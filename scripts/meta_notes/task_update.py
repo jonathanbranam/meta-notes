@@ -22,6 +22,9 @@ COMPLETED_EMOJI = '✅'
 NEW_DUE_EMOJI = '📅'
 RECUR_EMOJI = '🔁'
 DONE_CHARS = ('x', 'X')
+# Statuses that roll a recurring task to its next occurrence: done, and
+# canceled (`-`, a skipped occurrence)
+ROLL_CHARS = DONE_CHARS + ('-',)
 TIME_EMOJI = tasks.TIME_EMOJI
 
 _DATE = r'\d{4}-\d{2}-\d{2}'
@@ -496,14 +499,14 @@ def update(path: str, line_no: int, expect: str, *,
         status, add_tags, remove_tags, due, start, time, recur,
         new_text, no_completed, today: See edit_line.
         no_recur: Don't insert the next occurrence when a recurring task is
-            marked done.
+            marked done or canceled.
 
     Returns:
         The line before and after. The file is written only if it changed.
-        Marking a recurring task done (not already done) also inserts its
-        next occurrence as a new open line directly above it, in the same
-        write; the target then sits one line lower. A done task set to done
-        again inserts nothing.
+        Marking a recurring task done or canceled (`x`, `X` or `-`, from
+        another status) also inserts its next occurrence as a new open line
+        directly above it, in the same write; the target then sits one line
+        lower. A task already done or canceled and set again inserts nothing.
 
     Raises:
         TaskUpdateError: If the file can't be read, the line is out of
@@ -536,9 +539,9 @@ def update(path: str, line_no: int, expect: str, *,
                     recur=recur, no_completed=no_completed, today=today)
     result = UpdateResult(old=old, new=new, changed=new != old)
     today = today or date.today()
-    completed = (status in DONE_CHARS
+    completed = (status in ROLL_CHARS
                  and tasks.CHECKBOX_PATTERN.match(old).group(1)
-                 not in DONE_CHARS)
+                 not in ROLL_CHARS)
     spawned = None
     if completed:
         if _is_recurring(new):

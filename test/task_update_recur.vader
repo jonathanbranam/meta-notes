@@ -31,14 +31,15 @@ Execute (Completing the done line again adds nothing):
   Assert g:result.created is v:null
   AssertEqual 5, len(readfile('project/foo.md'))
 
-Execute (Canceling adds nothing):
+Execute (Canceling a recurring task rolls the series):
   let g:line = '- [ ] stretch 🔁 every day 📅 2026-09-25'
   call writefile([g:line], 'project/bar.md')
   let g:result = meta_notes#cli#Run(['task', 'update', 'project/bar.md:1',
         \ '--expect', g:line, '--status', '-'])
   Assert g:result.ok, string(g:result)
-  Assert g:result.created is v:null
-  AssertEqual ['- [-] stretch 🔁 every day 📅 2026-09-25'], readfile('project/bar.md')
+  AssertEqual '- [ ] stretch 🔁 every day 📅 2026-09-26', g:result.created.text
+  AssertEqual ['- [ ] stretch 🔁 every day 📅 2026-09-26',
+        \ '- [-] stretch 🔁 every day 📅 2026-09-25'], readfile('project/bar.md')
 
 Execute (--no-recur completes without a next occurrence):
   call writefile([g:line], 'project/bar.md')
@@ -47,6 +48,14 @@ Execute (--no-recur completes without a next occurrence):
   Assert g:result.ok, string(g:result)
   Assert g:result.created is v:null
   AssertEqual 1, len(readfile('project/bar.md'))
+
+Execute (--no-recur on a cancel ends the series):
+  call writefile([g:line], 'project/bar.md')
+  let g:result = meta_notes#cli#Run(['task', 'update', 'project/bar.md:1',
+        \ '--expect', g:line, '--status', '-', '--no-recur'])
+  Assert g:result.ok, string(g:result)
+  Assert g:result.created is v:null
+  AssertEqual ['- [-] stretch 🔁 every day 📅 2026-09-25'], readfile('project/bar.md')
 
 Execute (A when-done task without a final newline, in a CRLF file):
   let g:line = '- [ ] buy salt 🔁 every month when done 📅 2026-07-24'

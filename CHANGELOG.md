@@ -6,6 +6,12 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 2.33.0 - 2026-10-16
+
+- Changed: `meta-notes task update --status -` on a recurring task now adds its
+  next occurrence, like `--status x`, so a cancelled day doesn't end the series.
+- New: `--no-recur` ends the series when a recurring task is marked `x` or `-`.
+
 ## 2.32.0 - 2026-10-14
 
 - New: `:MetaNotesTaskList` (`<localleader>t` in markdown) shows the task

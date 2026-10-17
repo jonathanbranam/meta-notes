@@ -543,12 +543,55 @@ def test_task_update_recur_stale_second_call_is_guarded(tmp_path):
     assert info.value.current == RECUR_NEXT
 
 
-@pytest.mark.parametrize('status', ['-', '>', '.', ' '])
+@pytest.mark.parametrize('status', ['>', '.', ' '])
 def test_task_update_recur_other_status_spawns_nothing(tmp_path, status):
     path = write_note(tmp_path, [RECUR])
     result = update(str(path), 1, RECUR, status=status, today=TODAY)
     assert result.created is None
     assert len(path.read_text().splitlines()) == 1
+
+
+DAILY = '- [ ] water plants 🔁 every day 📅 2026-09-25'
+DAILY_NEXT = '- [ ] water plants 🔁 every day 📅 2026-09-26'
+DAILY_CANCELED = '- [-] water plants 🔁 every day 📅 2026-09-25'
+
+
+def test_task_update_recur_cancel_inserts_next_above(tmp_path):
+    path = write_note(tmp_path, [DAILY])
+    result = update(str(path), 1, DAILY, status='-', today=TODAY)
+    assert result.created == DAILY_NEXT
+    assert result.created_line == 1
+    assert result.new == DAILY_CANCELED
+    assert path.read_text() == DAILY_NEXT + '\n' + DAILY_CANCELED + '\n'
+
+
+def test_task_update_recur_cancel_when_done_steps_from_today(tmp_path):
+    line = '- [ ] buy salt 🔁 every day when done 📅 2026-09-20'
+    path = write_note(tmp_path, [line])
+    result = update(str(path), 1, line, status='-', today=TODAY)
+    assert result.created == '- [ ] buy salt 🔁 every day when done 📅 2026-09-26'
+
+
+def test_task_update_recur_cancel_no_recur_inserts_nothing(tmp_path):
+    path = write_note(tmp_path, [DAILY])
+    result = update(str(path), 1, DAILY, status='-', no_recur=True,
+                    today=TODAY)
+    assert result.created is None
+    assert path.read_text() == DAILY_CANCELED + '\n'
+
+
+def test_task_update_recur_cancel_again_inserts_nothing(tmp_path):
+    path = write_note(tmp_path, [DAILY_CANCELED])
+    result = update(str(path), 1, DAILY_CANCELED, status='-', today=TODAY)
+    assert result.created is None
+    assert path.read_text() == DAILY_CANCELED + '\n'
+
+
+def test_task_update_recur_reopen_canceled_inserts_nothing(tmp_path):
+    path = write_note(tmp_path, [DAILY_CANCELED])
+    result = update(str(path), 1, DAILY_CANCELED, status=' ', today=TODAY)
+    assert result.created is None
+    assert path.read_text() == DAILY + '\n'
 
 
 def test_task_update_recur_late_steps_from_due_date(tmp_path):
