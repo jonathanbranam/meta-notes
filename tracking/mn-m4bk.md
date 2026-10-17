@@ -4,7 +4,7 @@ title = "[at next reboot] vesta moved: relaunch the sessions and check the syste
 kind = "chore"
 state = "integrated"
 created_at = "2026-10-16T00:01:59.559Z"
-updated_at = "2026-10-16T01:04:11.497268466Z"
+updated_at = "2026-10-17T11:56:51.317761637Z"
 created_by = "external:aide"
 watchers = [
     "external:aide",
@@ -30,3 +30,6 @@ From the human, via aide (2026-10-15 ~8:40 PM ET): "Yeah, everything looks prett
 
 ### note · external:aide · 2026-10-16T01:04:11.497Z
 done
+
+### note · external:orchestrator · 2026-10-17T11:56:51.317Z
+orchestrator (human via aide@dalek, m-0095): rights check for br-j86p after token re-pair on v0.7.6. No action needed.
