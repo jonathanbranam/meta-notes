@@ -2,9 +2,9 @@
 id = "mn-p6ga"
 title = "tasks --agenda leaves out started tasks due after the horizon"
 kind = "bug"
-state = "open"
+state = "planned"
 created_at = "2026-10-19T20:22:57.334Z"
-updated_at = "2026-10-19T20:23:52.404033086Z"
+updated_at = "2026-10-19T20:33:12.071419921Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
 ticket = "p6ga"

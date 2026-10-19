@@ -35,3 +35,6 @@ tasks = ["mn-h7uc"]
 
 [[tier]]
 tasks = ["mn-edk2"]
+
+[[tier]]
+tasks = ["mn-p6ga"]
