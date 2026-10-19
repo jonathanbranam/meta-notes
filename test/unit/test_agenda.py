@@ -65,6 +65,46 @@ def test_query_agenda_places_tasks(tmp_path, monkeypatch):
     assert not any('far' in t or 'bare' in t for ts in got.values() for t in ts)
 
 
+def test_query_agenda_started_task_past_horizon_under_today(tmp_path, monkeypatch):
+    root = write_root(tmp_path, monkeypatch, [
+        '- [ ] begun 📅 2027-01-01 🛫 2026-10-01',
+        '- [ ] starts today 📅 2027-01-01 🛫 2026-10-08',
+        '- [ ] not started 📅 2027-01-01 🛫 2026-10-09',
+        '- [ ] no start 📅 2027-01-01',
+    ])
+    _, sections, _ = query.agenda(root, today=THU)
+    got = by_section(sections)
+    assert got['today'] == ['- [ ] begun 📅 2027-01-01 🛫 2026-10-01',
+                            '- [ ] starts today 📅 2027-01-01 🛫 2026-10-08']
+    assert not any('not started' in t or 'no start' in t
+                   for ts in got.values() for t in ts)
+
+
+def test_query_agenda_started_task_past_horizon_json(tmp_path, monkeypatch):
+    root = write_root(tmp_path, monkeypatch, [
+        '- [ ] begun 📅 2027-01-01 🛫 2026-10-01',
+        '- [ ] not started 📅 2027-01-01 🛫 2026-10-09',
+    ])
+    _, sections, _ = query.agenda(root, today=THU)
+    today = sections[1]
+    assert today['section'] == 'today'
+    assert [t['text'] for t in today['tasks']] == ['- [ ] begun 📅 2027-01-01 🛫 2026-10-01']
+    assert today['tasks'][0]['due'] == '2027-01-01'
+    assert today['tasks'][0]['start'] == '2026-10-01'
+    assert today['tasks'][0]['section'] == 'today'
+
+
+def test_cli_tasks_agenda_started_past_horizon_text(tmp_path, monkeypatch, capsys):
+    write_root(tmp_path, monkeypatch, [
+        f'- [ ] begun 📅 2027-01-01 🛫 {date.today().isoformat()}',
+        f'- [ ] not started 📅 2027-01-01 🛫 {(date.today() + timedelta(days=30)).isoformat()}',
+    ])
+    assert cli.main(['tasks', '--agenda']) == 0
+    out = capsys.readouterr().out
+    assert '# Today' in out and 'begun' in out
+    assert 'not started' not in out
+
+
 def test_query_agenda_undated_off_by_default(tmp_path, monkeypatch):
     root = write_root(tmp_path, monkeypatch, ['- [ ] bare 📅'])
     lines, sections, _ = query.agenda(root, today=THU)

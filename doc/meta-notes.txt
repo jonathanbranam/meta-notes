@@ -723,7 +723,9 @@ Commands ~
                         days ahead and through the next Monday; on Thursday
                         or Friday, through the following Wednesday. Started
                         (`🛫`) tasks with no due date are under Today, and
-                        today's timed tasks stay there all day. Empty
+                        so are started tasks due after the horizon (an
+                        unstarted one is left out). Today's timed tasks
+                        stay there all day. Empty
                         sections are left out of the text but kept in
                         `--json` (`agenda`: a list of sections, each with
                         `tasks`). Combines with `--undated`, `--through`,

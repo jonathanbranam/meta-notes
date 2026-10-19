@@ -245,7 +245,7 @@ With `--group-by tag`, each section SHALL list its tasks under a `## <tag>` head
 - **THEN** it SHALL exit non-zero with a usage error on stderr
 
 ### Requirement: Agenda preset  {#r-67fe}
-`meta-notes tasks --agenda` SHALL list incomplete tasks in sections: Overdue (due before today), Today, then one section per following day through the horizon, headed `<YYYY-MM-DD> <Weekday>`, and with `--undated` an Undated section of tasks with no date. The horizon SHALL be at least 5 days after today and through the next Monday; on Thursday or Friday, through the following Wednesday. `--through DATE` (the end of any `--date` form) SHALL replace it, and a date before today SHALL be an error. A task is in one section, by its due date; today's timed tasks SHALL stay under Today all day. A started (`🛫`) task with no due date SHALL be under Today; a task due after the horizon SHALL be left out. Text output SHALL omit empty sections; `--json` SHALL give `agenda`, every section in order with `section`, `heading`, `date` and `tasks`, empty ones included. `--tag`, `--folder`, `--later`, `--status` and `--format` SHALL apply; `--date`, `--at` and the modes other than `--undated` SHALL be a usage error, as SHALL `--through` without `--agenda`. Work and personal roots SHALL behave the same.
+`meta-notes tasks --agenda` SHALL list incomplete tasks in sections: Overdue (due before today), Today, then one section per following day through the horizon, headed `<YYYY-MM-DD> <Weekday>`, and with `--undated` an Undated section of tasks with no date. The horizon SHALL be at least 5 days after today and through the next Monday; on Thursday or Friday, through the following Wednesday. `--through DATE` (the end of any `--date` form) SHALL replace it, and a date before today SHALL be an error. A task is in one section, by its due date; today's timed tasks SHALL stay under Today all day. A started (`🛫`) task with no due date SHALL be under Today; a started task due after the horizon SHALL also be under Today, and an unstarted task due after the horizon SHALL be left out. Text output SHALL omit empty sections; `--json` SHALL give `agenda`, every section in order with `section`, `heading`, `date` and `tasks`, empty ones included. `--tag`, `--folder`, `--later`, `--status` and `--format` SHALL apply; `--date`, `--at` and the modes other than `--undated` SHALL be a usage error, as SHALL `--through` without `--agenda`. Work and personal roots SHALL behave the same.
 
 #### Scenario: Sections by day  {#s-2ef0}
 *Verification*: **non-executable**
@@ -256,6 +256,11 @@ With `--group-by tag`, each section SHALL list its tasks under a `## <tag>` head
 *Verification*: **non-executable**
 - **WHEN** a task has a bare `📅` and the user runs `meta-notes tasks --agenda`, then `--agenda --undated`
 - **THEN** only the second output SHALL list it, under Undated
+
+#### Scenario: Started task due after the horizon  {#s-0d4d}
+*Verification*: **non-executable**
+- **WHEN** a task started (`🛫`) on or before today is due after the horizon, a second task not yet started is due after it, and the user runs `meta-notes tasks --agenda`
+- **THEN** the started task SHALL be under Today in the text and in `--json`, and the unstarted task SHALL be left out
 
 ### Requirement: Task list buffer in Vim  {#r-089f}
 `:MetaNotesTaskList` (mapped to `<localleader>t` in markdown buffers) SHALL run `meta-notes tasks --agenda --json` in Vim's current directory and show the agenda in a readonly scratch buffer named `Task List` (`buftype=nofile`, `filetype=markdown`), reusing the buffer and its window when they exist. The buffer SHALL have a heading per non-empty agenda section, the task's file as a wiki link, and the task lines. `<CR>` on a task line SHALL open that task's file at its line.
