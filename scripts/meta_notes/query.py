@@ -91,8 +91,9 @@ def agenda(root_dir: str, through: str | None = None, undated: bool = False,
         Tuple of (text lines, sections, warnings). Each section is
         {"section", "heading", "date", "tasks"}, in order, empty ones
         included; the text omits empty sections. A task is in one section,
-        by due date. Started (🛫) tasks with no due date are under Today; a
-        started task due after the horizon is left out.
+        by due date. Started (🛫) tasks with no due date are under Today, and
+        so are started tasks due after the horizon; an unstarted task due
+        after the horizon is left out.
 
     Raises:
         ValueError: If through is invalid or before today.
@@ -116,9 +117,12 @@ def agenda(root_dir: str, through: str | None = None, undated: bool = False,
         if not later and find_tasks.is_later(task):
             continue
         due = task.effective_due
-        if due is not None:
-            if due > end:
+        if due is not None and due > end:
+            # A started task stays under Today, whatever its due date
+            if task.start_date is None or task.start_date > today:
                 continue
+            key = "today"
+        elif due is not None:
             key = "overdue" if due < today else due.isoformat() if due > today else "today"
         elif task.start_date is not None:
             if task.start_date > today:

@@ -6,6 +6,11 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 2.33.1 - 2026-10-19
+
+- Fixed: `meta-notes tasks --agenda` (and the task list buffer) leaves out a
+  started (`🛫`) task due after the horizon; it now shows under Today.
+
 ## 2.33.0 - 2026-10-16
 
 - Changed: `meta-notes task update --status -` on a recurring task now adds its
