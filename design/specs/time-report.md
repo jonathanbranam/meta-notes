@@ -253,3 +253,11 @@ The lists are fixed per mode, not configuration.
 *Verification*: **non-executable**
 - **WHEN** the root has no `mode`, or `mode = "work"`
 - **THEN** the report SHALL be as before, with `work duration` and Work vs Non-Work
+
+### Requirement: Deprecated tilde times warn  {#r-6a57}
+The time report SHALL still read a `start:` or `end:` time with a leading `~`, as before, and SHALL print one warning for each such line it reads, naming the file and the line number, that a `~` before a Time Log time is deprecated. The warning SHALL go to stderr, as the report's other warnings do; under `--json` it SHALL be listed in `warnings`. A time without a `~` SHALL give no warning.
+
+#### Scenario: Tilde time still reads, with a warning  {#s-f44e}
+*Verification*: **non-executable**
+- **WHEN** the daily note `plan/daily/26-Q4/2026-10-01 Thu.md` has `* start: ~09:45` on line 5 of its `### Log`
+- **THEN** the report SHALL count the entry from 09:45, and the warning SHALL name `2026-10-01 Thu.md` and line 5

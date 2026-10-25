@@ -451,6 +451,9 @@ day abbreviation is not checked against the date.
 A timestamp in any other form, such as the template's `HH:MM` placeholder,
 leaves that time unset. The entry is kept but has no duration.
 
+A leading `~` (`~09:10`) is deprecated: it still reads, but `meta-notes time`
+warns with the file and line of each one. Write the time without it.
+
 Time report ~
                                                 *meta-notes-time-report*
 The report for one day has these sections, in order:
@@ -1521,8 +1524,9 @@ Commands ~
     line plus every indented line under it. Both commands check that the
     log still holds what the caller expects and otherwise write nothing,
     so they don't overwrite what you changed in Vim meanwhile. Times are
-    `HH:MM` or `9:30am`; prefix with `~` (e.g., `~21:55`) to mark them as
-    approximate.
+    `HH:MM` or `9:30am`. Never write a `~` before a time: the Time Log
+    rejects it, and a `~` in an old note gets a deprecation warning from
+    `meta-notes time` (file and line).
 
     `append` adds one entry at the end. Options: `--text {line}` (the
     header, `- text #tags`), `--start {time}` (default: now), `--end

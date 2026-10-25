@@ -204,7 +204,8 @@ a range set to the same text. Check-ins may use
 
 ## Editing the Time Log
 
-A tilde before a time means approximately: `~9:00` for the start or end.
+Write the start and end as plain times, `HH:MM`, never with a `~`: the Time
+Log rejects one. Times may be approximate; leave the tilde out.
 
 Never edit the entries under the daily note's `### Log` yourself; the user
 usually has the note open in Vim. An entry is a `- ` header line plus its

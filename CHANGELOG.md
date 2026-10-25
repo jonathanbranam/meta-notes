@@ -6,6 +6,14 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 2.33.2 - 2026-10-25
+
+- Changed: `time-log append` (`--start`, `--end`, `--prev-start`) and
+  `time-log update` (`--text`) refuse a `~` before a time; write `HH:MM`.
+  `--close-prev` never writes a `~`.
+- Changed: `meta-notes time` still reads a `~` before a start or end, but
+  warns with the file and line of each one; drop the `~` from those times.
+
 ## 2.33.1 - 2026-10-19
 
 - Fixed: `meta-notes tasks --agenda` (and the task list buffer) leaves out a
