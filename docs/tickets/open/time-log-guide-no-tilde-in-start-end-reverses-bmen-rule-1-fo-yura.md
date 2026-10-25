@@ -21,18 +21,31 @@ The human, 2026-10-25 10:55 AM ET (relayed verbatim by aide, m-0112 on vesta-hom
 bmen (resolved), led aide to write `~HH:MM` in Time Log start/end. This reverses bmen rule 1 for
 the Time Log only. The Time Block tilde rule (`conventions.md:149`, `home ~9:20`) stays as it is.
 
+## Widened scope (the human, 2026-10-25 11:04 AM ET, via aide, verbatim)
+
+"I don't want ~ in the time log ever; it's just messy and IMO unnecessary; times may be
+approximate, that is understood."
+
+So nothing writes `~` to the Time Log. This reverses the write side of mn-3p28 (v2.26.7), which made
+append accept and write `~HH:MM` because agents followed the guide line from mn-caa0 (bmen).
+The ticket thread (aide's comment) has the background.
+
 ## Changes
 
-- `scripts/meta_notes/conventions.md`, "Editing the Time Log": drop the tilde line; say start and
-  end are plain `HH:MM`, never with `~` (an approximate time is just written as the best guess).
-- Check `skills/` and other docs for the same Time Log tilde advice and drop it there too.
-- If `meta-notes time-log append` / `update` currently accept `~` in `--start` / `--end` /
-  `--prev-start`, make them reject it with a clear error. If they already reject it, no code change.
-- Tests that pin the conventions text; patch release with CHANGELOG entry.
+- `time-log append` `--start` / `--end` / `--prev-start` / `--close-prev`, and `time-log update
+  --text`: reject a leading `~` with a clear error; `--close-prev` never writes `~`.
+- Drop the Time Log tilde from: the guide (`scripts/meta_notes/conventions.md:207`; start and end
+  are plain `HH:MM`), `doc/meta-notes.txt`, `--help`, and the spec
+  `design/specs/time-log-edit.md` (r-6bf7, s-295d, s-e683). Check `skills/` for the same advice.
+- Update the tests mn-3p28 added to expect rejection.
+- Patch release with a CHANGELOG entry.
+- Leave the read side alone (`time_tracking._parse_entry_time` still strips `~` in old notes): the
+  human hasn't decided it yet (aide asked). If they answer before merge, aide adds it to the thread.
 
 ## Verify
 
-`meta-notes prime` no longer suggests `~` in the Time Log; `just check` green.
+`meta-notes prime` and `--help` don't suggest `~` in the Time Log; `time-log append --start ~9:00`
+fails with a clear error; old notes with `~` still report; spec check 0 errors; `just check` green.
 
 ## Model
 
