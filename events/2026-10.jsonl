@@ -269,3 +269,5 @@
 {"actor":"external:orchestrator","at":"2026-10-20T05:30:13.202545937Z","from":"planned","task":"mn-p6ga","to":"integrated"}
 {"actor":"human","at":"2026-10-25T14:57:22.308Z","from":"","task":"mn-yura","to":"pending"}
 {"actor":"external:orchestrator","at":"2026-10-25T14:57:27.337489837Z","from":"pending","task":"mn-yura","to":"open"}
+{"actor":"external:orchestrator","at":"2026-10-25T15:17:27.108956757Z","from":"open","task":"mn-yura","to":"planned"}
+{"actor":"external:orchestrator","at":"2026-10-25T15:17:27.163137280Z","queue":"reprioritized"}

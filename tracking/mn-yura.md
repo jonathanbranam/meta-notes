@@ -2,9 +2,9 @@
 id = "mn-yura"
 title = "Time Log guide: no tilde in start/end (reverses bmen rule 1 for the Time Log)"
 kind = "fix"
-state = "open"
+state = "planned"
 created_at = "2026-10-25T14:57:22.308Z"
-updated_at = "2026-10-25T15:06:49.632516705Z"
+updated_at = "2026-10-25T15:17:31.140005092Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 ticket = "yura"
@@ -31,3 +31,6 @@ So for this ticket: no ~ written to the Time Log by anything. Reverse mn-3p28's 
 From the human, via aide, 2026-10-25 (verbatim), answering the open read-side point: "update the time report to accept the ~ but to issue a warning when it is found that this syntax is deprecated"
 
 So the read side: the time report keeps parsing a leading ~ in start/end, and warns when it finds one (the ~ syntax is deprecated), naming the file and line so it can be fixed. This is in scope for this ticket.
+
+### note · external:orchestrator · 2026-10-25T15:17:31.140Z
+From orchestrator: mn-yura planned and queued (tier 1, startable). Brief widened by the human (no ~ written to the Time Log; time report keeps reading ~ with a deprecation warning); it's all in the ticket body. Haiku.
