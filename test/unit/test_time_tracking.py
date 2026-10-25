@@ -1649,3 +1649,24 @@ def test_highlighted_tags_list():
         'all meetings', 'recruiting', 'agile', 'fence', 'iceberg', 'code',
         'integr-test', 'axe', 'off-task']
     assert HIGHLIGHTED_TAGS[0][1] in TAG_GROUPS
+
+
+# Tests for the deprecated tilde warning in find_time_log_entries
+
+def test_time_tracking_find_time_log_entries_tilde_warns(tmp_path, capsys):
+    test_file = tmp_path / "2026-10-01 Thu.md"
+    test_file.write_text(
+        "# Daily\n\n### Log\n\n- Work #dev\n  * start: ~09:45\n  * end:   13:00\n")
+    entries = find_time_log_entries(str(test_file))
+    assert entries[0].start_time == datetime(2026, 10, 1, 9, 45)
+    err = capsys.readouterr().err
+    assert f"Warning: {test_file} line 6:" in err
+    assert "'~' before a Time Log time is deprecated" in err
+
+
+def test_time_tracking_find_time_log_entries_plain_time_no_warning(tmp_path, capsys):
+    test_file = tmp_path / "2026-10-01 Thu.md"
+    test_file.write_text(
+        "# Daily\n\n### Log\n\n- Work #dev\n  * start: 09:45\n  * end:   13:00\n")
+    find_time_log_entries(str(test_file))
+    assert capsys.readouterr().err == ""

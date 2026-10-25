@@ -349,37 +349,14 @@ def test_time_log_cli_update_invalid_is_error(tmp_path, capsys):
     assert code == 1 and not out["ok"]
 
 
-# Tests for tilde times
+# Tests for the tilde ban (no '~' is ever written to the Time Log)
 
-def test_time_log_append_tilde_start(tmp_path):
+def test_time_log_append_close_prev_writes_plain_end(tmp_path):
     path = make_note(tmp_path)
-    result = append(path, start_tilde=True)
+    append(path, close_prev=True)
     out = lines_of(path)
-    assert any("  * start: ~14:00" in line for line in out)
-
-
-def test_time_log_append_tilde_end(tmp_path):
-    path = make_note(tmp_path)
-    result = append(path, end=time(15, 0), end_tilde=True)
-    out = lines_of(path)
-    assert any("  * end:   ~15:00" in line for line in out)
-
-
-def test_time_log_append_tilde_start_and_end(tmp_path):
-    path = make_note(tmp_path)
-    result = append(path, start=time(14, 0), start_tilde=True,
-                    end=time(15, 0), end_tilde=True)
-    out = lines_of(path)
-    assert any("  * start: ~14:00" in line for line in out)
-    assert any("  * end:   ~15:00" in line for line in out)
-
-
-def test_time_log_append_close_prev_tilde(tmp_path):
-    path = make_note(tmp_path)
-    result = append(path, close_prev=True, start_tilde=True)
-    out = lines_of(path)
-    assert "  * end:   ~14:00" in out
-    assert any("  * start: ~14:00" in line for line in out)
+    assert "  * end:   14:00" in out
+    assert any("  * start: 14:00" in line for line in out)
 
 
 def test_time_log_append_prev_start_tilde_matches_stored_tilde(tmp_path):
@@ -392,10 +369,33 @@ def test_time_log_append_prev_start_tilde_matches_stored_tilde(tmp_path):
     assert result.written and result.warnings == []
 
 
-def test_time_log_update_tilde_time_validation(tmp_path):
-    """Test that update validates tilde times in --text."""
+def test_time_log_update_tilde_in_text_refused(tmp_path):
+    """Test that update refuses a tilde before a start or end in --text."""
     path = make_note(tmp_path)
-    result = time_log.update(path, NOTE.split("### Log\n")[1].split("### Time Block")[0].strip(),
-                             "- Work\n  * start: ~09:45\n  * end:   ~13:00\n"
-                             "- Lunch #personal\n  * start: ~13:00\n  * end:   ~13:30")
-    assert result.written
+    expect = NOTE.split("### Log\n")[1].split("### Time Block")[0].strip()
+    for text in ("- Work\n  * start: ~09:45\n  * end:   13:00",
+                 "- Work\n  * start: 09:45\n  * end:   ~13:00"):
+        with pytest.raises(time_log.TimeLogError, match="no '~'"):
+            time_log.update(path, expect, text)
+    assert Path(path).read_text() == NOTE
+
+
+def test_time_log_cli_append_tilde_refused(tmp_path, capsys):
+    path = make_note(tmp_path)
+    for option in (["--start", "~14:00"], ["--end", "~14:30"],
+                   ["--prev-start", "~13:30"]):
+        code, out = run_cli(tmp_path, capsys, "append", path, "--text",
+                            "- Next", "--prev", "- Review #dev",
+                            "--prev-open", *option)
+        assert code == 1 and not out["ok"]
+        assert "no '~' in a Time Log time" in out["error"]
+    assert Path(path).read_text() == NOTE
+
+
+def test_time_log_cli_append_close_prev_tilde_refused(tmp_path, capsys):
+    path = make_note(tmp_path)
+    code, out = run_cli(tmp_path, capsys, "append", path, "--text", "- Next",
+                        "--prev", "- Review #dev", "--prev-start", "13:30",
+                        "--prev-open", "--close-prev", "--start", "~14:00")
+    assert code == 1 and not out["ok"]
+    assert Path(path).read_text() == NOTE

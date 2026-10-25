@@ -315,6 +315,19 @@ def calculate_time_by_group(entries: list[TimeLogEntry],
     return dict(group_durations)
 
 
+# (file, line) pairs already warned about: a day's note is parsed for the
+# day and again for its week, and each line should warn once per run.
+_warned_tilde: set[tuple[str, int]] = set()
+
+
+def _warn_tilde(time_str: str, filepath: str, line_num: int) -> None:
+    """Warn once about a deprecated '~' before a Time Log start or end."""
+    if time_str.startswith('~') and (filepath, line_num) not in _warned_tilde:
+        _warned_tilde.add((filepath, line_num))
+        print(f"Warning: {filepath} line {line_num}: '~' before a Time Log "
+              "time is deprecated; write the time without it", file=sys.stderr)
+
+
 def _parse_time_log_lines(lines: list[str], filepath: str,
                           file_date: Optional[date] = None,
                           mode: str = 'work') -> list[TimeLogEntry]:
@@ -402,12 +415,14 @@ def _parse_time_log_lines(lines: list[str], filepath: str,
             if detail_line.startswith('start:'):
                 current_entry_data['has_time'] = True
                 time_str = detail_line[6:].strip()
+                _warn_tilde(time_str, filepath, line_num)
                 current_entry_data['start_time'] = _parse_entry_time(time_str, file_date)
 
             # Parse end time
             elif detail_line.startswith('end:'):
                 current_entry_data['has_time'] = True
                 time_str = detail_line[4:].strip()
+                _warn_tilde(time_str, filepath, line_num)
                 current_entry_data['end_time'] = _parse_entry_time(time_str, file_date)
 
             # Everything else is notes

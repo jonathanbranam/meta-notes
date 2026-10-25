@@ -169,18 +169,25 @@ def _check_new(entries: list[Entry], allow_open_last: bool) -> None:
             raise TimeLogError(f"{name!r} ends before it starts")
 
 
-def _stamp(at: time, has_tilde: bool = False) -> str:
-	"""Format a time as HH:MM, optionally with a leading tilde."""
-	formatted = f"{at:%H:%M}"
-	return f"~{formatted}" if has_tilde else formatted
+def _stamp(at: time) -> str:
+	"""Format a time as HH:MM."""
+	return f"{at:%H:%M}"
+
+
+def _reject_tilde(lines: list[str]) -> None:
+	"""Refuse a '~' before a start or end time: the Time Log never holds one."""
+	for line in lines:
+		m = _START.match(line) or _END.match(line)
+		if m and m.group(1).strip().startswith('~'):
+			raise TimeLogError(
+				f"no '~' before a Time Log time: {line.strip()!r}; write the "
+				"time as HH:MM (times may be approximate)")
 
 
 def append(path: str, text: str, start: time, end: time | None = None,
            notes: list[str] | None = None, prev: str | None = None,
            prev_start: time | None = None, prev_open: bool = False,
-           close_prev: bool = False, first: bool = False,
-           start_tilde: bool = False, end_tilde: bool = False,
-           prev_start_tilde: bool = False) -> Result:
+           close_prev: bool = False, first: bool = False) -> Result:
     """
     Add one entry at the end of the log.
 
@@ -194,7 +201,6 @@ def append(path: str, text: str, start: time, end: time | None = None,
         prev_open: Assert the last entry has no end (else it must have one).
         close_prev: Write the last entry's end as `start` (needs prev_open).
         first: Assert the log is empty; replaces the prev options.
-        start_tilde, end_tilde, prev_start_tilde: Whether to write times with ~ prefix.
 
     Raises:
         TimeLogError: With nothing written, if the guard fails (`current`
@@ -241,14 +247,14 @@ def append(path: str, text: str, start: time, end: time | None = None,
             raise TimeLogError("last entry doesn't match: "
                                + "; ".join(problems), [last.as_dict()])
 
-    new_lines = [text, f"  * start: {_stamp(start, start_tilde)}"]
+    new_lines = [text, f"  * start: {_stamp(start)}"]
     if end is not None:
-        new_lines.append(f"  * end:   {_stamp(end, end_tilde)}")
+        new_lines.append(f"  * end:   {_stamp(end)}")
     new_lines += [f"  * {note}" for note in notes]
 
     result = Result()
     if close_prev:
-        end_line = f"  * end:   {_stamp(start, start_tilde)}"
+        end_line = f"  * end:   {_stamp(start)}"
         for i in range(last.index + 1, _entry_end(last)):
             if _END.match(lines[i]):
                 lines[i] = end_line
@@ -331,6 +337,7 @@ def update(path: str, expect: str, text: str) -> Result:
     run = entries[at:at + n]
     new_text = text.rstrip("\n")
     new_lines = new_text.split("\n") if new_text.strip() else []
+    _reject_tilde(new_lines)
     new = parse_entries(new_lines, 0, file_date, strict=True)
     _check_new(new, allow_open_last=at + n == len(entries))
 
