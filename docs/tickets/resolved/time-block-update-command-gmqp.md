@@ -7,6 +7,7 @@ changes: []
 specs: []
 needs: []
 see: [docs/bug-report/time-block-request.md]
+kind: chore
 ---
 
 # time-block update: edit Time Block cells like task update edits task lines

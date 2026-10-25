@@ -7,6 +7,7 @@ changes: []
 specs: [notes-autosave]
 needs: []
 see: [time-log-append-and-update-commands-v63j, time-block-update-command-gmqp]
+kind: chore
 ---
 
 # Vim autosave and autoreload for notes buffers

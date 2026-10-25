@@ -7,6 +7,7 @@ changes: []
 specs: [init, notes-autosave]
 needs: []
 see: [vim-autosave-and-autoreload-egvk]
+kind: chore
 ---
 
 # init warns when the file watcher is missing

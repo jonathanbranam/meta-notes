@@ -7,6 +7,7 @@ changes: []
 specs: [task-tree]
 needs: []
 see: [task-trees-notes-and-subtasks-m2at]
+kind: chore
 ---
 
 # A parent task is marked done only when every subtask is done

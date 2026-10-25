@@ -7,6 +7,7 @@ changes: []
 specs: [time-log-edit]
 needs: []
 see: [time-block-update-command-gmqp, time-report-work-split-disagrees-286n]
+kind: chore
 ---
 
 # time-log append and time-log update: race-safe Time Log edits

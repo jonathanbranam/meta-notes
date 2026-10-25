@@ -7,6 +7,7 @@ changes: []
 specs: []
 needs: []
 see: [vim-autosave-and-autoreload-egvk]
+kind: chore
 ---
 
 # Autoreload's timer never starts and its reload notice never shows

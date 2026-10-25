@@ -2,3 +2,13 @@
 id = "0000-baseline"
 applied_at = "2026-10-08T23:09:21.380715908Z"
 bridle_version = "0.5.0"
+
+[[applied]]
+id = "0006-backfill-ticket-kind"
+applied_at = "2026-10-17T11:52:15.869756300Z"
+bridle_version = "0.7.6"
+
+[[applied]]
+id = "0007-gitignore-agent-site"
+applied_at = "2026-10-17T11:52:15.869756300Z"
+bridle_version = "0.7.6"

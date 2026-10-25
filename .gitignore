@@ -16,3 +16,4 @@ doc/tags
 .claude/skills/bridle-*/
 .claude/agents/
 .claude/.bridle-sync-hooks.json
+.agent-site/

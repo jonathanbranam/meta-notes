@@ -7,6 +7,7 @@ changes: []
 specs: []
 needs: []
 see: []
+kind: chore
 ---
 
 # The time report's Work vs Non-Work disagrees with its work duration

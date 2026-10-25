@@ -7,6 +7,7 @@ changes: []
 specs: []
 needs: []
 see: []
+kind: chore
 ---
 
 # Move development from Pipfile and pipenv to pyproject.toml and uv

@@ -7,6 +7,7 @@ changes: []
 specs: []
 needs: []
 see: [task-update-text-option-cpwr]
+kind: chore
 ---
 
 # Tasks as trees, with their notes and subtasks

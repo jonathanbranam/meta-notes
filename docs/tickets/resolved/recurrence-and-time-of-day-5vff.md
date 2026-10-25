@@ -7,6 +7,7 @@ changes: []
 specs: []
 needs: []
 see: [a-life-assistant-agent-on-the-notes-repo-phyy]
+kind: chore
 ---
 
 # Recurrence and time of day for tasks and reminders

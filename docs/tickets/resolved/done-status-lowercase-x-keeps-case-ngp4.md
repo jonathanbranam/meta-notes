@@ -7,6 +7,7 @@ changes: []
 specs: [task-tree]
 needs: []
 see: [parent-done-only-when-all-subtasks-done-f3vg]
+kind: chore
 ---
 
 # Done is written as lowercase x, and an existing X is kept

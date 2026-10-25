@@ -7,6 +7,7 @@ changes: []
 specs: []
 needs: []
 see: []
+kind: chore
 ---
 
 # task update can't change a task's text
