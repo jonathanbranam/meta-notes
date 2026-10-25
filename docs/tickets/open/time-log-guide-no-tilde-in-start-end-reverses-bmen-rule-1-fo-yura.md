@@ -39,13 +39,15 @@ The ticket thread (aide's comment) has the background.
   `design/specs/time-log-edit.md` (r-6bf7, s-295d, s-e683). Check `skills/` for the same advice.
 - Update the tests mn-3p28 added to expect rejection.
 - Patch release with a CHANGELOG entry.
-- Leave the read side alone (`time_tracking._parse_entry_time` still strips `~` in old notes): the
-  human hasn't decided it yet (aide asked). If they answer before merge, aide adds it to the thread.
+- Read side (the human, 2026-10-25 11:06 AM ET, via aide, verbatim: "update the time report to
+  accept the ~ but to issue a warning when it is found that this syntax is deprecated"): the time
+  report keeps parsing `~` (`time_tracking._parse_entry_time`) and prints a deprecation warning
+  naming the file and line for each one found.
 
 ## Verify
 
 `meta-notes prime` and `--help` don't suggest `~` in the Time Log; `time-log append --start ~9:00`
-fails with a clear error; old notes with `~` still report; spec check 0 errors; `just check` green.
+fails with a clear error; old notes with `~` still report, with a deprecation warning naming file and line; spec check 0 errors; `just check` green.
 
 ## Model
 
