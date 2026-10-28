@@ -271,3 +271,4 @@
 {"actor":"external:orchestrator","at":"2026-10-25T14:57:27.337489837Z","from":"pending","task":"mn-yura","to":"open"}
 {"actor":"external:orchestrator","at":"2026-10-25T15:17:27.108956757Z","from":"open","task":"mn-yura","to":"planned"}
 {"actor":"external:orchestrator","at":"2026-10-25T15:17:27.163137280Z","queue":"reprioritized"}
+{"actor":"human","at":"2026-10-28T16:33:24.603Z","from":"","task":"mn-8se5","to":"pending"}
