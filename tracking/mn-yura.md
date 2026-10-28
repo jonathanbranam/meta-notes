@@ -2,11 +2,13 @@
 id = "mn-yura"
 title = "Time Log guide: no tilde in start/end (reverses bmen rule 1 for the Time Log)"
 kind = "fix"
-state = "planned"
+state = "integrated"
 created_at = "2026-10-25T14:57:22.308Z"
-updated_at = "2026-10-25T15:17:31.140005092Z"
+updated_at = "2026-10-28T16:34:26.185962065Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
+branch = "bridle/timelog-notilde"
+commit = "d5b3211"
 ticket = "yura"
 +++
 
@@ -34,3 +36,9 @@ So the read side: the time report keeps parsing a leading ~ in start/end, and wa
 
 ### note · external:orchestrator · 2026-10-25T15:17:31.140Z
 From orchestrator: mn-yura planned and queued (tier 1, startable). Brief widened by the human (no ~ written to the Time Log; time report keeps reading ~ with a deprecation warning); it's all in the ticket body. Haiku.
+
+### note · external:orchestrator · 2026-10-28T16:34:26.180Z
+integrated: d5b3211 (branch bridle/timelog-notilde)
+
+### note · external:orchestrator · 2026-10-28T16:34:26.185Z
+cleanup: removed nothing
