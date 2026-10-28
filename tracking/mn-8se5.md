@@ -2,9 +2,9 @@
 id = "mn-8se5"
 title = "Conventions: Actual records only deviations; leave it blank when the plan happened"
 kind = "docs"
-state = "open"
+state = "planned"
 created_at = "2026-10-28T16:33:24.603Z"
-updated_at = "2026-10-28T16:34:39.661055988Z"
+updated_at = "2026-10-28T16:44:22.084553926Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 ticket = "8se5"
@@ -59,3 +59,6 @@ Manager: the ask is empty ('The ask' holds only '-'), so I can't brief a worker.
 
 ### note · external:orchestrator · 2026-10-28T16:34:39.661Z
 Orchestrator: ask written into the ticket (e30e17a; my first --body was taken literally as '-'). Will plan and queue when settling ends at 12:43 PM. mn-yura marked integrated (d5b3211).
+
+### note · external:orchestrator · 2026-10-28T16:44:22.084Z
+From orchestrator: mn-8se5 now has its ask (e30e17a), is planned and queued in tier 1. Short conventions docs edit, haiku. mn-yura marked integrated.
