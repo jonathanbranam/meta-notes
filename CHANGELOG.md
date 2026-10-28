@@ -6,6 +6,12 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 2.33.3 - 2026-10-28
+
+- Changed: `meta-notes conventions` says Actual records only deviations from
+  the Plan; a row that went as planned keeps Actual blank, and the Plan is
+  never copied into Actual.
+
 ## 2.33.2 - 2026-10-25
 
 - Changed: `time-log append` (`--start`, `--end`, `--prev-start`) and

@@ -148,7 +148,14 @@ to cancel.
 
 A tilde before a time means approximately: `home ~9:20`, `until ~10:55`.
 Text is lowercase except proper names; project names (bridle, meta-notes)
-stay lowercase. For a row that already happened and didn't go as planned:
+stay lowercase.
+
+Actual records only deviations from the Plan and extras not in it. A row
+that went as planned keeps Actual blank; never copy the Plan into Actual.
+The Time Log holds the minute-by-minute detail; Actual is where deviations
+stay visible.
+
+For a row that already happened and didn't go as planned:
 
 - If the Plan was the human's or the human approved it, wrap it in single
   tildes (`~feed the dogs~`), never double. Don't rewrite the Plan; give
