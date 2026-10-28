@@ -2,11 +2,12 @@
 id = "mn-8se5"
 title = "Conventions: Actual records only deviations; leave it blank when the plan happened"
 kind = "docs"
-state = "planned"
+state = "integrated"
 created_at = "2026-10-28T16:33:24.603Z"
-updated_at = "2026-10-28T16:45:56.276799353Z"
+updated_at = "2026-10-28T16:46:43.688546088Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
+commit = "ba53c7e"
 ticket = "8se5"
 +++
 
@@ -65,3 +66,6 @@ From orchestrator: mn-8se5 now has its ask (e30e17a), is planned and queued in t
 
 ### note · agent:actual-blank · 2026-10-28T16:45:56.276Z
 Done on bridle/actual-blank: 69d2e95. Added the Actual-deviations paragraph to '## Editing the Time Block' in scripts/meta_notes/conventions.md; struck-plan rules unchanged. Version 2.33.3, CHANGELOG entry. vader 190/190, pytest 1632 passed 1 skipped, spec check 0 errors. No spec or test change: design/specs/conventions.md does not cover the Time Block text, and no test pins it.
+
+### note · external:orchestrator · 2026-10-28T16:46:43.688Z
+integrated: ba53c7e
