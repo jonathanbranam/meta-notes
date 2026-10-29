@@ -4,10 +4,11 @@ title = "conventions: add the mtg:/(opt) prefix and overlap-ask rules for Time B
 kind = "bug"
 state = "integrated"
 created_at = "2026-10-29T14:05:19.967Z"
-updated_at = "2026-10-29T14:19:29.120217057Z"
+updated_at = "2026-10-29T14:19:33.933434497Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
 commit = "4e5a41e"
+summary = "conventions.md 'Editing the Time Block' now has the mtg:/(opt) prefix and overlap-ask rules; daily-plan step 5 points there. Merge 4e5a41e, v2.33.4."
 ticket = "dyer"
 +++
 
