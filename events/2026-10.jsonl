@@ -277,3 +277,4 @@
 {"actor":"external:orchestrator","at":"2026-10-28T16:44:21.951060322Z","from":"open","task":"mn-8se5","to":"planned"}
 {"actor":"external:orchestrator","at":"2026-10-28T16:44:22.015798652Z","queue":"reprioritized"}
 {"actor":"external:orchestrator","at":"2026-10-28T16:46:43.688546088Z","from":"planned","task":"mn-8se5","to":"integrated"}
+{"actor":"human","at":"2026-10-29T14:05:19.967Z","from":"","task":"mn-dyer","to":"pending"}
