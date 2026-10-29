@@ -104,7 +104,7 @@ A skill that completes its ceremony SHALL check its marker with `meta-notes task
 - **WHEN** the user wants the Follow up item `- [ ] reply to Sam` tracked for Monday 2026-09-28
 - **THEN** the skill SHALL run `task update` on that line with `--due 2026-09-28`
 
-The skill SHALL write a meeting whose `response` is `yes` plainly and prefix one whose `response` is `maybe`, `no-reply`, or null with `(opt) `. When events' `start`–`end` ranges intersect, it SHALL tell the user and ask which to keep, or whether to note both, and SHALL NOT drop one silently.
+The skill SHALL write meeting text as `meta-notes conventions` states it: a meeting whose `response` is `yes` plainly, one whose `response` is `maybe`, `no-reply`, or null with `(opt) `, and, when events' `start`-`end` ranges intersect, it SHALL tell the user and ask which to keep, or whether to note both, and SHALL NOT drop one silently.
 
 #### Scenario: Tentative meeting  {#s-a267}
 *Verification*: **non-executable**

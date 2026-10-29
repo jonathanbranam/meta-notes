@@ -185,6 +185,13 @@ begins. Examples (15-minute grid):
 - `11:50-12:05` (a short meeting spanning one grid line) fills
   `11:45am, 12:00pm` (`12:15pm` is not filled)
 
+Write a calendar meeting's Plan text as `mtg: <title>`. An event whose
+`response` is `maybe`, `no-reply`, or null gets a leading `(opt) `
+(`(opt) mtg: <title>`); only `response: "yes"` meetings are written
+plain. When two events' `start`-`end` ranges intersect, tell the user
+and ask which to keep, or whether to note both (`mtg: X / (opt) mtg: Y`).
+Never drop one silently.
+
 Travel to and from it is its own run of rows (`drive to concert` in each
 15-minute row it takes), and the event's rows follow (`concert`). When the
 end isn't known, use a typical length and tell the user, or ask. One
