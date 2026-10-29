@@ -78,6 +78,18 @@ def test_run_covers_required_topics():
         assert phrase in text, phrase
 
 
+# Tests for the Time Block meeting rules
+
+def test_run_states_meeting_prefix_and_overlap_rules():
+    text = unwrapped()
+
+    assert "Write a calendar meeting's Plan text as `mtg: <title>`." in text
+    assert "`(opt) mtg: <title>`" in text
+    assert "only `response: \"yes\"` meetings are written plain" in text
+    assert "ask which to keep, or whether to note both" in text
+    assert "Never drop one silently." in text
+
+
 def test_run_lines_fit_in_80_columns():
     for line in conventions.run().splitlines():
         assert len(line) <= 80, line

@@ -32,6 +32,7 @@ The conventions SHALL cover:
 - the project model: note and folder projects, the `Home.md` home note, the `status`, `tag`, and `archived` fields, and project tasks
 - task edits: take `file`, `line`, and `text` from `meta-notes tasks --json`, edit with `meta-notes task update <file>:<line> --expect <text>`, and re-query when the line has changed; never rewrite a task line directly
 - where new markers go: tags before dates (`... #next 📅 <date>`)
+- Time Block meetings: a meeting's Plan text is `mtg: <title>`, prefixed `(opt) ` when its `response` is `maybe`, `no-reply`, or null; when events' ranges intersect, ask the user which to keep or whether to note both, and never drop one silently
 - carrying a task forward: mark the old line `>` with `task update` and write the new copy
 - recurring tasks: `🔁 every 3 months` before the dates, reported as `recurrence` and `recurs_from_completion`; a recurring task lives in one home note, and a `🔁` line is never copied forward into a daily or weekly note
 - ceremony markers and checking them with `task update --status x`

@@ -6,6 +6,13 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 2.33.4 - 2026-10-29
+
+- Changed: `meta-notes conventions` states how a meeting is written in the Time
+  Block: `mtg: <title>`, `(opt) ` for a `maybe`, `no-reply` or null response,
+  and asking before keeping only one of two overlapping events. `daily-plan`
+  points there instead of repeating it.
+
 ## 2.33.3 - 2026-10-28
 
 - Changed: `meta-notes conventions` says Actual records only deviations from

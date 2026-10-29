@@ -131,12 +131,8 @@ note.
    cell unless `--expect '<old text>'` matches. When it reports a cell
    that's too wide, shorten the text. To rewrite or reorder several rows,
    use `meta-notes time-block replace` (see `meta-notes conventions`).
-   - An event's `response` is `yes`, `maybe`, `no-reply`, or null (see the
-     `calendar` skill, which also documents `mine`). Write `yes` meetings
-     plainly; prefix the others with `(opt) `, e.g. `(opt) mtg: X`.
-   - When events' `start`–`end` ranges intersect, tell the user and ask
-     which to keep, or whether to note both (`mtg: X / (opt) mtg: Y`).
-     Never drop one silently.
+   - Meeting text (the `mtg:` and `(opt) ` prefixes, and what to do when
+     events overlap) follows `meta-notes conventions`.
 3. Name a concrete first block (what, and the first action), and tell
    the user.
 
