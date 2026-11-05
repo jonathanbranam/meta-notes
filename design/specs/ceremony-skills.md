@@ -69,7 +69,7 @@ A skill that completes its ceremony SHALL check its marker with `meta-notes task
 - **THEN** the skill SHALL say so and continue
 
 ### Requirement: Daily shutdown  {#r-935e}
-`daily-shutdown` SHALL close out today's daily note, in about 15 minutes, with these steps in order: collect (items the user pastes or names become tasks in the right note), PR check (each open PR needing the user becomes a task dated the next workday), a next step for each project worked on today, the time-log check, a Follow up list, commit, and mark `shutdown complete`. It SHALL NOT plan the next day. The time-log check SHALL run today's time report, find gaps and large stretches that don't clearly map to a project or work item, ask the user about each, and update the log from the answers. The time-log check SHALL also look at the Time Block's Plan cells: when past rows are still empty, it SHALL confirm with the user and then fill each with `~no plan~`, flexibly and without blocking shutdown. The Follow up list SHALL go in today's `## Follow Up` section and list what to pick up on the next workday. The commit SHALL include all note changes in the notes root and SHALL be made only after the user confirms it.
+`daily-shutdown` SHALL close out today's daily note, in about 15 minutes, with these steps in order: collect (items the user pastes or names become tasks in the right note), PR check (each open PR needing the user becomes a task dated the next workday), a next step for each project worked on today, the time-log check, a Follow up list, commit, and mark `shutdown complete`. It SHALL NOT plan the next day. The time-log check SHALL run today's time report, find gaps and large stretches that don't clearly map to a project or work item, ask the user about each, and update the log from the answers. The time-log check SHALL also look at the Time Block's Plan cells: when past rows are still empty, it SHALL confirm with the user and then fill each with `~no plan~`, flexibly and without blocking shutdown. The Follow up list SHALL go in today's `## Follow Up` section and list what to pick up on the next workday. With the Follow up step, when the week note's `## Plan` has the per-day breakdown, it SHALL check off today's items that got done and move unfinished items and new work that doesn't fit to a later day's slice, consistent with the Follow up list and task due dates, through the CLI only. A week note with no per-day breakdown SHALL be left alone. The commit SHALL include all note changes in the notes root and SHALL be made only after the user confirms it.
 
 #### Scenario: Time-log gap  {#s-adcb}
 *Verification*: **non-executable**
@@ -81,13 +81,23 @@ A skill that completes its ceremony SHALL check its marker with `meta-notes task
 - **WHEN** a two-hour log entry has no project tag or link
 - **THEN** the skill SHALL ask which project or work item it belongs to and update the entry
 
+#### Scenario: Progress written to the week plan  {#s-6f3dd}
+*Verification*: **non-executable**
+- **WHEN** shutdown runs on Wednesday, the week note has a `### Wed` slice, one item is done and one is not
+- **THEN** the skill SHALL check off the done item and move the unfinished one to Thursday's slice with `meta-notes note write`
+
+#### Scenario: Week note without a breakdown  {#s-45d5}
+*Verification*: **non-executable**
+- **WHEN** the week note's `## Plan` has no per-day headings
+- **THEN** the skill SHALL leave the week note unchanged
+
 #### Scenario: Empty plan at shutdown  {#s-5a0e}
 *Verification*: **non-executable**
 - **WHEN** the Time Block's Plan cells are still empty at shutdown
 - **THEN** the skill SHALL confirm with the user, then fill each past row's Plan with `~no plan~`
 
 ### Requirement: Daily planning  {#r-236e}
-`daily-plan` SHALL plan one day in about 10–15 minutes. It SHALL plan today when today's daily note has no completed `plan complete` marker, and the next workday (Monday to Friday) otherwise, and SHALL state the choice. It SHALL always read the previous workday's note (its Follow up list, unfinished time blocks, and shutdown status), and for a Monday also the weekly plan. It SHALL gather meetings for the target day as "Calendar from the export" requires, and due and overdue tasks and open `#wait` tasks from the CLI. It SHALL create the target day's note with `meta-notes note daily` if needed, fill the Plan column of the Time Block table (placing every meeting first, before other work, each filling every row it spans with travel as its own rows), name a concrete first block, and mark `plan complete`. A Follow up item the user wants tracked SHALL become a task in place with `task update --due`. It SHALL NOT work through old tasks.
+`daily-plan` SHALL plan one day in about 10–15 minutes. It SHALL plan today when today's daily note has no completed `plan complete` marker, and the next workday (Monday to Friday) otherwise, and SHALL state the choice. It SHALL always read the previous workday's note (its Follow up list, unfinished time blocks, and shutdown status), and, on every day (not only Monday), the weekly plan's `## Plan`: the target day's slice of the per-day breakdown and the unchecked items from earlier days. Its very next action after picking the target day SHALL be to create the target day's note with `meta-notes note daily` if needed, gather meetings as "Calendar from the export" requires, and write every meeting into the Plan column of the Time Block table (each filling every row it spans with travel as its own rows), before outlook, tasks or any other gathering. It SHALL then gather outlook, due and overdue tasks and open `#wait` tasks from the CLI, reconcile the weekly plan's slice with the due and overdue tasks into one list, and compare that work, and deadlines coming later in the week, with the day's remaining open time; when it does not fit, it SHALL say so explicitly with the numbers and ask which items should slip, and SHALL NOT proceed as if all of it will get done. It SHALL then fill the rest of the Time Block Plan column, name a concrete first block, and mark `plan complete`. A week note with no per-day breakdown SHALL be read at the week level and not restructured. In a personal root, which has no shutdown, it SHALL catch the breakdown up from the previous day's note (check off done items, move unchecked ones forward) after confirming with the user. A Follow up item the user wants tracked SHALL become a task in place with `task update --due`. It SHALL NOT work through old tasks.
 
 #### Scenario: Evening run after shutdown  {#s-69ea}
 *Verification*: **non-executable**
@@ -98,6 +108,26 @@ A skill that completes its ceremony SHALL check its marker with `meta-notes task
 *Verification*: **non-executable**
 - **WHEN** it is Friday evening and Friday is planned
 - **THEN** the skill SHALL plan Monday and read the weekly plan for Monday's week
+
+#### Scenario: Meetings first  {#s-d8fe}
+*Verification*: **non-executable**
+- **WHEN** the skill has picked the target day and a current export exists
+- **THEN** its next action SHALL be to write the day's meetings into the Time Block, before running outlook or the task queries
+
+#### Scenario: Weekly plan read midweek  {#s-d4b5}
+*Verification*: **non-executable**
+- **WHEN** the skill plans Wednesday and the week note has a `### Wed` slice and an unchecked Tuesday item
+- **THEN** it SHALL read both and reconcile them with Wednesday's due and overdue tasks
+
+#### Scenario: Work does not fit  {#s-e1d7}
+*Verification*: **non-executable**
+- **WHEN** the day's open time is about 2 hours and the assigned and due work adds up to about 4
+- **THEN** the skill SHALL say so with the numbers and ask which items should slip
+
+#### Scenario: Personal root catch-up  {#s-e3d9}
+*Verification*: **non-executable**
+- **WHEN** `daily-plan` runs in a personal root and yesterday's breakdown items are unchecked
+- **THEN** it SHALL check off what yesterday's note shows done and move the rest forward, after confirming
 
 #### Scenario: Follow up item tracked  {#s-075f}
 *Verification*: **non-executable**
@@ -160,12 +190,17 @@ The skill SHALL write meeting text as `meta-notes conventions` states it: a meet
 - **THEN** the skill SHALL run `task update` with `--remove-tag later --due 2026-10-02`
 
 ### Requirement: Weekly planning  {#r-aba3}
-`weekly-plan` SHALL plan the next workweek, Monday to Friday, from the weekly review and that week's calendar, gathered as "Calendar from the export" requires. It SHALL work out capacity as free gaps of 90 minutes or more, listing shorter gaps separately, and SHALL list meetings to schedule and deadlines (`#deadline` tasks and due dates) landing in that week. It SHALL help the user choose 3–5 priorities, place them roughly on days, write the result in the next week's `## Plan` section (creating the note with `meta-notes note weekly` if needed), and mark that week's `plan complete`.
+`weekly-plan` SHALL plan the next workweek, Monday to Friday, from the weekly review and that week's calendar, gathered as "Calendar from the export" requires. It SHALL work out capacity as free gaps of 90 minutes or more, listing shorter gaps separately, and SHALL list meetings to schedule and deadlines (`#deadline` tasks and due dates) landing in that week. It SHALL help the user choose 3–5 priorities, assign priorities and deadlines roughly to specific days by each day's capacity and the item's size and urgency, write the result in the next week's `## Plan` section, as the week-level lists plus a per-day breakdown (one `### <Weekday> <YYYY-MM-DD>` heading per day with checklist lines), (creating the note with `meta-notes note weekly` if needed), and mark that week's `plan complete`.
 
 #### Scenario: Capacity  {#s-f430}
 *Verification*: **non-executable**
 - **WHEN** Tuesday's calendar has free gaps of 2 hours and 45 minutes
 - **THEN** the 2-hour gap SHALL count toward capacity and the 45-minute gap SHALL be listed separately
+
+#### Scenario: Per-day breakdown  {#s-3c22}
+*Verification*: **non-executable**
+- **WHEN** the skill writes the plan for the week of 2026-09-28
+- **THEN** the `## Plan` section SHALL have a `### Mon 2026-09-28` through `### Fri 2026-10-02` heading, each with the work assigned to that day
 
 #### Scenario: Week from the export  {#s-1fb7}
 *Verification*: **non-executable**
@@ -276,7 +311,7 @@ A skill that needs meetings SHALL run `meta-notes calendar --date <period> --jso
 - **THEN** the skill SHALL say to run `meta-notes init` and SHALL continue from a screenshot if the user provides one
 
 ### Requirement: Skills follow the root mode  {#r-cbe0}
-The shipped skills SHALL read the notes root's mode from `meta-notes conventions`, which ends with a "Personal mode" section in a `personal` root and adds nothing in a `work` root, and SHALL branch on it in their text; there is no second set of skills. In a `work` root every requirement above applies unchanged. In a `personal` root: no step SHALL ask about PRs, Slack or email; the next day SHALL be tomorrow, weekends included; `daily-shutdown` SHALL say it is for work roots and stop, and `daily-plan` SHALL run on its own, without reading a previous shutdown; `weekly-review` and `weekly-plan` SHALL be done on Sunday and SHALL cover the seven days Monday to Sunday, and the review SHALL NOT draft a manager summary; free time in the `calendar` skill SHALL be the personal day (07:00 to 21:00) and the skill SHALL NOT look for 1-1s; the `time-block` skill SHALL keep `pers:` and `work:` prefixes as written, with `work:` the exception instead of `pers:`.
+The shipped skills SHALL read the notes root's mode from `meta-notes conventions`, which ends with a "Personal mode" section in a `personal` root and adds nothing in a `work` root, and SHALL branch on it in their text; there is no second set of skills. In a `work` root every requirement above applies unchanged. In a `personal` root: no step SHALL ask about PRs, Slack or email; the next day SHALL be tomorrow, weekends included; `daily-shutdown` SHALL say it is for work roots and stop, and `daily-plan` SHALL run on its own, without reading a previous shutdown (it still reads the weekly plan every day and checks the fit, and catches the per-day breakdown up itself); `weekly-review` and `weekly-plan` SHALL be done on Sunday and SHALL cover the seven days Monday to Sunday, and the review SHALL NOT draft a manager summary; free time in the `calendar` skill SHALL be the personal day (07:00 to 21:00) and the skill SHALL NOT look for 1-1s; the `time-block` skill SHALL keep `pers:` and `work:` prefixes as written, with `work:` the exception instead of `pers:`.
 
 #### Scenario: Daily shutdown in a personal root  {#s-ddfd}
 *Verification*: **non-executable**

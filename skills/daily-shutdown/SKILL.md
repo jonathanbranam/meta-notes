@@ -1,6 +1,6 @@
 ---
 name: daily-shutdown
-description: End-of-workday shutdown for a meta-notes work root (personal roots have none), about 15 minutes. Use when the user says "shutdown", "daily shutdown", "close out today", or "end my day". Collects loose items into tasks, checks PRs, records next steps, fixes today's time log, writes a Follow up list, commits, and marks shutdown complete. It does not plan tomorrow (that is daily-plan).
+description: End-of-workday shutdown for a meta-notes work root (personal roots have none), about 15 minutes. Use when the user says "shutdown", "daily shutdown", "close out today", or "end my day". Collects loose items into tasks, checks PRs, records next steps, fixes today's time log, writes a Follow up list (and the week note's per-day plan updated from it), commits, and marks shutdown complete. It does not plan tomorrow (that is daily-plan).
 ---
 
 # Daily Shutdown
@@ -109,13 +109,34 @@ Then look at the Time Block's Plan cells. If past rows are still empty
 for rows that lack one. It marks a day without a plan. Be flexible: skip
 rows the user says to leave, and don't block shutdown on it.
 
-### 5. Follow up
+### 5. Follow up and the week plan
 
 Draft a short list for NEXT_DAY: unfinished work, promised replies, and
 the first thing to do. Use today's unfinished time blocks and step 1–3
 answers. Write it under `## Follow Up` in TODAY_NOTE as checklist lines
 without dates (`- [ ] reply to Sam`), adding the heading after `## Notes`
 if the note lacks it. `daily-plan` turns items into tasks when needed.
+
+Then write today's progress back into the week note, so its per-day plan
+is never more than a day stale. Find the week note from
+`meta-notes ceremony status --json` (the `weekly-plan` entry's `note`) and
+read its `## Plan` section. If it has the per-day breakdown
+(`### <Weekday> <date>` headings), then:
+
+- check off today's items that got done:
+  `meta-notes task update "<WEEK_NOTE>:<line>" --expect '<text>'
+  --status x`
+- move each unfinished item, and each new piece of work from steps 1-3
+  that doesn't fit tomorrow, from today's slice to a later day's slice
+  (usually NEXT_DAY), with `meta-notes note write <WEEK_NOTE> --lines A..B
+  --expect ... --text ...`; never edit the note by hand
+- keep it consistent with what you just wrote to Follow Up and with task
+  due dates: an item moved to a later day has a due date no earlier than
+  that day, and a deadline the move would miss is raised with the user,
+  not moved silently
+
+Confirm the changes with the user in one line. If the week note has no
+per-day breakdown (an older week), skip this and don't restructure it.
 
 ### 6. Commit and mark
 

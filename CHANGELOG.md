@@ -6,6 +6,14 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 2.34.0 - 2026-11-05
+
+- Changed: `weekly-plan` assigns priorities and deadlines to days, writing a
+  per-day breakdown in the week note's `## Plan`. `daily-plan` reads it every
+  day, writes the day's meetings into the Time Block first, and says when the
+  work doesn't fit the open time. `daily-shutdown` updates the breakdown with
+  the day's progress (in a personal root, `daily-plan` catches it up).
+
 ## 2.33.4 - 2026-10-29
 
 - Changed: `meta-notes conventions` states how a meeting is written in the Time
