@@ -2,11 +2,13 @@
 id = "mn-2pc3"
 title = "prime: tell agents not to use host auto-memory; persist in CLAUDE.md or filed issues"
 kind = "feature"
-state = "planned"
+state = "integrated"
 created_at = "2026-11-05T13:40:01.459Z"
-updated_at = "2026-11-05T13:56:35.802277409Z"
+updated_at = "2026-11-05T13:57:12.310926625Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
+commit = "82a673a"
+summary = "Shipped in 2.34.2 (merge 82a673a): meta-notes prime's guide tells agents not to use host memory; preferences go in the root's CLAUDE.md, skill/CLI requests under project/meta-notes/."
 ticket = "2pc3"
 +++
 
@@ -19,3 +21,6 @@ Approved for work: the human, via aide (m-0159, relaying email m-0195, 2026-11-0
 
 ### note · agent:prime-memory · 2026-11-05T13:56:35.802Z
 Done on bridle/prime-memory, commit 225dc12 (main merged in). Paragraph added to scripts/meta_notes/prime.md before the conventions; spec requirement r-9c37 and scenario s-bc3f; test_run_persistence_line_before_conventions; doc/meta-notes.txt; CHANGELOG and version 2.34.2. Checks: vader 190/190 (478 assertions), pytest 1634 passed 1 skipped, spec check 31 files 0 errors.
+
+### note · external:orchestrator · 2026-11-05T13:57:11.888Z
+integrated: 82a673a
