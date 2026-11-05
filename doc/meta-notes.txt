@@ -1400,7 +1400,11 @@ Commands ~
     the start of a session: the folders and naming, the plan notes (with
     today's daily, weekly, quarterly, and yearly paths), the working day, the time log, projects, areas, resources,
     the archive, the commands for finding things, the shipped skills, and
-    the full |meta-notes-cli-conventions| output. Today's paths, the tag
+    the full |meta-notes-cli-conventions| output. Before the conventions,
+    it says the notes root holds anything that should persist across
+    sessions: the assistant shouldn't use its own memory feature there, but
+    put standing preferences in `CLAUDE.md` and bug reports under
+    `project/meta-notes/`. Today's paths, the tag
     groups, and the skills are generated. Outside a notes root it still
     succeeds and starts with a line saying no root was found. With
     `--json`, the object has `version`, `root` (null outside a root), and

@@ -6,6 +6,13 @@ in the root's `CLAUDE.md` and override this guide.
 
 <!-- generated: mode -->
 
+This notes root is the source of truth for anything that should persist
+across sessions. If your assistant has its own memory or
+preference-saving feature, don't use it here. Put standing preferences in
+this root's `CLAUDE.md`, and skill or CLI bug reports under
+`project/meta-notes/`, so everything stays in this git repo and visible to
+a human reading it.
+
 ## Folders
 
 - `plan/`: daily, weekly, quarterly, and yearly plan notes

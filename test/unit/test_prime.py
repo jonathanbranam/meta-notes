@@ -121,6 +121,17 @@ def test_run_covers_required_topics(notes_root):
         assert phrase in text, phrase
 
 
+def test_run_persistence_line_before_conventions(notes_root):
+    text = " ".join(prime.run(str(notes_root), SATURDAY).split())
+
+    line = 'source of truth for anything that should persist across sessions'
+    conventions_at = text.index('# meta-notes conventions')
+    assert text.index(line) < conventions_at
+    assert "don't use it here" in text[:conventions_at]
+    assert "`CLAUDE.md`" in text[:conventions_at]
+    assert "`project/meta-notes/`" in text[:conventions_at]
+
+
 @pytest.mark.parametrize('command', [
     'tasks', 'projects', 'project brief', 'changes', 'calendar',
     'ceremony status', 'time'])
