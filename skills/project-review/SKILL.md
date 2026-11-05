@@ -20,9 +20,11 @@ at a time, and save what's decided if the user stops.
    `bin/meta-notes` into a directory on your PATH, for example
    `ln -s <plugin>/bin/meta-notes ~/bin/meta-notes`." Don't read or edit
    any note.
-2. Run `meta-notes conventions` and follow it for everything below. If
-   it ends with a "Personal mode" section, this is a personal root: the
-   next workday below is simply tomorrow, weekends included.
+2. If you already ran `meta-notes conventions` earlier in this session,
+   skip re-running it and follow what you already have. Otherwise, run
+   `meta-notes conventions` and follow it for everything below. If it ends
+   with a "Personal mode" section, this is a personal root: the next
+   workday below is simply tomorrow, weekends included.
 
 ## Hard rules
 

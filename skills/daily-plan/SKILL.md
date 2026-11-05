@@ -20,7 +20,9 @@ About 10–15 minutes. Say so in one line when you start.
    `bin/meta-notes` into a directory on your PATH, for example
    `ln -s <plugin>/bin/meta-notes ~/bin/meta-notes`." Don't read or edit
    any note.
-2. Run `meta-notes conventions` and follow it for everything below.
+2. If you already ran `meta-notes conventions` earlier in this session,
+   skip re-running it and follow what you already have. Otherwise, run
+   `meta-notes conventions` and follow it for everything below.
 
 3. Read the mode: if the conventions end with a "Personal mode"
    section, this is a personal root. Where a step below differs for it, it
