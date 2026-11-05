@@ -20,7 +20,9 @@ in one line. Plan on about one minute per 3–5 tasks.
    `bin/meta-notes` into a directory on your PATH, for example
    `ln -s <plugin>/bin/meta-notes ~/bin/meta-notes`." Don't read or edit
    any note.
-2. Run `meta-notes conventions` and follow it for everything below.
+2. If you already ran `meta-notes conventions` earlier in this session,
+   skip re-running it and follow what you already have. Otherwise, run
+   `meta-notes conventions` and follow it for everything below.
 
 ## Hard rules
 

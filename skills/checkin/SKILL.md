@@ -17,10 +17,12 @@ Needs no hooks: a background command sleeps and wakes you when it exits.
    `bin/meta-notes` into a directory on your PATH, for example
    `ln -s <plugin>/bin/meta-notes ~/bin/meta-notes`." Don't read or edit
    any note.
-2. Run `meta-notes conventions` and follow it for everything below. If
-   it ends with a "Personal mode" section, the day is the personal day
-   (7:00 to 21:00) and `checkin wait` ends at 21:00; there's no
-   `daily-shutdown` to offer, so skip that offer.
+2. If you already ran `meta-notes conventions` earlier in this session,
+   skip re-running it and follow what you already have. Otherwise, run
+   `meta-notes conventions` and follow it for everything below. If it ends
+   with a "Personal mode" section, the day is the personal day (7:00 to
+   21:00) and `checkin wait` ends at 21:00; there's no `daily-shutdown` to
+   offer, so skip that offer.
 3. Run `meta-notes checkin status --json`. If `note_exists` is false or
    `current` is null and there are no rows, tell the user there is no Time
    Block to fill (run `daily-plan` first) and stop.

@@ -16,7 +16,9 @@ what you meant to do; Actual records deviations and extras.
    `bin/meta-notes` into a directory on your PATH, for example
    `ln -s <plugin>/bin/meta-notes ~/bin/meta-notes`." Don't read or edit
    any note.
-2. Run `meta-notes conventions` and follow it. Follow the notes root's
+2. If you already ran `meta-notes conventions` earlier in this session,
+   skip re-running it and follow what you already have. Otherwise, run
+   `meta-notes conventions` and follow it. Follow the notes root's
    `CLAUDE.md` too: personal tags, working hours and the workout block are
    there, and it wins over this skill.
 3. Run `meta-notes note daily [date]` for the note's path, and read its

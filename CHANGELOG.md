@@ -6,6 +6,12 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 2.34.4 - 2026-11-05
+
+- Changed: the skills run `meta-notes conventions` only once per session. A
+  skill that follows another skill in the same session uses the conventions
+  already in context instead of printing them again.
+
 ## 2.34.3 - 2026-11-05
 
 - Changed: when two events claim the same Time Block row (a long placeholder

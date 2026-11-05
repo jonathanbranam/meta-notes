@@ -18,8 +18,10 @@ user: "`meta-notes` isn't on your PATH. Link the plugin's
 else.
 
 This skill reads no notes, so it doesn't follow `meta-notes conventions`.
-It runs it only to learn the mode: if it ends with a "Personal mode"
-section, this is a personal root (see "Free time" and "1-1s").
+If you already ran `meta-notes conventions` earlier in this session, skip
+re-running it and use the mode you already have. Otherwise, run it only to
+learn the mode: if it ends with a "Personal mode" section, this is a
+personal root (see "Free time" and "1-1s").
 
 ## Period
 

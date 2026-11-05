@@ -19,7 +19,7 @@ The plugin SHALL ship `daily-shutdown`, `daily-plan`, `weekly-review`, `weekly-p
 - **THEN** the `task-cleanup` skill SHALL match the request
 
 ### Requirement: Skills start from the CLI  {#r-7caf}
-Every skill SHALL start by running `meta-notes conventions` and SHALL follow the conventions it prints. When `meta-notes` is not on `PATH`, the skill SHALL stop and tell the user how to install it, without reading or editing notes. Skills SHALL read notes through focused CLI queries (tags, folders, date ranges) and SHALL NOT read whole folders to find tasks.
+Every skill SHALL start by running `meta-notes conventions` and SHALL follow the conventions it prints, unless it already ran `meta-notes conventions` earlier in the same session, in which case it SHALL skip re-running it and follow the output it already has. When `meta-notes` is not on `PATH`, the skill SHALL stop and tell the user how to install it, without reading or editing notes. Skills SHALL read notes through focused CLI queries (tags, folders, date ranges) and SHALL NOT read whole folders to find tasks.
 
 #### Scenario: CLI missing  {#s-2c3f}
 *Verification*: **non-executable**
