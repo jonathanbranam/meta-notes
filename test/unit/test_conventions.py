@@ -90,6 +90,19 @@ def test_run_states_meeting_prefix_and_overlap_rules():
     assert "Never drop one silently." in text
 
 
+def test_run_states_shared_row_later_event_wins():
+    text = unwrapped()
+
+    assert "event B's text wins the row." in text
+    assert ("A later-starting event takes priority over an earlier, "
+            "still-running one,") in text
+    assert "This settles only the shared row" in text
+    assert "ask the user when the ranges intersect." in text
+    assert ("`OOO 3:00pm-4:30pm` and `Consensus Meeting 4:05pm-4:30pm`."
+            in text)
+    assert "`mtg: Consensus Meeting`, not `ooo`" in text
+
+
 def test_run_lines_fit_in_80_columns():
     for line in conventions.run().splitlines():
         assert len(line) <= 80, line

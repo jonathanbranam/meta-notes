@@ -192,6 +192,19 @@ plain. When two events' `start`-`end` ranges intersect, tell the user
 and ask which to keep, or whether to note both (`mtg: X / (opt) mtg: Y`).
 Never drop one silently.
 
+When two events' filled rows would claim the same row (event A nominally runs
+through that row, but event B starts partway into it), event B's text wins the
+row. A later-starting event takes priority over an earlier, still-running one,
+so a broad placeholder such as OOO or Focus time gives way to a meeting nested
+inside it. This settles only the shared row: neither event is dropped, and
+the overlap rule above still applies, so ask the user when the ranges
+intersect.
+
+Worked example: `OOO 3:00pm-4:30pm` and `Consensus Meeting 4:05pm-4:30pm`.
+OOO fills `3:00pm, 3:15pm, 3:30pm, 3:45pm`. The shared rows `4:00pm` and
+`4:15pm` show `mtg: Consensus Meeting`, not `ooo`, since the meeting is the
+thing actually starting there.
+
 Travel to and from it is its own run of rows (`drive to concert` in each
 15-minute row it takes), and the event's rows follow (`concert`). When the
 end isn't known, use a typical length and tell the user, or ask. One
