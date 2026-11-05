@@ -2,9 +2,9 @@
 id = "mn-n7bd"
 title = "weekly-plan: lower the capacity threshold (30+ min gaps are capacity, under 30 not listed; ask the user's threshold)"
 kind = "fix"
-state = "open"
+state = "planned"
 created_at = "2026-11-05T13:40:06.982Z"
-updated_at = "2026-11-05T13:40:54.801073041Z"
+updated_at = "2026-11-05T13:51:20.427190869Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
 ticket = "n7bd"

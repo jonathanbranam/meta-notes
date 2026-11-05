@@ -3,3 +3,13 @@ tasks = ["mn-dyer"]
 
 [[tier]]
 tasks = ["mn-8xfd"]
+
+[[tier]]
+tasks = [
+    "mn-n7bd",
+    "mn-2pc3",
+    "mn-edqk",
+]
+
+[[tier]]
+tasks = ["mn-h7fb"]

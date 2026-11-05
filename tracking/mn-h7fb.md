@@ -2,9 +2,9 @@
 id = "mn-h7fb"
 title = "skills: skip re-running meta-notes conventions when it's already loaded this session"
 kind = "chore"
-state = "open"
+state = "planned"
 created_at = "2026-11-05T13:40:01.698Z"
-updated_at = "2026-11-05T13:40:50.705936630Z"
+updated_at = "2026-11-05T13:51:21.174269605Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
 ticket = "h7fb"
