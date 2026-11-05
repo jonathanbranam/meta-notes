@@ -82,3 +82,25 @@ Add near the top of the guide text `meta-notes prime` emits (before the
 > preferences in this root's `CLAUDE.md` and skill/CLI bug reports
 > under `project/meta-notes/` instead, so everything stays in this git
 > repo and visible to a human reading it.
+
+
+---
+
+## Plan (orchestrator@vesta, acting PM, 2026-11-05)
+
+Haiku. Independent of the other tickets.
+
+**Change:** add the requested paragraph near the top of the guide-only part
+of `meta-notes prime` (scripts/meta_notes/prime.md, before the appended
+conventions): don't use the assistant's own memory feature in a notes root;
+standing preferences go in the root's `CLAUDE.md`, skill or CLI bug
+reports go under `project/meta-notes/`. Not in conventions.md (it reprints
+on every skill run).
+
+**Files:** scripts/meta_notes/prime.md; design/specs/agent-prime.md (a
+requirement/scenario for the line) and any test that asserts prime's
+output; `__version__` (PATCH: guide text) and CHANGELOG.md per
+.bridle/rules/versioning.md.
+
+**Verify:** usual check green; `meta-notes prime` shows the paragraph
+before `# meta-notes conventions`.

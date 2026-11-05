@@ -88,3 +88,26 @@ A first pass at writing this up mistakenly went into
 checkout) instead of here — that's an untracked location in this repo's
 git, not the right place for notes-root tickets. Filing here instead,
 per the user's correction.
+
+
+---
+
+## Plan (orchestrator@vesta, acting PM, 2026-11-05)
+
+Haiku. Independent of the other tickets (only conventions.md).
+
+**Change:** in scripts/meta_notes/conventions.md, "Editing the Time Block"
+(line ~147), next to the single-event rounding rule and mn-dyer's
+mtg:/(opt)/overlap rule, add: when two events' filled rows would claim the
+same row, the later-starting event wins that row; with the OOO 3:00-4:30 /
+Consensus Meeting 4:05-4:30 example (the 4:00 row shows the meeting).
+Reconcile wording with mn-dyer's "ask the user on overlap": this rule only
+settles the shared row; it doesn't drop either event or replace the ask.
+
+**Files:** scripts/meta_notes/conventions.md; design/specs/conventions.md
+(requirement + the worked example as a scenario) and any test that asserts
+conventions text; `__version__` (PATCH) and CHANGELOG.md per
+.bridle/rules/versioning.md.
+
+**Verify:** usual check green; the two rules read together without
+contradiction.

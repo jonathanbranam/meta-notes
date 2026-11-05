@@ -80,3 +80,24 @@ with something like:
 
 This mirrors how CLAUDE.md's own `meta-notes prime` instruction only
 needs to fire once per session, not once per skill invocation.
+
+
+---
+
+## Plan (orchestrator@vesta, acting PM, 2026-11-05)
+
+Haiku. Low priority (the human's note). Blocked by mn-8xfd and mn-n7bd: it
+edits the Start step of every skill, including the files those two change.
+
+**Change:** in each skill's Start step that runs `meta-notes conventions`,
+use the suggested wording: skip re-running it if it was already run earlier
+in this session; otherwise run it and follow it. Skills: calendar, checkin,
+daily-plan, daily-shutdown, project-review, task-cleanup, time-block,
+weekly-plan, weekly-review (all nine `skills/*/SKILL.md` that call it).
+
+**Files:** those nine SKILL.md files; design/specs/ceremony-skills.md only
+if a scenario asserts the unconditional wording; `__version__` (PATCH) and
+CHANGELOG.md per .bridle/rules/versioning.md.
+
+**Verify:** usual check green; `grep -n "meta-notes conventions"
+skills/*/SKILL.md` shows the conditional wording in all nine.
