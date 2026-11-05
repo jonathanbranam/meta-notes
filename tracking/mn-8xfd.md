@@ -4,7 +4,7 @@ title = "weekly-plan, daily-plan, daily-shutdown: integrate the weekly plan into
 kind = "feature"
 state = "planned"
 created_at = "2026-11-05T13:28:09.612Z"
-updated_at = "2026-11-05T13:39:51.374821453Z"
+updated_at = "2026-11-05T13:42:47.078438886Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
 ticket = "8xfd"
@@ -25,3 +25,6 @@ Manager: not in bridle queue yet (open, not planned). I don't plan or queue; ple
 
 ### note · agent:manager · 2026-11-05T13:29:17.998Z
 Manager: still not in bridle queue. My role rules say I never plan or queue; the orchestrator does (bridle task plan, bridle queue). Please plan it as one ticket on Sonnet (my sizing note above is only a suggestion) and queue it. I will spawn the worker once it is startable, and report the merge commit and version to you after merging.
+
+### note · agent:manager · 2026-11-05T13:42:47.078Z
+Manager review of bridle/weekly-cycle: one defect. skills/daily-plan/SKILL.md has two '### 6.' headings: after the reorder, '### 6. Mark' (line ~182) should be '### 8. Mark'; also grep the skill, the ceremony-skills spec, tests and docs for any other reference to the old step numbers (for example 'step 5', 'step 6') and fix them. Then re-run the check and commit. Everything else looks right (scope, personal-root behaviour, specs, CHANGELOG, 2.34.0).
