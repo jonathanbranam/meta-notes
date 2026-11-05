@@ -23,3 +23,7 @@
   human, 2026-10-06: "there's supposed to be a 10-minute wait on tasks. I
   know that's a bug. Can you please just remind yourself to wait 10
   minutes?" (bridle zta7 will enforce it in the daemon.)
+- **Batch ticket commits around merges.** Every commit to `main` while a
+  worker is mid-flight costs it an extra merge round trip before its own
+  merge. Resolve tickets and file findings after the merge, in one commit
+  where you can. The manager, 2026-11-05 (m-0173), after a five-ticket batch.
