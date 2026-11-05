@@ -16,3 +16,4 @@
 {"actor":"external:orchestrator","at":"2026-11-05T13:51:21.174269605Z","from":"open","task":"mn-h7fb","to":"planned"}
 {"actor":"external:orchestrator","at":"2026-11-05T13:51:21.363181670Z","queue":"reprioritized"}
 {"actor":"external:orchestrator","at":"2026-11-05T13:51:21.440374278Z","queue":"reprioritized"}
+{"actor":"external:orchestrator","at":"2026-11-05T13:51:34.245686924Z","from":"planned","task":"mn-8xfd","to":"integrated"}

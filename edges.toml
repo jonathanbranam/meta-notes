@@ -99,3 +99,9 @@ from = "mn-n7bd"
 to = "mn-8xfd"
 kind = "related"
 created_at = "2026-11-05T13:40:25.172Z"
+
+[[edge]]
+from = "mn-n7bd"
+to = "mn-h7fb"
+kind = "blocks"
+created_at = "2026-11-05T13:51:25.343Z"

@@ -2,11 +2,14 @@
 id = "mn-8xfd"
 title = "weekly-plan, daily-plan, daily-shutdown: integrate the weekly plan into the daily cycle (per-day breakdown, daily read, shutdown write-back, at-risk check, meetings first)"
 kind = "feature"
-state = "planned"
+state = "integrated"
 created_at = "2026-11-05T13:28:09.612Z"
-updated_at = "2026-11-05T13:42:47.078438886Z"
+updated_at = "2026-11-05T13:51:40.593564518Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
+branch = "bridle/weekly-cycle"
+commit = "8c7b174"
+summary = "Shipped in 2.34.0 (merge 8c7b174): weekly-plan writes a per-day breakdown; daily-plan puts meetings in the Time Block first, reads the week plan daily, runs a fit check; daily-shutdown writes progress back."
 ticket = "8xfd"
 +++
 
@@ -28,3 +31,9 @@ Manager: still not in bridle queue. My role rules say I never plan or queue; the
 
 ### note · agent:manager · 2026-11-05T13:42:47.078Z
 Manager review of bridle/weekly-cycle: one defect. skills/daily-plan/SKILL.md has two '### 6.' headings: after the reorder, '### 6. Mark' (line ~182) should be '### 8. Mark'; also grep the skill, the ceremony-skills spec, tests and docs for any other reference to the old step numbers (for example 'step 5', 'step 6') and fix them. Then re-run the check and commit. Everything else looks right (scope, personal-root behaviour, specs, CHANGELOG, 2.34.0).
+
+### note · external:orchestrator · 2026-11-05T13:51:34.245Z
+integrated: 8c7b174 (branch bridle/weekly-cycle)
+
+### note · external:orchestrator · 2026-11-05T13:51:34.248Z
+cleanup: removed nothing
