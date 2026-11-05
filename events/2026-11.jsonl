@@ -6,3 +6,7 @@
 {"actor":"human","at":"2026-11-05T13:40:01.589Z","from":"","task":"mn-edqk","to":"pending"}
 {"actor":"human","at":"2026-11-05T13:40:01.698Z","from":"","task":"mn-h7fb","to":"pending"}
 {"actor":"human","at":"2026-11-05T13:40:06.982Z","from":"","task":"mn-n7bd","to":"pending"}
+{"actor":"external:orchestrator","at":"2026-11-05T13:40:48.636029184Z","from":"pending","task":"mn-n7bd","to":"open"}
+{"actor":"external:orchestrator","at":"2026-11-05T13:40:49.627780878Z","from":"pending","task":"mn-2pc3","to":"open"}
+{"actor":"external:orchestrator","at":"2026-11-05T13:40:50.161314253Z","from":"pending","task":"mn-edqk","to":"open"}
+{"actor":"external:orchestrator","at":"2026-11-05T13:40:50.705936630Z","from":"pending","task":"mn-h7fb","to":"open"}
