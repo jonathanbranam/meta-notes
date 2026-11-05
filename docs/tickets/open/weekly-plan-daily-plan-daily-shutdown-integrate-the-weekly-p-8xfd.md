@@ -187,3 +187,72 @@ glance at the note and see today's meeting skeleton almost immediately,
 then have the rest of planning (including the open-time-vs-workload
 check in #4) build on that already-visible structure instead of
 reconstructing it from scratch at the end.
+
+---
+
+## Plan (orchestrator@vesta, acting PM, 2026-11-05)
+
+One ticket, one worker, Sonnet. The five parts share one data shape (the
+per-day breakdown in the week note's `## Plan`), so splitting would make two
+workers agree on that shape across a merge boundary; one coherent change is
+cheaper.
+
+**Goal.** The week note's `## Plan` gets a per-day breakdown that weekly-plan
+writes, daily-plan reads every day, and daily-shutdown keeps current, with
+daily-plan putting meetings in the Time Block first and flagging work that
+doesn't fit.
+
+**Files it may touch (impact list):**
+- `skills/weekly-plan/SKILL.md` (part 1)
+- `skills/daily-plan/SKILL.md` (parts 2, 4, 5)
+- `skills/daily-shutdown/SKILL.md` (part 3)
+- `design/specs/ceremony-skills.md` (requirements/scenarios for the new
+  behaviour; follow `.bridle/rules/specs.md`), and any skill tests that
+  already cover these skills
+- `scripts/meta_notes/__init__.py` (`__version__`, MINOR bump: new skill
+  behaviour) and `CHANGELOG.md` (one or two user-facing lines), per
+  `.bridle/rules/versioning.md`
+- Templates under `templates/` only if a week-note template defines
+  `## Plan` and needs the per-day layout.
+
+**Design decisions:**
+- Per-day breakdown: under the week note's `## Plan`, one `### <Weekday>
+  <YYYY-MM-DD>` heading per remaining day of the plan's week, each with a
+  checkbox list. Keep the existing `### Priorities` / `### Deadlines` as the
+  week-level view; the per-day lists point at them, not duplicate prose.
+  The worker may adjust the exact headings if the specs or conventions
+  already fix a form; say so in the report.
+- Part 1 is rough on purpose: assign by each day's open time (whatever gap
+  threshold is in effect; 90 min today) and item urgency.
+- Part 2: daily-plan reads today's slice plus unchecked items from earlier
+  days on every day, and reconciles them with the `tasks --due/--overdue`
+  results (one combined list; say which came from where only where they
+  disagree).
+- Part 3: daily-shutdown, in or right after its Follow Up step, checks off
+  done items for today and moves unfinished and new items to a later day in
+  the same breakdown, consistent with Follow Up and due dates.
+- Part 4: after the Time Block and due work are known, compare assigned or
+  due work against remaining open time; if it doesn't fit, tell the user
+  plainly with the numbers and ask what slips. Don't silently proceed.
+- Part 5: the meeting fill from mn-bf7a moves from step 5 to right after
+  picking the target day; nothing else in mn-bf7a changes.
+- Personal roots (Sunday weekly plan, no daily shutdown): the breakdown
+  covers the plan's own week as configured (Sunday start); daily-plan still
+  reads it; with no daily-shutdown, the next daily-plan does the catch-up
+  (checks off what's done per the previous day's note, rolls unchecked
+  items forward) so the breakdown stays at most a day stale.
+- If a week note has no per-day breakdown (older weeks), the skills fall
+  back to today's behaviour and don't rewrite the note's structure.
+
+**Rejected:** two tickets (manager's suggestion), for the shared-shape
+reason above. Making daily-plan create the breakdown on the fly when
+missing: more behaviour than asked; weekly-plan owns it.
+
+**Deferred (not yet):** the 90-minute capacity threshold change. The human's
+note about it lives in their work notes and was never filed here; not part
+of this ticket unless the human asks.
+
+**Verify:** the worker's usual check (pytest and `run_tests.sh` where they
+apply) green; the spec scenarios for parts 1-5 and the personal-root case are
+present; read the three SKILL.md files end to end for a consistent step order
+(daily-plan: target day, then Time Block meetings, then the rest).
