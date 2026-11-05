@@ -68,3 +68,29 @@ In step 2, replace the 90-minute line with something like:
 Ask the user for their own threshold if it isn't already known, since
 this will vary by person and by how granular someone's work tends to
 be.
+
+
+---
+
+## Plan (orchestrator@vesta, acting PM, 2026-11-05)
+
+Haiku. Blocked by mn-8xfd (same step of skills/weekly-plan/SKILL.md; 8xfd's
+per-day breakdown uses "whatever threshold is in effect"). Not folded into
+8xfd because 8xfd was already queued and may be claimed.
+
+**Change:** in weekly-plan step 2 ("Calendar and capacity"), replace the
+90-minute rule: gaps of 30+ minutes are capacity; 30-60 minute gaps are
+called out as tighter; gaps under 30 minutes are not listed at all (drop the
+short-gap list and update the worked example). If the user's threshold
+isn't known, ask; keep their answer in the notes root's `CLAUDE.md` (never
+assistant memory, see mn-2pc3) and read it from there next time.
+
+**Files:** skills/weekly-plan/SKILL.md; design/specs/ceremony-skills.md
+(the capacity scenario); `__version__` in scripts/meta_notes/__init__.py
+(MINOR) and CHANGELOG.md per .bridle/rules/versioning.md.
+
+**Rejected:** a config option or CLI setting for the threshold (YAGNI; the
+root's CLAUDE.md already holds user preferences).
+
+**Verify:** usual check green; step 2 reads consistently with 8xfd's
+per-day breakdown (which now uses 30 minutes by default).
