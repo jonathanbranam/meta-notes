@@ -33,6 +33,7 @@ The conventions SHALL cover:
 - task edits: take `file`, `line`, and `text` from `meta-notes tasks --json`, edit with `meta-notes task update <file>:<line> --expect <text>`, and re-query when the line has changed; never rewrite a task line directly
 - where new markers go: tags before dates (`... #next 📅 <date>`)
 - Time Block meetings: a meeting's Plan text is `mtg: <title>`, prefixed `(opt) ` when its `response` is `maybe`, `no-reply`, or null; when events' ranges intersect, ask the user which to keep or whether to note both, and never drop one silently
+- Time Block shared rows: when two events' filled rows claim the same row, the later-starting event's text wins it (see the shared-row requirement)
 - carrying a task forward: mark the old line `>` with `task update` and write the new copy
 - recurring tasks: `🔁 every 3 months` before the dates, reported as `recurrence` and `recurs_from_completion`; a recurring task lives in one home note, and a `🔁` line is never copied forward into a daily or weekly note
 - ceremony markers and checking them with `task update --status x`
@@ -67,3 +68,11 @@ The status characters and the tag aliases in the conventions SHALL be generated 
 *Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes conventions`
 - **THEN** the output SHALL name 📅 as the due emoji to write and SHALL NOT list 📆 or 🗓, which the CLI still reads
+
+### Requirement: Time Block shared rows  {#r-581a}
+When two events' filled rows would otherwise claim the same Time Block row (event A nominally runs through the row, but event B starts partway into it), the conventions SHALL state that event B's text wins that row: a later-starting event takes priority over an earlier, still-running one. The conventions SHALL state that this settles only the shared row, that neither event is dropped, and that the overlap rule (ask the user when ranges intersect) still applies.
+
+#### Scenario: Later-starting meeting wins the shared row  {#s-a1cc}
+*Verification*: **non-executable**
+- **WHEN** an OOO block runs 3:00pm-4:30pm and a Consensus Meeting runs 4:05pm-4:30pm
+- **THEN** the 4:00pm and 4:15pm rows SHALL show `mtg: Consensus Meeting`, not `ooo`, and the OOO SHALL fill 3:00pm through 3:45pm

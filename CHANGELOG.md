@@ -6,6 +6,13 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 2.34.3 - 2026-11-05
+
+- Changed: when two events claim the same Time Block row (a long placeholder
+  such as OOO and a meeting that starts partway into it), the later-starting
+  event's text fills the shared row. The conventions say so, with a worked
+  example.
+
 ## 2.34.2 - 2026-11-05
 
 - Changed: `meta-notes prime` tells the assistant that the notes root is the
