@@ -88,8 +88,9 @@ the day's meeting skeleton in the note right away.
    - Meeting text (the `mtg:` and `(opt) ` prefixes, and what to do when
      events overlap) follows `meta-notes conventions`.
 4. Tell the user the shape of the day in one line: the meetings and the
-   open time left (free gaps; count the gaps of 90 minutes or more
-   separately, as `weekly-plan` does).
+   open time left (free gaps: count those at or above the capacity
+   threshold, as `weekly-plan` does, which reads it from the root's
+   `CLAUDE.md` or defaults to 30 minutes; leave out shorter gaps).
 
 ### 3. Read the previous workday and the weekly plan
 

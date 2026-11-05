@@ -6,6 +6,14 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 2.34.1 - 2026-11-05
+
+- Changed: `weekly-plan` counts free gaps of 30 minutes or more as capacity
+  (not 90), and calls out gaps under 60 minutes as tighter. Shorter gaps are
+  transition buffers and aren't listed. The threshold is read from the notes
+  root's `CLAUDE.md` (`Capacity gap: N minutes`); if it has none, the skill
+  asks and records the answer there. `daily-plan` follows the same rule.
+
 ## 2.34.0 - 2026-11-05
 
 - Changed: `weekly-plan` assigns priorities and deadlines to days, writing a

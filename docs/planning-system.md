@@ -263,8 +263,9 @@ Then:
 
 1. Read the weekly review and next week's calendar (`meta-notes calendar
    --date MON..FRI`; a screenshot when there's no export).
-2. **Capacity.** Productive hours are free gaps of 90 minutes or more.
-   Shorter gaps are listed separately.
+2. **Capacity.** Productive hours are free gaps of the capacity threshold
+   or more (30 minutes unless the user's `CLAUDE.md` sets another). Gaps
+   under it are transition buffers and aren't listed.
 3. Meetings to schedule, and deadlines landing next week.
 4. Choose 3–5 priorities and place them roughly on days.
 5. Write the plan into next week's `## Plan` and mark that note's

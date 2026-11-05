@@ -65,15 +65,28 @@ Run `meta-notes calendar --date NEXT_MON..NEXT_FRI --json`.
 
 Ask for working hours if you don't know them (assume 8:00–17:00
 otherwise; in a personal root the day is 7:00–21:00, from
-`meta-notes prime`). For each day, list:
+`meta-notes prime`).
+
+The capacity threshold is the shortest free gap that counts. Read it from
+the notes root's `CLAUDE.md`, where the user keeps their preferences (a
+line such as `Capacity gap: 30 minutes`); it wins over this skill. If
+`CLAUDE.md` has no threshold, ask the user for theirs, suggesting 30
+minutes, and once they answer, add the line to `CLAUDE.md` so the next run
+reads it. If they have no preference, use 30 minutes and say so.
+
+For each day, list:
 
 - meetings
-- free gaps of 90 minutes or more: these are capacity
-- shorter free gaps, listed separately; they aren't capacity
+- free gaps of the threshold or more: these are capacity. Gaps between the
+  threshold and 60 minutes are usable but tighter (fine for short tasks,
+  not deep work); call them out as tighter.
+- shorter free gaps are back-to-back transition buffers: don't count or
+  list them
 
 Total the capacity per day and for the week. For example, a 2-hour and a
-45-minute gap on Tuesday give 2 hours of capacity and one short gap.
-Keep each day's capacity; step 4 assigns work to days by it.
+45-minute gap on Tuesday give 2.75 hours of capacity, with the 45-minute
+gap called out as tighter. Keep each day's capacity; step 4 assigns work
+to days by it.
 
 ### 3. Deadlines and meetings to schedule
 
@@ -117,10 +130,6 @@ Capacity: <n> h (Mon <n>, Tue <n>, Wed <n>, Thu <n>, Fri <n>)
 
 - <meeting>
 
-### Short gaps
-
-- Tue 10:15–11:00
-
 ### Mon 2026-10-05
 
 - [ ] <work assigned to Monday> (from Priority 1)
@@ -130,7 +139,9 @@ Capacity: <n> h (Mon <n>, Tue <n>, Wed <n>, Thu <n>, Fri <n>)
 - [ ] <work assigned to Tuesday> (deadline <what>)
 ```
 
-The per-day breakdown is the part the other skills use: one
+Each day's capacity counts the free gaps at or above the threshold from
+step 2, so the per-day numbers follow the user's setting. The per-day
+breakdown is the part the other skills use: one
 `### <Weekday> <YYYY-MM-DD>` heading per day of the plan's week (Monday to
 Friday; all seven days in a personal root), each with checklist lines,
 after the week-level sections. A day with no work still gets its heading.

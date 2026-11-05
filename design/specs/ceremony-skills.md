@@ -190,12 +190,27 @@ The skill SHALL write meeting text as `meta-notes conventions` states it: a meet
 - **THEN** the skill SHALL run `task update` with `--remove-tag later --due 2026-10-02`
 
 ### Requirement: Weekly planning  {#r-aba3}
-`weekly-plan` SHALL plan the next workweek, Monday to Friday, from the weekly review and that week's calendar, gathered as "Calendar from the export" requires. It SHALL work out capacity as free gaps of 90 minutes or more, listing shorter gaps separately, and SHALL list meetings to schedule and deadlines (`#deadline` tasks and due dates) landing in that week. It SHALL help the user choose 3–5 priorities, assign priorities and deadlines roughly to specific days by each day's capacity and the item's size and urgency, write the result in the next week's `## Plan` section, as the week-level lists plus a per-day breakdown (one `### <Weekday> <YYYY-MM-DD>` heading per day with checklist lines), (creating the note with `meta-notes note weekly` if needed), and mark that week's `plan complete`.
+`weekly-plan` SHALL plan the next workweek, Monday to Friday, from the weekly review and that week's calendar, gathered as "Calendar from the export" requires. It SHALL work out capacity as free gaps at or above the capacity threshold, which SHALL be read from the notes root's `CLAUDE.md` when it sets one, else asked of the user and recorded there, else 30 minutes. Gaps between the threshold and 60 minutes SHALL be called out as tighter. Shorter gaps are back-to-back transition buffers and SHALL NOT be counted or listed. It SHALL list meetings to schedule and deadlines (`#deadline` tasks and due dates) landing in that week. It SHALL help the user choose 3–5 priorities, assign priorities and deadlines roughly to specific days by each day's capacity and the item's size and urgency, write the result in the next week's `## Plan` section, as the week-level lists plus a per-day breakdown (one `### <Weekday> <YYYY-MM-DD>` heading per day with checklist lines), (creating the note with `meta-notes note weekly` if needed), and mark that week's `plan complete`.
 
 #### Scenario: Capacity  {#s-f430}
 *Verification*: **non-executable**
-- **WHEN** Tuesday's calendar has free gaps of 2 hours and 45 minutes
-- **THEN** the 2-hour gap SHALL count toward capacity and the 45-minute gap SHALL be listed separately
+- **WHEN** Tuesday's calendar has free gaps of 2 hours and 45 minutes, and the threshold is 30 minutes
+- **THEN** both gaps SHALL count toward capacity, 2.75 hours in all, and the 45-minute gap SHALL be called out as tighter
+
+#### Scenario: Short gap not listed  {#s-a736}
+*Verification*: **non-executable**
+- **WHEN** Tuesday's calendar has a 15-minute free gap between two meetings, and the threshold is 30 minutes
+- **THEN** the gap SHALL NOT count toward capacity and SHALL NOT be listed
+
+#### Scenario: Threshold from CLAUDE.md  {#s-9f96}
+*Verification*: **non-executable**
+- **WHEN** the notes root's `CLAUDE.md` sets the capacity gap to 45 minutes
+- **THEN** gaps of 45 minutes or more SHALL count toward capacity, and the skill SHALL NOT ask for the threshold
+
+#### Scenario: Threshold asked and recorded  {#s-d19a}
+*Verification*: **non-executable**
+- **WHEN** the notes root's `CLAUDE.md` sets no capacity gap and the user answers 45 minutes
+- **THEN** the skill SHALL use 45 minutes and SHALL add the answer to the root's `CLAUDE.md`, not to assistant memory
 
 #### Scenario: Per-day breakdown  {#s-3c22}
 *Verification*: **non-executable**
