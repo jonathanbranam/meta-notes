@@ -179,7 +179,7 @@ The meetings are already in the Time Block (step 2).
 2. Name a concrete first block (what, and the first action), and tell
    the user.
 
-### 6. Mark
+### 8. Mark
 
 Find `plan complete` with `grep -n` in TARGET's note (add
 `- [ ] plan complete` under the Week Plan link if missing) and check it
