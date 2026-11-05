@@ -32,7 +32,8 @@ About 30 minutes. Say so in one line when you start.
 - Change existing task lines only with `meta-notes task update`, with
   `file`, `line`, and `text` from `meta-notes tasks --json`. Never rewrite
   them by hand.
-- Don't plan individual days in detail; `daily-plan` does that.
+- Assign work to days only roughly; `daily-plan` plans each day in detail
+  (the Time Block).
 - Don't read git history or file modification times.
 - If the user says stop, go to "Stopping early".
 
@@ -72,6 +73,7 @@ otherwise; in a personal root the day is 7:00–21:00, from
 
 Total the capacity per day and for the week. For example, a 2-hour and a
 45-minute gap on Tuesday give 2 hours of capacity and one short gap.
+Keep each day's capacity; step 4 assigns work to days by it.
 
 ### 3. Deadlines and meetings to schedule
 
@@ -85,8 +87,12 @@ Total the capacity per day and for the week. For example, a 2-hour and a
 
 Propose 3–5 priorities from the review, deadlines, and project `#next`
 tasks (`meta-notes tasks --all --tag next --json`). Let the user choose.
-Place each roughly on days that have capacity, without overfilling any
-day.
+Then make a rough first pass at the days: assign each priority and each
+deadline to the specific days that have capacity for it, by its rough size
+and urgency, without overfilling any day (a deadline's work lands on or
+before its date). It needn't be precise; `daily-plan` and `daily-shutdown`
+keep it current as the week unfolds. Show the user the per-day result and
+let them adjust it.
 
 ### 5. Write the plan
 
@@ -114,14 +120,31 @@ Capacity: <n> h (Mon <n>, Tue <n>, Wed <n>, Thu <n>, Fri <n>)
 ### Short gaps
 
 - Tue 10:15–11:00
+
+### Mon 2026-10-05
+
+- [ ] <work assigned to Monday> (from Priority 1)
+
+### Tue 2026-10-06
+
+- [ ] <work assigned to Tuesday> (deadline <what>)
 ```
+
+The per-day breakdown is the part the other skills use: one
+`### <Weekday> <YYYY-MM-DD>` heading per day of the plan's week (Monday to
+Friday; all seven days in a personal root), each with checklist lines,
+after the week-level sections. A day with no work still gets its heading.
+The lines point at the priorities and deadlines above; don't repeat their
+prose. Write the section with `meta-notes note write` (see
+`meta-notes note write --help`), never by editing the file directly.
 
 ### 6. Mark
 
 Find `plan complete` with `grep -n` in next week's note (add
 `- [ ] plan complete` under the Quarterly Plan link if missing) and check
-it with `meta-notes task update ... --status x`. Tell the user Monday's
-`daily-plan` will read this plan.
+it with `meta-notes task update ... --status x`. Tell the user
+`daily-plan` will read this plan every day, and `daily-shutdown` will keep
+the per-day breakdown current.
 
 ## Stopping early
 

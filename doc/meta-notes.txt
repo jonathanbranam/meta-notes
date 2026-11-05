@@ -1753,10 +1753,14 @@ and can be stopped at any point.
                     minutes: collect loose items into tasks, PR check, a next step per project
                     worked on, the time-log check, a Follow up list,
                     commit (after you confirm), and `shutdown complete`.
-                    Offers daily-plan.
+                    Writes the day's progress back into the week note's
+                    per-day plan. Offers daily-plan.
     daily-plan      After shutdown or the next morning, 10-15 minutes:
                     plans today if it has no plan, otherwise the next
-                    workday. Fills the Time Block Plan column.
+                    workday. Writes the day's meetings into the Time
+                    Block first, reads the weekly plan every day, warns
+                    when the work doesn't fit the open time, and fills
+                    the Time Block Plan column.
     weekly-review   Friday morning: the Monday to Friday week, a summary
                     for your manager in the weekly note's `## Review`,
                     commitments, project warnings, and a `#later` scan.
@@ -1764,7 +1768,8 @@ and can be stopped at any point.
     weekly-plan     Friday afternoon: capacity from next week's calendar
                     (|meta-notes-cli-calendar|, or a screenshot when
                     there's no export), deadlines, and 3-5 priorities in
-                    next week's `## Plan`.
+                    next week's `## Plan`, assigned to days in a
+                    per-day breakdown.
     task-cleanup    Anytime, 5-10 minutes: overdue and undated tasks,
                     oldest first, in batches.
     project-review  One project at a time.
