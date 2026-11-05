@@ -6,6 +6,13 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 2.34.2 - 2026-11-05
+
+- Changed: `meta-notes prime` tells the assistant that the notes root is the
+  source of truth for what persists across sessions: don't use its own memory
+  feature here; put standing preferences in the root's `CLAUDE.md` and
+  skill or CLI bug reports under `project/meta-notes/`.
+
 ## 2.34.1 - 2026-11-05
 
 - Changed: `weekly-plan` counts free gaps of 30 minutes or more as capacity

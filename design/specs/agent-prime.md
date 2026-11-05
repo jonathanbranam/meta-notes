@@ -62,6 +62,14 @@ The guide SHALL cover:
 - **WHEN** the user runs `meta-notes prime`
 - **THEN** the output SHALL say that archiving is done only with `meta-notes archive` and that archived items keep their path under `archive/`
 
+### Requirement: Persistence guidance  {#r-9c37}
+The guide SHALL, before the appended conventions, say that the notes root is the source of truth for anything that should persist across sessions; that the assistant SHALL NOT use its own memory or preference-saving feature in the root; and that standing preferences go in the root's `CLAUDE.md` and skill or CLI bug reports under `project/meta-notes/`. The line SHALL be in the guide only, not in the conventions, which skills print on every run.
+
+#### Scenario: Persistence line before conventions  {#s-bc3f}
+*Verification*: **non-executable**
+- **WHEN** the user runs `meta-notes prime` in a notes root
+- **THEN** the output SHALL say the notes root is the source of truth for persistent state, SHALL say not to use the assistant's own memory feature, and SHALL name `CLAUDE.md` and `project/meta-notes/`, all before the `# meta-notes conventions` heading
+
 ### Requirement: Generated parts  {#r-f718}
 These parts of the guide SHALL be generated, not written by hand, so they match the installed CLI and the notes root:
 
