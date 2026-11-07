@@ -24,7 +24,7 @@ import tasks as task_model
 from recurrence import parse_rule
 from tags import canonical_tag
 from meta_notes import (__version__, brief, calendar, ceremony, changes,
-                        checkin, config, conventions, hours, init, list_note, note, note_write, ops, outlook, planning,
+                        checkin, config, conventions, hours, init, list_note, list_ops, note, note_write, ops, outlook, planning,
                         prime,
                         projects, query, task_show, task_update, task_write, time,
                         time_block, time_log, ui)
@@ -822,9 +822,23 @@ def cmd_list_group_move(args, root: str) -> Output:
         n, args.name, args.position))
 
 
+def _source(args, root: str) -> dict | None:
+    """The --source FILE:LINE task of an item add, read as it is now."""
+    if not args.source:
+        return None
+    path, sep, line = args.source.rpartition(":")
+    if not sep or not path or not line.isdigit():
+        raise CliError("meta-notes list item-add: --source must be "
+                       f"FILE:LINE, got {args.source!r}")
+    try:
+        return list_ops.read_source(to_root_relative(path, root), int(line))
+    except list_note.ListError as e:
+        raise CliError(str(e))
+
+
 def cmd_list_item_add(args, root: str) -> Output:
     return _list_edit(args, lambda n: list_note.item_add(
-        n, args.text, args.group, args.position))
+        n, args.text, args.group, args.position, _source(args, root)))
 
 
 def cmd_list_item_edit(args, root: str) -> Output:
@@ -837,10 +851,25 @@ def cmd_list_item_move(args, root: str) -> Output:
         n, args.item, args.group, args.position, args.expect))
 
 
+def cmd_list_current(args, root: str) -> Output:
+    try:
+        day = note.parse_date(args.date) if args.date else date.today()
+        if args.list:
+            path = list_note.resolve(args.list)
+            daily = list_ops.set_current(path, day, _root_mode(root))
+            return Output({"list": path, "daily": daily},
+                          text=[f"{daily}: current list is {path}"])
+        path = list_ops.current(day)
+    except (list_note.ListError, note.NoteError) as e:
+        raise CliError(str(e))
+    return Output({"list": path},
+                  text=[path or "No current list for the day"])
+
+
 def cmd_list_state(args, root: str) -> Output:
     state = {"check": "done", "uncheck": "open", "cancel": "canceled"}[
         args.command_name]
-    return _list_edit(args, lambda n: list_note.set_state(
+    return _list_edit(args, lambda n: list_ops.set_state(
         n, args.item, state, args.expect))
 
 
@@ -1430,6 +1459,14 @@ def build_parser() -> argparse.ArgumentParser:
                          help="a list's groups and numbered items")
     k.set_defaults(handler=cmd_list_show)
 
+    k = kinds.add_parser("current", parents=[common],
+                         help="show or set the day's current list (a link "
+                              "line in the daily note)")
+    k.add_argument("list", nargs="?", metavar="LIST",
+                   help="set this list as current (default: show it)")
+    k.add_argument("--date", metavar="DAY", help="YYYY-MM-DD (default: today)")
+    k.set_defaults(handler=cmd_list_current)
+
     k = kinds.add_parser("group-add", parents=[common, listref, pos],
                          help="add a group (a store section)")
     k.add_argument("name")
@@ -1450,6 +1487,9 @@ def build_parser() -> argparse.ArgumentParser:
     k.add_argument("text", help="a few words; end a guess with ?")
     k.add_argument("--group", metavar="NAME",
                    help="the group (default: before the first group)")
+    k.add_argument("--source", metavar="FILE:LINE",
+                   help="the open task this item is for; checking the item "
+                        "closes it")
     k.set_defaults(handler=cmd_list_item_add)
     k = kinds.add_parser("item-edit", parents=[common, itemref],
                          help="change an item's text")

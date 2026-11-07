@@ -58,9 +58,40 @@ A list SHALL be one note at `resource/lists/<YY-Qn>/<YYYY-MM-DD> <name>.md`, the
 - **THEN** the file SHALL hold them in the order `list show` numbers them
 
 ### Requirement: Check, uncheck and cancel  {#r-2914}
-`meta-notes list check <list> <n>` SHALL mark an item done, `uncheck` SHALL reopen it and `cancel` SHALL mark it canceled, each accepting `--expect TEXT` as the item commands do. Setting an item to the state it has SHALL change nothing.
+`meta-notes list check <list> <n>` SHALL mark an item done, `uncheck` SHALL reopen it and `cancel` SHALL mark it canceled, each accepting `--expect TEXT` as the item commands do. Setting an item to the state it has SHALL change nothing. Checking an item that has a source (see below) SHALL close its task; unchecking or canceling a done item SHALL reopen a task the list closed.
 
 #### Scenario: Check an item  {#s-c817}
 *Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes list check Walmart 1`
 - **THEN** item 1 SHALL be `- [x]` and no other line SHALL change
+
+### Requirement: Items from tasks  {#r-ecf5}
+`item-add` SHALL accept `--source FILE:LINE`, the open task the item is for (a checkbox line of a note in the root, not done or canceled). The item SHALL then carry, indented under it, the bullet `* source: [[<note link without .md>]] line <N>: <the task line, copied exactly>`; the task file SHALL NOT change. `list show` SHALL report it as `source` (`file`, `line`, `text`). Checking the item SHALL close that task as `task update --expect --status x` does (so `✅` and a recurring task's next occurrence follow its rules), with the copied text as the expected text: it SHALL use the recorded line, else the one line of the file equal to the text, and otherwise fail with an error ending "Nothing was changed.", leaving the list and the task file untouched. After closing, the item SHALL carry `* closed: line <N>: <the closed task line>` (`closed_task` in `--json`). Unchecking, or canceling a done item, SHALL set that task open again with the same guard and remove the `closed` bullet; canceling an open item SHALL leave its task alone. An item with no source SHALL never touch a task file.
+
+#### Scenario: Check closes exactly that task  {#s-1351}
+*Verification*: **non-executable**
+- **WHEN** an item's source is line 3 of `project/home.md` and the user runs `meta-notes list check <list> 1`
+- **THEN** line 3 SHALL be done with a `✅` date, every other line of the file SHALL be unchanged, and the item SHALL be `- [x]`
+
+#### Scenario: The task changed  {#s-ab81}
+*Verification*: **non-executable**
+- **WHEN** the task line no longer reads as copied and the user runs `meta-notes list check <list> 1`
+- **THEN** the command SHALL fail and neither the list nor `project/home.md` SHALL change
+
+#### Scenario: Uncheck reopens the task  {#s-cbe4}
+*Verification*: **non-executable**
+- **WHEN** the list closed a task and the user runs `meta-notes list uncheck <list> 1`
+- **THEN** the task SHALL be open again, without its `✅` date, and the item open with no `closed` bullet
+
+#### Scenario: Canceling leaves the task open  {#s-10d2}
+*Verification*: **non-executable**
+- **WHEN** an open item with a source is canceled
+- **THEN** the item SHALL be `- [-]` and the task file SHALL not change
+
+### Requirement: The current list  {#r-3bef}
+`meta-notes list current <list> [--date DAY]` SHALL record the list as the day's current list: the line `Current list: [[<list path without .md>]]` in that day's daily note (today's by default), creating the daily note from its template when missing, replacing an existing such line, else inserting it after the title and the blank line below it. `meta-notes list current [--date DAY]` SHALL print the list path that line names, or say there is none (`list` null with `--json`), and SHALL NOT create the daily note. Setting an unknown list SHALL fail and write nothing.
+
+#### Scenario: Set and read back  {#s-84e5}
+*Verification*: **non-executable**
+- **WHEN** the user runs `meta-notes list current Walmart` and then `meta-notes list current`
+- **THEN** the daily note SHALL hold the one link line and the second command SHALL print the Walmart list's path
