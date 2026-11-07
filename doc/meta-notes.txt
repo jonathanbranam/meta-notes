@@ -1404,7 +1404,9 @@ Commands ~
     it says the notes root holds anything that should persist across
     sessions: the assistant shouldn't use its own memory feature there, but
     put standing preferences in `CLAUDE.md` and bug reports under
-    `project/meta-notes/`. Today's paths, the tag
+    `project/meta-notes/`. It also says to record the user's small
+    observations as `* note:` lines under the current time log entry
+    (see |meta-notes-cli-time-log|). Today's paths, the tag
     groups, and the skills are generated. Outside a notes root it still
     succeeds and starts with a line saying no root was found. With
     `--json`, the object has `version`, `root` (null outside a root), and
@@ -1531,6 +1533,8 @@ Commands ~
     `HH:MM` or `9:30am`. Never write a `~` before a time: the Time Log
     rejects it, and a `~` in an old note gets a deprecation warning from
     `meta-notes time` (file and line).
+    A `* note: {text}` line is kept as written; a time in its text
+    doesn't change the entry's start or end.
 
     `append` adds one entry at the end. Options: `--text {line}` (the
     header, `- text #tags`), `--start {time}` (default: now), `--end

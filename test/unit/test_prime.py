@@ -132,6 +132,20 @@ def test_run_persistence_line_before_conventions(notes_root):
     assert "`project/meta-notes/`" in text[:conventions_at]
 
 
+def test_run_observation_guidance_before_conventions(notes_root):
+    text = " ".join(prime.run(str(notes_root), SATURDAY).split())
+
+    conventions_at = text.index('# meta-notes conventions')
+    observed_at = text.index('## Observations in the time log')
+    assert observed_at < conventions_at
+    assert '`* note:`' in text[observed_at:conventions_at]
+    assert 'meta-notes time-log update' in text[observed_at:conventions_at]
+    section = text[observed_at:conventions_at].lower()
+    assert '* note: 10:51: esther not awake' in section
+    assert 'bridle' not in section
+    assert 'aide' not in section
+
+
 @pytest.mark.parametrize('command', [
     'tasks', 'projects', 'project brief', 'changes', 'calendar',
     'ceremony status', 'time'])
