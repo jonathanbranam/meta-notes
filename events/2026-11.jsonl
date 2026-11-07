@@ -29,3 +29,4 @@
 {"actor":"external:orchestrator","at":"2026-11-07T16:06:24.827181931Z","queue":"reprioritized"}
 {"actor":"human","at":"2026-11-07T16:48:33.856Z","from":"","task":"mn-yznt","to":"pending"}
 {"actor":"human","at":"2026-11-07T17:09:04.717Z","from":"","task":"mn-m9qv","to":"pending"}
+{"actor":"external:orchestrator","at":"2026-11-07T17:09:32.802659579Z","from":"pending","task":"mn-m9qv","to":"open"}
