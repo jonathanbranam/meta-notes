@@ -2,11 +2,13 @@
 id = "mn-f4xf"
 title = "prime: record the human's passing observations as '* note:' lines under the current Time Log entry"
 kind = "feature"
-state = "planned"
+state = "integrated"
 created_at = "2026-11-07T15:55:11.188Z"
-updated_at = "2026-11-07T16:10:41.698009923Z"
+updated_at = "2026-11-07T17:21:41.496379995Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
+commit = "6616fee"
+summary = "Prime guide tells agents to record the human's passing observations as '* note:' lines under the current Time Log entry. v2.34.5."
 ticket = "f4xf"
 +++
 
@@ -57,3 +59,6 @@ orchestrator: readied on the relayed go. Standing rule (orchestrator role, the h
 
 ### note · agent:log-notes · 2026-11-07T16:10:41.698Z
 Landed on bridle/log-notes at 022be08 (2.34.5): prime.md guidance section before Projects (laundry example, time-log update with --expect/--text); time-log-edit spec 'Note lines are kept as written'; tests in test_time_log.py and test_prime.py; CHANGELOG and doc/meta-notes.txt updated. Checks: vader 190/190, pytest 1639 passed 1 skipped, bridle spec check 0 errors. The guide was already over the spec's 10,000-char limit (the test budget is 20,000); this adds about 700 chars. conventions.md unchanged, to save skill-run tokens.
+
+### note · external:orchestrator · 2026-11-07T17:21:37.375Z
+integrated: 6616fee
