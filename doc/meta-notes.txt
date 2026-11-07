@@ -1563,6 +1563,51 @@ Commands ~
     with one item per new entry, each with `line` and `text`). The
     `daily-shutdown` skill (|meta-notes-skills|) uses them.
 
+`meta-notes list {kind} ...`                    *meta-notes-cli-list*
+    Make and run lists (a shopping list, a packing list). A list is a
+    note, `resource/lists/{YY-Qn}/{YYYY-MM-DD} {name}.md`: a title, then
+    `## ` groups (store sections) holding items in file order, which is
+    display order. Items before the first group belong to no group. An
+    item is a plain checkbox line, `- [ ]` open, `- [x]` done or `- [-]`
+    canceled, with no date, time, recurrence or completion emoji, so it
+    is never a task and `meta-notes tasks` never lists it; text with such
+    an emoji is refused. End a guessed item with `?`. Other lines of the
+    file are kept. {list} is a path, or a name (the newest list so named).
+    Items are numbered from 1 in `show`; item commands take `--expect
+    {text}` and refuse, writing nothing, when the item has changed. Every
+    command prints the list; `--json` gives `list`, `date`, `name` and
+    `groups` (each `name`, null before the first heading, and `items` with
+    `number`, `text`, `state`, `source`, `closed_task`).
+
+        list new {name} [--date {day}]      an empty list, dated today
+        list ls                             every list, with open counts
+        list show {list}                    groups and numbered items
+        list group-add {list} {name} [--position {n}]
+        list group-rename {list} {old} {new}
+        list group-move {list} {name} {position}
+        list item-add {list} {text} [--group {name}] [--position {n}]
+                    [--source {file}:{line}]
+        list item-edit {list} {n} --text {text}
+        list item-move {list} {n} [--group {name}] [--position {n}]
+        list check|uncheck|cancel {list} {n}
+        list current [{list}] [--date {day}]
+
+    `--source` names the open task an item is for. The item then holds
+    an indented `* source: [[note]] line {n}: {task line}` bullet with
+    the line copied exactly; the task file doesn't change. `check` closes
+    that task as `task update --status x --expect` does (a `✅` date, a
+    recurring task's next occurrence), expecting the copied text at the
+    recorded line, else the one line of that text. If the task changed,
+    the command fails, "Nothing was changed.": neither file is written.
+    The closed line is kept in a `* closed:` bullet; `uncheck`, or
+    `cancel` of a done item, sets that task open again, with the same
+    guard. `cancel` of an open item leaves its task open.
+
+    `list current {list}` records the list as the day's current list,
+    with a `Current list: [[...]]` line after the daily note's title
+    (creating the note when missing, replacing an earlier such line);
+    without {list} it prints the list that line names.
+
 `meta-notes projects [--warnings]`              *meta-notes-cli-projects*
     List every project directly in `project/`: each note, and each folder,
     whose home note is its `Home.md`. Archived projects aren't listed. A
