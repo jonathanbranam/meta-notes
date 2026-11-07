@@ -160,7 +160,7 @@ def test_run_inside_root_has_no_no_root_line(notes_root):
 
 
 def test_run_size_budget(notes_root):
-    assert len(prime.run(str(notes_root), SATURDAY)) <= 20_000
+    assert len(prime.run(str(notes_root), SATURDAY)) <= 22_500
 
 
 # Tests for the prime command
@@ -174,7 +174,7 @@ def test_prime_inside_notes_root(notes_root, capsys):
 
     assert code == 0
     assert out.startswith('# meta-notes guide')
-    assert len(out) <= 20_000
+    assert len(out) <= 22_500
 
 
 def test_prime_json(notes_root, capsys):

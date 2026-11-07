@@ -93,6 +93,8 @@ meta-notes/
 │   │   ├── conventions.py       # Conventions, generated parts filled in
 │   │   ├── hours.py             # Working hours and days by root mode
 │   │   ├── init.py              # Notes root setup
+│   │   ├── list_note.py         # List notes: format, groups, items
+│   │   ├── list_ops.py          # List source tasks and the current list
 │   │   ├── note.py              # Note paths and creation
 │   │   ├── outlook.py           # Weather, sun and alerts for a place
 │   │   ├── note_write.py        # Race-safe line edits of a note
@@ -135,6 +137,8 @@ meta-notes/
 │   │   ├── test_find_tasks.py
 │   │   ├── test_hours.py
 │   │   ├── test_init.py
+│   │   ├── test_list_note.py
+│   │   ├── test_list_ops.py
 │   │   ├── test_note.py
 │   │   ├── test_notes.py
 │   │   ├── test_period.py
@@ -201,7 +205,7 @@ This structure is compatible with vim-plug, Vundle, and Pathogen.
 templates (`note`), race-safe line edits (`note write`), file operations (`move`, `rename`, `archive`), task
 query (`tasks`), task edits (`task update`, `task add`), one task read as a tree (`task show`), its notes and subtasks written (`task notes`, `task replace`, `task add --under`), time reports (`time`), changed
 notes (`changes`), calendar agendas (`calendar`, `cache clear`), the day's weather, sun and alerts (`outlook`), the meta-notes-ui server (`ui start`, `ui stop`, `ui status`, `ui url`, `ui open`), the
-project list (`projects`), ceremony status (`ceremony status`), the planning record (`planning`), stay-on-task check-ins (`checkin`), Time Block cell and row edits (`time-block update`, `time-block replace`), Time Log edits (`time-log append`, `time-log update`), and the
+the lists (`list`), the project list (`projects`), ceremony status (`ceremony status`), the planning record (`planning`), stay-on-task check-ins (`checkin`), Time Block cell and row edits (`time-block update`, `time-block replace`), Time Log edits (`time-log append`, `time-log update`), and the
 skills' shared conventions (`conventions`), and a guide to the notes root
 for agents (`prime`) outside Vim, for shells, agents, and other tools. The Vim
 commands call it. Every command accepts `--json`. It needs Python 3.11 or newer as `python3`. See
@@ -276,6 +280,9 @@ meta-notes task update area/home.md:9 --expect '- [ ] change filter 🔁 every 3
 meta-notes time                           # today's time report
 meta-notes time --date 2026-09 --json     # a month's time summary
 meta-notes changes --date 2026-09-21..2026-09-25  # notes changed this week
+meta-notes list new Walmart               # an empty shopping list
+meta-notes list item-add Walmart '3 soups' --group Pantry --source project/home.md:12
+meta-notes list check Walmart 1           # done; closes the source task
 meta-notes projects --warnings            # stalled or unreviewed projects
 meta-notes project brief project/kitchen/  # one project's files, tasks, dates
 meta-notes ceremony status --date 2026-09-25

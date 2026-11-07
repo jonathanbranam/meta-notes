@@ -111,6 +111,46 @@ rewords a task and keeps its dates and `🔁` rule.
 Create one with `meta-notes task add <file> <text> --recur <rule> --due
 <date> [--time HH:MM]`, which checks the rule, date and time.
 
+## Lists
+
+A shopping list (or any trip list) is a note under
+`resource/lists/<YY-QN>/`, named `YYYY-MM-DD <name>.md`, with `## `
+groups, each holding checkbox items. An item is never a task: no due or start date, no emoji. Make and run lists only
+with `meta-notes list` (every command takes `--json`):
+
+```
+meta-notes list new Walmart            # an empty list, today's date
+meta-notes list group-add Walmart 'Produce (front)'
+meta-notes list item-add Walmart '3 soups for work' --group Pantry \
+  --source project/home/Tasks.md:12    # the task this item is for
+meta-notes list show Walmart           # numbered items; --json for tools
+meta-notes list check|uncheck|cancel Walmart 4 [--expect 'item text']
+meta-notes list item-edit|item-move|group-rename|group-move ...
+meta-notes list current Walmart        # the day's current list
+```
+
+When the user asks for a list ("I'm going to Walmart, make me a list"):
+
+1. Find candidate tasks: `meta-notes tasks --all --tag walmart --json`
+   for the store's tag, and `--agenda` for what is due; ask about
+   anything unclear.
+2. Add each as a very brief item ("3 soups for work", not the task's
+   wording). If you guessed, or the task is vague, add it anyway with a
+   trailing `?` ("soup?") and ask the user to confirm or fix it.
+3. Group and order the items by the store's layout, when the root has
+   one (look in `resource/locations/`): one group per section in walking
+   order. With no layout, use a few plain groups or none.
+4. Give every item that comes from a task `--source FILE:LINE`, so
+   checking it closes exactly that task. Items with no task (a quick add
+   from the user) have no source.
+5. Set the list current: `meta-notes list current <list>`.
+
+As the user shops, `check` what they got and `cancel` what they decided
+against. `check` closes the source task; if the task changed since, it
+fails and writes nothing, so read the task again and ask. At the end of
+the trip every item is done or canceled, and a task that wasn't got stays
+open. Don't edit item lines by hand; keep the checkbox format.
+
 ## Commands
 
 ```

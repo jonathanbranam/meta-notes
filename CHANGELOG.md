@@ -6,6 +6,16 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 2.35.0 - 2026-11-07
+
+- New: `meta-notes list` makes and runs lists (shopping and others) as notes
+  under `resource/lists/`: groups, items, `check`, `uncheck`, `cancel`, and a
+  current list linked from the daily note. An item added with `--source` is
+  tied to a task; checking it closes that task, and refuses, changing
+  nothing, if the task no longer reads as copied. Items are never tasks.
+- Changed: `meta-notes prime` tells the assistant how to build a list from
+  the user's tasks and run it on a trip.
+
 ## 2.34.5 - 2026-11-07
 
 - Changed: `meta-notes prime` tells the assistant to record the user's small
