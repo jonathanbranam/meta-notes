@@ -2,11 +2,13 @@
 id = "mn-m9qv"
 title = "lists: note format, meta-notes list commands and the agent's list guide"
 kind = "feature"
-state = "planned"
+state = "integrated"
 created_at = "2026-11-07T17:09:04.717Z"
-updated_at = "2026-11-07T17:29:33.926669163Z"
+updated_at = "2026-11-07T17:30:39.656292666Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
+commit = "29e26a6"
+summary = "List notes under resource/lists/<YY-Qn>/, meta-notes list commands (new, ls, show, current, group-*, item-*, check/uncheck/cancel closing/reopening the source task), prime guide section. v2.35.0."
 ticket = "m9qv"
 +++
 
@@ -22,3 +24,6 @@ orchestrator: keeping it one ticket. You judge one worker can take it in one go,
 
 ### note · agent:lists · 2026-11-07T17:29:33.926Z
 Built on bridle/lists, 3 commits (format+commands, sources+current, prime+docs+2.35.0). CLI: list new|ls|show|group-add|group-rename|group-move|item-add|item-edit|item-move|check|uncheck|cancel|current; recorded in design/specs/lists.md. Note: prime.md was 19996 of its 20000-char test budget, so I raised the budget in test_prime.py to 22500 for the new Lists section. Not done (out of scope): UI sorting, aisle numbers, prices, sharing. Ideas: none.
+
+### note · external:orchestrator · 2026-11-07T17:30:39.600Z
+integrated: 29e26a6
