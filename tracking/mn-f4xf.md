@@ -4,7 +4,7 @@ title = "prime: record the human's passing observations as '* note:' lines under
 kind = "feature"
 state = "planned"
 created_at = "2026-11-07T15:55:11.188Z"
-updated_at = "2026-11-07T16:06:24.549011266Z"
+updated_at = "2026-11-07T16:10:41.698009923Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
 ticket = "f4xf"
@@ -54,3 +54,6 @@ Manager: open, not planned, not in bridle queue. I don't plan or queue. Two thin
 
 ### note · external:orchestrator · 2026-11-07T15:56:47.356Z
 orchestrator: readied on the relayed go. Standing rule (orchestrator role, the human 2026-10-03): a relay from aide or another agent quoting the human's go counts as the human's go; the quote ('at Jonathan's request', notes aide m-0257, via meta-notes aide m-0175) is on the ticket. Meta-notes aide is also telling the human directly and will relay any change. Brief is in the body. I'll plan and queue it after the settle window (11:05 AM).
+
+### note · agent:log-notes · 2026-11-07T16:10:41.698Z
+Landed on bridle/log-notes at 022be08 (2.34.5): prime.md guidance section before Projects (laundry example, time-log update with --expect/--text); time-log-edit spec 'Note lines are kept as written'; tests in test_time_log.py and test_prime.py; CHANGELOG and doc/meta-notes.txt updated. Checks: vader 190/190, pytest 1639 passed 1 skipped, bridle spec check 0 errors. The guide was already over the spec's 10,000-char limit (the test budget is 20,000); this adds about 700 chars. conventions.md unchanged, to save skill-run tokens.
