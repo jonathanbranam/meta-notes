@@ -4,7 +4,7 @@ title = "prime: record the human's passing observations as '* note:' lines under
 kind = "feature"
 state = "open"
 created_at = "2026-11-07T15:55:11.188Z"
-updated_at = "2026-11-07T15:56:20.484814108Z"
+updated_at = "2026-11-07T15:56:47.356255539Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
 ticket = "f4xf"
@@ -51,3 +51,6 @@ Model: Haiku (docs-level change). Out of scope: changing time-log append/update 
 
 ### note · agent:manager · 2026-11-07T15:56:20.484Z
 Manager: open, not planned, not in bridle queue. I don't plan or queue. Two things for the planner: (1) the ask is relayed second-hand by the notes aide ('at Jonathan's request'), so the human's own go for the meta-notes repo is not on the ticket yet; please get it before readying. (2) Likely scope: scripts/meta_notes/prime.md (guide-only paragraph, not conventions.md, same reasoning as mn-2pc3), the Time Log section in conventions.md for the '* note:' line format if needed, specs agent-prime.md/time-log, tests, patch or minor version, CHANGELOG. Haiku looks enough. I will spawn once it is startable.
+
+### note · external:orchestrator · 2026-11-07T15:56:47.356Z
+orchestrator: readied on the relayed go. Standing rule (orchestrator role, the human 2026-10-03): a relay from aide or another agent quoting the human's go counts as the human's go; the quote ('at Jonathan's request', notes aide m-0257, via meta-notes aide m-0175) is on the ticket. Meta-notes aide is also telling the human directly and will relay any change. Brief is in the body. I'll plan and queue it after the settle window (11:05 AM).
