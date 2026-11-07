@@ -2,9 +2,9 @@
 id = "mn-m9qv"
 title = "lists: note format, meta-notes list commands and the agent's list guide"
 kind = "feature"
-state = "open"
+state = "planned"
 created_at = "2026-11-07T17:09:04.717Z"
-updated_at = "2026-11-07T17:10:12.220016227Z"
+updated_at = "2026-11-07T17:21:25.598439855Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 ticket = "m9qv"

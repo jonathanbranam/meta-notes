@@ -30,3 +30,5 @@
 {"actor":"human","at":"2026-11-07T16:48:33.856Z","from":"","task":"mn-yznt","to":"pending"}
 {"actor":"human","at":"2026-11-07T17:09:04.717Z","from":"","task":"mn-m9qv","to":"pending"}
 {"actor":"external:orchestrator","at":"2026-11-07T17:09:32.802659579Z","from":"pending","task":"mn-m9qv","to":"open"}
+{"actor":"external:orchestrator","at":"2026-11-07T17:21:25.598439855Z","from":"open","task":"mn-m9qv","to":"planned"}
+{"actor":"external:orchestrator","at":"2026-11-07T17:21:25.653204510Z","queue":"reprioritized"}
