@@ -2,9 +2,9 @@
 id = "mn-f4xf"
 title = "prime: record the human's passing observations as '* note:' lines under the current Time Log entry"
 kind = "feature"
-state = "open"
+state = "planned"
 created_at = "2026-11-07T15:55:11.188Z"
-updated_at = "2026-11-07T15:56:47.356255539Z"
+updated_at = "2026-11-07T16:06:24.549011266Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
 ticket = "f4xf"

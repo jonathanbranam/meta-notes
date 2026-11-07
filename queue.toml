@@ -13,3 +13,6 @@ tasks = [
 
 [[tier]]
 tasks = ["mn-h7fb"]
+
+[[tier]]
+tasks = ["mn-f4xf"]
