@@ -8,7 +8,8 @@ repos: [meta-notes]
 changes: []
 specs: []
 blocked_by: []
-related: [mu-5tju]
+related: [mu-5tju, mn-m9qv]
+resolved: 2026-11-07T17:09:16Z
 ---
 
 ## The ask
@@ -34,3 +35,17 @@ Recommendation: B. Plain markdown the human can read and edit in Vim or Obsidian
 3. meta-notes-ui: the Lists tab (mu-5tju), later.
 
 Deferred, not yet: aisle numbers, who asked, price capture, not-found state, sharing (the draft's Should/Could), until the agent-first version has been used on a trip.
+
+## Resolution (2026-11-07)
+
+From the human, via aide (meta-notes-ui, m-0184), 2026-11-07, verbatim: "Yeah, start the work on the shopping list between all of meta-notes, the UI, and everything." This approves the design as shaped on mu-5tju (every decision quoted there). It settles this question with a variant of B:
+
+- Tasks stay the master list; no separate master list file.
+- One note per list at `resource/lists/<YY-Qn>/<YYYY-MM-DD> <name>.md` (quarter folders like daily notes). A new list starts empty; the agent fills it.
+- Ordered groups (store sections) holding ordered items; file order is UI order.
+- Items are plain checkboxes with no 📅 or 🛫, so they are checklist items, never tasks (aide verified against `meta-notes conventions` and `meta-notes tasks`). Each item is very brief ("3 soups for work"); a guessed item gets a trailing `?`.
+- Source traced by an indented plain bullet under the item: `[[link]]` to the task's note, a line hint, and the task's text copied exactly. Checking an item closes its task with `task update --expect`; a mismatch stops, never guesses.
+- Trip end: every item done or canceled; done closes its task, tasks not got stay open.
+- The daily note links the current list.
+
+Build: mn-m9qv (meta-notes), then mu-5eme and mu-xfm2 (meta-notes-ui).
