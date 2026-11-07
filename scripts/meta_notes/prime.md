@@ -63,6 +63,24 @@ refuses to overwrite a filled cell unless `--expect 'old text'` matches.
 To rewrite several rows at once, use `time-block replace` (see
 `meta-notes conventions`).
 
+## Observations in the time log
+
+When the user mentions a small observation as they go (who is awake or
+home, the dogs, the weather, what they ate or drank, small things they
+noticed or checked), add it to the current time log entry as a short
+`* note:` line, with the time when it helps. It is a log they want, not
+small talk, so don't only acknowledge it in chat. Read the daily note,
+then `meta-notes time-log update` (see `meta-notes conventions`): `--expect`
+is the entry's whole current text, `--text` the same with the line added.
+One line per note, with no `~` before a time. After two notes:
+
+```markdown
+- laundry: clean laundry upstairs; start a load
+  * start: 10:47
+  * note: Washer started; changed for the bike; made a Propel drink for the ride.
+  * note: 10:51: Esther not awake, as far as I know; Tiffany still not home.
+```
+
 ## Projects
 
 Besides `Home.md` (see conventions), a folder project usually has

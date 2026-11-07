@@ -51,6 +51,19 @@ Specifies `meta-notes time-log append` and `meta-notes time-log update`, which a
 - **WHEN** `--expect` ends at 12:00 but the entry ends at 13:00
 - **THEN** the command SHALL fail, leave the file unchanged, and show the entry with the `end:` line marked `~`
 
+### Requirement: Note lines are kept as written  {#r-34ad}
+A `* note: <text>` line in an entry SHALL be an ordinary indented line: `append` and `update` SHALL write it as given and SHALL NOT read a time in its text as the entry's `start:` or `end:`. A `note:` line, and any `start:` or `end:` text inside it, SHALL NOT change the entry's times. A note's text MAY hold a time, such as `10:51:`, and a `~` that is not before a Time Log time, such as `~5 mph`.
+
+#### Scenario: Note line with a time in it  {#s-91cc}
+*Verification*: **non-executable**
+- **WHEN** the user appends `- Laundry` with `--start 10:47` and `--note 'note: 10:51: Esther not awake'`
+- **THEN** the log SHALL hold `  * start: 10:47`, then `  * note: 10:51: Esther not awake`, and the entry SHALL be open with start 10:47
+
+#### Scenario: Update keeps a note line for the next guarded edit  {#s-024f}
+*Verification*: **non-executable**
+- **WHEN** an open entry has a `* note:` line and `update` replaces it with the same entry plus another `* note:` line, using the whole current entry as `--expect`
+- **THEN** the update SHALL succeed and both note lines SHALL be kept in order
+
 ### Requirement: Validate new entries  {#r-3e0c}
 Each entry in `update`'s `--text` SHALL have a `- ` header, a valid `start:`, and an `end:` that is valid when present and not before its own start. A `~` before any `start:` or `end:` time in `--text` SHALL be an error. Only the log's last entry MAY lack an `end:`; an empty `end:` line (`* end:` with no time) counts as missing and is kept as written. Lines of `--text` outside an entry, and blank lines, SHALL be errors. Any failure SHALL reject the whole update.
 

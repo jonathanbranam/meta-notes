@@ -37,6 +37,7 @@ The guide SHALL cover:
 - the archive: archiving moves an item to `archive/<original path>`, sets `status: archived` and `archived: <date>` on a project, keeps links resolving, and is done only with `meta-notes archive`; archived items stay searchable
 - the working day, by the root's mode, read from the same source as `conventions` and `checkin`: in `work` mode 08:00 to 17:00, Monday to Friday, with no work planned after 17:00, and the time block running to 18:00 so after-work personal events can go in it; in `personal` mode 07:00 to 21:00, every day of the week, with no work cutoff
 - the daily note's time log (an entry bullet naming the activity, with tags, and `start:` and `end:` sub-bullets, times given only as `HH:MM`) and time block table
+- observations: the user's small observations (who is awake or home, the dogs, the weather, food and drink, things checked) go in the current time log entry as `* note:` lines, with the time when it helps, added with `meta-notes time-log update`; the guide SHALL give the entry example
 - the commands for finding things: `tasks`, `projects`, `project brief`, `changes`, `calendar`, `ceremony status`, and `time`, as one example command line each
 - the shipped skills, by name
 - that the user's personal preferences, such as working hours and routines, are in the notes root's `CLAUDE.md` and override the guide's defaults
@@ -69,6 +70,14 @@ The guide SHALL, before the appended conventions, say that the notes root is the
 *Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes prime` in a notes root
 - **THEN** the output SHALL say the notes root is the source of truth for persistent state, SHALL say not to use the assistant's own memory feature, and SHALL name `CLAUDE.md` and `project/meta-notes/`, all before the `# meta-notes conventions` heading
+
+### Requirement: Observations go in the time log  {#r-b67d}
+The guide SHALL, before the appended conventions, say that when the user mentions a small observation as they go, the assistant SHALL add it to the current time log entry as a short `* note:` line, with the time when it helps, and SHALL NOT only acknowledge it in chat. The guide SHALL say to add the line with `meta-notes time-log update`, and SHALL show a laundry entry with a start line and two `* note:` lines. The line SHALL be in the guide only, not in the conventions.
+
+#### Scenario: Observation guidance before conventions  {#s-8964}
+*Verification*: **non-executable**
+- **WHEN** the user runs `meta-notes prime` in a notes root
+- **THEN** the output SHALL say to record small observations as `* note:` lines under the current time log entry, SHALL name `meta-notes time-log update`, SHALL show the example entry, and SHALL do all of this before the `# meta-notes conventions` heading
 
 ### Requirement: Generated parts  {#r-f718}
 These parts of the guide SHALL be generated, not written by hand, so they match the installed CLI and the notes root:

@@ -6,6 +6,13 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 2.34.5 - 2026-11-07
+
+- Changed: `meta-notes prime` tells the assistant to record the user's small
+  observations (who is home, the dogs, the weather, food and drink) as
+  `* note:` lines under the current Time Log entry, with the time when it
+  helps, using `meta-notes time-log update`.
+
 ## 2.34.4 - 2026-11-05
 
 - Changed: the skills run `meta-notes conventions` only once per session. A

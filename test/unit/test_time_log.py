@@ -4,7 +4,7 @@ Unit tests for scripts/meta_notes/time_log.py
 
 import json
 import sys
-from datetime import time
+from datetime import date, datetime, time
 from pathlib import Path
 
 import pytest
@@ -399,3 +399,62 @@ def test_time_log_cli_append_close_prev_tilde_refused(tmp_path, capsys):
                         "--prev-open", "--close-prev", "--start", "~14:00")
     assert code == 1 and not out["ok"]
     assert Path(path).read_text() == NOTE
+
+
+# Tests for '* note:' lines
+
+def entry_named(path, header):
+    """The parsed entry with this header line, read back from the file."""
+    lines = lines_of(path)
+    heading = lines.index("### Log")
+    stop = next((i for i in range(heading + 1, len(lines))
+                 if lines[i].startswith("#")), len(lines))
+    entries = time_log.parse_entries(lines[heading + 1:stop], heading + 1,
+                                     date(2026, 10, 1))
+    return next(e for e in entries if e.header == header)
+
+
+def test_time_log_update_note_line_round_trips(tmp_path):
+    path = make_note(tmp_path)
+    time_log.update(
+        path, "- Review #dev\n  * start: 13:30",
+        "- Review #dev\n  * start: 13:30\n"
+        "  * note: 10:51: Esther not awake; Tiffany still not home.")
+    entry = entry_named(path, "- Review #dev")
+    assert entry.start == datetime(2026, 10, 1, 13, 30)
+    assert entry.end is None
+    assert entry.lines[-1] == (
+        "  * note: 10:51: Esther not awake; Tiffany still not home.")
+
+    # The same entry, with its note line, is matched again by --expect.
+    time_log.update(
+        path, "\n".join(entry.lines),
+        "\n".join(entry.lines + ["  * note: 11:05: Washer started."]))
+    entry = entry_named(path, "- Review #dev")
+    assert entry.lines[-2:] == [
+        "  * note: 10:51: Esther not awake; Tiffany still not home.",
+        "  * note: 11:05: Washer started."]
+    assert entry.start == datetime(2026, 10, 1, 13, 30)
+    assert entry.end is None
+
+
+def test_time_log_append_note_line_keeps_times(tmp_path):
+    path = make_note(tmp_path)
+    append(path, notes=["note: 10:51: Esther not awake; ~5 mph wind"])
+    assert "  * note: 10:51: Esther not awake; ~5 mph wind" in lines_of(path)
+    entry = entry_named(path, "- Next #dev")
+    assert entry.start == datetime(2026, 10, 1, 14, 0)
+    assert entry.end is None
+    assert not entry.start_has_tilde and not entry.end_has_tilde
+
+
+def test_time_log_note_line_not_read_as_start_or_end():
+    lines = ["- Laundry",
+             "  * start: 10:47",
+             "  * note: start: 9:00 end: 9:30 (not times)",
+             "  * note: end: 11:00"]
+    entries = time_log.parse_entries(lines, 0, date(2026, 10, 1))
+    assert len(entries) == 1
+    assert entries[0].start == datetime(2026, 10, 1, 10, 47)
+    assert entries[0].end is None
+    assert time_log._check_new(entries, allow_open_last=True) is None
