@@ -35,3 +35,4 @@
 {"actor":"external:orchestrator","at":"2026-11-07T17:21:37.375526594Z","from":"planned","task":"mn-f4xf","to":"integrated"}
 {"actor":"external:orchestrator","at":"2026-11-07T17:30:39.600309628Z","from":"planned","task":"mn-m9qv","to":"integrated"}
 {"actor":"human","at":"2026-11-07T18:17:27.233Z","from":"","task":"mn-mu65","to":"pending"}
+{"actor":"human","at":"2026-11-08T13:40:20.835Z","from":"","task":"mn-r5g8","to":"pending"}
