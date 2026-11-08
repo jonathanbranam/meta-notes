@@ -18,10 +18,11 @@ with the due date: `⏰ 15:00` before the dates, or
 by its date, whatever its time.
 
 A recurring task has `🔁 every 3 months` (or `every day`, `every 2 weeks`,
-`every year`, `every weekday`, any of them with `when done` after) before
-the dates. `meta-notes tasks --json` reports it as `recurrence` and
-`recurs_from_completion`; a `🔁` rule it doesn't support is a warning. A
-recurring task lives in one home note (usually in `area/`). **Never copy a
+`every year`, `every weekday`, `every week on Sunday, Monday`, any of them
+with `when done` after) before the dates. `meta-notes tasks --json` reports
+it as `recurrence` and `recurs_from_completion`; a `🔁` rule it doesn't
+support is a warning. A recurring task lives in one home note (usually in
+`area/`). **Never copy a
 `🔁` line forward** into a daily or weekly note, or into another note:
 write the task without the `🔁` marker and leave the original where it is.
 Completing one with `task update --status x` stamps `✅` and adds the next

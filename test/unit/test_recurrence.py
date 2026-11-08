@@ -33,6 +33,45 @@ def test_recurrence_parse_rule_forms(text, expected):
     assert parse_rule(text) == expected
 
 
+# Tests for parse_rule with weekday lists
+
+@pytest.mark.parametrize('text, expected', [
+    ('every week on Sunday', Rule('week', 1, False, (6,))),
+    ('every week on Sunday, Monday, Tuesday, Wednesday, Thursday',
+     Rule('week', 1, False, (0, 1, 2, 3, 6))),
+    ('every week on Sunday, Monday, and Tuesday',
+     Rule('week', 1, False, (0, 1, 6))),
+    ('every week on Sunday and Monday', Rule('week', 1, False, (0, 6))),
+    ('every week on Friday,Monday', Rule('week', 1, False, (0, 4))),
+    ('every week on Monday, Monday', Rule('week', 1, False, (0,))),
+    ('EVERY WEEK ON sunday, MONDAY', Rule('week', 1, False, (0, 6))),
+    ('every 2 weeks on Friday', Rule('week', 2, False, (4,))),
+])
+def test_recurrence_parse_rule_weekday_lists(text, expected):
+    assert parse_rule(text) == expected
+
+
+def test_recurrence_parse_rule_weekday_list_when_done():
+    assert parse_rule('every week on Sunday, Monday when done') == (
+        Rule('week', 1, True, (0, 6)))
+    assert parse_rule('every week on Sunday when  done') == (
+        Rule('week', 1, True, (6,)))
+
+
+@pytest.mark.parametrize('text', [
+    'every week on', 'every week on ', 'every week on Funday',
+    'every week on Sunday,', 'every week on Sunday,,Monday',
+    'every week on, Sunday', 'every week on and Sunday',
+    'every week on Sunday and', 'every week on Sun',
+    'every week on Sunday Monday', 'every week on the 1st',
+    'every week on Sunday when', 'every 0 weeks on Sunday',
+    'every other week on Sunday', 'every day on Sunday',
+    'every month on Sunday', 'every Sunday', 'every weekday on Sunday',
+])
+def test_recurrence_parse_rule_invalid_weekday_lists(text):
+    assert parse_rule(text) is None
+
+
 def test_recurrence_parse_rule_when_done():
     assert parse_rule('every month when done') == Rule('month', 1, True)
     assert parse_rule('every 2 weeks when done') == Rule('week', 2, True)
@@ -91,6 +130,30 @@ def test_recurrence_next_date_weekday_skips_weekend():
     assert next_date(Rule('weekday'), date(2026, 10, 2)) == date(2026, 10, 5)
     assert next_date(Rule('weekday'), date(2026, 10, 3)) == date(2026, 10, 5)
     assert next_date(Rule('weekday'), date(2026, 10, 4)) == date(2026, 10, 5)
+
+
+def test_recurrence_next_date_weekday_list_across_week_end():
+    # 2026-10-01 is a Thursday; the rule lists Sunday to Thursday.
+    rule = parse_rule('every week on Sunday, Monday, Tuesday, Wednesday, Thursday')
+    assert next_date(rule, date(2026, 9, 28)) == date(2026, 9, 29)  # Mon -> Tue
+    assert next_date(rule, date(2026, 10, 1)) == date(2026, 10, 4)  # Thu -> Sun
+    assert next_date(rule, date(2026, 10, 4)) == date(2026, 10, 5)  # Sun -> Mon
+    assert next_date(rule, date(2026, 10, 2)) == date(2026, 10, 4)  # Fri -> Sun
+
+
+def test_recurrence_next_date_single_weekday_list():
+    rule = parse_rule('every week on Friday')
+    assert next_date(rule, date(2026, 10, 2)) == date(2026, 10, 9)  # Fri
+    assert next_date(rule, date(2026, 10, 3)) == date(2026, 10, 9)  # Sat
+    assert next_date(rule, date(2026, 10, 5)) == date(2026, 10, 9)  # Mon
+
+
+def test_recurrence_next_date_every_two_weeks_on_days():
+    # 2026-10-01 is a Thursday; the rule lists Monday and Friday.
+    rule = parse_rule('every 2 weeks on Monday, Friday')
+    assert next_date(rule, date(2026, 10, 1)) == date(2026, 10, 2)   # Thu -> Fri
+    assert next_date(rule, date(2026, 10, 2)) == date(2026, 10, 12)  # Fri -> Mon two weeks on
+    assert next_date(rule, date(2026, 10, 12)) == date(2026, 10, 16)  # Mon -> Fri
 
 
 def test_recurrence_next_date_late_completion_steps_from_base():
