@@ -732,6 +732,8 @@ TASK = '- [ ] call Sam 📅 2026-09-22'
     (['--time', '15:60'], 'invalid value'),
     (['--recur', 'every other week'], 'invalid value'),
     (['--recur', 'sometimes'], 'invalid value'),
+    (['--recur', 'every week on Funday'], 'invalid value'),
+    (['--recur', 'every week on'], 'invalid value'),
     (['--add-tag', 'two words'], 'invalid tag'),
     (['--remove-tag', '#a.b'], 'invalid tag'),
     (['--add-tag', 'later', '--remove-tag', '#Later'], 'both'),

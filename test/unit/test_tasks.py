@@ -854,6 +854,9 @@ def test_tasks_task_warnings_none_for_valid_time(tmp_path):
     ('- [ ] check 🔁 every week', None, False),
     ('- [ ] check 🔁 every week 🛫 2026-10-01', 'every week', False),
     ('- [ ] check 🔁 every week when done 📅', 'every week when done', True),
+    ('- [ ] standup 🔁 every week on Sunday, Monday, and Tuesday 📅 2026-10-01',
+     'every week on Sunday, Monday, and Tuesday', False),
+    ('- [ ] standup 🔁 every week on Friday when done 📅', 'every week on Friday when done', True),
     ('- [ ] plain 📅 2026-10-01', None, False),
 ])
 def test_tasks_find_tasks_in_file_recurrence(tmp_path, line, rule, from_completion):
@@ -871,7 +874,10 @@ def test_tasks_find_tasks_in_file_recurrence(tmp_path, line, rule, from_completi
     assert not task.invalid_recurrence
 
 
-@pytest.mark.parametrize('rule', ['every other week', 'every Monday', 'every 0 days', 'soon'])
+@pytest.mark.parametrize('rule', [
+    'every other week', 'every Monday', 'every 0 days', 'soon',
+    'every week on Funday', 'every week on',
+])
 def test_tasks_find_tasks_in_file_invalid_recurrence(tmp_path, rule):
     path = tmp_path / 'test.md'
     path.write_text(f'- [ ] sweep 🔁 {rule} 📅 2026-10-01\n')

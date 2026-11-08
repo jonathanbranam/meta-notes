@@ -725,6 +725,45 @@ def test_task_update_recur_non_recurring_done_unchanged_behavior(tmp_path):
     assert result.new == '- [x] call 📅 2026-09-25'
 
 
+# Tests for weekday-list rules
+
+WEEKDAYS = 'every week on Sunday, Monday, Tuesday, Wednesday, Thursday'
+WEEKDAYS_LINE = '- [ ] standup 🔁 ' + WEEKDAYS + ' 📅 2026-10-01'
+WEEKDAYS_DONE = '- [x] standup 🔁 ' + WEEKDAYS + ' 📅 2026-10-01 ✅ 2026-09-25'
+WEEKDAYS_NEXT = '- [ ] standup 🔁 ' + WEEKDAYS + ' 📅 2026-10-04'
+
+
+def test_task_update_recur_weekday_list_done_spawns_next_sunday(tmp_path):
+    # 2026-10-01 is a Thursday; the next listed day is Sunday 2026-10-04.
+    path = write_note(tmp_path, [WEEKDAYS_LINE])
+    result = update(str(path), 1, WEEKDAYS_LINE, status='x', today=TODAY)
+    assert result.new == WEEKDAYS_DONE
+    assert result.created == WEEKDAYS_NEXT
+    assert path.read_text(encoding='utf-8') == (
+        WEEKDAYS_NEXT + '\n' + WEEKDAYS_DONE + '\n')
+
+
+def test_task_update_recur_weekday_list_when_done_steps_from_today(tmp_path):
+    # TODAY is Friday 2026-09-25; the next listed day is Sunday 2026-09-27.
+    line = '- [ ] standup 🔁 every week on Friday, Sunday when done'
+    path = write_note(tmp_path, [line])
+    result = update(str(path), 1, line, status='x', today=TODAY)
+    assert result.created == '- [ ] standup 🔁 every week on Friday, Sunday when done 📅 2026-09-27'
+
+
+def test_task_update_recur_weekday_list_keeps_rule_text(tmp_path):
+    line = '- [ ] standup 🔁 every week on Sunday and Monday, and Tuesday 📅 2026-10-01'
+    path = write_note(tmp_path, [line])
+    result = update(str(path), 1, line, status='x', today=TODAY)
+    assert result.created == (
+        '- [ ] standup 🔁 every week on Sunday and Monday, and Tuesday 📅 2026-10-04')
+
+
+def test_task_update_recur_set_weekday_list_writes_rule_as_given():
+    assert edit('- [ ] call 📅 2026-10-01', recur=WEEKDAYS) == (
+        '- [ ] call 🔁 ' + WEEKDAYS + ' 📅 2026-10-01')
+
+
 # Tests for --recur and tags around the 🔁 marker
 
 def test_task_update_recur_set_adds_marker_before_dates():

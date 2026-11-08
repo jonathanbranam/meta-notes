@@ -6,6 +6,14 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 2.36.0 - 2026-11-08
+
+- New: a recurring task can repeat on named days of the week, as Obsidian
+  Tasks writes it: `every week on Sunday, Monday, Tuesday, Wednesday,
+  Thursday`, with `and` before the last day and `when done` optional.
+  `every N weeks on <days>` works too. `task update --recur`, completing the
+  task, and `tasks` all accept it.
+
 ## 2.35.0 - 2026-11-07
 
 - New: `meta-notes list` makes and runs lists (shopping and others) as notes

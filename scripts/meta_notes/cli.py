@@ -434,7 +434,8 @@ def _recur_value(value: str) -> str:
         return value
     raise argparse.ArgumentTypeError(
         f"invalid value: {value!r} (expected a rule like 'every 3 months', "
-        "'every week when done', or 'every weekday', or none)")
+        "'every week when done', 'every weekday', 'every week on Sunday, "
+        "Monday', or none)")
 
 
 def _text_value(value: str) -> str:
