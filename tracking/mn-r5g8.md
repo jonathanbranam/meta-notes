@@ -2,9 +2,9 @@
 id = "mn-r5g8"
 title = "Recurrence: 'every week on <days>' rule (e.g. Sunday to Thursday)"
 kind = "feature"
-state = "open"
+state = "planned"
 created_at = "2026-11-08T13:40:20.835Z"
-updated_at = "2026-11-08T13:40:48.313314836Z"
+updated_at = "2026-11-08T13:50:23.721313903Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 ticket = "r5g8"
