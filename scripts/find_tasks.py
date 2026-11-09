@@ -15,6 +15,7 @@ Status:
 - [x] or [X] = completed
 - [>] = rescheduled
 - [-] = canceled
+- [<] = from (a copy of a task that lives elsewhere; see --mark-from)
 
 Modes select tasks relative to the --date period START..END (default:
 today). Each task is listed once, in the first matching selected mode:
@@ -34,7 +35,8 @@ import sys
 from datetime import date, datetime, time
 from typing import Callable
 
-from tasks import Task, TaskStatus, find_tasks_in_file, filter_tasks_by_status
+from tasks import (CHECKBOX_PATTERN, Task, TaskStatus, find_tasks_in_file,
+                   filter_tasks_by_status)
 from notes import get_wiki_link, find_all_markdown_files
 from period import FORMS, parse_period
 from tags import canonical_tag
@@ -316,8 +318,23 @@ def group_tasks_by_tag(tasks: list[Task]) -> list[tuple[str, list[Task]]]:
     return result
 
 
+def task_line(task: Task, mark_from: bool = False) -> str:
+    """
+    The output line for a task.
+
+    With mark_from, the status character is replaced by `<` (a copy of a
+    task that lives elsewhere); the rest of the line is unchanged.
+    """
+    if not mark_from:
+        return task.text
+    match = CHECKBOX_PATTERN.match(task.text)
+    if not match:
+        return task.text
+    return task.text[:match.start(1)] + '<' + task.text[match.end(1):]
+
+
 def format_file_tasks(filepath: str, tasks: list[Task], root_dir: str,
-                      level: int = 2) -> list[str]:
+                      level: int = 2, mark_from: bool = False) -> list[str]:
     """
     Format tasks from a single file as output lines (standard format).
 
@@ -326,6 +343,7 @@ def format_file_tasks(filepath: str, tasks: list[Task], root_dir: str,
         tasks: List of Task objects from the file.
         root_dir: Root directory for generating wiki links.
         level: Heading level of the file heading.
+        mark_from: Write each task with status `<` (see task_line).
 
     Returns:
         List of formatted output lines (empty if no tasks).
@@ -339,12 +357,13 @@ def format_file_tasks(filepath: str, tasks: list[Task], root_dir: str,
     lines.append("")
 
     for task in tasks:
-        lines.append(task.text)
+        lines.append(task_line(task, mark_from))
 
     return lines
 
 
-def format_file_tasks_condensed(filepath: str, tasks: list[Task], root_dir: str) -> list[str]:
+def format_file_tasks_condensed(filepath: str, tasks: list[Task], root_dir: str,
+                                mark_from: bool = False) -> list[str]:
     """
     Format tasks from a single file in condensed format.
 
@@ -357,6 +376,7 @@ def format_file_tasks_condensed(filepath: str, tasks: list[Task], root_dir: str)
         filepath: Path to the file containing tasks.
         tasks: List of Task objects from the file.
         root_dir: Root directory for generating wiki links.
+        mark_from: Write each task with status `<` (see task_line).
 
     Returns:
         List of formatted output lines (empty if no tasks).
@@ -370,22 +390,24 @@ def format_file_tasks_condensed(filepath: str, tasks: list[Task], root_dir: str)
 
     for task in tasks:
         # Add one level of indentation (2 spaces) to each task line
-        indented_task = "  " + task.text
+        indented_task = "  " + task_line(task, mark_from)
         lines.append(indented_task)
 
     return lines
 
 
 def format_files(tasks: list[Task], root_dir: str, condensed: bool,
-                 level: int = 2) -> list[str]:
+                 level: int = 2, mark_from: bool = False) -> list[str]:
     """Format tasks grouped by file, files sorted by path."""
     lines: list[str] = []
     tasks_by_file = group_tasks_by_file(tasks)
     for filepath in sorted(tasks_by_file):
         if condensed:
-            lines.extend(format_file_tasks_condensed(filepath, tasks_by_file[filepath], root_dir))
+            lines.extend(format_file_tasks_condensed(filepath, tasks_by_file[filepath],
+                                                     root_dir, mark_from))
         else:
-            lines.extend(format_file_tasks(filepath, tasks_by_file[filepath], root_dir, level))
+            lines.extend(format_file_tasks(filepath, tasks_by_file[filepath], root_dir,
+                                           level, mark_from))
             lines.append("")  # Empty line between files (standard format only)
     return lines
 
@@ -399,7 +421,8 @@ def _add_heading(lines: list[str], heading: str) -> None:
 
 
 def build_report(selected: list[tuple[str, Task]], sections: list[str], root_dir: str,
-                 group_by: str | None = None, condensed: bool = False) -> list[str]:
+                 group_by: str | None = None, condensed: bool = False,
+                 mark_from: bool = False) -> list[str]:
     """
     Build the report lines for selected tasks.
 
@@ -410,6 +433,7 @@ def build_report(selected: list[tuple[str, Task]], sections: list[str], root_dir
         root_dir: Root directory for generating wiki links.
         group_by: 'tag' to list tasks under a heading per tag.
         condensed: If True, use condensed format.
+        mark_from: Write each task with status `<` (see task_line).
 
     Returns:
         List of output lines.
@@ -427,9 +451,10 @@ def build_report(selected: list[tuple[str, Task]], sections: list[str], root_dir
         if group_by == 'tag':
             for heading, tag_tasks in group_tasks_by_tag(tasks):
                 _add_heading(lines, f"## {heading}")
-                lines.extend(format_files(tag_tasks, root_dir, condensed, level=3))
+                lines.extend(format_files(tag_tasks, root_dir, condensed, level=3,
+                                          mark_from=mark_from))
         else:
-            lines.extend(format_files(tasks, root_dir, condensed))
+            lines.extend(format_files(tasks, root_dir, condensed, mark_from=mark_from))
 
     # Add summary (not in condensed format)
     if not condensed:
@@ -448,7 +473,8 @@ def run_query(root_dir: str, period: str | None = None,
               tags: list[str] | None = None, group_by: str | None = None,
               folder: str | None = None, status: str = 'incomplete',
               condensed: bool = False, today: date | None = None,
-              at: str | None = None) -> tuple[list[str], list[tuple[str, Task]]]:
+              at: str | None = None,
+              mark_from: bool = False) -> tuple[list[str], list[tuple[str, Task]]]:
     """
     Run a task query.
 
@@ -464,6 +490,7 @@ def run_query(root_dir: str, period: str | None = None,
         condensed: If True, use condensed format.
         today: Reference date for the default period (default: today).
         at: --at value, 'now' or HH:MM (needs a single day in period).
+        mark_from: Write each task with status `<` (see task_line).
 
     Returns:
         Tuple of (report lines, selected (section, task) pairs in report
@@ -487,7 +514,7 @@ def run_query(root_dir: str, period: str | None = None,
     sections = resolve_modes(modes)
     tasks = collect_tasks(markdown_files, root_dir, folder, status, tags)
     selected = sort_selection(select(tasks, sections, start, end, later, at_time))
-    return build_report(selected, sections, root_dir, group_by, condensed), selected
+    return build_report(selected, sections, root_dir, group_by, condensed, mark_from), selected
 
 
 def add_query_arguments(parser: argparse.ArgumentParser) -> None:
@@ -602,6 +629,13 @@ Replacements for removed options:
 
     add_query_arguments(parser)
 
+    parser.add_argument(
+        '--mark-from',
+        action='store_true',
+        help='Write each task with status [<] (a copy from elsewhere) instead of '
+             'its status box, so it is not a duplicate open task'
+    )
+
     args = parser.parse_args()
 
     # Validate root directory
@@ -613,7 +647,8 @@ Replacements for removed options:
         lines, _selected = run_query(
             args.root_dir, args.date, args.modes, args.later, args.tags,
             args.group_by, args.folder, args.status,
-            args.condensed or args.format == 'condensed', at=args.at)
+            args.condensed or args.format == 'condensed', at=args.at,
+            mark_from=args.mark_from)
     except ValueError as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)

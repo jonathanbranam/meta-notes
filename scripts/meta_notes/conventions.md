@@ -272,6 +272,9 @@ target note, then mark the old line `>` with
 `meta-notes task update <file>:<line> --expect <text> --status '>'`.
 Don't change the old line's dates. `task update` never copies a task.
 
+`[<]` (from) is a copy of a task that lives elsewhere; `[>]` says the
+original moved away. Default task queries leave both out.
+
 ## Ceremony markers
 
 Checklist lines record whether a ceremony was done. They have no dates,

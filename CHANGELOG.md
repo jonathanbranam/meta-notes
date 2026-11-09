@@ -6,6 +6,18 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 2.37.0 - 2026-11-09
+
+- New: task status `[<]` (from) marks a copy of a task that lives elsewhere.
+  `meta-notes task update --status '<'` sets it, and queries leave it out of
+  open tasks (`--overdue`, `--due`, `--agenda`), as they do `[>]`.
+- New: `find_tasks.py --mark-from` writes each task it copies as `[<]`
+  instead of its status box. The shipped daily templates use it for "Tasks
+  Due Today" and "Overdue Tasks", so the copies aren't duplicate open tasks.
+  Existing notes roots keep their templates: to use it, add `--mark-from` by
+  hand to the two `find_tasks.py` lines in `resource/template/daily.md` (or
+  `daily-personal.md`), after `--condensed`.
+
 ## 2.36.0 - 2026-11-08
 
 - New: a recurring task can repeat on named days of the week, as Obsidian

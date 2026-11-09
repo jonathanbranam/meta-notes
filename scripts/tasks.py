@@ -28,6 +28,7 @@ STATUS_CHARS = {
     ' ': 'open',
     'x': 'done',
     'X': 'done',
+    '<': 'from (copy of a task that lives elsewhere)',
     '>': 'rescheduled (carried forward to another note)',
     '-': 'canceled',
     '.': 'partial (open)',
@@ -136,6 +137,7 @@ class TaskStatus(Enum):
     COMPLETED = "completed"
     RESCHEDULED = "rescheduled"
     CANCELED = "canceled"
+    FROM = "from"
 
 
 @dataclass
@@ -355,6 +357,8 @@ def char_to_status(status_char: str) -> TaskStatus:
         return TaskStatus.COMPLETED
     elif status_char == '>':
         return TaskStatus.RESCHEDULED
+    elif status_char == '<':
+        return TaskStatus.FROM
     elif status_char == '-':
         return TaskStatus.CANCELED
     else:

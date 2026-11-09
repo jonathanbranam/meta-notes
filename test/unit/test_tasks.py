@@ -1010,3 +1010,24 @@ def test_find_tasks_in_file_lists_tasks_outside_daily(tmp_path):
     note.write_text("## Overdue Tasks\n- [ ] b 📅 2026-10-01\n")
 
     assert len(tasks_module.find_tasks_in_file(str(note))) == 1
+
+
+# Tests for the from status ([<])
+
+def test_char_to_status_from():
+    """A copy of a task that lives elsewhere reads as from, not open."""
+    assert tasks_module.char_to_status("<") == TaskStatus.FROM
+
+
+def test_categorize_status_from():
+    assert tasks_module.categorize_status("<") == "from"
+
+
+def test_find_tasks_in_file_from_status(tmp_path):
+    test_file = tmp_path / "copy.md"
+    test_file.write_text("- [<] Copied 📅 2026-09-25\n")
+
+    tasks = tasks_module.find_tasks_in_file(str(test_file))
+
+    assert len(tasks) == 1
+    assert tasks[0].status == TaskStatus.FROM
