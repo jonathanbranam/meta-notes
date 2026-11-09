@@ -28,7 +28,18 @@ Move a secret by hand between machines that share no clipboard, e.g. onto the hu
 A meta-notes CLI command (name is the planner's) with encode and decode, based on words.py below.
 
 - **Generic input.** Encode the input's bytes exactly: any text or binary, all of it. This removes words.py's unchecked prefix stripping (it drops the first 11 chars of anything) and its base-63 alphabet (characters outside it raise a bare ValueError).
-- **Common prefixes (allowed, the planner's call).** The human, verbatim (meta-notes aide session, 2026-11-09, after the "just encode everything" decision above): "i'm fine with special encoding for common prefixes like gpg_ and the github pat token, ssh key introductory lines like the key type". So a small table of known prefixes may be replaced by a short code, e.g. `github_pat_`, `ghp_` (the aide's guess at what "gpg_" may also mean; include both if cheap) and SSH key type lines. Rules: the prefix is matched, never assumed; anything else encodes in full; decode restores the exact original bytes; the table is part of the format, so the encoder and decoder must agree on it (a format version or check that fails clearly). Only prefixes: no per-token alphabet such as base-63.
+- **Common prefixes and headers (required in this version; the human's decision).** The human, verbatim (meta-notes aide session, 2026-11-09): "i'm fine with special encoding for common prefixes like gpg_ and the github pat token, ssh key introductory lines like the key type", then, on seeing the list below and that the planner had left prefixes out: "definitely agree on the SSH public keys, private key headers, PEM, GPG, those all I may use commonly. github i use commonly. the others i don't care so much about."
+
+  The table covers (values from the aide's memory; confirm each against real fake-key output, e.g. `ssh-keygen` and `gpg --armor` on throwaway keys):
+  - GitHub: `github_pat_`, `ghp_`, `gho_`, `ghu_`, `ghs_`, `ghr_`.
+  - SSH public keys: the key types `ssh-ed25519 `, `ssh-rsa `, `ecdsa-sha2-nistp256 `, `sk-ssh-ed25519@openssh.com `, with the fixed start of the key data where there is one (`AAAAC3NzaC1lZDI1NTE5AAAAI` for ed25519, `AAAAB3NzaC1yc2EAAAADAQAB` for typical RSA).
+  - OpenSSH private keys: `-----BEGIN OPENSSH PRIVATE KEY-----` with its `END` line, and the fixed body start `b3BlbnNzaC1rZXktdjEAAAAA`.
+  - PEM: `BEGIN`/`END` lines for `PRIVATE KEY`, `RSA PRIVATE KEY`, `EC PRIVATE KEY`, `ENCRYPTED PRIVATE KEY`, `CERTIFICATE`.
+  - GPG: `BEGIN`/`END` lines for `PGP PUBLIC KEY BLOCK`, `PGP PRIVATE KEY BLOCK`, `PGP MESSAGE`.
+
+  Other services' prefixes (GitLab, Anthropic, OpenAI, Slack, Stripe, AWS, Google and so on) are out: "the others i don't care so much about".
+
+  Rules: a prefix or footer is matched, never assumed; anything else encodes in full; decode restores the exact original bytes, including the line endings around a header or footer (if they don't match the table's form, encode in full); the table is part of the format, so encoder and decoder must agree on it (a format version or check that fails clearly). No per-token alphabet such as base-63.
 - **Words.** Proquints as in words.py: every 16 bits is one 5-letter consonant-vowel-consonant-vowel-consonant word. Lines of 4 data words plus 1 check word.
 - **Per-line check.** Check word is derived from the line index and the row, so typos and swapped or skipped lines are rejected when Enter is pressed, and the line can be retyped.
 - **Whole-message check (aide's recommendation; the human did not object).** The first line carries the length or line count and a whole-message check, so decode knows when it is complete. Finishing early must not produce a truncated secret. It needs to work for an odd byte count too.
