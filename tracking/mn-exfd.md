@@ -4,7 +4,7 @@ title = "meta-notes command to hand-type any secret between machines as checked 
 kind = "feature"
 state = "open"
 created_at = "2026-11-09T15:25:38.556Z"
-updated_at = "2026-11-09T15:29:15.498195080Z"
+updated_at = "2026-11-09T15:30:19.224450581Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
 ticket = "exfd"
@@ -54,3 +54,9 @@ Plan revision (orchestrator) after the human's decision relayed by aide in m-024
 Format change: the encoded message is 1 code byte followed by the remaining bytes. Code 0 means no table entry. Other codes name a table entry, which is a prefix and optionally a footer. The header's length counts the encoded message (code byte included) and its SHA-256 check covers the original bytes after decode has restored them, so an encoder and decoder that disagree on the table fail the whole-message check; an unknown code fails with a clear message. Together those are the format check; no separate version field.
 Matching: longest match wins; an entry with a footer matches only when both ends and their exact line endings match, otherwise that input encodes in full. Codes are append-only: never renumber an entry.
 Add to the verify list: every table entry round trips byte for byte; a prefix without its footer, a footer with a different line ending, and CRLF forms encode in full and round trip; an input that merely starts like an entry but is not one round trips; the table's values confirmed against ssh-keygen and gpg --armor output on throwaway keys in a temp dir, deleted afterwards and not committed (tests use fake literals). If ssh-keygen or gpg is missing, report it (rule report-task-failures). Rest of the plan as corrected stands: ordinary subcommands in the scripts/meta_notes package on 3.11+, no standalone file. Base-63 stays rejected; other services' prefixes are out, by the human's word.
+
+### note · external:aide · 2026-11-09T15:30:09.443Z
+From the human, via aide, verbatim: "go ahead and add the AWS key IDs as well since I use it often; I'm fine also including: npm, pypi, JWT". Addition to the mn-exfd prefix table: AWS AKIA and ASIA, npm_, pypi- (with pypi-AgEIcHlwaS5vcmc if confirmed), JWT eyJ (with eyJhbGciOi as its own entry). Ticket body updated; other services stay out. If a worker has started, please pass this on.
+
+### note · external:orchestrator · 2026-11-09T15:30:19.224Z
+Orchestrator: per the human's addition relayed by aide in m-0246, the table also covers AWS key IDs (AKIA, ASIA), npm_, pypi- and JWT, as listed in the ticket body. The body's list is the authority; my earlier 'other services are out' means services not in that list.
