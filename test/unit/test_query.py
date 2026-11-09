@@ -388,3 +388,31 @@ def test_cli_tasks_at_json(at_root, capsys):
     out = json.loads(capsys.readouterr().out)
     assert code == 0
     assert {t['time'] for t in out['tasks']} == {'09:00', '23:00'}
+
+
+# Tests for the from status ([<]) in queries
+
+def test_cli_tasks_from_copy_left_out_of_overdue(tmp_path, capsys, monkeypatch):
+    (tmp_path / '.meta-notes').write_text('# meta-notes notes root\n')
+    (tmp_path / 'daily.md').write_text(f'- [<] Copied 📅 {PAST}\n')
+    monkeypatch.delenv('META_NOTES_ROOT', raising=False)
+    monkeypatch.setenv('HOME', str(tmp_path))
+    monkeypatch.chdir(tmp_path)
+
+    code, out = cli_json(capsys, ['--overdue'])
+
+    assert code == 0
+    assert out['tasks'] == []
+
+
+def test_cli_tasks_from_copy_json_status_from(tmp_path, capsys, monkeypatch):
+    (tmp_path / '.meta-notes').write_text('# meta-notes notes root\n')
+    (tmp_path / 'daily.md').write_text(f'- [<] Copied 📅 {PAST}\n')
+    monkeypatch.delenv('META_NOTES_ROOT', raising=False)
+    monkeypatch.setenv('HOME', str(tmp_path))
+    monkeypatch.chdir(tmp_path)
+
+    code, out = cli_json(capsys, ['--all', '--status', 'all'])
+
+    assert code == 0
+    assert [t['status'] for t in out['tasks']] == ['from']

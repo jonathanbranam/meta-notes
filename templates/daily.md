@@ -11,10 +11,10 @@ Week Plan: [[plan/week/{{week_start:%y}}-{{week_quarter}}/{{week_start:%Y-%m-%d}
 {{% python scripts/meta_notes/__main__.py outlook --date {{date:%Y-%m-%d}} %}}
 ## Tasks Due Today
 
-{{% python scripts/find_tasks.py --due --date {{date:%Y-%m-%d}} --condensed %}}
+{{% python scripts/find_tasks.py --due --date {{date:%Y-%m-%d}} --condensed --mark-from %}}
 ## Overdue Tasks
 
-{{% python scripts/find_tasks.py --overdue --date {{date:%Y-%m-%d}} --condensed %}}
+{{% python scripts/find_tasks.py --overdue --date {{date:%Y-%m-%d}} --condensed --mark-from %}}
 ## Notes
 
 ## Follow Up

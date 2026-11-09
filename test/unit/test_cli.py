@@ -1613,3 +1613,11 @@ def test_time_personal_mode_follows_the_root(daily_note, capsys):
     assert data['work_vs_nonwork'] is None
     assert 'work duration' not in data['report']
     assert '### Day Total' in data['report']
+
+
+def test_task_update_status_from_accepted(task_note, capsys):
+    """--status '<' is a valid status and only sets the character."""
+    code, out, _ = run_json(capsys, ['task', 'update', 'project/foo.md:3',
+                                     '--expect', TASK, '--status', '<'])
+    assert code == 0, out
+    assert task_note.read_text() == '# project/foo\n\n- [<] call Sam 📅 2026-09-22\n'

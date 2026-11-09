@@ -59,7 +59,7 @@ When the target does not end in `:` and digits, the whole target SHALL be the fi
 - **THEN** the command SHALL exit non-zero, the file SHALL be unchanged, and the error SHALL name lines 1 and 3 and suggest `<file>:<line>`
 
 ### Requirement: Set status  {#r-7e2b}
-`--status <char>` SHALL set the character between the brackets. It SHALL accept space, `x`, `X`, `>`, `-`, `.`, `o`, and `O`, and reject any other value with a usage error. `x` and `X` SHALL both mean done. `--status '>'` SHALL only set the character; the command SHALL NOT copy the task anywhere.
+`--status <char>` SHALL set the character between the brackets. It SHALL accept space, `x`, `X`, `<`, `>`, `-`, `.`, `o`, and `O`, and reject any other value with a usage error. `x` and `X` SHALL both mean done. `--status '>'` SHALL only set the character; the command SHALL NOT copy the task anywhere. `--status '<'` SHALL only set the character, marking the line as a copy of a task that lives elsewhere (status `from`).
 
 #### Scenario: Cancel a task  {#s-4f94}
 *Verification*: **non-executable**

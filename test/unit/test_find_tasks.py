@@ -595,3 +595,89 @@ def test_main_invalid_date_exits_1(tmp_path, capsys, monkeypatch):
     err = capsys.readouterr().err
     assert "Invalid date: 2026-W45" in err
     assert "YYYY-Qn" in err
+
+
+# Tests for the from status and --mark-from
+
+def test_filter_tasks_by_status_arg_from_left_out_of_incomplete():
+    tasks = [make_task("- [<] Copy 📅 2026-09-20", due=date(2026, 9, 20),
+                       status=TaskStatus.FROM)]
+
+    assert find_tasks.filter_tasks_by_status_arg(tasks, 'incomplete') == []
+    assert find_tasks.filter_tasks_by_status_arg(tasks, 'all') == tasks
+
+
+def test_select_from_copy_not_listed_when_collected_as_incomplete(tmp_path):
+    (tmp_path / "copy.md").write_text("- [<] Copy 📅 2000-01-01\n")
+
+    tasks = find_tasks.collect_tasks([str(tmp_path / "copy.md")], str(tmp_path))
+
+    assert tasks == []
+
+
+def test_task_line_mark_from_replaces_status_char():
+    task = make_task("  * [x] Copy 📅 2026-09-25 🛫 2026-09-20", due=date(2026, 9, 25))
+
+    assert find_tasks.task_line(task) == "  * [x] Copy 📅 2026-09-25 🛫 2026-09-20"
+    assert find_tasks.task_line(task, mark_from=True) == \
+        "  * [<] Copy 📅 2026-09-25 🛫 2026-09-20"
+
+
+def test_task_line_mark_from_keeps_line_without_checkbox():
+    task = make_task("Plain text 📅 2026-09-25", due=date(2026, 9, 25))
+
+    assert find_tasks.task_line(task, mark_from=True) == "Plain text 📅 2026-09-25"
+
+
+def test_format_file_tasks_mark_from_standard(tmp_path):
+    filepath = str(tmp_path / "test.md")
+    tasks = [make_task("- [ ] Task 1 📅 2026-09-25", due=date(2026, 9, 25),
+                       filename=filepath)]
+
+    lines = find_tasks.format_file_tasks(filepath, tasks, str(tmp_path), mark_from=True)
+
+    assert lines == ["## [[test]]", "", "- [<] Task 1 📅 2026-09-25"]
+
+
+def test_format_file_tasks_condensed_mark_from(tmp_path):
+    filepath = str(tmp_path / "test.md")
+    tasks = [
+        make_task("- [ ] Task 1 📅 2026-09-25", due=date(2026, 9, 25), filename=filepath),
+        make_task("  * [-] Subtask", due=date(2026, 9, 25), filename=filepath),
+    ]
+
+    lines = find_tasks.format_file_tasks_condensed(filepath, tasks, str(tmp_path),
+                                                   mark_from=True)
+
+    assert lines == ["- [[test]]", "  - [<] Task 1 📅 2026-09-25", "    * [<] Subtask"]
+
+
+def test_run_query_mark_from_keeps_selection(tmp_path):
+    (tmp_path / "daily.md").write_text("- [ ] Due 📅 2026-09-25\n"
+                                       "- [ ] Overdue 📅 2026-09-20\n")
+
+    lines, selected = find_tasks.run_query(str(tmp_path), "2026-09-25", ['due', 'overdue'],
+                                           condensed=True, mark_from=True)
+
+    assert [task.text for _section, task in selected] == [
+        "- [ ] Overdue 📅 2026-09-20", "- [ ] Due 📅 2026-09-25"]
+    assert lines == ["# Overdue", "", "- [[daily]]", "  - [<] Overdue 📅 2026-09-20", "",
+                     "# Due", "", "- [[daily]]", "  - [<] Due 📅 2026-09-25"]
+
+
+def test_main_mark_from_writes_copy_marker(tmp_path, capsys, monkeypatch):
+    (tmp_path / "tasks.md").write_text("- [ ] Task 1 📅 2000-01-01\n")
+
+    out = run_main(monkeypatch, capsys, str(tmp_path), "--overdue", "--condensed",
+                   "--mark-from")
+
+    assert "  - [<] Task 1 📅 2000-01-01" in out
+
+
+def test_main_without_mark_from_keeps_status_box(tmp_path, capsys, monkeypatch):
+    (tmp_path / "tasks.md").write_text("- [ ] Task 1 📅 2000-01-01\n")
+
+    out = run_main(monkeypatch, capsys, str(tmp_path), "--overdue", "--condensed")
+
+    assert "  - [ ] Task 1 📅 2000-01-01" in out
+    assert "[<]" not in out

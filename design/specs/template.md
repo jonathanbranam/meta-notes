@@ -208,12 +208,12 @@ SHALL report a warning naming the failed command.
 - **THEN** the note SHALL be created with a `<!-- Command failed: ...` comment containing the usage error in its place, and the CLI SHALL report a warning
 
 ### Requirement: Shipped daily template task sections  {#r-a8bd}
-The shipped daily template's "Tasks Due Today" section SHALL list incomplete tasks due on the note's date, and its "Overdue Tasks" section SHALL list incomplete tasks due before the note's date, both in condensed format, using `--due` and `--overdue` with `--date` set to the note's date.
+The shipped daily template's "Tasks Due Today" section SHALL list incomplete tasks due on the note's date, and its "Overdue Tasks" section SHALL list incomplete tasks due before the note's date, both in condensed format, using `--due` and `--overdue` with `--date` set to the note's date. Both SHALL pass `--mark-from`, so each listed task is a copy written with status `<` (see `find_tasks marks copies` in `task-query`).
 
 #### Scenario: Daily note task sections  {#s-323a}
 *Verification*: **non-executable**
 - **WHEN** a daily note is created for 2026-09-25
-- **THEN** its template SHALL run `find_tasks.py --due --date 2026-09-25 --condensed` for "Tasks Due Today" and `find_tasks.py --overdue --date 2026-09-25 --condensed` for "Overdue Tasks"
+- **THEN** its template SHALL run `find_tasks.py --due --date 2026-09-25 --condensed --mark-from` for "Tasks Due Today" and `find_tasks.py --overdue --date 2026-09-25 --condensed --mark-from` for "Overdue Tasks"
 
 ### Requirement: Shipped daily template ceremony sections  {#r-5e05}
 The shipped daily template SHALL include a `## Follow Up` section and the ceremony marker lines `- [ ] plan complete` and `- [ ] shutdown complete`, each once. The marker lines SHALL have no date markers, so task queries don't list them.

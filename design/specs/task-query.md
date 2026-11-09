@@ -262,6 +262,32 @@ With `--group-by tag`, each section SHALL list its tasks under a `## <tag>` head
 - **WHEN** a task started (`🛫`) on or before today is due after the horizon, a second task not yet started is due after it, and the user runs `meta-notes tasks --agenda`
 - **THEN** the started task SHALL be under Today in the text and in `--json`, and the unstarted task SHALL be left out
 
+### Requirement: From copies are not open tasks  {#r-4c1e}
+A task whose status character is `<` (status `from`: a copy of a task that lives elsewhere) SHALL NOT count as incomplete. The default `--status incomplete` query SHALL leave it out, so no mode (`--overdue`, `--due`, `--agenda`, and the rest) SHALL list it. `--status all` SHALL include it, and `--json` SHALL report its status as `from`.
+
+#### Scenario: From copy left out of overdue  {#s-4c1f}
+*Verification*: **non-executable**
+- **WHEN** `project/foo.md` has `- [<] call Sam 📅 2026-09-20` and the user runs `meta-notes tasks --overdue --date 2026-09-25`
+- **THEN** the line SHALL NOT be listed
+
+#### Scenario: From copy in JSON  {#s-4c20}
+*Verification*: **non-executable**
+- **WHEN** the same line exists and the user runs `meta-notes tasks --status all --overdue --date 2026-09-25 --json`
+- **THEN** the task SHALL be listed with status `from`
+
+### Requirement: find_tasks marks copies  {#r-7d3a}
+`scripts/find_tasks.py --mark-from` SHALL write each task line it prints with `<` in place of the status character between the brackets. The rest of each line SHALL be unchanged: its bullet, indentation, text, dates, and tags, and the `[[note]]` line in condensed format. Which tasks are listed SHALL not change. Without `--mark-from`, the output SHALL be as it was before the option existed. The option is only on `find_tasks.py`; `meta-notes tasks` SHALL NOT accept it.
+
+#### Scenario: Copy written with from status  {#s-7d3b}
+*Verification*: **non-executable**
+- **WHEN** `project/foo.md` has `- [ ] call Sam 📅 2026-09-25 🛫 2026-09-20` and the user runs `find_tasks.py --due --date 2026-09-25 --condensed --mark-from`
+- **THEN** the output SHALL contain `  - [<] call Sam 📅 2026-09-25 🛫 2026-09-20` under `- [[project/foo]]`
+
+#### Scenario: Without the option  {#s-7d3c}
+*Verification*: **non-executable**
+- **WHEN** the same line exists and the user runs `find_tasks.py --due --date 2026-09-25 --condensed`
+- **THEN** the output SHALL contain `  - [ ] call Sam 📅 2026-09-25 🛫 2026-09-20`
+
 ### Requirement: Task list buffer in Vim  {#r-089f}
 `:MetaNotesTaskList` (mapped to `<localleader>t` in markdown buffers) SHALL run `meta-notes tasks --agenda --json` in Vim's current directory and show the agenda in a readonly scratch buffer named `Task List` (`buftype=nofile`, `filetype=markdown`), reusing the buffer and its window when they exist. The buffer SHALL have a heading per non-empty agenda section, the task's file as a wiki link, and the task lines. `<CR>` on a task line SHALL open that task's file at its line.
 

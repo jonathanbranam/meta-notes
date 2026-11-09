@@ -56,6 +56,9 @@ endif
 " Arrived entry
 syntax match metaNotesArrived /^-\s*arrived:/
 
+" Task copied from another note: [<] (see --status '<' in conventions)
+syntax match metaNotesTaskFrom /\[<\]/
+
 " Color scheme definitions
 " Link to existing Vim highlight groups for consistency
 
@@ -73,6 +76,7 @@ highlight default link metaNotesTagActivity Tag
 highlight default link metaNotesBreak Comment
 highlight default link metaNotesOffPlan Comment
 highlight default link metaNotesArrived Special
+highlight default link metaNotesTaskFrom Comment
 
 " Make strikethrough text appear dimmed/grayed out
 highlight default metaNotesOffPlan gui=strikethrough cterm=strikethrough ctermfg=Gray guifg=Gray

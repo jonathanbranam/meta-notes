@@ -1200,7 +1200,7 @@ def build_parser() -> argparse.ArgumentParser:
                         ":LINE it finds the line, and must match exactly "
                         "one")
     k.add_argument("--status", choices=STATUS_CHARS, metavar="CHAR",
-                   help="set the status character: ' ', x, X, >, -, ., o, "
+                   help="set the status character: ' ', x, X, <, >, -, ., o, "
                         "or O")
     k.add_argument("--text", type=_text_value, metavar="TEXT",
                    help="replace the task's words (tags among them), keeping "

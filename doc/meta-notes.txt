@@ -771,7 +771,8 @@ Commands ~
     note.
     For a completed task with a `✅ YYYY-MM-DD` date, that date is used in
     place of its due date by every mode. The status character `x` or `X` is
-    completed, `>` rescheduled, `-` canceled, and anything else incomplete.
+    completed, `>` rescheduled, `<` from (a copy of a task that lives
+    elsewhere, so not incomplete), `-` canceled, and anything else incomplete.
 
                                                 *meta-notes-tasks-modes*
     Modes select tasks relative to the `--date` period START..END, after
@@ -867,8 +868,8 @@ Commands ~
     kept, so line numbers from one query stay valid across several updates.
     Give at least one of:
 
-    --status {char}     Set the status character: ` `, `x`, `X`, `>`, `-`,
-                        `.`, `o`, or `O`.
+    --status {char}     Set the status character: ` `, `x`, `X`, `<`, `>`,
+                        `-`, `.`, `o`, or `O`.
     --text {text}       Replace the task's words: everything between the
                         checkbox and the first date emoji (🛫, due, ⏰,
                         🔁, ✅), or the end of the line. The indent,
@@ -941,7 +942,10 @@ Commands ~
     Changing a date doesn't reschedule a task: `--due` and `--start` edit
     the task where it lives. `>` is for a copy of a task, such as one in a
     daily note, that was planned but not done there. `--status '>'` only
-    sets the character; write any copy of the task yourself.
+    sets the character; write any copy of the task yourself. `<` is the
+    copy: `find_tasks.py --mark-from` writes the tasks it copies into a
+    daily note with `[<]`, so they aren't duplicate open tasks. Marking a
+    copy done doesn't close the original.
 
     Removing a line's last due emoji and 🛫 date makes the edit with a
     warning that the line is no longer a task. Everything else on the line

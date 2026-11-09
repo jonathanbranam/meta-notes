@@ -1033,3 +1033,8 @@ def test_add_tasks_heading_at_any_level_keeps_subheadings(tmp_path):
     result = task_update.add(str(path), 'x', due='2026-10-02')
     assert result.created_line == 7
     assert path.read_text().split('\n')[8] == '## Next'
+
+
+def test_edit_line_status_from_only_sets_char():
+    assert (edit('- [ ] call Sam 📅 2026-10-01', status='<')
+            == '- [<] call Sam 📅 2026-10-01')
