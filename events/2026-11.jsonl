@@ -50,3 +50,4 @@
 {"actor":"external:orchestrator","at":"2026-11-09T15:41:28.444072047Z","from":"open","task":"mn-exfd","to":"planned"}
 {"actor":"external:orchestrator","at":"2026-11-09T15:41:28.666988487Z","queue":"reprioritized"}
 {"actor":"external:orchestrator","at":"2026-11-09T15:48:14.851797315Z","from":"planned","task":"mn-exfd","to":"integrated"}
+{"actor":"human","at":"2026-11-09T17:15:51.417Z","from":"","task":"mn-abjq","to":"pending"}
