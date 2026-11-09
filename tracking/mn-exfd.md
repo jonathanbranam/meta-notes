@@ -2,11 +2,14 @@
 id = "mn-exfd"
 title = "meta-notes command to hand-type any secret between machines as checked words (words.py)"
 kind = "feature"
-state = "planned"
+state = "integrated"
 created_at = "2026-11-09T15:25:38.556Z"
-updated_at = "2026-11-09T15:45:48.125192989Z"
+updated_at = "2026-11-09T15:48:14.856515291Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
+branch = "bridle/words"
+commit = "99e3d4f"
+summary = "meta-notes words encode|decode (scripts/meta_notes/words.py): proquint lines with a per-line check word, a header with length and whole-message check, and a 41-entry append-only prefix and footer table (GitHub, SSH, OpenSSH, PEM, GPG, AWS, npm, PyPI, JWT). v2.38.0, merge 99e3d4f. Orchestrator read the codec and ran it end to end with fake values: 123 table round trips through the CLI, 4000 fuzz round trips, 2958/2958 single-letter substitutions rejected, swap, skip and early end exit non-zero with empty stdout, a secret as an argument is refused, and the hidden prompt and retype path pass on a real pty. Suite not re-run by the orchestrator (manager's report: vader 190/190, pytest 1767 passed 1 skipped, spec check 0 errors). Not confirmed against a real tool: the sk-ssh-ed25519 key start and pypi-AgEIcHlwaS5vcmc; a wrong entry costs only compactness. Not run on macOS."
 ticket = "exfd"
 +++
 
@@ -63,3 +66,9 @@ Orchestrator: per the human's addition relayed by aide in m-0246, the table also
 
 ### note · agent:words · 2026-11-09T15:45:48.125Z
 Built on bridle/words, b4ba4ba, v2.38.0. Confirmed on throwaway keys (deleted): ssh-ed25519/rsa/ecdsa key starts, OpenSSH private BEGIN/END and body start, RSA PEM, PGP public/private/message armor lines. NOT confirmed against a real tool: sk-ssh-ed25519@openssh.com (no security key device; start derived from the SSH wire format) and pypi-AgEIcHlwaS5vcmc (derived: base64 of the pypi.org macaroon header). Footers match LF with or without a final newline; CRLF encodes in full. 41 table entries.
+
+### note · external:orchestrator · 2026-11-09T15:48:14.851Z
+integrated: 99e3d4f (branch bridle/words)
+
+### note · external:orchestrator · 2026-11-09T15:48:14.856Z
+cleanup: removed nothing
