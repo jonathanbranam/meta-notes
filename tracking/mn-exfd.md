@@ -2,9 +2,9 @@
 id = "mn-exfd"
 title = "meta-notes command to hand-type any secret between machines as checked words (words.py)"
 kind = "feature"
-state = "open"
+state = "planned"
 created_at = "2026-11-09T15:25:38.556Z"
-updated_at = "2026-11-09T15:30:19.224450581Z"
+updated_at = "2026-11-09T15:41:28.444072047Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
 ticket = "exfd"

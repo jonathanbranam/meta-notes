@@ -25,3 +25,6 @@ tasks = ["mn-r5g8"]
 
 [[tier]]
 tasks = ["mn-qh2m"]
+
+[[tier]]
+tasks = ["mn-exfd"]
