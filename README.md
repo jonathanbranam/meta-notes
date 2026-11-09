@@ -113,6 +113,7 @@ meta-notes/
 │   │   ├── task_show.py         # One task with its notes and subtasks
 │   │   ├── task_update.py       # Task line edits
 │   │   ├── task_write.py        # Task notes, subtasks and subtree writes
+│   │   ├── words.py             # Secrets as checked proquint words
 │   │   └── template.py          # Template discovery and rendering
 │   ├── find_tasks.py        # Task selection and report
 │   ├── notes.py             # Note utilities
@@ -205,7 +206,7 @@ This structure is compatible with vim-plug, Vundle, and Pathogen.
 templates (`note`), race-safe line edits (`note write`), file operations (`move`, `rename`, `archive`), task
 query (`tasks`), task edits (`task update`, `task add`), one task read as a tree (`task show`), its notes and subtasks written (`task notes`, `task replace`, `task add --under`), time reports (`time`), changed
 notes (`changes`), calendar agendas (`calendar`, `cache clear`), the day's weather, sun and alerts (`outlook`), the meta-notes-ui server (`ui start`, `ui stop`, `ui status`, `ui url`, `ui open`), the
-the lists (`list`), the project list (`projects`), ceremony status (`ceremony status`), the planning record (`planning`), stay-on-task check-ins (`checkin`), Time Block cell and row edits (`time-block update`, `time-block replace`), Time Log edits (`time-log append`, `time-log update`), and the
+the lists (`list`), the project list (`projects`), ceremony status (`ceremony status`), the planning record (`planning`), stay-on-task check-ins (`checkin`), Time Block cell and row edits (`time-block update`, `time-block replace`), Time Log edits (`time-log append`, `time-log update`), a secret hand-typed as checked words (`words encode`, `words decode`), and the
 skills' shared conventions (`conventions`), and a guide to the notes root
 for agents (`prime`) outside Vim, for shells, agents, and other tools. The Vim
 commands call it. Every command accepts `--json`. It needs Python 3.11 or newer as `python3`. See
@@ -302,6 +303,8 @@ meta-notes outlook sun --date 2026-10-09  # one line
 meta-notes outlook refresh                # update today's and tomorrow's notes
 meta-notes ui open                        # start the meta-notes-ui server ([ui] path) and open it
 meta-notes ui status                      # running or not, url, pid
+printf %s "$SECRET" | meta-notes words encode  # a secret as checked words
+meta-notes words decode | pbcopy          # type the words back, checked per line
 meta-notes conventions                    # syntax and rules the skills follow
 meta-notes prime                          # guide to the notes root for agents
 ```

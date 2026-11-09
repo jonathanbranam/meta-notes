@@ -27,7 +27,7 @@ from meta_notes import (__version__, brief, calendar, ceremony, changes,
                         checkin, config, conventions, hours, init, list_note, list_ops, note, note_write, ops, outlook, planning,
                         prime,
                         projects, query, task_show, task_update, task_write, time,
-                        time_block, time_log, ui)
+                        time_block, time_log, ui, words)
 from meta_notes.root import SENTINEL, find_root
 
 
@@ -921,6 +921,41 @@ def cmd_prime(args, root: None) -> Output:
                   [text.removesuffix("\n")])
 
 
+def cmd_words_encode(args, root: None) -> Output:
+    if sys.stdin.isatty():
+        import getpass
+        data = getpass.getpass("secret (hidden, no newline added): "
+                               ).encode("utf-8")
+    else:
+        data = sys.stdin.buffer.read()
+    lines = words.encode(data)
+    return Output({"lines": lines}, lines)
+
+
+def cmd_words_decode(args, root: None) -> Output:
+    interactive = sys.stdin.isatty()
+    err = sys.stderr
+
+    def prompt(label: str) -> None:
+        if interactive:
+            err.write(f"{label}: ")
+            err.flush()
+
+    def report(message: str) -> None:
+        err.write(message + "\n")
+        err.flush()
+
+    try:
+        data = words.decode(sys.stdin.readline, interactive=interactive,
+                            prompt=prompt, report=report)
+    except words.WordsError as e:
+        raise CliError(str(e))
+    # Only after the whole check passed, and exactly the bytes
+    sys.stdout.buffer.write(data)
+    sys.stdout.buffer.flush()
+    return Output()
+
+
 INIT_MESSAGES = {
     ("folder", "created"): "Created directory: {}",
     ("folder", "exists"): "Directory already exists: {}",
@@ -1562,6 +1597,35 @@ def build_parser() -> argparse.ArgumentParser:
                             "structure, plan notes, projects, archive, "
                             "commands, and conventions")
     p.set_defaults(handler=cmd_prime, resolves_root=False)
+
+    p = sub.add_parser("words",
+                       help="hand-type a secret as checked words")
+    kinds = p.add_subparsers(dest="kind", metavar="KIND", parser_class=_Parser)
+    kinds.required = True
+    k = kinds.add_parser(
+        "encode",
+        help="print the secret on stdin (or typed at a hidden prompt) as "
+             "lines of words",
+        description="Read a secret from a hidden prompt on a terminal, or "
+                    "from stdin, and print it as lines of proquint words: a "
+                    "header line, then lines of 4 words and a check word. "
+                    "Every byte is encoded exactly, text or binary, with no "
+                    "stripping. echo and files add a trailing newline, which "
+                    "is then part of the secret: use printf %%s or the "
+                    "prompt. The secret is never taken as an argument.")
+    k.set_defaults(handler=cmd_words_encode, resolves_root=False)
+    k = kinds.add_parser(
+        "decode",
+        help="read the lines of words and write the secret to stdout",
+        description="Read the lines from `words encode` (typed on a "
+                    "terminal, or on stdin) and write the exact bytes to "
+                    "stdout, so | pbcopy works. Prompts go to stderr. On a "
+                    "terminal each line is checked when you press Enter and "
+                    "a bad line is typed again; a blank line asks again. "
+                    "Elsewhere a bad line, or input ending early, is an "
+                    "error. Nothing is written to stdout unless the whole "
+                    "message checks.")
+    k.set_defaults(handler=cmd_words_decode, resolves_root=False)
 
     return parser
 

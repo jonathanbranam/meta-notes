@@ -6,6 +6,13 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 2.38.0 - 2026-11-09
+
+- New: `meta-notes words encode` and `words decode` hand-type any secret
+  (text or binary) as lines of checked words, with each line checked as you
+  press Enter. Common prefixes (GitHub, SSH, PEM, GPG, AWS, npm, PyPI, JWT)
+  are coded short. See `:help meta-notes-cli-words`.
+
 ## 2.37.0 - 2026-11-09
 
 - New: task status `[<]` (from) marks a copy of a task that lives elsewhere.
