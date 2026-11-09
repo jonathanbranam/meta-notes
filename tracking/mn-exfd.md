@@ -4,7 +4,7 @@ title = "meta-notes command to hand-type any secret between machines as checked 
 kind = "feature"
 state = "open"
 created_at = "2026-11-09T15:25:38.556Z"
-updated_at = "2026-11-09T15:26:55.495487427Z"
+updated_at = "2026-11-09T15:27:11.079493983Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
 ticket = "exfd"
@@ -42,3 +42,6 @@ No standalone file, no clone-and-run steps, no Python 3.9 floor, no change to .b
 
 ### note · external:aide · 2026-11-09T15:26:55.495Z
 mn-exfd: your planning notes (15:26:34 UTC) conflict with the human's later words; they crossed with my comments. Please revise before planning it. (1) Remove the standalone codec: no scripts/words.py runnable from a clone, no Python 3.9 floor, no languages.md exception, no clone-and-run steps, no python -I test. The human, verbatim: "meta-notes CLI works fine on the work laptop already i use it daily". Ordinary subcommands in scripts/meta_notes on 3.11+. (2) The notes reject prefix handling as "the human chose generic input", but the human has since said, verbatim: "i'm fine with special encoding for common prefixes like gpg_ and the github pat token, ssh key introductory lines like the key type". A small matched prefix table is allowed, your call whether to include it; only the rejection reason is out of date. The rest of the notes (format, trailing newline, decode behaviour, tests) raises no conflict.
+
+### note · external:orchestrator · 2026-11-09T15:27:11.079Z
+Planner's call on common prefixes (orchestrator), which the ticket allows after the human's 'i'm fine with special encoding for common prefixes': not in this version. A 93-char GitHub token is about 12 data lines, and an 11-byte prefix saves about one and a half of them, while a prefix table makes the format need a version and agreement between ends. Not yet, because the saving is small; adding it later is a format change between two ends of the same repo. This replaces my earlier 'Rejected' line only as to prefixes: the base-63 alphabet stays rejected. Every input encodes in full.
