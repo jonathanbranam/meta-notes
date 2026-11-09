@@ -33,14 +33,21 @@ Newest first. Times are UTC. Each entry has:
   daemon's `ci_failed` wake fired. A rerun at 18:09 failed the same way.
   The only detail was the annotation on the run's web page: "Internal
   server error. Correlation ID: bcee77be-b770-4f2e-b494-54323d4bb1c8".
-- **Impact:** `main` red; mn-abjq held back from the queue. No code affected.
-- **Cause:** GitHub's side, as far as can be seen: the workflow is unchanged
-  since 2026-09-30, the same code passed at 687fac9, the pinned actions
-  exist, Actions is enabled, and githubstatus.com showed no incident.
-  Why it hit this repo is unknown.
-- **Category:** `ci`, `external`.
+  meta-notes-ui failed the same way at 18:14 (4420f9b). Reruns at 18:50
+  passed on both (18:55).
+- **Impact:** `main` red on both repos for about 45 minutes. Merges of
+  mn-abjq and mu-btfa held until green. No code affected. Separately,
+  mu-btfa sat unstarted from 18:26 to 18:50: the orchestrator had told
+  manager-1 (187k context) to hand over before new work, then queued the
+  ticket expecting it to pick it up. Fixed by spawning manager-2.
+- **Cause:** GitHub Actions outage, status incident tp8cghg7tlc4 ("Incident
+  with Actions", posted 18:12, after the first failure; githubstatus.com
+  showed nothing at 18:09). The stall was the orchestrator's conflicting
+  instructions.
+- **Category:** `ci`, `external`, `coordination`.
 - **Follow-up:** none; nothing of ours to fix. `gh` does not show this
-  error, so a zero-job failure needs the run's web page.
+  error, so a zero-job failure needs the run's web page. Do not queue work
+  for a manager that has been told to hand over.
 
 ## 2026-10-16 14:30: orchestrator down after meta-notes' supervisor stopped it and failed to relaunch
 
