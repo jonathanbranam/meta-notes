@@ -2,11 +2,14 @@
 id = "mn-abjq"
 title = "encode and decode commands with --algorithm (default mn-proquint), replacing words; accept text as an argument"
 kind = "feature"
-state = "planned"
+state = "integrated"
 created_at = "2026-11-09T17:15:51.417Z"
-updated_at = "2026-11-09T18:18:31.800629357Z"
+updated_at = "2026-11-09T18:56:31.805032211Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
+branch = "bridle/encode"
+commit = "c7a7049"
+summary = "v3.0.0 (c7a7049). meta-notes encode [TEXT] and decode with --algorithm/-a (only mn-proquint, the default) replace words encode/decode, no alias; wire format unchanged. Encode input order: TEXT argument (stdin not read), else piped stdin, else hidden prompt. Text starting with a dash goes by pipe (or after --); the help says so. Worker check: vader 190/190, pytest 1774 passed 1 skipped, spec check 0 errors. Orchestrator ran the merged CLI with fake values: version, words gone, argument with spaces round trip, argument wins over stdin, pipe with -a, unknown algorithm refused, dash-leading argument refused, help text."
 ticket = "abjq"
 +++
 
@@ -37,3 +40,9 @@ Verify: the project's normal check is green, once. Tests with fake values only: 
 Deferred: a text argument for decode, not yet because the human accepted leaving it out and it is one line to add later. More algorithms and the human's other axes (hand typing, check digits), not yet because the human said "let's KISS for now".
 
 Rejected: an alias for `words` (shipped the same day, only the human uses it); an error when both an argument and stdin are present (agents and scripts often have an open, empty stdin); auto-detecting the algorithm; handling for arguments that start with dashes (the human, item 4). Keep the spec and test file names unless renaming is trivial; internal names are out of scope.
+
+### note · external:orchestrator · 2026-11-09T18:56:31.215Z
+integrated: c7a7049 (branch bridle/encode)
+
+### note · external:orchestrator · 2026-11-09T18:56:31.222Z
+cleanup: removed nothing
