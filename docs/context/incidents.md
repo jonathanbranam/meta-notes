@@ -25,6 +25,23 @@ Newest first. Times are UTC. Each entry has:
   `human-process`.
 - **Follow-up:** the ticket or task, or "none" and why.
 
+## 2026-11-09 18:07: CI on main failed at startup with a GitHub internal error
+
+- **What happened:** CI run 42671251133 on fdd2f28 (a ticket-file-only
+  commit) ended `failure` with zero jobs. `gh` said "likely failed because
+  of a workflow file issue". The manager reported it (m-0275) and the
+  daemon's `ci_failed` wake fired. A rerun at 18:09 failed the same way.
+  The only detail was the annotation on the run's web page: "Internal
+  server error. Correlation ID: bcee77be-b770-4f2e-b494-54323d4bb1c8".
+- **Impact:** `main` red; mn-abjq held back from the queue. No code affected.
+- **Cause:** GitHub's side, as far as can be seen: the workflow is unchanged
+  since 2026-09-30, the same code passed at 687fac9, the pinned actions
+  exist, Actions is enabled, and githubstatus.com showed no incident.
+  Why it hit this repo is unknown.
+- **Category:** `ci`, `external`.
+- **Follow-up:** none; nothing of ours to fix. `gh` does not show this
+  error, so a zero-job failure needs the run's web page.
+
 ## 2026-10-16 14:30: orchestrator down after meta-notes' supervisor stopped it and failed to relaunch
 
 - **What happened:** the orchestrator had moved to vesta-home overnight and
