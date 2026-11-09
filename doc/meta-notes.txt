@@ -1424,16 +1424,23 @@ Commands ~
 <   Put personal preferences (routines, habits, other working hours) in
     `CLAUDE.md` too; the guide says they override it.
 
-`meta-notes words encode|decode`                *meta-notes-cli-words*
+`meta-notes encode|decode [-a {algorithm}]`     *meta-notes-cli-encode*
     Move a secret by hand between machines that share no clipboard, as
     lines of checked words (proquints: five letters, consonant and vowel
     alternating, 16 bits each). Works outside a notes root.
 
-    `encode` reads the secret from a hidden prompt on a terminal, or from
-    stdin, and prints a header line, then lines of 4 words and a check
+    {algorithm} (`--algorithm`, `-a`) is `mn-proquint`, the only one and the
+    default; `decode` must be given the one used to encode.
+
+    `encode [TEXT]` reads the secret from the quoted TEXT argument (stdin
+    is then not read), else from stdin, else from a hidden prompt on a
+    terminal, and prints a header line, then lines of 4 words and a check
     word. Every byte is encoded exactly, text or binary, with no stripping.
     `echo` and files add a trailing newline, which then becomes part of the
-    secret: use `printf %s` or the prompt. The secret is never an argument.
+    secret: use `printf %s` or the prompt. A literal typed as TEXT lands in
+    your shell history and is briefly visible in `ps`: use the prompt for
+    real secrets. Binary must be piped (arguments cannot hold NUL bytes),
+    and so must text starting with a dash, such as PEM or GPG armor.
     Common prefixes and headers (GitHub tokens, SSH keys, PEM and GPG
     armor, AWS key IDs, npm, PyPI, JWT) are coded short when they match
     exactly; anything else is encoded in full.
@@ -1445,8 +1452,9 @@ Commands ~
     works, only after the whole message checks; otherwise it exits non-zero
     with nothing on stdout. A message that names a table entry this version
     lacks fails with a message saying so: update meta-notes. >
-        printf %s "$SECRET" | meta-notes words encode
-        meta-notes words decode | pbcopy
+        meta-notes encode 'a token'
+        printf %s "$SECRET" | meta-notes encode
+        meta-notes decode | pbcopy
 <
 
 `meta-notes ceremony status [--date {day}]`     *meta-notes-cli-ceremony*
