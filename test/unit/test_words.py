@@ -207,29 +207,71 @@ def test_words_pack_overlapping_prefix_and_footer_not_matched():
 
 def test_words_command_stdout_is_exactly_the_bytes(tmp_path):
     data = bytes(range(256)) + b'\n'
-    enc = run(['words', 'encode'], data, tmp_path)
+    enc = run(['encode'], data, tmp_path)
     assert enc.returncode == 0
-    dec = run(['words', 'decode'], enc.stdout, tmp_path)
+    dec = run(['decode'], enc.stdout, tmp_path)
     assert dec.returncode == 0
     assert dec.stdout == data
 
 
+def test_words_command_roundtrip_with_explicit_algorithm(tmp_path):
+    enc = run(['encode', '-a', 'mn-proquint'], b'fake secret', tmp_path)
+    dec = run(['decode', '--algorithm', 'mn-proquint'], enc.stdout, tmp_path)
+    assert dec.stdout == b'fake secret'
+
+
+def test_words_command_text_argument_wins_over_stdin(tmp_path):
+    enc = run(['encode', 'fake-arg'], b'fake stdin', tmp_path)
+    assert run(['decode'], enc.stdout, tmp_path).stdout == b'fake-arg'
+
+
+def test_words_command_text_argument_with_empty_open_stdin(tmp_path):
+    enc = run(['encode', 'fake-arg'], b'', tmp_path)
+    assert enc.returncode == 0
+    assert run(['decode'], enc.stdout, tmp_path).stdout == b'fake-arg'
+
+
+def test_words_command_piped_stdin_without_argument(tmp_path):
+    enc = run(['encode'], b'fake stdin', tmp_path)
+    assert run(['decode'], enc.stdout, tmp_path).stdout == b'fake stdin'
+
+
+def test_words_command_quoted_argument_with_spaces_roundtrips(tmp_path):
+    enc = run(['encode', 'fake two  words'], b'', tmp_path)
+    assert run(['decode'], enc.stdout, tmp_path).stdout == b'fake two  words'
+
+
+def test_words_command_unknown_algorithm_is_an_error(tmp_path):
+    for cmd in ('encode', 'decode'):
+        result = run([cmd, '-a', 'nope'], b'x', tmp_path)
+        assert result.returncode != 0
+        assert result.stdout == b''
+        assert b'nope' in result.stderr
+
+
+def test_words_command_words_subcommand_is_gone(tmp_path):
+    for args in (['words', 'encode'], ['words', 'decode'], ['words']):
+        result = run(args, b'x', tmp_path)
+        assert result.returncode != 0
+        assert result.stdout == b''
+
+
+def test_words_command_decodes_a_line_encoded_by_2_38_0(tmp_path):
+    # Output of v2.38.0 `words encode` for b'abc'; the wire format is fixed
+    old = 'babab babah ronum dipuz fanuv\nbadod kanog jituj\n'
+    assert run(['decode'], old.encode(), tmp_path).stdout == b'abc'
+
+
 def test_words_command_decode_failure_writes_nothing(tmp_path):
-    enc = run(['words', 'encode'], b'fake secret', tmp_path).stdout.decode().splitlines()
+    enc = run(['encode'], b'fake secret', tmp_path).stdout.decode().splitlines()
     for text in ('\n'.join(enc[:-1]) + '\n', '\n'.join([enc[0], enc[1][:-1] + 'z']) + '\n', ''):
-        dec = run(['words', 'decode'], text.encode(), tmp_path)
+        dec = run(['decode'], text.encode(), tmp_path)
         assert dec.returncode != 0
         assert dec.stdout == b''
         assert dec.stderr
 
 
-def test_words_command_takes_no_secret_argument(tmp_path):
-    result = run(['words', 'encode', 'ghp_FAKE'], b'', tmp_path)
-    assert result.returncode != 0
-    assert b'ghp_FAKE' not in result.stdout
-
-
 def test_words_command_works_without_a_notes_root(tmp_path):
-    result = run(['words', 'encode'], b'x', tmp_path)
+    result = run(['encode'], b'x', tmp_path)
     assert result.returncode == 0
     assert len(result.stdout.splitlines()) == 2

@@ -6,6 +6,14 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 3.0.0 - 2026-11-09
+
+- Changed (incompatible): `meta-notes words encode` and `words decode` are now
+  `meta-notes encode [TEXT]` and `meta-notes decode`, with `--algorithm`
+  (only `mn-proquint`, the default; lines encoded by 2.38.0 still decode).
+  `encode` takes the text as an argument, else stdin, else a hidden prompt.
+  See `:help meta-notes-cli-encode`.
+
 ## 2.38.0 - 2026-11-09
 
 - New: `meta-notes words encode` and `words decode` hand-type any secret
