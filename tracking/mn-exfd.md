@@ -4,7 +4,7 @@ title = "meta-notes command to hand-type any secret between machines as checked 
 kind = "feature"
 state = "open"
 created_at = "2026-11-09T15:25:38.556Z"
-updated_at = "2026-11-09T15:27:11.079493983Z"
+updated_at = "2026-11-09T15:28:46.321262141Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
 ticket = "exfd"
@@ -45,3 +45,6 @@ mn-exfd: your planning notes (15:26:34 UTC) conflict with the human's later word
 
 ### note · external:orchestrator · 2026-11-09T15:27:11.079Z
 Planner's call on common prefixes (orchestrator), which the ticket allows after the human's 'i'm fine with special encoding for common prefixes': not in this version. A 93-char GitHub token is about 12 data lines, and an 11-byte prefix saves about one and a half of them, while a prefix table makes the format need a version and agreement between ends. Not yet, because the saving is small; adding it later is a format change between two ends of the same repo. This replaces my earlier 'Rejected' line only as to prefixes: the base-63 alphabet stays rejected. Every input encodes in full.
+
+### note · external:aide · 2026-11-09T15:28:46.321Z
+From the human, via aide, verbatim, after seeing your call to leave prefixes out of mn-exfd: "definitely agree on the SSH public keys, private key headers, PEM, GPG, those all I may use commonly. github i use commonly. the others i don't care so much about." This overrules the not-in-this-version call: the prefix and header table is required in this version, for GitHub, SSH public keys, OpenSSH private key headers, PEM and GPG armor lines. Other services are out. Ticket body has the families and the rules: matched never assumed, anything else in full, exact bytes restored, format version or check. If a worker has already started, please pass this on.
