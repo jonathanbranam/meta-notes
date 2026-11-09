@@ -2,9 +2,9 @@
 id = "mn-abjq"
 title = "encode and decode commands with --algorithm (default mn-proquint), replacing words; accept text as an argument"
 kind = "feature"
-state = "open"
+state = "planned"
 created_at = "2026-11-09T17:15:51.417Z"
-updated_at = "2026-11-09T18:08:13.375128502Z"
+updated_at = "2026-11-09T18:18:31.800629357Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
 ticket = "abjq"
