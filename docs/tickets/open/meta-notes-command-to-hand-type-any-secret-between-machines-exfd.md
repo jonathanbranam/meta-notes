@@ -36,9 +36,9 @@ A meta-notes CLI command (name is the planner's) with encode and decode, based o
 
 ## Getting decode onto the work laptop
 
-The decoder has to run on the work laptop, which may have only stock Python, with nothing to install. The human, verbatim: "(i can't access gist from work laptop)" and "we can clone public repos no problem over HTTPS". jonathanbranam/meta-notes is public (checked 2026-11-09).
+No special route is needed. The human, verbatim (meta-notes aide session, 2026-11-09): "meta-notes CLI works fine on the work laptop already i use it daily"
 
-So (aide's recommendation; the human did not object): the codec is one standalone, standard-library file in this repo that the CLI wraps. It must not import the meta_notes package, and it must run directly from a clone with the Mac's stock Python, which may be older than the 3.11 the CLI requires. Document the clone-and-run steps. This needs the python-version exception noted in the languages rule if it applies.
+So encode and decode are ordinary `meta-notes` subcommands in the `scripts/meta_notes/` package, on the CLI's usual Python 3.11+ and standard library. No standalone file and no clone-and-run steps. This replaces the glassbox aide's constraint that the laptop may have only stock Python. The laptop gets the command by updating its meta-notes checkout as usual.
 
 ## Safety
 
