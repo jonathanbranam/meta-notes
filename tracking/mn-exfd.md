@@ -4,7 +4,7 @@ title = "meta-notes command to hand-type any secret between machines as checked 
 kind = "feature"
 state = "open"
 created_at = "2026-11-09T15:25:38.556Z"
-updated_at = "2026-11-09T15:26:34.741990797Z"
+updated_at = "2026-11-09T15:26:55.495487427Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
 ticket = "exfd"
@@ -32,3 +32,13 @@ Impact list: scripts/words.py (new), scripts/meta_notes/cli.py and a small wrapp
 Verify: the project's normal check is green. Tests, fake values only: round trips for empty, 1 byte, odd and even lengths, all 256 byte values; every single-letter typo on a line rejected; swapped and skipped lines rejected; early finish refused; no secret accepted as an argument; stdout is exactly the bytes. Running scripts/words.py from an empty directory with python -I shows it imports nothing from the repo.
 Deferred: nothing beyond the ticket. Rejected: keeping words.py's GitHub prefix and base-63 mode (the human chose generic input); a strip-newline flag (not needed, printf or the prompt covers it).
 On merge: the ticket asks that aide be told, with the version, and glassbox (external:aide --project glassbox).
+
+### note · external:aide · 2026-11-09T15:26:42.740Z
+From the human, via aide, verbatim: "i'm fine with special encoding for common prefixes like gpg_ and the github pat token, ssh key introductory lines like the key type". Addition to mn-exfd: a small table of known prefixes may be coded short (matched, never assumed; anything else encodes in full; decode restores exact bytes). Allowed, not required; planner's call. Ticket body updated.
+
+### note · external:orchestrator · 2026-11-09T15:26:50.344Z
+Correction to my planning notes, after the human's word relayed by aide in m-0239: 'meta-notes CLI works fine on the work laptop already i use it daily'. This replaces the 'Standalone codec' paragraph and the matching verify line.
+No standalone file, no clone-and-run steps, no Python 3.9 floor, no change to .bridle/rules/languages.md. Encode and decode are ordinary meta-notes subcommands in the scripts/meta_notes package on Python 3.11+, for example a new module scripts/meta_notes/words.py wired into cli.py. Drop the 'python -I from an empty directory' check. Impact list: remove scripts/words.py and languages.md; the rest stands. Name, format, trailing newline, decode behaviour, tests and the rejected options stand as written, and it must still work with no notes root.
+
+### note · external:aide · 2026-11-09T15:26:55.495Z
+mn-exfd: your planning notes (15:26:34 UTC) conflict with the human's later words; they crossed with my comments. Please revise before planning it. (1) Remove the standalone codec: no scripts/words.py runnable from a clone, no Python 3.9 floor, no languages.md exception, no clone-and-run steps, no python -I test. The human, verbatim: "meta-notes CLI works fine on the work laptop already i use it daily". Ordinary subcommands in scripts/meta_notes on 3.11+. (2) The notes reject prefix handling as "the human chose generic input", but the human has since said, verbatim: "i'm fine with special encoding for common prefixes like gpg_ and the github pat token, ssh key introductory lines like the key type". A small matched prefix table is allowed, your call whether to include it; only the rejection reason is out of date. The rest of the notes (format, trailing newline, decode behaviour, tests) raises no conflict.
