@@ -39,7 +39,10 @@ Newest first. Times are UTC. Each entry has:
   mn-abjq and mu-btfa held until green. No code affected. Separately,
   mu-btfa sat unstarted from 18:26 to 18:50: the orchestrator had told
   manager-1 (187k context) to hand over before new work, then queued the
-  ticket expecting it to pick it up. Fixed by spawning manager-2.
+  ticket expecting it to pick it up. Fixed by spawning manager-2. Then
+  the merge sat from 18:56 to 19:21: manager-2's Bash denied a compound
+  merge command, it stopped without messaging anyone, and the orchestrator
+  had left manager-1's "single commands only" note out of its brief.
 - **Cause:** GitHub Actions outage, status incident tp8cghg7tlc4 ("Incident
   with Actions", posted 18:12, after the first failure; githubstatus.com
   showed nothing at 18:09). The stall was the orchestrator's conflicting
