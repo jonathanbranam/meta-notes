@@ -37,7 +37,9 @@ A meta-notes CLI command (name is the planner's) with encode and decode, based o
   - PEM: `BEGIN`/`END` lines for `PRIVATE KEY`, `RSA PRIVATE KEY`, `EC PRIVATE KEY`, `ENCRYPTED PRIVATE KEY`, `CERTIFICATE`.
   - GPG: `BEGIN`/`END` lines for `PGP PUBLIC KEY BLOCK`, `PGP PRIVATE KEY BLOCK`, `PGP MESSAGE`.
 
-  Other services' prefixes (GitLab, Anthropic, OpenAI, Slack, Stripe, AWS, Google and so on) are out: "the others i don't care so much about".
+  - AWS key IDs, npm, PyPI and JWT: the human, verbatim (meta-notes aide session, 2026-11-09): "go ahead and add the AWS key IDs as well since I use it often; I'm fine also including: npm, pypi, JWT". AWS `AKIA` and `ASIA`; `npm_`; `pypi-` (with the longer fixed start `pypi-AgEIcHlwaS5vcmc` if confirmed); JWT `eyJ` (with the common longer start `eyJhbGciOi` as its own entry, since `eyJ` alone saves almost nothing).
+
+  Other services' prefixes (GitLab, Anthropic, OpenAI, Slack, Stripe, Google and so on) are out: "the others i don't care so much about".
 
   Rules: a prefix or footer is matched, never assumed; anything else encodes in full; decode restores the exact original bytes, including the line endings around a header or footer (if they don't match the table's form, encode in full); the table is part of the format, so encoder and decoder must agree on it (a format version or check that fails clearly). No per-token alphabet such as base-63.
 - **Words.** Proquints as in words.py: every 16 bits is one 5-letter consonant-vowel-consonant-vowel-consonant word. Lines of 4 data words plus 1 check word.
