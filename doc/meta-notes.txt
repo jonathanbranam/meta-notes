@@ -1424,6 +1424,31 @@ Commands ~
 <   Put personal preferences (routines, habits, other working hours) in
     `CLAUDE.md` too; the guide says they override it.
 
+`meta-notes words encode|decode`                *meta-notes-cli-words*
+    Move a secret by hand between machines that share no clipboard, as
+    lines of checked words (proquints: five letters, consonant and vowel
+    alternating, 16 bits each). Works outside a notes root.
+
+    `encode` reads the secret from a hidden prompt on a terminal, or from
+    stdin, and prints a header line, then lines of 4 words and a check
+    word. Every byte is encoded exactly, text or binary, with no stripping.
+    `echo` and files add a trailing newline, which then becomes part of the
+    secret: use `printf %s` or the prompt. The secret is never an argument.
+    Common prefixes and headers (GitHub tokens, SSH keys, PEM and GPG
+    armor, AWS key IDs, npm, PyPI, JWT) are coded short when they match
+    exactly; anything else is encoded in full.
+
+    `decode` reads the lines, prompting on stderr, and checks each line when
+    Enter is pressed: on a terminal a bad line is rejected and typed again,
+    and a blank line asks again. From a pipe, a bad line or input ending
+    early is an error. It writes the exact bytes to stdout, so `| pbcopy`
+    works, only after the whole message checks; otherwise it exits non-zero
+    with nothing on stdout. A message that names a table entry this version
+    lacks fails with a message saying so: update meta-notes. >
+        printf %s "$SECRET" | meta-notes words encode
+        meta-notes words decode | pbcopy
+<
+
 `meta-notes ceremony status [--date {day}]`     *meta-notes-cli-ceremony*
     Report which ceremony markers (|meta-notes-ceremonies|) are checked
     for {day}, a single `YYYY-MM-DD` (default: today), and the Monday to
