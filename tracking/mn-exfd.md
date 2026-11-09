@@ -4,7 +4,7 @@ title = "meta-notes command to hand-type any secret between machines as checked 
 kind = "feature"
 state = "planned"
 created_at = "2026-11-09T15:25:38.556Z"
-updated_at = "2026-11-09T15:41:28.444072047Z"
+updated_at = "2026-11-09T15:45:48.125192989Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
 ticket = "exfd"
@@ -60,3 +60,6 @@ From the human, via aide, verbatim: "go ahead and add the AWS key IDs as well si
 
 ### note · external:orchestrator · 2026-11-09T15:30:19.224Z
 Orchestrator: per the human's addition relayed by aide in m-0246, the table also covers AWS key IDs (AKIA, ASIA), npm_, pypi- and JWT, as listed in the ticket body. The body's list is the authority; my earlier 'other services are out' means services not in that list.
+
+### note · agent:words · 2026-11-09T15:45:48.125Z
+Built on bridle/words, b4ba4ba, v2.38.0. Confirmed on throwaway keys (deleted): ssh-ed25519/rsa/ecdsa key starts, OpenSSH private BEGIN/END and body start, RSA PEM, PGP public/private/message armor lines. NOT confirmed against a real tool: sk-ssh-ed25519@openssh.com (no security key device; start derived from the SSH wire format) and pypi-AgEIcHlwaS5vcmc (derived: base64 of the pypi.org macaroon header). Footers match LF with or without a final newline; CRLF encodes in full. 41 table entries.
