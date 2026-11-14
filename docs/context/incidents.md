@@ -25,9 +25,10 @@ Newest first. Times are UTC. Each entry has:
   `human-process`.
 - **Follow-up:** the ticket or task, or "none" and why.
 
-## 2026-11-12 08:34: aide offline for two days after a DNS outage
+## 2026-11-12 08:34: aide offline for two days after an internet outage
 
-- **What happened:** vesta lost DNS on 2026-11-12. The meta-notes
+- **What happened:** the human's home lost its internet connection on
+  2026-11-12. The meta-notes
   daemon logged "Could not resolve host" from 07:41 UTC until at least
   11:12. At 08:34:42 the meta-notes aide's next API call failed with
   "API Error: Can't reach the API server - check your internet or DNS
@@ -45,10 +46,12 @@ Newest first. Times are UTC. Each entry has:
   `bridle status` showed "no waiter" for the aide the whole time, but
   nothing alerted on it: the waiter-grace incident covers only the
   orchestrator.
-- **Cause:** a host DNS outage (cause of the outage unknown) ended the
+- **Cause:** a UPS failure shut off the router that runs the home's
+  DNS, so every agent and the whole system lost internet (the human,
+  2026-11-14). Other sessions recovered on their own. The outage ended the
   aide's turn on an API error, and Claude Code does not retry a turn that
   ended that way. Bridle has no liveness check for an aide's waiter.
-- **Category:** `connectivity`, `host`, `coordination`.
+- **Category:** `connectivity`, `external`, `coordination`.
 - **Follow-up:** bridle br-t8wk (aide waiters get the waiter-grace
   incident, or a nudge into the pane) and br-nxkj (a second orchestrator
   launch overwrote the live pid file), both filed by dalek's orchestrator.
