@@ -25,6 +25,34 @@ Newest first. Times are UTC. Each entry has:
   `human-process`.
 - **Follow-up:** the ticket or task, or "none" and why.
 
+## 2026-11-12 08:34: aide offline for two days after a DNS outage
+
+- **What happened:** vesta lost DNS on 2026-11-12. The meta-notes
+  daemon logged "Could not resolve host" from 07:41 UTC until at least
+  11:12. At 08:34:42 the meta-notes aide's next API call failed with
+  "API Error: Can't reach the API server - check your internet or DNS
+  (EAI_AGAIN)". Claude Code ended the turn. Its waiter (`bridle agent wake
+  external:aide`) had already exited, and nothing started another one.
+  The session sat idle at the prompt until the human typed "Try again" on
+  2026-11-14 at 11:00:04, and then the aide recovered. The human reported
+  it ("meta-notes aide says its been offline for two days"), and the
+  vesta orchestrator traced it from the aide's pane and transcript. The
+  vesta orchestrator's own waiter dropped in the same outage (vesta-home
+  daemon incident "no wake command running since 08:16:46 UTC"), but the
+  orchestrator was relaunched at its 12h handover.
+- **Impact:** the human had no aide for meta-notes for about 50 hours.
+  No messages arrived for it in that time, so none were missed.
+  `bridle status` showed "no waiter" for the aide the whole time, but
+  nothing alerted on it: the waiter-grace incident covers only the
+  orchestrator.
+- **Cause:** a host DNS outage (cause of the outage unknown) ended the
+  aide's turn on an API error, and Claude Code does not retry a turn that
+  ended that way. Bridle has no liveness check for an aide's waiter.
+- **Category:** `connectivity`, `host`, `coordination`.
+- **Follow-up:** a bridle ticket to cover aide waiters with the
+  waiter-grace incident (or a nudge into the pane). Requested from
+  dalek's orchestrator, which owns bridle.
+
 ## 2026-11-09 18:07: CI on main failed at startup with a GitHub internal error
 
 - **What happened:** CI run 42671251133 on fdd2f28 (a ticket-file-only
