@@ -55,3 +55,4 @@
 {"actor":"external:orchestrator","at":"2026-11-09T18:18:31.800629357Z","from":"open","task":"mn-abjq","to":"planned"}
 {"actor":"external:orchestrator","at":"2026-11-09T18:18:32.067770281Z","queue":"reprioritized"}
 {"actor":"external:orchestrator","at":"2026-11-09T18:56:31.215486802Z","from":"planned","task":"mn-abjq","to":"integrated"}
+{"actor":"human","at":"2026-11-14T12:05:23.405Z","from":"","task":"mn-tjzd","to":"pending"}
