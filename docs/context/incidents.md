@@ -49,9 +49,9 @@ Newest first. Times are UTC. Each entry has:
   aide's turn on an API error, and Claude Code does not retry a turn that
   ended that way. Bridle has no liveness check for an aide's waiter.
 - **Category:** `connectivity`, `host`, `coordination`.
-- **Follow-up:** a bridle ticket to cover aide waiters with the
-  waiter-grace incident (or a nudge into the pane). Requested from
-  dalek's orchestrator, which owns bridle.
+- **Follow-up:** bridle br-t8wk (aide waiters get the waiter-grace
+  incident, or a nudge into the pane) and br-nxkj (a second orchestrator
+  launch overwrote the live pid file), both filed by dalek's orchestrator.
 
 ## 2026-11-09 18:07: CI on main failed at startup with a GitHub internal error
 
