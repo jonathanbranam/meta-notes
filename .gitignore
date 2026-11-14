@@ -17,3 +17,4 @@ doc/tags
 .claude/agents/
 .claude/.bridle-sync-hooks.json
 .agent-site/
+.bridle/tmp/
