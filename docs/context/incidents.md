@@ -34,8 +34,10 @@ Newest first. Times are UTC. Each entry has:
   "API Error: Can't reach the API server - check your internet or DNS
   (EAI_AGAIN)". Claude Code ended the turn. Its waiter (`bridle agent wake
   external:aide`) had already exited, and nothing started another one.
-  The session sat idle at the prompt until the human typed "Try again" on
-  2026-11-14 at 11:00:04, and then the aide recovered. The human reported
+  The session sat idle at the prompt until 2026-11-14 at 11:00:04. The
+  human opened Remote Control, which showed "cannot connect" with a "Try
+  again" button. The button sent the literal text "Try again" to the
+  session as a prompt, and the aide recovered. The human reported
   it ("meta-notes aide says its been offline for two days"), and the
   vesta orchestrator traced it from the aide's pane and transcript. The
   vesta orchestrator's own waiter dropped in the same outage (vesta-home
