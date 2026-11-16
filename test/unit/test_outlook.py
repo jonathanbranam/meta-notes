@@ -190,7 +190,7 @@ def test_outlook_geocode_no_match(root, net):
 
 def test_outlook_run_default_lines(root, net):
     lines, data = outlook.run(str(root), DAY, None)
-    assert lines[0].startswith('### Outlook (as of ')
+    assert lines[0].startswith('## Outlook (as of ')
     assert lines[1] == ''
     assert lines[2:] == [
         '- Weather: 72/51, rain 60% 3-8 PM, 0.3 in, 4h sun',
@@ -236,7 +236,7 @@ def test_outlook_run_location_flag_overrides_config(root, net):
 def test_outlook_run_no_config_is_unavailable_when_lenient(root, net):
     (root / '.meta-notes').write_text(SENTINEL)
     lines, data = outlook.run(str(root), DAY, None, lenient=True)
-    assert lines[0] == '### Outlook'
+    assert lines[0] == '## Outlook'
     assert lines[1] == ''
     assert lines[2].startswith('- Weather: unavailable (no location')
     assert net['calls'] == []
@@ -262,7 +262,7 @@ def test_outlook_cli_prints_section(root, net, capsys):
     code = cli.main(['outlook', '--date', '2026-10-09'])
     out = capsys.readouterr().out
     assert code == 0
-    assert out.startswith('### Outlook (as of ') and '- Sun: 7:41 AM' in out
+    assert out.startswith('## Outlook (as of ') and '- Sun: 7:41 AM' in out
 
 
 def test_outlook_cli_unavailable_exits_zero(root, net):
@@ -298,7 +298,7 @@ def make_note(root, day, body):
     return path
 
 
-OLD = ('# Daily\n\n### Outlook (as of 1:00 AM Mon)\n\n- Weather: old\n'
+OLD = ('# Daily\n\n## Outlook (as of 1:00 AM Mon)\n\n- Weather: old\n'
        '- Sun: old\n- my own line\n\n## Tasks\n')
 
 
@@ -327,12 +327,21 @@ def test_outlook_refresh_keeps_blank_line_without_duplicates(root, net):
     text = refreshed(root, OLD)
     assert text.count('- Weather:') == 1 and text.count('- Sun:') == 1
     head = text.split('\n')
-    assert head[2].startswith('### Outlook') and head[3] == ''
+    assert head[2].startswith('## Outlook (as of ') and head[3] == ''
+    assert '- my own line\n\n## Tasks\n' in text
+
+
+def test_outlook_refresh_upgrades_old_h3_heading(root, net):
+    # Notes made before 3.0.1 have the section under "### Outlook".
+    text = refreshed(root, OLD.replace('## Outlook', '### Outlook'))
+    head = text.split('\n')
+    assert head[2].startswith('## Outlook (as of ') and head[3] == ''
+    assert '### Outlook' not in text and text.count('- Weather:') == 1
     assert '- my own line\n\n## Tasks\n' in text
 
 
 def test_outlook_refresh_adds_missing_blank_lines(root, net):
-    old = ('# Daily\n\n### Outlook (as of 1:00 AM Mon)\n- Weather: old\n'
+    old = ('# Daily\n\n## Outlook (as of 1:00 AM Mon)\n- Weather: old\n'
            '- my own line\n## Tasks\n')
     text = refreshed(root, old)
     assert text.split('\n')[3] == '' and text.count('- Weather:') == 1
@@ -340,7 +349,7 @@ def test_outlook_refresh_adds_missing_blank_lines(root, net):
 
 
 def test_outlook_refresh_collapses_extra_blank_lines(root, net):
-    old = ('# Daily\n\n### Outlook (as of 1:00 AM Mon)\n\n\n- Weather: old\n'
+    old = ('# Daily\n\n## Outlook (as of 1:00 AM Mon)\n\n\n- Weather: old\n'
            '\n- my own line\n\n\n\n## Tasks\n')
     text = refreshed(root, old)
     assert text.count('- Weather:') == 1

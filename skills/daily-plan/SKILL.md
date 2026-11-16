@@ -126,7 +126,7 @@ confirming with the user.
 
 - Outlook: run `meta-notes outlook refresh` (today's note and tomorrow's,
   when it exists), and `meta-notes outlook refresh --date <TARGET>` if
-  TARGET is later. It changes only the `### Outlook` section. Tell the
+  TARGET is later. It changes only the `## Outlook` section. Tell the
   user the forecast in one line from TARGET's note; if a status says
   `failed`, say so and go on.
 - Due: `meta-notes tasks --due --date <TARGET> --json`

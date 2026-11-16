@@ -9,6 +9,7 @@ access goes through fetch_json(), so tests replace that one function.
 import json
 import math
 import os
+import re
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -21,7 +22,9 @@ GEOCODE_URL = "https://geocoding-api.open-meteo.com/v1/search"
 FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 ALERTS_URL = "https://api.weather.gov/alerts/active"
 CACHE_FILE = os.path.join(".meta-notes-cache", "outlook-places.json")
-HEADING = "### Outlook"
+HEADING = "## Outlook"
+# Notes made before 3.0.1 have "### Outlook"; refresh finds and upgrades them.
+HEADING_RE = re.compile(r"#{2,3} Outlook\b")
 TIMEOUT = 10
 
 # line name -> on by default
@@ -422,7 +425,7 @@ def refresh_note(root: str, day: date, location: str | None) -> dict:
     except FileNotFoundError:
         return {**result, "status": "no note"}
     start = next((i for i, l in enumerate(lines)
-                  if l.startswith(HEADING)), None)
+                  if HEADING_RE.match(l)), None)
     if start is None:
         return {**result, "status": "no heading"}
     end = start + 1

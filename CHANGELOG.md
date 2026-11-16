@@ -6,6 +6,13 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 3.0.1 - 2026-11-16
+
+- Fixed: the daily note's Outlook section is now `## Outlook`, a level-2
+  heading under `# Daily Note`, instead of `### Outlook`, so the note's
+  heading levels are in order. `meta-notes outlook refresh` still finds
+  `### Outlook` in existing notes and rewrites it as `## Outlook`.
+
 ## 3.0.0 - 2026-11-09
 
 - Changed (incompatible): `meta-notes words encode` and `words decode` are now

@@ -357,7 +357,7 @@ as `templates/daily-personal.md`).
 
 `meta-notes outlook` prints a day's weather, a temperature sparkline, sun
 times and National Weather Service alerts (US) for a place, and the daily
-note templates run it into an `### Outlook` section. No key; it uses
+note templates run it into an `## Outlook` section. No key; it uses
 Open-Meteo. Set your place in `.meta-notes`; each line has an on/off
 switch:
 

@@ -1181,7 +1181,7 @@ Commands ~
 `meta-notes outlook [weather|sun] [--date {day}] [--location {place}]`
                                                 *meta-notes-cli-outlook*
     Print the day's weather, temperatures, sun times and weather alerts
-    for a place, as the lines of an `### Outlook` section. {day} is
+    for a place, as the lines of an `## Outlook` section. {day} is
     YYYY-MM-DD (default today). The daily note templates run it, so a new
     daily note has the section. `outlook weather` and `outlook sun` print
     only their line, with no heading, and fail with an error when the
@@ -1198,7 +1198,7 @@ Commands ~
     or `--location {place}` (for travel): a city and state, as in
     `Mason, OH`, or a ZIP code. A city alone that matches several places is
     an error listing them. Output: >
-        ### Outlook (as of 9:40 PM Tue)
+        ## Outlook (as of 9:40 PM Tue)
 
         - Weather: 72/55, rain 60% 3-8 PM, 0.3 in, 4h sun
         - Temps: 51 ▂▁▁▁▁▁▂▃▄▅▆▇██▇▆▅▄▃▃▂▂▂▂ 72 (low 6 AM, high 2 PM)
@@ -1218,7 +1218,7 @@ Commands ~
 
 `meta-notes outlook refresh [--date {day}] [--location {place}]`
                                         *meta-notes-cli-outlook-refresh*
-    Rewrite the `### Outlook` section of a daily note with a fresh forecast,
+    Rewrite the `## Outlook` section of a daily note with a fresh forecast,
     for notes made days ahead. With no {day} it refreshes today's note and,
     when it exists, tomorrow's; with {day}, only that day's. It replaces the
     time in the heading and the lines the command writes (`Weather`,
