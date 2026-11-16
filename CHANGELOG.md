@@ -6,6 +6,14 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 3.1.0 - 2026-11-16
+
+- New: the shipped daily templates have an empty `## Tasks` section right
+  after `## Outlook`, for tasks added that day (the script-written "Tasks
+  Due Today" and "Overdue Tasks" follow it). Existing notes roots keep
+  their templates: to get it, add `## Tasks` and a blank line after the
+  `outlook` line in `resource/template/daily.md` (and `daily-personal.md`).
+
 ## 3.0.1 - 2026-11-16
 
 - Fixed: the daily note's Outlook section is now `## Outlook`, a level-2

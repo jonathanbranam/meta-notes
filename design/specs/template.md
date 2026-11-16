@@ -215,6 +215,14 @@ The shipped daily template's "Tasks Due Today" section SHALL list incomplete tas
 - **WHEN** a daily note is created for 2026-09-25
 - **THEN** its template SHALL run `find_tasks.py --due --date 2026-09-25 --condensed --mark-from` for "Tasks Due Today" and `find_tasks.py --overdue --date 2026-09-25 --condensed --mark-from` for "Overdue Tasks"
 
+### Requirement: Shipped daily template Tasks section  {#r-1e29}
+The shipped daily templates (`daily.md` and `daily-personal.md`) SHALL have an empty `## Tasks` section right after the `## Outlook` section and before "Tasks Due Today". It holds the tasks added that day, not the copies a script writes, so a task written there is an ordinary task that task queries list.
+
+#### Scenario: New daily note has an empty Tasks section  {#s-e164}
+*Verification*: **non-executable**
+- **WHEN** a daily note is created from the shipped template
+- **THEN** a `## Tasks` heading SHALL follow the Outlook lines, with no lines under it, followed by `## Tasks Due Today`
+
 ### Requirement: Shipped daily template ceremony sections  {#r-5e05}
 The shipped daily template SHALL include a `## Follow Up` section and the ceremony marker lines `- [ ] plan complete` and `- [ ] shutdown complete`, each once. The marker lines SHALL have no date markers, so task queries don't list them.
 

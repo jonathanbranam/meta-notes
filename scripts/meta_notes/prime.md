@@ -41,6 +41,10 @@ linked from the daily note.
 
 <!-- generated: hours -->
 
+Tasks added during the day go under the daily note's `## Tasks`, right
+after `## Outlook`. "Tasks Due Today" and "Overdue Tasks" hold `[<]`
+copies a script wrote; don't add tasks there.
+
 Time log entries go under the daily note's `### Log`, times as `HH:MM`:
 
 ```markdown

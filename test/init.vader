@@ -51,6 +51,7 @@ Execute (MetaNotesInit creates daily template with correct content):
   let content = join(lines, "\n")
   Assert content =~ '# Daily Note', 'Daily template should have heading'
   Assert content =~ 'Week Plan:', 'Daily template should have Week Plan link'
+  Assert content =~ '\n## Tasks\n\n## Tasks Due Today\n', 'Daily template should have an empty Tasks section before Tasks Due Today'
   Assert content =~ '## Tasks Due Today', 'Daily template should have Tasks Due Today section'
   Assert content =~ '## Overdue Tasks', 'Daily template should have Overdue Tasks section'
   Assert content =~ '## Time Tracking', 'Daily template should have Time Tracking section'
