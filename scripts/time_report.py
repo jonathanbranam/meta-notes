@@ -247,6 +247,8 @@ def _format_entry(item: dict) -> list[str]:
              f"  * start: {item['start'] or '*MISSING START TIME*'}",
              f"  * end:   {item['end'] or '*MISSING END TIME*'}"]
     if item['kind'] == 'entry':
+        for error in item.get('errors', []):
+            lines.append(f"  * error: *{error.upper()}*")
         if item['minutes'] is not None:
             lines.append(f"  * time:  {_minutes(item['minutes'])}")
         if item['tags']:

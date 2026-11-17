@@ -1506,7 +1506,7 @@ def test_day_log_items_entry_fields():
 
     assert items == [{'kind': 'entry', 'line': 5, 'text': 'June DMC Connect #mtg',
                       'start': '15:00', 'end': '15:50', 'minutes': 50,
-                      'tags': ['meeting']}]
+                      'tags': ['meeting'], 'errors': []}]
 
 
 def test_day_log_items_small_gap_ignored():

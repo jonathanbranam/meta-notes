@@ -54,7 +54,7 @@ The day report SHALL contain, in order: the day log listing, the day's Total Tim
 - **THEN** the day log listing SHALL say no time log entries were found, and the plan adherence and week summary sections SHALL still be printed
 
 ### Requirement: Day log listing  {#r-191f}
-The day log listing SHALL list the day's time log entries in the order they appear in the note. Each entry SHALL show its activity line as written, followed by its `start` and `end` as `HH:MM`, its `time` (the duration, formatted `H hr M min`, or `M min` under an hour), and its `tags`. An entry missing a start or end time SHALL show `*MISSING START TIME*` or `*MISSING END TIME*` in place of that time and SHALL show no `time`.
+The day log listing SHALL list the day's time log entries in the order they appear in the note. Each entry SHALL show its activity line as written, followed by its `start` and `end` as `HH:MM`, its `time` (the duration, formatted `H hr M min`, or `M min` under an hour), and its `tags`. An entry missing a start or end time SHALL show `*MISSING START TIME*` or `*MISSING END TIME*` in place of that time and SHALL show no `time`. An entry with a second `start:` or `end:` line SHALL keep the last one and SHALL report an `errors` label, `duplicate start` or `duplicate end` (one for each), shown in text as `*DUPLICATE START*` or `*DUPLICATE END*` on an `error:` line; an entry without such lines has an empty `errors` list.
 
 #### Scenario: Complete entry  {#s-91da}
 *Verification*: **non-executable**
@@ -70,6 +70,11 @@ The day log listing SHALL list the day's time log entries in the order they appe
 *Verification*: **non-executable**
 - **WHEN** an entry has a start of 14:00 and no parseable end
 - **THEN** it SHALL show `start: 14:00` and `*MISSING END TIME*`, and no `time`
+
+#### Scenario: Duplicate start or end  {#s-685b}
+*Verification*: **non-executable**
+- **WHEN** an entry has two `start:` lines
+- **THEN** its `errors` SHALL be `["duplicate start"]` and the text listing SHALL show `error: *DUPLICATE START*`; two `end:` lines likewise give `duplicate end`
 
 #### Scenario: Tag-only entry  {#s-1260}
 *Verification*: **non-executable**

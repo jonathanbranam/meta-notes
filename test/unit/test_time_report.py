@@ -309,7 +309,7 @@ def test_build_day_report_data(tmp_path):
     assert data['entries'][0] == {'kind': 'entry', 'line': 5,
                                   'text': 'June DMC Connect #meeting',
                                   'start': '15:00', 'end': '15:50',
-                                  'minutes': 50, 'tags': ['meeting']}
+                                  'minutes': 50, 'tags': ['meeting'], 'errors': []}
     assert data['entries'][1] == {'kind': 'gap', 'minutes': 10,
                                   'start': '15:50', 'end': '16:00'}
     assert data['by_tag'] == {'meeting': 80}
@@ -528,3 +528,53 @@ def test_time_report_work_mode_default_matches_explicit_work(tmp_path):
     text = "\n".join(format_day_report(default))
     assert '- work duration:' in text
     assert '### Work vs Non-Work' in text
+
+
+# Tests for duplicate starts and ends
+
+def _dup_log(*extra: str) -> list[str]:
+    return (entry("early", "08:00", "08:30")
+            + ["- doubled", *extra]
+            + entry("late", "10:00", "10:30"))
+
+
+def _dup_report(tmp_path, log):
+    path = write_note(tmp_path, TUESDAY, log)
+    data = build_day_report(str(tmp_path), TUESDAY, str(path))
+    return data, "\n".join(format_day_report(data))
+
+
+def _errors(data):
+    return {e['text']: e['errors'] for e in data['entries'] if e['kind'] == 'entry'}
+
+
+def test_build_day_report_duplicate_start_is_an_error(tmp_path):
+    data, text = _dup_report(tmp_path, _dup_log(
+        "  * start: 09:00", "  * start: 09:10", "  * end:   09:30"))
+
+    assert _errors(data) == {"early": [], "doubled": ["duplicate start"], "late": []}
+    assert "  * error: *DUPLICATE START*" in text
+
+
+def test_build_day_report_duplicate_end_is_an_error(tmp_path):
+    data, text = _dup_report(tmp_path, _dup_log(
+        "  * start: 09:00", "  * end:   09:20", "  * end:   09:30"))
+
+    assert _errors(data)["doubled"] == ["duplicate end"]
+    assert "  * error: *DUPLICATE END*" in text
+
+
+def test_build_day_report_duplicate_start_and_end_both_reported(tmp_path):
+    data, text = _dup_report(tmp_path, _dup_log(
+        "  * start: 09:00", "  * start: 09:10",
+        "  * end:   09:20", "  * end:   09:30"))
+
+    assert _errors(data)["doubled"] == ["duplicate start", "duplicate end"]
+    assert "*DUPLICATE START*" in text and "*DUPLICATE END*" in text
+
+
+def test_build_day_report_normal_log_has_no_errors(tmp_path):
+    data, text = _dup_report(tmp_path, _dup_log("  * start: 09:00", "  * end:   09:30"))
+
+    assert _errors(data) == {"early": [], "doubled": [], "late": []}
+    assert "error:" not in text

@@ -430,7 +430,7 @@ def test_time_json_entry_fields(daily_note, capsys):
     assert data['entries'][0] == {'kind': 'entry', 'line': 5,
                                   'text': 'June DMC Connect #meeting',
                                   'start': '15:00', 'end': '15:50',
-                                  'minutes': 50, 'tags': ['meeting']}
+                                  'minutes': 50, 'tags': ['meeting'], 'errors': []}
     assert data['warnings'] == []
 
 
