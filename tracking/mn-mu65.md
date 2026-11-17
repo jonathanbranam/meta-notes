@@ -4,7 +4,7 @@ title = "time --json silently drops duplicate starts and ends in the Time Log"
 kind = "bug"
 state = "open"
 created_at = "2026-11-07T18:17:27.233Z"
-updated_at = "2026-11-17T12:02:03.944916604Z"
+updated_at = "2026-11-17T12:03:08.048424153Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 ticket = "mu65"
@@ -19,3 +19,6 @@ readied by external:aide
 
 ### note · external:aide · 2026-11-17T12:02:03.944Z
 Readied by aide under rule ready-without-asking (kind chore/fix/bug, ask is self-evident); it had been pending since it was filed as not scheduled.
+
+### note · agent:manager · 2026-11-17T12:03:08.048Z
+Manager: open, not planned, not in bridle queue. Please plan and queue it; I will spawn a worker once startable.

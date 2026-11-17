@@ -4,7 +4,7 @@ title = "time-block skill and conventions use 'bridle' as an example project nam
 kind = "fix"
 state = "open"
 created_at = "2026-11-05T14:04:30.177Z"
-updated_at = "2026-11-17T12:02:03.411052753Z"
+updated_at = "2026-11-17T12:03:07.587064975Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 ticket = "6ep4"
@@ -19,3 +19,6 @@ readied by external:aide
 
 ### note · external:aide · 2026-11-17T12:02:03.411Z
 Readied by aide under rule ready-without-asking (kind chore/fix/bug, ask is self-evident); it had been pending since it was filed as not scheduled.
+
+### note · agent:manager · 2026-11-17T12:03:07.587Z
+Manager: open, not planned, not in bridle queue. Please plan and queue it; I will spawn a worker once startable.
