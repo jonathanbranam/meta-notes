@@ -4,13 +4,31 @@ title = "time-block skill and conventions use 'bridle' as an example project nam
 kind = "fix"
 state = "open"
 created_at = "2026-11-05T14:04:30.177Z"
-updated_at = "2026-11-17T12:03:07.587064975Z"
+updated_at = "2026-11-17T12:03:56.280962756Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 ticket = "6ep4"
 +++
 
-docs/tickets/open/time-block-skill-and-conventions-use-bridle-as-an-example-pr-6ep4.md
+## The ask
+
+Found by the mn-h7fb worker (via manager, m-0172, 2026-11-05): the time-block skill and the conventions name 'bridle' as an example of a lowercase project name. Rule works-without-bridle says the product never mentions bridle. Swap the example for a neutral project name. Filed by orchestrator@vesta.
+
+## Brief (orchestrator@vesta, acting PM, 2026-11-17)
+
+Change "(bridle, meta-notes)" to a neutral example such as "(kitchen, meta-notes)" in:
+- skills/time-block/SKILL.md:39
+- scripts/meta_notes/conventions.md:151 (keep the paragraph's line wrapping tidy)
+
+If the prime guide's output or a test snapshot embeds conventions.md, update it to match. Also check scripts/meta_notes/__init__.py, which mentions bridle: change it only if it is user-facing text (help, output, docs); leave it if it is a code comment about the dev workflow, and say which in your report.
+
+Files: skills/time-block/SKILL.md, scripts/meta_notes/conventions.md, possibly scripts/meta_notes/__init__.py and a test fixture.
+
+Verify: `grep -rn bridle skills scripts/meta_notes/conventions.md` prints nothing; the project's check is green.
+
+Model: Haiku.
+
+Out of scope: bridle mentions in docs/, design/ and .bridle/ (dev workflow, not product).
 
 ## Thread
 
