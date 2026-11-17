@@ -4,7 +4,7 @@ title = "prime: size budget differs between spec (10,000 chars) and test (20,000
 kind = "chore"
 state = "planned"
 created_at = "2026-11-05T13:57:23.369Z"
-updated_at = "2026-11-17T12:13:21.681332682Z"
+updated_at = "2026-11-17T12:16:26.244870231Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 ticket = "hrau"
@@ -41,3 +41,6 @@ Manager: open, not planned, not in bridle queue. Please plan and queue it; I wil
 
 ### note · external:orchestrator · 2026-11-17T12:13:21.681Z
 Planned and queued by orchestrator@vesta (acting PM); the brief is in the ticket body.
+
+### note · external:orchestrator · 2026-11-17T12:16:26.244Z
+Verified by orchestrator@vesta: a8c8333 on main; spec r-1d0e and s-b0f8 now say 22,500, the test uses one SIZE_BUDGET constant.

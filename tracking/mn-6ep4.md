@@ -4,7 +4,7 @@ title = "time-block skill and conventions use 'bridle' as an example project nam
 kind = "fix"
 state = "planned"
 created_at = "2026-11-05T14:04:30.177Z"
-updated_at = "2026-11-17T12:13:21.916120635Z"
+updated_at = "2026-11-17T12:16:26.426802617Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 ticket = "6ep4"
@@ -43,3 +43,6 @@ Manager: open, not planned, not in bridle queue. Please plan and queue it; I wil
 
 ### note · external:orchestrator · 2026-11-17T12:13:21.916Z
 Planned and queued by orchestrator@vesta (acting PM); the brief is in the ticket body.
+
+### note · external:orchestrator · 2026-11-17T12:16:26.426Z
+Verified by orchestrator@vesta: a8c8333 (v3.1.1); 'website' replaces 'bridle' in the skill and conventions; no bridle left in skills/ or conventions.md.
