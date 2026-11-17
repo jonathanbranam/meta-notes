@@ -463,6 +463,10 @@ The report for one day has these sections, in order:
                         or `M min` under an hour), and `tags`. A missing
                         time shows `*MISSING START TIME*` or
                         `*MISSING END TIME*` and the entry has no `time`.
+                        A second `start:` or `end:` line in one entry
+                        keeps the last and adds an `error:` line,
+                        `*DUPLICATE START*` or `*DUPLICATE END*` (`errors`
+                        in --json).
                         Between two entries, a gap of more than 2 minutes
                         is listed as `*GAP of N min*`, and an entry that
                         starts before the previous one ends as

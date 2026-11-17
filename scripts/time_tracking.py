@@ -80,6 +80,7 @@ class TimeLogEntry:
     activity: Optional[str] = None
     tags: list[Tag] = field(default_factory=list)
     notes: Optional[str] = None
+    errors: list[str] = field(default_factory=list)
 
 
 def _extract_date_from_filepath(filepath: str) -> Optional[date]:
@@ -403,6 +404,7 @@ def _parse_time_log_lines(lines: list[str], filepath: str,
                 'end_time': None,
                 'notes': None,
                 'has_time': False,
+                'errors': [],
                 'line_no': line_num,
                 'text': line.rstrip()
             }
@@ -414,6 +416,8 @@ def _parse_time_log_lines(lines: list[str], filepath: str,
             # Parse start time
             if detail_line.startswith('start:'):
                 current_entry_data['has_time'] = True
+                if current_entry_data['start_time'] is not None:
+                    current_entry_data['errors'].append('duplicate start')
                 time_str = detail_line[6:].strip()
                 _warn_tilde(time_str, filepath, line_num)
                 current_entry_data['start_time'] = _parse_entry_time(time_str, file_date)
@@ -421,6 +425,8 @@ def _parse_time_log_lines(lines: list[str], filepath: str,
             # Parse end time
             elif detail_line.startswith('end:'):
                 current_entry_data['has_time'] = True
+                if current_entry_data['end_time'] is not None:
+                    current_entry_data['errors'].append('duplicate end')
                 time_str = detail_line[4:].strip()
                 _warn_tilde(time_str, filepath, line_num)
                 current_entry_data['end_time'] = _parse_entry_time(time_str, file_date)
@@ -494,7 +500,8 @@ def _create_time_log_entry(entry_data: dict, filepath: str,
         end_time=entry_data.get('end_time'),
         activity=entry_data.get('activity'),
         tags=tags,
-        notes=entry_data.get('notes')
+        notes=entry_data.get('notes'),
+        errors=entry_data.get('errors', [])
     )
 
 
@@ -914,6 +921,7 @@ def _entry_item(entry: TimeLogEntry) -> dict:
         'end': _hhmm(entry.end_time),
         'minutes': minutes,
         'tags': tags,
+        'errors': list(entry.errors),
     }
 
 
