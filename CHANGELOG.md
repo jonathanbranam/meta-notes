@@ -6,6 +6,11 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 3.1.1 - 2026-11-17
+
+- Fixed: the Time Block guide (`meta-notes conventions`, `time-block` skill)
+  uses `website`, not `bridle`, as its example project name.
+
 ## 3.1.0 - 2026-11-16
 
 - New: the shipped daily templates have an empty `## Tasks` section right
