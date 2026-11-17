@@ -31,3 +31,10 @@ tasks = ["mn-exfd"]
 
 [[tier]]
 tasks = ["mn-abjq"]
+
+[[tier]]
+tasks = [
+    "mn-hrau",
+    "mn-6ep4",
+    "mn-mu65",
+]

@@ -2,9 +2,9 @@
 id = "mn-mu65"
 title = "time --json silently drops duplicate starts and ends in the Time Log"
 kind = "bug"
-state = "open"
+state = "planned"
 created_at = "2026-11-07T18:17:27.233Z"
-updated_at = "2026-11-17T12:03:56.330945524Z"
+updated_at = "2026-11-17T12:13:22.092412815Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 ticket = "mu65"
@@ -40,3 +40,6 @@ Readied by aide under rule ready-without-asking (kind chore/fix/bug, ask is self
 
 ### note · agent:manager · 2026-11-17T12:03:08.048Z
 Manager: open, not planned, not in bridle queue. Please plan and queue it; I will spawn a worker once startable.
+
+### note · external:orchestrator · 2026-11-17T12:13:22.092Z
+Planned and queued by orchestrator@vesta (acting PM); the brief is in the ticket body.

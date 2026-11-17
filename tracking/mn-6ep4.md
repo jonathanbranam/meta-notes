@@ -2,9 +2,9 @@
 id = "mn-6ep4"
 title = "time-block skill and conventions use 'bridle' as an example project name"
 kind = "fix"
-state = "open"
+state = "planned"
 created_at = "2026-11-05T14:04:30.177Z"
-updated_at = "2026-11-17T12:03:56.280962756Z"
+updated_at = "2026-11-17T12:13:21.916120635Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 ticket = "6ep4"
@@ -40,3 +40,6 @@ Readied by aide under rule ready-without-asking (kind chore/fix/bug, ask is self
 
 ### note · agent:manager · 2026-11-17T12:03:07.587Z
 Manager: open, not planned, not in bridle queue. Please plan and queue it; I will spawn a worker once startable.
+
+### note · external:orchestrator · 2026-11-17T12:13:21.916Z
+Planned and queued by orchestrator@vesta (acting PM); the brief is in the ticket body.
