@@ -4,13 +4,29 @@ title = "prime: size budget differs between spec (10,000 chars) and test (20,000
 kind = "chore"
 state = "open"
 created_at = "2026-11-05T13:57:23.369Z"
-updated_at = "2026-11-17T12:02:06.301843539Z"
+updated_at = "2026-11-17T12:02:52.697747361Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 ticket = "hrau"
 +++
 
-docs/tickets/open/prime-size-budget-differs-between-spec-10-000-chars-and-test-hrau.md
+## The ask
+
+Found by the mn-2pc3 worker (via manager, m-0168, 2026-11-05): the prime guide's size budget differs between the test and the spec. One of them is wrong; align them. Filed by orchestrator@vesta.
+
+## Brief (orchestrator@vesta, acting PM, 2026-11-17)
+
+Decision: the test is right, the spec is stale. mn-m9qv (commit e3045b8, v2.35.0) deliberately raised the budget in test/unit/test_prime.py to 22,500 characters (test_run_size_budget and test_prime_inside_notes_root) when the lists conventions were added to the guide. The spec was not updated.
+
+Change: in design/specs/agent-prime.md, change the requirement (line ~100) and scenario s-b0f8 (line ~105) from 10,000 to 22,500 characters. Keep the rest of the wording ("costs little context", no markdown tables).
+
+Files: design/specs/agent-prime.md only. No code or test change.
+
+Verify: `grep -n "22,500" design/specs/agent-prime.md` shows both lines; no "10,000" remains in that file; the project's check is green.
+
+Model: Haiku (one-line docs edit).
+
+Rejected: lowering the test back to 10,000. The guide now exceeds 10,000 with the lists conventions mn-m9qv added on purpose; shrinking it is a separate design question, not this chore.
 
 ## Thread
 
