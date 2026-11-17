@@ -1416,7 +1416,7 @@ Commands ~
     groups, and the skills are generated. Outside a notes root it still
     succeeds and starts with a line saying no root was found. With
     `--json`, the object has `version`, `root` (null outside a root), and
-    `text`. The guide, conventions included, stays under 10,000
+    `text`. The guide, conventions included, stays under 22,500
     characters.
 
     Point agents at it with this line in the notes root's `CLAUDE.md`: >

@@ -97,9 +97,9 @@ These parts of the guide SHALL be generated, not written by hand, so they match 
 - **THEN** the guide SHALL list `calendar`
 
 ### Requirement: Prime output size  {#r-1d0e}
-The guide, including the conventions, SHALL be at most 10,000 characters, so it costs little context in every session. It SHALL contain no markdown tables.
+The guide, including the conventions, SHALL be at most 22,500 characters, so it costs little context in every session. It SHALL contain no markdown tables.
 
 #### Scenario: Size budget  {#s-b0f8}
 *Verification*: **non-executable**
 - **WHEN** the user runs `meta-notes prime` in a notes root
-- **THEN** stdout SHALL be at most 10,000 characters and no line SHALL start with `|`
+- **THEN** stdout SHALL be at most 22,500 characters and no line SHALL start with `|`

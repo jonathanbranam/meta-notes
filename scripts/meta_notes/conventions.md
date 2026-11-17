@@ -148,7 +148,7 @@ to cancel.
 ## Editing the Time Block
 
 A tilde before a time means approximately: `home ~9:20`, `until ~10:55`.
-Text is lowercase except proper names; project names (bridle, meta-notes)
+Text is lowercase except proper names; project names (website, meta-notes)
 stay lowercase.
 
 Actual records only deviations from the Plan and extras not in it. A row

@@ -17,6 +17,8 @@ from meta_notes import cli, conventions, init, prime
 from time_tracking import TAG_GROUPS
 
 SATURDAY = date(2026, 9, 26)
+# The prime guide size budget, in characters; agent-prime spec r-1d0e.
+SIZE_BUDGET = 22_500
 
 
 @pytest.fixture
@@ -160,7 +162,7 @@ def test_run_inside_root_has_no_no_root_line(notes_root):
 
 
 def test_run_size_budget(notes_root):
-    assert len(prime.run(str(notes_root), SATURDAY)) <= 22_500
+    assert len(prime.run(str(notes_root), SATURDAY)) <= SIZE_BUDGET
 
 
 # Tests for the prime command
@@ -174,7 +176,7 @@ def test_prime_inside_notes_root(notes_root, capsys):
 
     assert code == 0
     assert out.startswith('# meta-notes guide')
-    assert len(out) <= 22_500
+    assert len(out) <= SIZE_BUDGET
 
 
 def test_prime_json(notes_root, capsys):
