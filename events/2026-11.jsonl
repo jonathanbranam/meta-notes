@@ -63,3 +63,6 @@
 {"actor":"external:orchestrator","at":"2026-11-17T12:13:21.427335619Z","from":"open","task":"mn-6ep4","to":"planned"}
 {"actor":"external:orchestrator","at":"2026-11-17T12:13:21.538412570Z","from":"open","task":"mn-mu65","to":"planned"}
 {"actor":"external:orchestrator","at":"2026-11-17T12:13:21.604873741Z","queue":"reprioritized"}
+{"actor":"external:orchestrator","at":"2026-11-17T12:20:18.513386019Z","from":"planned","task":"mn-hrau","to":"integrated"}
+{"actor":"external:orchestrator","at":"2026-11-17T12:20:18.613275029Z","from":"planned","task":"mn-6ep4","to":"integrated"}
+{"actor":"external:orchestrator","at":"2026-11-17T12:20:18.793060967Z","from":"planned","task":"mn-mu65","to":"integrated"}

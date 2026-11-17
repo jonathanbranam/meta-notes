@@ -2,11 +2,13 @@
 id = "mn-hrau"
 title = "prime: size budget differs between spec (10,000 chars) and test (20,000)"
 kind = "chore"
-state = "planned"
+state = "integrated"
 created_at = "2026-11-05T13:57:23.369Z"
-updated_at = "2026-11-17T12:16:26.244870231Z"
+updated_at = "2026-11-17T12:20:23.874995157Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
+commit = "a8c8333"
+summary = "Spec r-1d0e/s-b0f8 and doc now say 22,500 characters, matching the test (raised deliberately in mn-m9qv); the test uses one SIZE_BUDGET constant. a8c8333."
 ticket = "hrau"
 +++
 
@@ -44,3 +46,6 @@ Planned and queued by orchestrator@vesta (acting PM); the brief is in the ticket
 
 ### note · external:orchestrator · 2026-11-17T12:16:26.244Z
 Verified by orchestrator@vesta: a8c8333 on main; spec r-1d0e and s-b0f8 now say 22,500, the test uses one SIZE_BUDGET constant.
+
+### note · external:orchestrator · 2026-11-17T12:20:18.513Z
+integrated: a8c8333

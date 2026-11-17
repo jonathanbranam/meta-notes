@@ -2,11 +2,13 @@
 id = "mn-6ep4"
 title = "time-block skill and conventions use 'bridle' as an example project name"
 kind = "fix"
-state = "planned"
+state = "integrated"
 created_at = "2026-11-05T14:04:30.177Z"
-updated_at = "2026-11-17T12:16:26.426802617Z"
+updated_at = "2026-11-17T12:20:23.883522443Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
+commit = "a8c8333"
+summary = "'website' replaces 'bridle' as the example project name in skills/time-block/SKILL.md and conventions.md (v3.1.1). a8c8333."
 ticket = "6ep4"
 +++
 
@@ -46,3 +48,6 @@ Planned and queued by orchestrator@vesta (acting PM); the brief is in the ticket
 
 ### note · external:orchestrator · 2026-11-17T12:16:26.426Z
 Verified by orchestrator@vesta: a8c8333 (v3.1.1); 'website' replaces 'bridle' in the skill and conventions; no bridle left in skills/ or conventions.md.
+
+### note · external:orchestrator · 2026-11-17T12:20:18.613Z
+integrated: a8c8333

@@ -2,11 +2,13 @@
 id = "mn-mu65"
 title = "time --json silently drops duplicate starts and ends in the Time Log"
 kind = "bug"
-state = "planned"
+state = "integrated"
 created_at = "2026-11-07T18:17:27.233Z"
-updated_at = "2026-11-17T12:13:22.092412815Z"
+updated_at = "2026-11-17T12:20:23.891785972Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
+commit = "eebe84f"
+summary = "Each time --json entry now has an 'errors' list ('duplicate start', 'duplicate end'); text shows an error: line; the entry keeps the last value. Spec s-685b. Known gap: a duplicate is flagged only if the first value parsed. v3.1.2, eebe84f."
 ticket = "mu65"
 +++
 
@@ -43,3 +45,6 @@ Manager: open, not planned, not in bridle queue. Please plan and queue it; I wil
 
 ### note · external:orchestrator · 2026-11-17T12:13:22.092Z
 Planned and queued by orchestrator@vesta (acting PM); the brief is in the ticket body.
+
+### note · external:orchestrator · 2026-11-17T12:20:18.793Z
+integrated: eebe84f
