@@ -70,3 +70,4 @@
 {"actor":"external:aide","at":"2026-11-19T11:46:22.480800721Z","from":"pending","task":"mn-f4wt","to":"open"}
 {"actor":"external:orchestrator","at":"2026-11-19T11:58:01.732660137Z","from":"open","task":"mn-f4wt","to":"planned"}
 {"actor":"external:orchestrator","at":"2026-11-19T11:58:01.966917738Z","queue":"reprioritized"}
+{"actor":"external:orchestrator","at":"2026-11-19T12:01:12.055723857Z","from":"planned","task":"mn-f4wt","to":"integrated"}
