@@ -6,6 +6,12 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 3.2.0 - 2026-11-19
+
+- New: `meta-notes calendar --declined` also lists meetings you declined,
+  marked `(declined)` in text and with `response` `no` in `--json`. It works
+  with `--with` and `--search`. Without it, declined meetings stay hidden.
+
 ## 3.1.2 - 2026-11-17
 
 - Fixed: `meta-notes time` reports an entry with two `start:` or two `end:`
