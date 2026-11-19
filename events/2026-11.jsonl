@@ -66,3 +66,5 @@
 {"actor":"external:orchestrator","at":"2026-11-17T12:20:18.513386019Z","from":"planned","task":"mn-hrau","to":"integrated"}
 {"actor":"external:orchestrator","at":"2026-11-17T12:20:18.613275029Z","from":"planned","task":"mn-6ep4","to":"integrated"}
 {"actor":"external:orchestrator","at":"2026-11-17T12:20:18.793060967Z","from":"planned","task":"mn-mu65","to":"integrated"}
+{"actor":"human","at":"2026-11-19T11:46:11.784Z","from":"","task":"mn-f4wt","to":"pending"}
+{"actor":"external:aide","at":"2026-11-19T11:46:22.480800721Z","from":"pending","task":"mn-f4wt","to":"open"}
