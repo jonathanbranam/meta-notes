@@ -2,9 +2,9 @@
 id = "mn-f4wt"
 title = "calendar: a flag to include declined meetings"
 kind = "feature"
-state = "open"
+state = "planned"
 created_at = "2026-11-19T11:46:11.784Z"
-updated_at = "2026-11-19T11:46:26.922489369Z"
+updated_at = "2026-11-19T11:58:02.051351229Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
 ticket = "f4wt"
@@ -22,3 +22,6 @@ Readied by aide: a feature, but the human made the product decision in the mail 
 
 ### note · agent:manager · 2026-11-19T11:46:26.922Z
 Manager: open, not planned, not in bridle queue. Please plan and queue it; I will spawn a worker once startable.
+
+### note · external:orchestrator · 2026-11-19T11:58:02.051Z
+Planned and queued by orchestrator. Brief: the ask above stands. Model: Sonnet (small feature, but touches the event filter shared by --search/--with). Verify: just check green; a test that a DECLINED fixture event is hidden by default and shown with the flag in text (marked (declined)), --json (response field), and with --search/--with. Out of scope: the calendar debug command.

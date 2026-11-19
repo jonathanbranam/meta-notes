@@ -38,3 +38,6 @@ tasks = [
     "mn-6ep4",
     "mn-mu65",
 ]
+
+[[tier]]
+tasks = ["mn-f4wt"]
