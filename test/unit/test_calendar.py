@@ -151,9 +151,10 @@ def set_config(root, extra):
     (root / '.meta-notes').write_text(CONFIG + extra)
 
 
-def run(root, period=None, ics=None, today=TODAY, names=(), searches=()):
+def run(root, period=None, ics=None, today=TODAY, names=(), searches=(),
+        declined=False):
     return calendar.run(str(root), period, ics, today=today, names=names,
-                        searches=searches)
+                        searches=searches, declined=declined)
 
 
 def titles(data, day):
@@ -583,6 +584,72 @@ def test_calendar_other_attendee_declined_kept(root):
     _, data, _ = run(root)
 
     assert titles(data, '2026-09-28') == ['Sync']
+
+
+def declined_pair(root):
+    one_calendar(root, [
+        vevent('d', '20260928T090000', '20260928T100000', 'Office Hours',
+               extra=['ATTENDEE;PARTSTAT=DECLINED:mailto:me@example.com',
+                      'ATTENDEE;PARTSTAT=ACCEPTED:mailto:zach@example.com']),
+        vevent('k', '20260928T110000', '20260928T120000', 'Kept'),
+    ])
+
+
+def test_calendar_declined_flag_shows_marked_text(root):
+    """--declined lists the declined event, marked in text; default hides it."""
+    declined_pair(root)
+
+    lines, _, _ = run(root)
+    assert not [x for x in lines if 'Office Hours' in x]
+    lines, _, _ = run(root, declined=True)
+
+    assert '(declined) 09:00-10:00  Office Hours' in lines
+    assert '11:00-12:00  Kept' in lines
+
+
+def test_calendar_declined_flag_json_response(root):
+    """With --declined, JSON carries the event with its response."""
+    declined_pair(root)
+
+    _, data, _ = run(root, declined=True)
+
+    events = data['days'][0]['events']
+    assert [(e['title'], e['response']) for e in events] == [
+        ('Office Hours', 'no'), ('Kept', None)]
+
+
+def test_calendar_declined_flag_with_search_and_with(root):
+    """--search and --with find a declined event only with --declined."""
+    declined_pair(root)
+
+    _, data, _ = run(root, searches=['office'])
+    assert data['days'] == []
+    _, data, _ = run(root, searches=['office'], declined=True)
+    assert titles(data, '2026-09-28') == ['Office Hours']
+    _, data, _ = run(root, names=['zach'], declined=True)
+    assert titles(data, '2026-09-28') == ['Office Hours']
+
+
+def test_calendar_declined_flag_after_cached_run(root):
+    """The parsed cache doesn't bake in the filter: the flag works on a cached run."""
+    declined_pair(root)
+
+    run(root)
+    _, data, _ = run(root, declined=True)
+
+    assert data['source']['cached'] is True
+    assert titles(data, '2026-09-28') == ['Office Hours', 'Kept']
+
+
+def test_cli_calendar_declined_flag(root, capsys):
+    """The CLI passes --declined through."""
+    declined_pair(root)
+
+    code, out, _ = run_json(capsys, ['calendar', '--date', '2026-09-28',
+                                     '--declined'])
+
+    assert code == 0
+    assert out['days'][0]['events'][0]['response'] == 'no'
 
 
 def test_calendar_email_unset(root):

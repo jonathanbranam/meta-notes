@@ -297,6 +297,7 @@ meta-notes time-log update plan/daily/26-Q4/2026-10-01\ Thu.md --expect "$old" -
 meta-notes calendar --date 2026-09-28..2026-10-02  # agenda from the latest export
 meta-notes calendar --ics ~/Downloads/export.zip --json
 meta-notes calendar --date 2026-09 --with zach --search 1:1  # filtered
+meta-notes calendar --date 2026-11-09 --declined  # include declined meetings, marked
 meta-notes cache clear                    # delete parsed calendars, keep exports
 meta-notes outlook --location 45040       # weather, temps, sun, alerts
 meta-notes outlook sun --date 2026-10-09  # one line

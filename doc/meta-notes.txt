@@ -1284,8 +1284,11 @@ Commands ~
 
     Every occurrence overlapping a day in {period} is listed, with
     recurrence rules, excluded dates, and moved or changed occurrences
-    applied. Cancelled events, events you declined, and older copies of an
-    occurrence the export records more than once are left out. A timed
+    applied. Cancelled events, events you declined (unless `--declined`
+    is given: they are listed, marked `(declined)` in text and with
+    `response` `no` in `--json`; it works with `--with` and `--search`),
+    and older copies of an occurrence the export records more than once
+    are left out. A timed
     event is listed on the day it starts; an all-day event on each day it
     covers. Output, one heading per day, including empty days: >
         ## 2026-09-28 Mon
@@ -1313,8 +1316,8 @@ Commands ~
                         event (no organizer or attendees) in any
                         loaded calendar
         organizer       `name` and `email`, or null
-        response        your response: `yes`, `maybe`, `no-reply`, or
-                        null
+        response        your response: `yes`, `maybe`, `no-reply`, `no`
+                        (declined; only with `--declined`), or null
         attendee_count  attendees who are people (rooms and resources
                         aren't counted)
         attendees       the first 20 of them, each with `name`, `email`,

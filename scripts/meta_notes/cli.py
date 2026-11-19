@@ -232,7 +232,8 @@ def cmd_calendar(args, root: str) -> Output:
     try:
         lines, data, warnings = calendar.run(root, args.date, args.ics,
                                               names=args.with_names,
-                                              searches=args.search)
+                                              searches=args.search,
+                                              declined=args.declined)
     except ValueError as e:
         raise CliError(str(e))
     return Output(data, lines, warnings,
@@ -1158,6 +1159,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--search", metavar="TEXT", action="append", default=[],
                    help="only events whose title, location, or description "
                         "contains TEXT (repeatable)")
+    p.add_argument("--declined", action="store_true",
+                   help="also list events you declined, marked (declined)")
     p.set_defaults(handler=cmd_calendar)
 
     p = sub.add_parser("outlook", parents=[common],

@@ -679,10 +679,12 @@ def _local(value, tz: tzinfo) -> datetime:
 
 def agenda(rie, calendars: list[tuple], start: date, end: date, tz: tzinfo,
            email: str | None, names: list[str] = (),
-           searches: list[str] = ()) -> dict[date, list[dict]]:
+           searches: list[str] = (),
+           declined: bool = False) -> dict[date, list[dict]]:
     """
     Occurrences overlapping each day from start to end in tz, leaving out
-    cancelled and declined events. All-day events appear on each day they
+    cancelled events, and declined ones unless declined is true (those get
+    response "no"). All-day events appear on each day they
     cover; timed events on the day they start (or the first day, when they
     started earlier). All-day first, then by start time. Each event
     carries its attendance (see attendance()).
@@ -704,12 +706,15 @@ def agenda(rie, calendars: list[tuple], start: date, end: date, tz: tzinfo,
                                    end + timedelta(days=2)):
             if str(event.get("STATUS", "")).upper() == "CANCELLED":
                 continue
-            if _declined(event, email):
+            mine_declined = _declined(event, email)
+            if mine_declined and not declined:
                 continue
             title = str(event.get("SUMMARY") or "").strip() or "(no title)"
             location = str(event.get("LOCATION") or "").strip() or None
             everyone = _people(event)
             people = attendance(event, email, everyone)
+            if mine_declined:
+                people["response"] = "no"
             if filtered:
                 found = match(event, people["organizer"], everyone,
                               names, searches)
@@ -763,6 +768,8 @@ def agenda_lines(days: dict[date, list[dict]], multiple: bool) -> list[str]:
                 when = (f"{datetime.fromisoformat(event['start']):%H:%M}-"
                         f"{datetime.fromisoformat(event['end']):%H:%M}")
             line = f"{when}  {event['title']}"
+            if event["response"] == "no":
+                line = "(declined) " + line
             # Only responses that matter for planning; the rest is in JSON
             if not event["mine"] and event["response"] in ("maybe", "no-reply"):
                 line += f" [{event['response']}]"
@@ -776,7 +783,8 @@ def agenda_lines(days: dict[date, list[dict]], multiple: bool) -> list[str]:
 
 def run(root: str, period: str | None = None, ics: str | None = None,
         today: date | None = None, names: list[str] = (),
-        searches: list[str] = ()) -> tuple[list[str], dict, list[str]]:
+        searches: list[str] = (),
+        declined: bool = False) -> tuple[list[str], dict, list[str]]:
     """
     Build the agenda for a period.
 
@@ -787,6 +795,7 @@ def run(root: str, period: str | None = None, ics: str | None = None,
         today: Today's date in the display timezone (default: now).
         names: --with NAMEs; only events with all of them are listed.
         searches: --search TEXTs; only events with all of them are listed.
+        declined: --declined; list events the user declined, too.
 
     Returns:
         (text lines, JSON fields: days, source, pruned; warnings)
@@ -878,7 +887,8 @@ def run(root: str, period: str | None = None, ics: str | None = None,
 
     pruned = prune(root, exports, settings.calendars, used)
 
-    days = agenda(rie, loaded, start, end, tz, settings.email, names, searches)
+    days = agenda(rie, loaded, start, end, tz, settings.email, names, searches,
+                  declined)
     loaded_names = [name for name, _ in loaded]
     lines = agenda_lines(days, len(loaded_names) > 1)
     if (names or searches) and not days:

@@ -88,7 +88,7 @@ A `.zip` export SHALL be read without extracting it to disk. Each `.ics` member 
 ### Requirement: Events in the agenda  {#r-8c48}
 The agenda SHALL include every occurrence of every event, including each occurrence of a recurring event, that overlaps a day in PERIOD in the display timezone, and no other. It SHALL apply recurrence rules, excluded dates, and changes to single occurrences as the export records them. It SHALL leave out:
 - events with status `CANCELLED`
-- events where the attendee whose address matches `email`, ignoring case, has declined
+- events where the attendee whose address matches `email`, ignoring case, has declined, unless `--declined` is given
 - earlier versions of an occurrence the export records more than once, keeping only the latest
 
 A timed event SHALL appear on the day it starts. An all-day event SHALL appear on each day it covers within PERIOD. Within a day, all-day events SHALL come first, then timed events by start time.
@@ -97,6 +97,11 @@ A timed event SHALL appear on the day it starts. An all-day event SHALL appear o
 *Verification*: **non-executable**
 - **WHEN** `email = "me@example.com"` and an event lists `me@example.com` as an attendee with `PARTSTAT=DECLINED`
 - **THEN** the event SHALL NOT appear
+
+#### Scenario: Declined meeting shown with the flag  {#s-98a0}
+*Verification*: **non-executable**
+- **WHEN** `--declined` is given and an event lists the user as an attendee with `PARTSTAT=DECLINED`
+- **THEN** the event SHALL appear, in text with `(declined) ` before its time, and in `--json` with `response` `no`, and `--with` and `--search` SHALL match it like any other event
 
 #### Scenario: Moved occurrence  {#s-1ed7}
 *Verification*: **non-executable**
