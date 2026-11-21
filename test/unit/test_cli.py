@@ -750,6 +750,18 @@ def test_task_update_usage_errors(task_note, capsys, args, message):
     assert task_note.read_bytes() == before
 
 
+def test_task_update_text_with_date_emoji_refused(task_note, capsys):
+    """--text with a date emoji is a clear error, and the file is unchanged."""
+    before = task_note.read_bytes()
+    code, out, _ = run_json(
+        capsys, ['task', 'update', 'project/foo.md:3', '--expect', TASK,
+                 '--text', 'call Sam 📅 2026-10-01'])
+    assert code == 1
+    assert out['ok'] is False
+    assert '--due, --start, --time or --recur' in out['error']
+    assert task_note.read_bytes() == before
+
+
 def test_task_update_expect_required(task_note, capsys):
     code, out, _ = run_json(capsys, ['task', 'update', 'project/foo.md:3',
                                      '--status', 'x'])

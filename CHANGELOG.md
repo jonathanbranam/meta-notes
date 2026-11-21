@@ -6,6 +6,12 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 3.2.1 - 2026-11-21
+
+- Fixed: `meta-notes task update --text` refuses a value with a date or marker
+  emoji (`📅`, `🛫`, `⏰`, `🔁`, `✅`) with an error, instead of doubling the
+  line's dates. Set dates with `--due`, `--start`, `--time` or `--recur`.
+
 ## 3.2.0 - 2026-11-19
 
 - New: `meta-notes calendar --declined` also lists meetings you declined,

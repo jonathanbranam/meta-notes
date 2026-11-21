@@ -1038,3 +1038,32 @@ def test_add_tasks_heading_at_any_level_keeps_subheadings(tmp_path):
 def test_edit_line_status_from_only_sets_char():
     assert (edit('- [ ] call Sam 📅 2026-10-01', status='<')
             == '- [<] call Sam 📅 2026-10-01')
+
+
+# Tests for --text with a date or marker emoji (refused)
+
+@pytest.mark.parametrize('emoji', ['🛫', '📅', '📆', '🗓', '⏰', '🔁', '✅'])
+def test_task_update_text_with_emoji_raises(tmp_path, emoji):
+    line = '- [ ] call Sam 📅 2026-09-22'
+    path = write_note(tmp_path, [line])
+    before = path.read_bytes()
+    with pytest.raises(TaskUpdateError, match='--due, --start, --time or --recur'):
+        update(str(path), 1, line, new_text=f'call Sam {emoji} 2026-10-01',
+               today=TODAY)
+    assert path.read_bytes() == before
+
+
+def test_task_update_text_with_emoji_names_emoji(tmp_path):
+    line = '- [ ] call Sam 📅 2026-09-22'
+    path = write_note(tmp_path, [line])
+    with pytest.raises(TaskUpdateError, match='📅'):
+        update(str(path), 1, line, new_text='call 📅 2026-10-01', today=TODAY)
+
+
+def test_task_update_text_plain_still_works(tmp_path):
+    line = '- [ ] call Sam 📅 2026-09-22'
+    path = write_note(tmp_path, [line])
+    result = update(str(path), 1, line, new_text='call Sam about the quote',
+                    today=TODAY)
+    assert result.new == '- [ ] call Sam about the quote 📅 2026-09-22'
+    assert path.read_text() == result.new + '\n'
