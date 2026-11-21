@@ -261,6 +261,12 @@ def _set_text(text: str, value: str) -> str:
     value = value.strip()
     if not value or re.search(r'[\r\n]', value):
         raise TaskUpdateError("The task text must be one non-empty line")
+    emoji = _DATE_EMOJI_PATTERN.search(value)
+    if emoji:
+        raise TaskUpdateError(
+            f"--text can't contain a date or marker emoji ({emoji.group()}); "
+            "set dates with --due, --start, --time or --recur instead "
+            "(--status x stamps the completed date)")
     box_end = tasks.CHECKBOX_PATTERN.match(text).end()
     first_date = _DATE_EMOJI_PATTERN.search(text, box_end)
     rest = text[first_date.start():] if first_date else ''

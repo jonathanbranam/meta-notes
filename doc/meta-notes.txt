@@ -881,7 +881,10 @@ Commands ~
                         stay as they are, and a 🔁 line keeps its rule.
                         Tags in the old words go with them; put a tag to
                         keep in {text} or add it with `--add-tag`. Empty
-                        text is an error. It is applied first, so a
+                        text is an error, and so is text with a date or
+                        marker emoji (📅, 🛫, ⏰, 🔁, ✅): set those with
+                        --due, --start, --time, --recur (or --status x
+                        for the ✅ date). It is applied first, so a
                         recurring task completed in the same call gets
                         its next occurrence with the new words.
     --add-tag {tag}     Add a tag (with or without `#`), before the first
