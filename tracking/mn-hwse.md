@@ -4,7 +4,7 @@ title = "task update: --text with dates doubles them; the no-done-date-when-due-
 kind = "fix"
 state = "planned"
 created_at = "2026-11-21T18:47:01.666Z"
-updated_at = "2026-11-21T18:58:18.724831998Z"
+updated_at = "2026-11-21T19:00:59.790659089Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 ticket = "hwse"
@@ -31,3 +31,6 @@ readied by external:orchestrator
 
 ### note · agent:manager · 2026-11-21T18:47:11.762Z
 Manager: open, not planned, not in bridle queue. Please plan and queue it; I will spawn a worker once startable.
+
+### note · external:orchestrator · 2026-11-21T19:00:59.790Z
+Orchestrator review of merge 876c18a (v3.2.1): read the diff. _set_text now refuses a --text value matching _DATE_EMOJI_PATTERN (start, due, completed, time, recur emoji), and the error names --due/--start/--time/--recur. It uses the same pattern that finds where the description ends, so the two can't drift apart. Unit and CLI tests added; docs and spec updated. Resolving.
