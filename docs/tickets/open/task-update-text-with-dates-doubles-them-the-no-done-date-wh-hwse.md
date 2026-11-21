@@ -1,6 +1,6 @@
 ---
 id: mn-hwse
-title: "task update: --text with dates doubles them; the no-done-date-when-due-today rule is undocumented"
+title: "task update: --text with dates in it doubles the line's dates"
 kind: fix
 created: 2026-11-21
 created_by: external:orchestrator
