@@ -2,9 +2,9 @@
 id = "mn-hwse"
 title = "task update: --text with dates doubles them; the no-done-date-when-due-today rule is undocumented"
 kind = "fix"
-state = "open"
+state = "planned"
 created_at = "2026-11-21T18:47:01.666Z"
-updated_at = "2026-11-21T18:49:31.447759285Z"
+updated_at = "2026-11-21T18:58:18.724831998Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
 ticket = "hwse"
