@@ -1,15 +1,15 @@
 ---
-id: wn9j
+id: mn-wn9j
 title: "time-block skill: single tildes for off-plan rows, never ~ for approximately"
 kind: bug
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [zqqb]
+blocked_by: []
+related: [mn-zqqb]
 tasks: [mn-3221]
-closed: 2026-10-03T14:37:21Z
+resolved: 2026-10-03T14:37:21Z
 ---
 
 # time-block skill: single tildes, never `~` for "approximately"

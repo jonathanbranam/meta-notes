@@ -1,15 +1,15 @@
 ---
-id: bup2
+id: mn-bup2
 title: Ceremony skills follow the root mode
 kind: feature
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: [47rb]
-see: [zyab]
+blocked_by: [mn-47rb]
+related: [mn-zyab]
 tasks: [mn-kau5]
-closed: 2026-10-04T03:16:23Z
+resolved: 2026-10-04T03:16:23Z
 ---
 
 # Ceremony skills follow the root mode

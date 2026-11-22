@@ -1,12 +1,12 @@
 ---
-id: egvk
+id: mn-egvk
 title: Vim autosave and autoreload for notes buffers, safe against agent edits
-opened: 2026-10-01
+created: 2026-10-01
 repos: [meta-notes]
 changes: []
 specs: [notes-autosave]
-needs: []
-see: [time-log-append-and-update-commands-v63j, time-block-update-command-gmqp]
+blocked_by: []
+related: [time-log-append-and-update-commands-v63j, time-block-update-command-gmqp]
 kind: chore
 ---
 

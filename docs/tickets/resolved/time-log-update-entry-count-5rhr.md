@@ -1,15 +1,15 @@
 ---
-id: 5rhr
+id: mn-5rhr
 title: time-log update reports wrote 1 entry for a multi-entry replace
 kind: bug
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [v63j]
+blocked_by: []
+related: [mn-v63j]
 tasks: [mn-e2d5]
-closed: 2026-10-03T13:59:37Z
+resolved: 2026-10-03T13:59:37Z
 ---
 
 # time-log update reports "wrote 1 entry" for a multi-entry replace

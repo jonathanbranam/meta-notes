@@ -1,13 +1,13 @@
 ---
-id: m6jy
+id: mn-m6jy
 title: "Live calendar access: read Google and Cozi, carefully scoped write (Google first)"
 kind: feature
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: []
+blocked_by: []
+related: []
 tasks: []
 ---
 

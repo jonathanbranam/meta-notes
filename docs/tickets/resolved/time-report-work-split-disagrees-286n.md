@@ -1,12 +1,12 @@
 ---
-id: 286n
+id: mn-286n
 title: The time report's Work vs Non-Work disagrees with its work duration
-opened: 2026-10-01
+created: 2026-10-01
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: []
+blocked_by: []
+related: []
 kind: chore
 ---
 

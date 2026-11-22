@@ -1,12 +1,12 @@
 ---
-id: cpwr
+id: mn-cpwr
 title: task update can't change a task's text
-opened: 2026-10-01
+created: 2026-10-01
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: []
+blocked_by: []
+related: []
 kind: chore
 ---
 

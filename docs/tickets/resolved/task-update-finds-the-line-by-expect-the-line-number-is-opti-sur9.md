@@ -1,15 +1,15 @@
 ---
-id: sur9
+id: mn-sur9
 title: task update finds the line by --expect; the line number is optional
 kind: feature
-opened: 2026-10-06
+created: 2026-10-06
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: []
+blocked_by: []
+related: []
 tasks: [mn-2dyd]
-closed: 2026-10-06T04:15:06Z
+resolved: 2026-10-06T04:15:06Z
 ---
 
 ## The ask

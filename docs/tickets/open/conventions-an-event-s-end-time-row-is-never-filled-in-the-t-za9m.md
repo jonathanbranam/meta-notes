@@ -1,13 +1,13 @@
 ---
-id: za9m
+id: mn-za9m
 title: "Conventions: an event's end-time row is never filled in the Time Block"
 kind: feature
-opened: 2026-10-07
+created: 2026-10-07
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [y6bw]
+blocked_by: []
+related: [mn-y6bw]
 tasks: [mn-za9m]
 ---
 

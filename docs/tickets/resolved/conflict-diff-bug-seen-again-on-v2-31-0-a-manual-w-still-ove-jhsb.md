@@ -1,16 +1,16 @@
 ---
-id: jhsb
+id: mn-jhsb
 title: "Conflict diff bug seen again on v2.31.0: a manual :w still overwrote a newer disk write"
 kind: bug
-opened: 2026-10-11
-filed_by: external:orchestrator
+created: 2026-10-11
+created_by: external:orchestrator
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: []
+blocked_by: []
+related: []
 tasks: []
-closed: 2026-10-11T21:18:15Z
+resolved: 2026-10-11T21:18:15Z
 ---
 
 ## The ask

@@ -1,13 +1,13 @@
 ---
-id: hd2x
+id: mn-hd2x
 title: "Week template: a standard weekly schedule with overrides, overlaid on daily plans"
 kind: explore
-opened: 2026-10-05
+created: 2026-10-05
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [m6jy, zyab, u34c]
+blocked_by: []
+related: [mn-m6jy, mn-zyab, mn-u34c]
 tasks: []
 ---
 

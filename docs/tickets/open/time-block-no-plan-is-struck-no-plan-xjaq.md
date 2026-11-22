@@ -1,13 +1,13 @@
 ---
-id: xjaq
+id: mn-xjaq
 title: "Time Block: no plan is struck, ~no plan~"
 kind: bug
-opened: 2026-10-06
+created: 2026-10-06
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [qb8e]
+blocked_by: []
+related: [mn-qb8e]
 tasks: [mn-xjaq]
 ---
 

@@ -1,15 +1,15 @@
 ---
-id: tzac
+id: mn-tzac
 title: "Vim: GitGutter off for the whole session when Vim starts in a notes root"
 kind: feature
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [bawv]
+blocked_by: []
+related: [mn-bawv]
 tasks: [mn-9b7a]
-closed: 2026-10-03T17:54:15Z
+resolved: 2026-10-03T17:54:15Z
 ---
 
 ## The ask

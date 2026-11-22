@@ -1,15 +1,15 @@
 ---
-id: kkrj
+id: mn-kkrj
 title: "time-block replace: rewrite a range of Time Block rows in one call"
 kind: feature
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [gmqp]
+blocked_by: []
+related: [mn-gmqp]
 tasks: [mn-6523]
-closed: 2026-10-03T13:24:33Z
+resolved: 2026-10-03T13:24:33Z
 ---
 
 # time-block replace: rewrite a range of Time Block rows in one call

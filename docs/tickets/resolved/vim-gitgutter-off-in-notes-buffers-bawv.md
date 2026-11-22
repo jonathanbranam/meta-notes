@@ -1,15 +1,15 @@
 ---
-id: bawv
+id: mn-bawv
 title: "Vim: GitGutter off in notes buffers"
 kind: feature
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: []
+blocked_by: []
+related: []
 tasks: [mn-65ad]
-closed: 2026-10-03T17:31:41Z
+resolved: 2026-10-03T17:31:41Z
 ---
 
 ## The ask

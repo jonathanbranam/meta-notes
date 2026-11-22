@@ -1,15 +1,15 @@
 ---
-id: qb8e
+id: mn-qb8e
 title: "Time Block: strike only plans the human made or approved"
 kind: bug
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [gjf6, bmen]
+blocked_by: []
+related: [mn-gjf6, mn-bmen]
 tasks: [mn-d368]
-closed: 2026-10-03T22:14:30Z
+resolved: 2026-10-03T22:14:30Z
 ---
 
 # Time Block: strike only plans the human made or approved

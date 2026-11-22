@@ -1,13 +1,13 @@
 ---
-id: x5hr
+id: mn-x5hr
 title: Does the Time Block need a bump command to shift rows by N minutes?
 kind: question
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [kkrj]
+blocked_by: []
+related: [mn-kkrj]
 tasks: []
 ---
 

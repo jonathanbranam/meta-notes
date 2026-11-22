@@ -1,12 +1,12 @@
 ---
-id: v63j
+id: mn-v63j
 title: time-log append and time-log update, race-safe commands for Time Log entries
-opened: 2026-10-01
+created: 2026-10-01
 repos: [meta-notes]
 changes: []
 specs: [time-log-edit]
-needs: []
-see: [time-block-update-command-gmqp, time-report-work-split-disagrees-286n]
+blocked_by: []
+related: [time-block-update-command-gmqp, time-report-work-split-disagrees-286n]
 kind: chore
 ---
 

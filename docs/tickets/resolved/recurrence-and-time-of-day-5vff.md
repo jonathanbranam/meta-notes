@@ -1,12 +1,12 @@
 ---
-id: 5vff
+id: mn-5vff
 title: Recurrence and time of day for tasks and reminders
-opened: 2026-09-30
+created: 2026-09-30
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [a-life-assistant-agent-on-the-notes-repo-phyy]
+blocked_by: []
+related: [a-life-assistant-agent-on-the-notes-repo-phyy]
 kind: chore
 ---
 

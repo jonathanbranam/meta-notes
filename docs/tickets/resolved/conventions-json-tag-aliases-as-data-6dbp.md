@@ -1,15 +1,15 @@
 ---
-id: 6dbp
+id: mn-6dbp
 title: "conventions --json: tag aliases as data"
 kind: feature
-opened: 2026-10-05
+created: 2026-10-05
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: []
+blocked_by: []
+related: []
 tasks: [mn-6dbp]
-closed: 2026-10-05T10:48:47Z
+resolved: 2026-10-05T10:48:47Z
 ---
 
 ## The ask

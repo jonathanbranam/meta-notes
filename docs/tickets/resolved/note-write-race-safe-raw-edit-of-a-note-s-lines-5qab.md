@@ -1,15 +1,15 @@
 ---
-id: 5qab
+id: mn-5qab
 title: "note write: race-safe raw edit of a note's lines"
 kind: feature
-opened: 2026-10-05
+created: 2026-10-05
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [5wam]
+blocked_by: []
+related: [mn-5wam]
 tasks: [mn-5qab]
-closed: 2026-10-05T10:48:47Z
+resolved: 2026-10-05T10:48:47Z
 ---
 
 ## The ask

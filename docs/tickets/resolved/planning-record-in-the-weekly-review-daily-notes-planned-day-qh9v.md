@@ -1,15 +1,15 @@
 ---
-id: qh9v
+id: mn-qh9v
 title: "Planning record in the weekly review: daily notes, planned days, no-plan rows, crossed-out plans"
 kind: feature
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: [gjf6]
-see: [bmen]
+blocked_by: [mn-gjf6]
+related: [mn-bmen]
 tasks: [mn-0a21]
-closed: 2026-10-03T14:56:41Z
+resolved: 2026-10-03T14:56:41Z
 ---
 
 # Planning record in the weekly review

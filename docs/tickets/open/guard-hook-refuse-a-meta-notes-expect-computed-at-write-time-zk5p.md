@@ -1,13 +1,13 @@
 ---
-id: zk5p
+id: mn-zk5p
 title: "Guard hook: refuse a meta-notes --expect computed at write time"
 kind: feature
-opened: 2026-10-08
+created: 2026-10-08
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: []
+blocked_by: []
+related: []
 tasks: [mn-zk5p]
 ---
 

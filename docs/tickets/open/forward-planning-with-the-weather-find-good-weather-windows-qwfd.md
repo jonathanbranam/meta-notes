@@ -1,13 +1,13 @@
 ---
-id: qwfd
+id: mn-qwfd
 title: "Forward planning with the weather: find good-weather windows, skip watering before rain"
 kind: explore
-opened: 2026-10-08
+created: 2026-10-08
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [pqwv]
+blocked_by: []
+related: [mn-pqwv]
 tasks: []
 ---
 

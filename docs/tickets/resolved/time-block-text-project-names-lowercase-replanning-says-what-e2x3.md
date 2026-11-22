@@ -1,15 +1,15 @@
 ---
-id: e2x3
+id: mn-e2x3
 title: "Time Block text: project names lowercase; replanning says what it pushes out"
 kind: chore
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [bmen, gjf6]
+blocked_by: []
+related: [mn-bmen, mn-gjf6]
 tasks: [mn-23f8]
-closed: 2026-10-03T14:59:44Z
+resolved: 2026-10-03T14:59:44Z
 ---
 
 ## The ask

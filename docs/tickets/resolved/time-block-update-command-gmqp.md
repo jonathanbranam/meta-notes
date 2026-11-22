@@ -1,12 +1,12 @@
 ---
-id: gmqp
+id: mn-gmqp
 title: time-block update, a race-safe command for Time Block Plan and Actual cells
-opened: 2026-10-01
+created: 2026-10-01
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [docs/bug-report/time-block-request.md]
+blocked_by: []
+related: [docs/bug-report/time-block-request.md]
 kind: chore
 ---
 

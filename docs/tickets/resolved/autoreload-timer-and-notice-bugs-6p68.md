@@ -1,12 +1,12 @@
 ---
-id: 6p68
+id: mn-6p68
 title: Autoreload's timer never starts and its reload notice never shows
-opened: 2026-10-01
+created: 2026-10-01
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [vim-autosave-and-autoreload-egvk]
+blocked_by: []
+related: [vim-autosave-and-autoreload-egvk]
 kind: chore
 ---
 

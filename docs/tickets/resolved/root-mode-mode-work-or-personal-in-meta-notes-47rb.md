@@ -1,15 +1,15 @@
 ---
-id: 47rb
+id: mn-47rb
 title: "Root mode: mode = work or personal in .meta-notes"
 kind: feature
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [zyab]
+blocked_by: []
+related: [mn-zyab]
 tasks: [mn-7qet]
-closed: 2026-10-04T03:01:41Z
+resolved: 2026-10-04T03:01:41Z
 ---
 
 # Root mode: `mode = "work"` or `"personal"` in `.meta-notes`

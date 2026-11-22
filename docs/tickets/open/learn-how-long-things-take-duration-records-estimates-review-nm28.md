@@ -1,13 +1,13 @@
 ---
-id: nm28
+id: mn-nm28
 title: "Learn how long things take: duration records, estimates, review"
 kind: explore
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [5zm3, qh9v]
+blocked_by: []
+related: [mn-5zm3, mn-qh9v]
 tasks: []
 ---
 

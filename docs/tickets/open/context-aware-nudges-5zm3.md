@@ -1,13 +1,13 @@
 ---
-id: 5zm3
+id: mn-5zm3
 title: "Context-aware nudges: checks prompted by place, day and what's going on"
 kind: explore
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [u34c, zyab]
+blocked_by: []
+related: [mn-u34c, mn-zyab]
 tasks: []
 ---
 

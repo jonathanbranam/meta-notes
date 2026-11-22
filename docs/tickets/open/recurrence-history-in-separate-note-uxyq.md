@@ -1,13 +1,13 @@
 ---
-id: uxyq
+id: mn-uxyq
 title: Recurring tasks keep their history in a separate, linked note
 kind: feature
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: []
+blocked_by: []
+related: []
 tasks: []
 ---
 

@@ -1,15 +1,15 @@
 ---
-id: j8kw
+id: mn-j8kw
 title: "Syntax: the ### Time Block heading loses its markdown heading highlight in daily notes"
 kind: bug
-opened: 2026-10-08
+created: 2026-10-08
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: []
+blocked_by: []
+related: []
 tasks: [mn-j8kw]
-closed: 2026-10-08T03:48:41Z
+resolved: 2026-10-08T03:48:41Z
 ---
 
 ## The ask

@@ -1,15 +1,15 @@
 ---
-id: bmen
+id: mn-bmen
 title: "Conventions: tildes in the Time Block and Time Log (approximate times, missed plans)"
 kind: feature
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [wn9j, zqqb]
+blocked_by: []
+related: [mn-wn9j, mn-zqqb]
 tasks: [mn-caa0]
-closed: 2026-10-03T14:49:27Z
+resolved: 2026-10-03T14:49:27Z
 ---
 
 # Conventions: tildes in the Time Block and Time Log

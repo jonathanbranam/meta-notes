@@ -1,15 +1,15 @@
 ---
-id: 357e
+id: mn-357e
 title: "Time report: work and personal time follow the root mode"
 kind: feature
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: [47rb]
-see: [zyab]
+blocked_by: [mn-47rb]
+related: [mn-zyab]
 tasks: [mn-8xpc]
-closed: 2026-10-04T03:06:52Z
+resolved: 2026-10-04T03:06:52Z
 ---
 
 # Time report: work and personal time follow the root mode

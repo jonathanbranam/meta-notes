@@ -1,13 +1,13 @@
 ---
-id: 5wam
+id: mn-5wam
 title: "Live view of the notes: web app at work and mobile app for personal"
 kind: explore
-opened: 2026-10-05
+created: 2026-10-05
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [5zm3, m6jy]
+blocked_by: []
+related: [mn-5zm3, mn-m6jy]
 tasks: []
 ---
 

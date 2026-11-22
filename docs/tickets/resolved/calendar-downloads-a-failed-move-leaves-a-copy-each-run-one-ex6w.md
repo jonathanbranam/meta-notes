@@ -1,15 +1,15 @@
 ---
-id: ex6w
+id: mn-ex6w
 title: "Calendar downloads: a failed move leaves a copy each run; one setting instead of two"
 kind: bug
-opened: 2026-10-08
+created: 2026-10-08
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [rgev]
+blocked_by: []
+related: [mn-rgev]
 tasks: [mn-ex6w]
-closed: 2026-10-08T15:02:45Z
+resolved: 2026-10-08T15:02:45Z
 ---
 
 ## The ask

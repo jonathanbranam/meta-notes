@@ -1,12 +1,12 @@
 ---
-id: u34c
+id: mn-u34c
 title: Daily planning asks when the day's workout happens
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [personal-and-work-planning-differences-zyab]
+blocked_by: []
+related: [personal-and-work-planning-differences-zyab]
 kind: explore
 tasks: []
 ---

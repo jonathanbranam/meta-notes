@@ -1,15 +1,15 @@
 ---
-id: ws7t
+id: mn-ws7t
 title: NERDTree stays stale when reopened or in another tab after changes
 kind: bug
-opened: 2026-10-04
+created: 2026-10-04
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [rb4z]
+blocked_by: []
+related: [mn-rb4z]
 tasks: [mn-ws7t]
-closed: 2026-10-04T22:58:49Z
+resolved: 2026-10-04T22:58:49Z
 ---
 
 ## The ask

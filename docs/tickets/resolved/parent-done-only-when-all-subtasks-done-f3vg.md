@@ -1,12 +1,12 @@
 ---
-id: f3vg
+id: mn-f3vg
 title: A parent task is marked done only when every subtask is done
-opened: 2026-10-01
+created: 2026-10-01
 repos: [meta-notes]
 changes: []
 specs: [task-tree]
-needs: []
-see: [task-trees-notes-and-subtasks-m2at]
+blocked_by: []
+related: [task-trees-notes-and-subtasks-m2at]
 kind: chore
 ---
 

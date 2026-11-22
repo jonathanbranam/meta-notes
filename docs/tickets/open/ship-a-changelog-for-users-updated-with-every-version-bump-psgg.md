@@ -1,14 +1,14 @@
 ---
-id: psgg
+id: mn-psgg
 title: Ship a CHANGELOG for users, updated with every version bump
 kind: feature
-opened: 2026-10-09
-filed_by: external:aide
+created: 2026-10-09
+created_by: external:aide
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: []
+blocked_by: []
+related: []
 tasks: [mn-psgg]
 ---
 

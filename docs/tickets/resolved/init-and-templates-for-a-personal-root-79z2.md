@@ -1,15 +1,15 @@
 ---
-id: 79z2
+id: mn-79z2
 title: init and templates for a personal root
 kind: feature
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: [47rb]
-see: [zyab]
+blocked_by: [mn-47rb]
+related: [mn-zyab]
 tasks: [mn-eyet]
-closed: 2026-10-04T03:18:22Z
+resolved: 2026-10-04T03:18:22Z
 ---
 
 # init and templates for a personal root

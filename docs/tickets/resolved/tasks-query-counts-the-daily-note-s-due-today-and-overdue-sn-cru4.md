@@ -1,15 +1,15 @@
 ---
-id: cru4
+id: mn-cru4
 title: tasks query counts the daily note's Due Today and Overdue snapshot copies as tasks
 kind: bug
-opened: 2026-10-05
+created: 2026-10-05
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: []
+blocked_by: []
+related: []
 tasks: [mn-cru4]
-closed: 2026-10-05T11:51:13Z
+resolved: 2026-10-05T11:51:13Z
 ---
 
 ## The ask

@@ -1,15 +1,15 @@
 ---
-id: y6bw
+id: mn-y6bw
 title: "Conventions: an event fills every Time Block row it spans, travel included"
 kind: feature
-opened: 2026-10-05
+created: 2026-10-05
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: []
+blocked_by: []
+related: []
 tasks: [mn-y6bw]
-closed: 2026-10-05T00:29:08Z
+resolved: 2026-10-05T00:29:08Z
 ---
 
 ## The ask

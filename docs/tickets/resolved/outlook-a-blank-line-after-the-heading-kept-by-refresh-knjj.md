@@ -1,15 +1,15 @@
 ---
-id: knjj
+id: mn-knjj
 title: "Outlook: a blank line after the heading, kept by refresh"
 kind: bug
-opened: 2026-10-08
+created: 2026-10-08
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [pqwv]
+blocked_by: []
+related: [mn-pqwv]
 tasks: [mn-knjj]
-closed: 2026-10-08T12:56:13Z
+resolved: 2026-10-08T12:56:13Z
 ---
 
 ## The ask

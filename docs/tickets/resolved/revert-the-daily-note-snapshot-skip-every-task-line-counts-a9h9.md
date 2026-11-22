@@ -1,15 +1,15 @@
 ---
-id: a9h9
+id: mn-a9h9
 title: "Revert the daily-note snapshot skip: every task line counts"
 kind: bug
-opened: 2026-10-06
+created: 2026-10-06
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [cru4]
+blocked_by: []
+related: [mn-cru4]
 tasks: [mn-s36r]
-closed: 2026-10-06T02:14:32Z
+resolved: 2026-10-06T02:14:32Z
 ---
 
 ## The ask

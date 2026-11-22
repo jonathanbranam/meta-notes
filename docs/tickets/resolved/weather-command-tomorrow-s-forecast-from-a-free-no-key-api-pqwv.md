@@ -1,15 +1,15 @@
 ---
-id: pqwv
+id: mn-pqwv
 title: "Weather command: tomorrow's forecast from a free no-key API"
 kind: feature
-opened: 2026-10-07
+created: 2026-10-07
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: []
+blocked_by: []
+related: []
 tasks: [mn-pqwv]
-closed: 2026-10-08T03:50:40Z
+resolved: 2026-10-08T03:50:40Z
 ---
 
 ## The ask

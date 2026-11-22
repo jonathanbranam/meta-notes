@@ -1,12 +1,12 @@
 ---
-id: s34j
+id: mn-s34j
 title: Move development from Pipfile and pipenv to pyproject.toml and uv
-opened: 2026-09-30
+created: 2026-09-30
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: []
+blocked_by: []
+related: []
 kind: chore
 ---
 

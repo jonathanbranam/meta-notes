@@ -1,15 +1,15 @@
 ---
-id: xq4q
+id: mn-xq4q
 title: "Unapproved-plan rule: 'no plan' goes in Plan, not Actual"
 kind: bug
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [qb8e]
+blocked_by: []
+related: [mn-qb8e]
 tasks: [mn-8f5e]
-closed: 2026-10-03T23:04:33Z
+resolved: 2026-10-03T23:04:33Z
 ---
 
 # Unapproved-plan rule: `no plan` goes in Plan, not Actual

@@ -1,15 +1,15 @@
 ---
-id: rg3v
+id: mn-rg3v
 title: Snapshot skip hides real tasks written under Tasks Due Today
 kind: bug
-opened: 2026-10-05
+created: 2026-10-05
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [cru4]
+blocked_by: []
+related: [mn-cru4]
 tasks: [mn-hsxc]
-closed: 2026-10-05T23:27:10Z
+resolved: 2026-10-05T23:27:10Z
 ---
 
 ## The ask

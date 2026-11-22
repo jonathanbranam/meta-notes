@@ -1,15 +1,15 @@
 ---
-id: kxxy
+id: mn-kxxy
 title: Working hours and days follow the root mode
 kind: feature
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: [47rb]
-see: [zyab]
+blocked_by: [mn-47rb]
+related: [mn-zyab]
 tasks: [mn-qe7b]
-closed: 2026-10-04T03:12:30Z
+resolved: 2026-10-04T03:12:30Z
 ---
 
 # Working hours and days follow the root mode

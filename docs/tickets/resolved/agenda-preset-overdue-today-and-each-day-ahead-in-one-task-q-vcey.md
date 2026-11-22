@@ -1,15 +1,15 @@
 ---
-id: vcey
+id: mn-vcey
 title: "Agenda preset: overdue, today and each day ahead in one task query"
 kind: feature
-opened: 2026-10-05
+created: 2026-10-05
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [cru4]
+blocked_by: []
+related: [mn-cru4]
 tasks: [mn-kbfa]
-closed: 2026-10-05T23:18:50Z
+resolved: 2026-10-05T23:18:50Z
 ---
 
 ## The ask

@@ -1,13 +1,13 @@
 ---
-id: ybu6
+id: mn-ybu6
 title: Agents defeat --expect by computing it from the file at write time (sed/grep)
 kind: explore
-opened: 2026-10-08
+created: 2026-10-08
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [zk5p, t85d]
+blocked_by: []
+related: [mn-zk5p, mn-t85d]
 tasks: [mn-ybu6]
 ---
 

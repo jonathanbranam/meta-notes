@@ -1,15 +1,15 @@
 ---
-id: e5xs
+id: mn-e5xs
 title: time-log update rejects an open entry's empty end line
 kind: bug
-opened: 2026-10-08
+created: 2026-10-08
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: []
+blocked_by: []
+related: []
 tasks: [mn-e5xs]
-closed: 2026-10-08T02:07:44Z
+resolved: 2026-10-08T02:07:44Z
 ---
 
 ## The ask

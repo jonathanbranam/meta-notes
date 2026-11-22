@@ -1,12 +1,12 @@
 ---
-id: m2at
+id: mn-m2at
 title: Tasks as trees, with their notes and subtasks
-opened: 2026-10-01
+created: 2026-10-01
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [task-update-text-option-cpwr]
+blocked_by: []
+related: [task-update-text-option-cpwr]
 kind: chore
 ---
 

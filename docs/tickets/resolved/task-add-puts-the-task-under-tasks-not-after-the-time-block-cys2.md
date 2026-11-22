@@ -1,15 +1,15 @@
 ---
-id: cys2
+id: mn-cys2
 title: "task add puts the task under ## Tasks, not after the Time Block"
 kind: bug
-opened: 2026-10-06
+created: 2026-10-06
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: []
+blocked_by: []
+related: []
 tasks: [mn-cys2]
-closed: 2026-10-06T14:55:57Z
+resolved: 2026-10-06T14:55:57Z
 ---
 
 ## The ask

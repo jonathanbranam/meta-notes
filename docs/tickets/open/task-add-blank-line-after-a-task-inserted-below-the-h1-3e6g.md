@@ -1,13 +1,13 @@
 ---
-id: 3e6g
+id: mn-3e6g
 title: "task add: blank line after a task inserted below the H1"
 kind: bug
-opened: 2026-10-06
+created: 2026-10-06
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [cys2]
+blocked_by: []
+related: [mn-cys2]
 tasks: [mn-3e6g]
 ---
 

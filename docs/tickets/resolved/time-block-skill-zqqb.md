@@ -1,15 +1,15 @@
 ---
-id: zqqb
+id: mn-zqqb
 title: "time-block skill: how to edit the Time Block, with the human's style"
 kind: feature
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [kkrj, u34c, zyab]
+blocked_by: []
+related: [mn-kkrj, mn-u34c, mn-zyab]
 tasks: [mn-49a5]
-closed: 2026-10-03T14:04:25Z
+resolved: 2026-10-03T14:04:25Z
 ---
 
 # time-block skill: how to edit the Time Block, with the human's style

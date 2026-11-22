@@ -1,15 +1,15 @@
 ---
-id: gjf6
+id: mn-gjf6
 title: "\"no plan\" rows: record unplanned Time Block rows; daily-shutdown fills them"
 kind: feature
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [bmen, zqqb]
+blocked_by: []
+related: [mn-bmen, mn-zqqb]
 tasks: [mn-bfc6]
-closed: 2026-10-03T14:54:18Z
+resolved: 2026-10-03T14:54:18Z
 ---
 
 # "no plan" rows

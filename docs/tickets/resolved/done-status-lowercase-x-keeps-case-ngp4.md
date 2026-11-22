@@ -1,12 +1,12 @@
 ---
-id: ngp4
+id: mn-ngp4
 title: Done is written as lowercase x, and an existing X is kept
-opened: 2026-10-01
+created: 2026-10-01
 repos: [meta-notes]
 changes: []
 specs: [task-tree]
-needs: []
-see: [parent-done-only-when-all-subtasks-done-f3vg]
+blocked_by: []
+related: [parent-done-only-when-all-subtasks-done-f3vg]
 kind: chore
 ---
 

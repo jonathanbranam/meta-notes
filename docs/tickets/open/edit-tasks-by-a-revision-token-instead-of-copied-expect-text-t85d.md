@@ -1,13 +1,13 @@
 ---
-id: t85d
+id: mn-t85d
 title: Edit tasks by a revision token instead of copied --expect text
 kind: question
-opened: 2026-10-08
+created: 2026-10-08
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [zk5p]
+blocked_by: []
+related: [mn-zk5p]
 tasks: []
 ---
 

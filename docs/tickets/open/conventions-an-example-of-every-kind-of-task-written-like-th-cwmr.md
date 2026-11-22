@@ -1,13 +1,13 @@
 ---
-id: cwmr
+id: mn-cwmr
 title: "Conventions: an example of every kind of task, written like the human's"
 kind: feature
-opened: 2026-10-06
+created: 2026-10-06
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: []
+blocked_by: []
+related: []
 tasks: []
 ---
 

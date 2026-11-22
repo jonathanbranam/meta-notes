@@ -1,15 +1,15 @@
 ---
-id: rb4z
+id: mn-rb4z
 title: NERDTree refreshes when folders and files are added in a notes root
 kind: feature
-opened: 2026-10-04
+created: 2026-10-04
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: []
+blocked_by: []
+related: []
 tasks: [mn-rb4z]
-closed: 2026-10-04T22:56:42Z
+resolved: 2026-10-04T22:56:42Z
 ---
 
 ## The ask

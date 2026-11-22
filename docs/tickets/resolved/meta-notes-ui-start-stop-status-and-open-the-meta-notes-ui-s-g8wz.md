@@ -1,15 +1,15 @@
 ---
-id: g8wz
+id: mn-g8wz
 title: "meta-notes ui: start, stop, status and open the meta-notes-ui server"
 kind: feature
-opened: 2026-10-05
+created: 2026-10-05
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [5wam]
+blocked_by: []
+related: [mn-5wam]
 tasks: [mn-g8wz]
-closed: 2026-10-05T10:48:47Z
+resolved: 2026-10-05T10:48:47Z
 ---
 
 ## The ask

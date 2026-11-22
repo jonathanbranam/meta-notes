@@ -1,15 +1,15 @@
 ---
-id: rgev
+id: mn-rgev
 title: "Calendar: pick up exports from a Calendar Downloads folder and move them into the cache"
 kind: feature
-opened: 2026-10-08
+created: 2026-10-08
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: []
+blocked_by: []
+related: []
 tasks: [mn-rgev]
-closed: 2026-10-08T03:35:34Z
+resolved: 2026-10-08T03:35:34Z
 ---
 
 ## The ask

@@ -1,12 +1,12 @@
 ---
-id: h528
+id: mn-h528
 title: init warns when the file watcher (fswatch or inotifywait) is missing
-opened: 2026-10-02
+created: 2026-10-02
 repos: [meta-notes]
 changes: []
 specs: [init, notes-autosave]
-needs: []
-see: [vim-autosave-and-autoreload-egvk]
+blocked_by: []
+related: [vim-autosave-and-autoreload-egvk]
 kind: chore
 ---
 

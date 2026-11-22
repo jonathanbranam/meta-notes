@@ -1,15 +1,15 @@
 ---
-id: jxmu
+id: mn-jxmu
 title: README Key Mappings says after/ftplugin; mappings are FileType autocmds in plugin/meta_notes.vim
 kind: bug
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: []
+blocked_by: []
+related: []
 tasks: [mn-ceb6]
-closed: 2026-10-03T17:56:11Z
+resolved: 2026-10-03T17:56:11Z
 ---
 
 ## The ask

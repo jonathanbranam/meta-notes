@@ -1,12 +1,12 @@
 ---
-id: zyab
+id: mn-zyab
 title: Personal and work notes roots plan differently; make meta-notes flexible for both
-opened: 2026-10-03
+created: 2026-10-03
 repos: [meta-notes]
 changes: []
 specs: []
-needs: []
-see: [daily-exercise-block-in-planning-u34c, 47rb, 357e, kxxy, bup2, 79z2]
+blocked_by: []
+related: [daily-exercise-block-in-planning-u34c, mn-47rb, mn-357e, mn-kxxy, mn-bup2, mn-79z2]
 kind: explore
 tasks: []
 ---
