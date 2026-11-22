@@ -8,7 +8,6 @@ specs: []
 blocked_by: []
 related: [personal-and-work-planning-differences-zyab]
 kind: explore
-tasks: []
 ---
 
 # Daily planning asks when the day's workout happens

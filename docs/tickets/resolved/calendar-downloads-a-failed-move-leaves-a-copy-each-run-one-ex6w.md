@@ -8,7 +8,6 @@ changes: []
 specs: []
 blocked_by: []
 related: [mn-rgev]
-tasks: [mn-ex6w]
 resolved: 2026-10-08T15:02:45Z
 ---
 

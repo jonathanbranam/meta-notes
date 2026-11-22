@@ -8,7 +8,6 @@ changes: []
 specs: []
 blocked_by: []
 related: [mn-cru4]
-tasks: [mn-kbfa]
 resolved: 2026-10-05T23:18:50Z
 ---
 

@@ -8,7 +8,6 @@ changes: []
 specs: []
 blocked_by: []
 related: [mn-cys2]
-tasks: [mn-3e6g]
 ---
 
 ## The ask

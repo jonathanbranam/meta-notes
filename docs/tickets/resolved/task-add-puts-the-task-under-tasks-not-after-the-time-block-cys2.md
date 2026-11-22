@@ -8,7 +8,6 @@ changes: []
 specs: []
 blocked_by: []
 related: []
-tasks: [mn-cys2]
 resolved: 2026-10-06T14:55:57Z
 ---
 

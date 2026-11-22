@@ -8,7 +8,6 @@ changes: []
 specs: []
 blocked_by: []
 related: []
-tasks: []
 ---
 
 # Recurring tasks keep their history in a separate, linked note

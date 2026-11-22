@@ -8,7 +8,6 @@ changes: []
 specs: []
 blocked_by: []
 related: [mn-gjf6, mn-bmen]
-tasks: [mn-d368]
 resolved: 2026-10-03T22:14:30Z
 ---
 

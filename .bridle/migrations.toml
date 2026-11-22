@@ -24,3 +24,8 @@ bridle_version = "0.8.0"
 id = "0002-standard-ticket-fields"
 applied_at = "2026-11-22T00:59:11.570986336Z"
 bridle_version = "0.8.0"
+
+[[applied]]
+id = "0004-ticket-links-in-frontmatter"
+applied_at = "2026-11-22T00:59:20.830566646Z"
+bridle_version = "0.8.0"

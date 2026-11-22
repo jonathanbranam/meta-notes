@@ -8,7 +8,6 @@ changes: []
 specs: []
 blocked_by: []
 related: [mn-gmqp]
-tasks: [mn-6523]
 resolved: 2026-10-03T13:24:33Z
 ---
 
