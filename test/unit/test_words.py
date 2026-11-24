@@ -338,3 +338,151 @@ def test_words_command_works_without_a_notes_root(tmp_path):
     result = run(['encode'], b'x', tmp_path)
     assert result.returncode == 0
     assert len(result.stdout.splitlines()) == 2
+
+
+# Tests for labels, read_secret and encode --interactive
+
+import pty
+import threading
+import termios
+
+from meta_notes import cli
+
+
+def test_words_label_matches_decode_prompts():
+    lines = words.encode(b'fake secret value')
+    prompts = []
+    it = iter(lines)
+    words.decode(lambda: next(it, ''), prompt=prompts.append)
+    assert prompts == [words.label(i, len(lines) - 1) for i in range(len(lines))]
+
+
+def test_words_labelled_format():
+    out = words.labelled(words.encode(b'fake secret value'))
+    assert out[0].startswith('the header line: ')
+    assert out[1].startswith('line 1 of %d: ' % (len(out) - 1))
+
+
+def secret_via_pty(typed):
+    master, slave = pty.openpty()
+    before = termios.tcgetattr(slave)
+    seen = []
+
+    def terminal():
+        # Type once the prompt is shown, so raw mode is already set
+        while 'p: ' not in ''.join(seen):
+            seen.append(os.read(master, 4096).decode())
+        os.write(master, typed)
+
+    t = threading.Thread(target=terminal, daemon=True)
+    t.start()
+    try:
+        result = words.read_secret(slave, 'p: ')
+    except KeyboardInterrupt:
+        result = KeyboardInterrupt
+    t.join(5)
+    return result, master, slave, before
+
+
+def stars_written(master):
+    os.set_blocking(master, False)
+    try:
+        return os.read(master, 4096).decode()
+    except BlockingIOError:
+        return ''
+
+
+def test_words_read_secret_typed_shows_stars_and_no_newline():
+    secret, master, slave, _ = secret_via_pty(b'fake1\r')
+    assert secret == b'fake1'
+    assert stars_written(master).count('*') == 5
+
+
+def test_words_read_secret_pasted_shows_a_star_per_char():
+    text = b'x' * 40
+    secret, master, _, _ = secret_via_pty(text + b'\n')
+    assert secret == text
+    assert stars_written(master).count('*') == 40
+
+
+def test_words_read_secret_backspace_drops_char_and_star():
+    secret, master, _, _ = secret_via_pty(b'abc\x7fd\x08e\r')
+    assert secret == b'abe'
+    out = stars_written(master)
+    assert out.count('*') == 5 and out.count('\b \b') == 2
+
+
+def test_words_read_secret_multibyte_char_is_one_star():
+    secret, master, _, _ = secret_via_pty('éa\r'.encode())
+    assert secret == '\u00e9a'.encode()
+    assert stars_written(master).count('*') == 2
+
+
+def test_words_read_secret_ctrl_c_aborts_and_restores_mode():
+    result, master, slave, before = secret_via_pty(b'ab\x03')
+    assert result is KeyboardInterrupt
+    assert termios.tcgetattr(slave) == before
+
+
+def test_words_read_secret_mode_restored_after_enter():
+    _, _, slave, before = secret_via_pty(b'ab\r')
+    assert termios.tcgetattr(slave) == before
+
+
+def interactive_run(monkeypatch, capsys, argv, stdin=None, enters=2):
+    master, slave = pty.openpty()
+    os.write(master, b'\n' * enters)
+    monkeypatch.setattr(cli.os, 'open', lambda *a, **k: slave)
+    monkeypatch.setattr(cli.os, 'close', lambda fd: None)
+    if stdin is not None:
+        import io
+        monkeypatch.setattr(sys, 'stdin', io.TextIOWrapper(io.BytesIO(stdin)))
+    code = cli.main(argv)
+    return code, capsys.readouterr()
+
+
+def test_words_command_interactive_labels_match_decode(monkeypatch, capsys):
+    code, cap = interactive_run(monkeypatch, capsys,
+                                ['encode', '-i', 'fake secret value'], enters=5)
+    assert code == 0
+    assert cap.out.splitlines() == words.labelled(words.encode(b'fake secret value'))
+
+
+def test_words_command_interactive_waits_for_enter_between_lines(monkeypatch, capsys):
+    # One Enter for three lines: the second wait finds nothing and stops
+    master, slave = pty.openpty()
+    os.write(master, b'\n')
+    monkeypatch.setattr(cli.os, 'open', lambda *a, **k: slave)
+    monkeypatch.setattr(cli.os, 'close', lambda fd: None)
+    os.set_blocking(slave, False)
+    with pytest.raises(BlockingIOError):
+        cli.main(['encode', '-i', 'fake secret value'])
+    assert len(capsys.readouterr().out.splitlines()) == 2
+
+
+def test_words_command_interactive_piped_secret(monkeypatch, capsys):
+    code, cap = interactive_run(monkeypatch, capsys, ['encode', '-i'],
+                                stdin=b'fake piped', enters=5)
+    assert code == 0
+    assert cap.out.splitlines() == words.labelled(words.encode(b'fake piped'))
+
+
+def test_words_command_interactive_without_terminal_is_an_error(tmp_path):
+    result = subprocess.run(
+        [sys.executable, str(repo_dir / 'scripts' / 'meta_notes'), 'encode', '-i', 'x'],
+        capture_output=True, cwd=tmp_path, start_new_session=True,
+        env={**os.environ, 'HOME': str(tmp_path)})
+    assert result.returncode != 0
+    assert result.stdout == b''
+    assert b'needs a terminal' in result.stderr
+
+
+def test_words_command_interactive_with_json_is_an_error(monkeypatch, capsys):
+    code, cap = interactive_run(monkeypatch, capsys, ['encode', '-i', '--json', 'x'])
+    assert code != 0
+    assert '--json' in cap.out
+
+
+def test_words_command_plain_encode_output_has_no_labels(tmp_path):
+    out = run(['encode'], b'fake', tmp_path).stdout.decode().splitlines()
+    assert out == words.encode(b'fake')

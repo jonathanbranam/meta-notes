@@ -6,7 +6,7 @@ Specifies `meta-notes encode` and `meta-notes decode` (algorithm `mn-proquint`, 
 ## Requirements
 
 ### Requirement: Exact generic encoding  {#r-60a9}
-`meta-notes encode` SHALL print lines of words for exactly its input bytes, text or binary, with no stripping or alphabet restriction. The input SHALL be, in order: the TEXT argument (stdin SHALL then not be read, even if open and empty); else piped stdin; else a hidden prompt on a terminal, with no newline added. Text starting with a dash need not work as an argument; it goes by pipe. It SHALL work with no notes root. `meta-notes words` SHALL NOT exist.
+`meta-notes encode` SHALL print lines of words for exactly its input bytes, text or binary, with no stripping or alphabet restriction. The input SHALL be, in order: the TEXT argument (stdin SHALL then not be read, even if open and empty); else piped stdin; else a hidden prompt on a terminal, with no newline added, that prints one `*` for each character typed or pasted. Text starting with a dash need not work as an argument; it goes by pipe. It SHALL work with no notes root. `meta-notes words` SHALL NOT exist.
 
 #### Scenario: Trailing newline is kept  {#s-a6eb}
 *Verification*: **non-executable**
@@ -66,6 +66,37 @@ The encoded message SHALL be one code byte followed by the remaining bytes. Code
 *Verification*: **non-executable**
 - **WHEN** input ends before the last line
 - **THEN** the command SHALL exit non-zero with nothing on stdout
+
+### Requirement: Secret prompt echoes stars  {#r-3722}
+The hidden prompt of `meta-notes encode` SHALL read from the terminal (`/dev/tty`) and print one `*` for each character typed or pasted. Backspace SHALL remove one `*` and drop that character. Enter SHALL end the input, adding no newline to the secret. Ctrl-C SHALL abort with nothing written to stdout. The terminal mode SHALL be restored on every exit path, Ctrl-C included.
+
+#### Scenario: Typed, pasted and backspaced  {#s-f475}
+*Verification*: **non-executable**
+- **WHEN** a secret is typed, pasted (40 characters), or typed with Backspace
+- **THEN** one `*` per character remaining SHALL be shown, and the secret SHALL be exactly the characters kept
+
+#### Scenario: Ctrl-C at the prompt  {#s-92b5}
+*Verification*: **non-executable**
+- **WHEN** Ctrl-C is pressed at the prompt
+- **THEN** the command SHALL exit non-zero with nothing on stdout and the terminal mode restored
+
+### Requirement: Encode shows one line at a time  {#r-a227}
+`meta-notes encode --interactive` / `-i` SHALL print one line at a time, `<label>: <words>`, and wait for Enter before the next. The label SHALL be exactly what `decode` prompts for that line (`the header line`, `line N of TOTAL`), taken from one shared place. Enter SHALL be read from the terminal (`/dev/tty`), not stdin, so a piped secret works. With no terminal, or with `--json`, `-i` SHALL be an error with nothing on stdout. Without `-i`, output SHALL be unchanged.
+
+#### Scenario: Labels match decode  {#s-7621}
+*Verification*: **non-executable**
+- **WHEN** `meta-notes encode -i` runs on a terminal
+- **THEN** each line SHALL be shown with the label decode prompts for it, and the next only after Enter
+
+#### Scenario: Piped secret with -i  {#s-854f}
+*Verification*: **non-executable**
+- **WHEN** the secret is piped on stdin with `-i`
+- **THEN** the lines SHALL wait on Enter from the terminal
+
+#### Scenario: No terminal or --json  {#s-0d7d}
+*Verification*: **non-executable**
+- **WHEN** `-i` runs with no terminal, or with `--json`
+- **THEN** it SHALL exit non-zero with an error saying why
 
 ### Requirement: Algorithm option  {#r-8589}
 `encode` and `decode` SHALL accept `--algorithm` / `-a`. The only algorithm SHALL be `mn-proquint`, the default; its wire format SHALL be the one `meta-notes words` wrote in 2.38.0. An unknown algorithm SHALL be an error and write nothing to stdout. `decode` SHALL take no text argument and SHALL NOT detect the algorithm.

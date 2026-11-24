@@ -927,18 +927,58 @@ ALGORITHMS = ("mn-proquint",)
 DEFAULT_ALGORITHM = "mn-proquint"
 
 
+def _open_tty(why: str = "--interactive needs a terminal to wait for "
+                         "Enter, and there is none") -> int:
+    """The controlling terminal as a file descriptor; CliError if none."""
+    try:
+        return os.open("/dev/tty", os.O_RDWR)
+    except OSError:
+        raise CliError(why)
+
+
 def cmd_encode(args, root: None) -> Output:
     # One algorithm today; --algorithm is checked by the parser
-    if args.text is not None:
-        data = os.fsencode(args.text)
-    elif sys.stdin.isatty():
-        import getpass
-        data = getpass.getpass("secret (hidden, no newline added): "
-                               ).encode("utf-8")
-    else:
-        data = sys.stdin.buffer.read()
-    lines = words.encode(data)
-    return Output({"lines": lines}, lines)
+    interactive = args.interactive
+    if interactive and getattr(args, "json", False):
+        raise CliError("--interactive cannot be used with --json")
+    tty_fd = _open_tty() if interactive else None
+    try:
+        if args.text is not None:
+            data = os.fsencode(args.text)
+        elif sys.stdin.isatty():
+            if tty_fd is None:
+                tty_fd = _open_tty("no terminal to read the secret from")
+            try:
+                data = words.read_secret(
+                    tty_fd, "secret (hidden, * per character, no newline "
+                            "added): ")
+            except KeyboardInterrupt:
+                raise SystemExit(130)
+        else:
+            data = sys.stdin.buffer.read()
+        lines = words.encode(data)
+        if not interactive:
+            return Output({"lines": lines}, lines)
+        shown = words.labelled(lines)
+        for i, text in enumerate(shown):
+            sys.stdout.write(text + "\n")
+            sys.stdout.flush()
+            if i < len(shown) - 1:
+                _wait_for_enter(tty_fd)
+        return Output()
+    finally:
+        if tty_fd is not None:
+            os.close(tty_fd)
+
+
+def _wait_for_enter(fd: int) -> None:
+    """Block until Enter is pressed on the terminal (a line)."""
+    buf = b""
+    while not buf.endswith(b"\n"):
+        chunk = os.read(fd, 1024)
+        if not chunk:
+            raise SystemExit(130)
+        buf += chunk
 
 
 def cmd_decode(args, root: None) -> Output:
@@ -1632,7 +1672,8 @@ def build_parser() -> argparse.ArgumentParser:
                     "mn-proquint): a header line, then lines of 4 words and "
                     "a check word. Input, in order: the TEXT argument (stdin "
                     "is then not read); else piped stdin; else a hidden "
-                    "prompt on a terminal. Every byte is encoded exactly, "
+                    "prompt on a terminal, which shows a * for each character. "
+                    "Every byte is encoded exactly, "
                     "text or binary, with no stripping. echo and files add "
                     "a trailing newline, which is then part of the secret: "
                     "use printf %%s or the prompt. A literal typed as TEXT "
@@ -1643,6 +1684,10 @@ def build_parser() -> argparse.ArgumentParser:
                     "GPG armor.")
     p.add_argument("text", nargs="?", metavar="TEXT",
                    help="the text to encode, quoted: 'a token'")
+    p.add_argument("--interactive", "-i", action="store_true",
+                   help="show one line at a time, labelled as decode "
+                        "prompts for it, and wait for Enter (needs a "
+                        "terminal; not with --json)")
     p.set_defaults(handler=cmd_encode, resolves_root=False)
     p = sub.add_parser(
         "decode", parents=[algo],
