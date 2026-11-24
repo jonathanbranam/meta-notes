@@ -168,27 +168,41 @@ def parse_line(index: int, text: str, count: int) -> list[int]:
 
 def decode(readline: Callable[[], str], *, interactive: bool = False,
            prompt: Callable[[str], None] = lambda s: None,
-           report: Callable[[str], None] = lambda s: None) -> bytes:
-    """Read the lines with readline and return the original bytes.
+           report: Callable[[str], None] = lambda s: None,
+           pending: Callable[[], bool] = lambda: False) -> bytes:
+    """Read words with readline and return the original bytes.
 
-    A blank line asks again. A bad line is reported and asked again when
-    interactive, otherwise it raises WordsError, as does the end of input
-    before the last line and a whole-message mismatch.
+    The input is one stream of words: line breaks and other whitespace
+    between words do not matter. The words are grouped by the format (5 for
+    the header, then 4 data words and a check word per line). A bad group is
+    reported and asked again when interactive (dropping the words buffered
+    after it), otherwise it raises WordsError, as does the end of input
+    before the last line, words left after it, and a whole-message mismatch.
+    prompt is called only when more input is awaited; pending says whether
+    input is already waiting, so a paste does not pile up prompts.
     """
+    buf: list[str] = []
+
     def get(index: int, count: int, label: str) -> list[int]:
         while True:
-            prompt(label)
-            text = readline()
-            if text == "":
-                raise WordsError(f"input ended before {label}")
-            if not text.strip():
-                continue
+            while len(buf) < count + 1:
+                if not pending():
+                    prompt(label)
+                text = readline()
+                if text == "":
+                    raise WordsError(f"input ended before {label}")
+                buf.extend(text.split())
+            group = " ".join(buf[:count + 1])
             try:
-                return parse_line(index, text, count)
+                nums = parse_line(index, group, count)
             except WordsError as e:
                 if not interactive:
                     raise WordsError(f"{label}: {e}") from None
-                report(f"{e}; retype this line")
+                buf.clear()
+                report(f"{label}: {e}; retype this line")
+                continue
+            del buf[:count + 1]
+            return nums
 
     h = get(0, 4, "the header line")
     length = h[0] << 16 | h[1]
@@ -199,6 +213,14 @@ def decode(readline: Callable[[], str], *, interactive: bool = False,
     for i in range(1, total + 1):
         count = min(ROW_WORDS, words - len(nums))
         nums += get(i, count, f"line {i} of {total}")
+    if not interactive:
+        while True:
+            text = readline()
+            if text == "":
+                break
+            buf.extend(text.split())
+    if buf:
+        raise WordsError(f"{len(buf)} more words after the last line")
     msg = struct.pack(f">{len(nums)}H", *nums)
     if len(msg) > length:
         if msg[length:] != b"\x00":

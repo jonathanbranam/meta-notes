@@ -6,6 +6,13 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 3.2.2 - 2026-11-24
+
+- Fixed: `meta-notes decode` reads words as a stream, so line breaks and spaces
+  between words no longer matter: all on one line, one per line, or wrapped
+  differently from `encode`. Pasting the whole text at the prompt works too.
+  Words left after the last line are an error.
+
 ## 3.2.1 - 2026-11-21
 
 - Fixed: `meta-notes task update --text` refuses a value with a date or marker

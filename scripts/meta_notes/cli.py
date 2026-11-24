@@ -13,6 +13,7 @@ import io
 import json
 import os
 import re
+import select
 import shlex
 import subprocess
 import sys
@@ -953,9 +954,18 @@ def cmd_decode(args, root: None) -> Output:
         err.write(message + "\n")
         err.flush()
 
+    def pending() -> bool:
+        # More input already waiting (a paste): no prompt needed yet
+        if not interactive:
+            return False
+        try:
+            return bool(select.select([sys.stdin], [], [], 0)[0])
+        except (OSError, ValueError):
+            return False
+
     try:
         data = words.decode(sys.stdin.readline, interactive=interactive,
-                            prompt=prompt, report=report)
+                            prompt=prompt, report=report, pending=pending)
     except words.WordsError as e:
         raise CliError(str(e))
     # Only after the whole check passed, and exactly the bytes
