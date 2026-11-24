@@ -206,7 +206,7 @@ This structure is compatible with vim-plug, Vundle, and Pathogen.
 templates (`note`), race-safe line edits (`note write`), file operations (`move`, `rename`, `archive`), task
 query (`tasks`), task edits (`task update`, `task add`), one task read as a tree (`task show`), its notes and subtasks written (`task notes`, `task replace`, `task add --under`), time reports (`time`), changed
 notes (`changes`), calendar agendas (`calendar`, `cache clear`), the day's weather, sun and alerts (`outlook`), the meta-notes-ui server (`ui start`, `ui stop`, `ui status`, `ui url`, `ui open`), the
-the lists (`list`), the project list (`projects`), ceremony status (`ceremony status`), the planning record (`planning`), stay-on-task check-ins (`checkin`), Time Block cell and row edits (`time-block update`, `time-block replace`), Time Log edits (`time-log append`, `time-log update`), a secret hand-typed as checked words (`encode`, `decode`), and the
+the lists (`list`), the project list (`projects`), ceremony status (`ceremony status`), the planning record (`planning`), stay-on-task check-ins (`checkin`), Time Block cell and row edits (`time-block update`, `time-block replace`), Time Log edits (`time-log append`, `time-log update`), a secret hand-typed as checked words (`encode`, `decode`; `encode -i` shows one line at a time), and the
 skills' shared conventions (`conventions`), and a guide to the notes root
 for agents (`prime`) outside Vim, for shells, agents, and other tools. The Vim
 commands call it. Every command accepts `--json`. It needs Python 3.11 or newer as `python3`. See

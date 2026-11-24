@@ -6,6 +6,14 @@ and changes to options and existing behaviour. Newest first. Internal changes
 
 Every version bump adds an entry here (see `.bridle/rules/versioning.md`).
 
+## 3.3.0 - 2026-11-24
+
+- Added: `meta-notes encode --interactive` (`-i`) shows one line at a time,
+  labelled as `decode` asks for it (`the header line`, `line 1 of 2`), and
+  waits for Enter. It needs a terminal.
+- Changed: the hidden prompt of `meta-notes encode` shows a `*` for each
+  character typed or pasted; Backspace removes one.
+
 ## 3.2.2 - 2026-11-24
 
 - Fixed: `meta-notes decode` reads words as a stream, so line breaks and spaces

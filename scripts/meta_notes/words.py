@@ -151,6 +151,61 @@ def encode(data: bytes) -> list[str]:
     return lines
 
 
+def label(index: int, total: int) -> str:
+    """What a line is called: decode prompts with it, encode -i shows it."""
+    return "the header line" if index == 0 else f"line {index} of {total}"
+
+
+def labelled(lines: list[str]) -> list[str]:
+    """encode's lines as 'label: words', as decode prompts for them."""
+    total = len(lines) - 1
+    return [f"{label(i, total)}: {text}" for i, text in enumerate(lines)]
+
+
+def read_secret(fd: int, prompt: str) -> bytes:
+    """Read a secret from the terminal fd, echoing a * per character.
+
+    Backspace drops the last character and its *. Enter ends it and adds no
+    newline to the secret. Ctrl-C raises KeyboardInterrupt. The terminal mode
+    is restored on every exit path.
+    """
+    import os
+    import termios
+    import tty
+
+    saved = termios.tcgetattr(fd)
+    chars: list[bytearray] = []
+
+    def out(text: str) -> None:
+        os.write(fd, text.encode("utf-8"))
+
+    try:
+        tty.setraw(fd)
+        out(prompt)
+        while True:
+            chunk = os.read(fd, 1024)
+            if not chunk:
+                raise KeyboardInterrupt
+            for b in chunk:
+                if b in (10, 13):
+                    out("\r\n")
+                    return b"".join(bytes(c) for c in chars)
+                if b == 3:
+                    out("\r\n")
+                    raise KeyboardInterrupt
+                if b in (8, 127):
+                    if chars:
+                        chars.pop()
+                        out("\b \b")
+                elif b & 0xC0 == 0x80 and chars:
+                    chars[-1].append(b)  # continuation of a multibyte char
+                else:
+                    chars.append(bytearray([b]))
+                    out("*")
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, saved)
+
+
 def parse_line(index: int, text: str, count: int) -> list[int]:
     """The count data words of a typed line, checked; WordsError if bad."""
     words = text.lower().split()
@@ -204,7 +259,7 @@ def decode(readline: Callable[[], str], *, interactive: bool = False,
             del buf[:count + 1]
             return nums
 
-    h = get(0, 4, "the header line")
+    h = get(0, 4, label(0, 0))
     length = h[0] << 16 | h[1]
     digest = struct.pack(">2H", h[2], h[3])
     words = (length + 1) // 2
@@ -212,7 +267,7 @@ def decode(readline: Callable[[], str], *, interactive: bool = False,
     nums: list[int] = []
     for i in range(1, total + 1):
         count = min(ROW_WORDS, words - len(nums))
-        nums += get(i, count, f"line {i} of {total}")
+        nums += get(i, count, label(i, total))
     if not interactive:
         while True:
             text = readline()
