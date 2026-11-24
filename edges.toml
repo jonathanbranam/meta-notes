@@ -183,3 +183,15 @@ from = "mn-jjc7"
 to = "mn-8f4y"
 kind = "related"
 created_at = "2026-11-24T13:47:52.861Z"
+
+[[edge]]
+from = "mn-3bnq"
+to = "mn-jjc7"
+kind = "related"
+created_at = "2026-11-24T14:57:24.158Z"
+
+[[edge]]
+from = "mn-3bnq"
+to = "mn-8f4y"
+kind = "related"
+created_at = "2026-11-24T14:57:24.208Z"
