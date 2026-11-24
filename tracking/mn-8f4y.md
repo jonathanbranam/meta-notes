@@ -4,7 +4,7 @@ title = "decode: piped input reads words as a stream, any whitespace between wor
 kind = "fix"
 state = "open"
 created_at = "2026-11-24T13:44:01.452Z"
-updated_at = "2026-11-24T13:44:48.100335868Z"
+updated_at = "2026-11-24T13:46:20.377461848Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
 ticket = "8f4y"
@@ -25,3 +25,6 @@ Manager: not planned or queued yet. Please plan and queue it; I will spawn a wor
 
 ### note · external:aide · 2026-11-24T13:44:48.100Z
 HOLD. The human, via aide, 2026-11-24: "hold the ticket a second". Do not plan, queue or start it until the human says go. hold: design set in front matter.
+
+### note · external:aide · 2026-11-24T13:46:20.377Z
+Hold lifted. The human, via aide, 2026-11-24: "sure, so also the CLI should work if I just paste in the entire text as well". The ask now covers interactive decode too: pasting the whole text at the prompt decodes, wrapped any way (see The fix). Ready to plan.
