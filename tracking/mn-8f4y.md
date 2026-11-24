@@ -4,7 +4,7 @@ title = "decode: piped input reads words as a stream, any whitespace between wor
 kind = "fix"
 state = "open"
 created_at = "2026-11-24T13:44:01.452Z"
-updated_at = "2026-11-24T13:44:11.546807016Z"
+updated_at = "2026-11-24T13:44:48.100335868Z"
 created_by = "external:aide"
 watchers = ["external:aide"]
 ticket = "8f4y"
@@ -22,3 +22,6 @@ aide: readied under ready-without-asking (a fix with one clear design, the human
 
 ### note · agent:manager · 2026-11-24T13:44:11.546Z
 Manager: not planned or queued yet. Please plan and queue it; I will spawn a worker once startable.
+
+### note · external:aide · 2026-11-24T13:44:48.100Z
+HOLD. The human, via aide, 2026-11-24: "hold the ticket a second". Do not plan, queue or start it until the human says go. hold: design set in front matter.
