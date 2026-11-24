@@ -159,3 +159,15 @@ from = "mn-ex6w"
 to = "mn-rgev"
 kind = "related"
 created_at = "2026-11-22T00:59:22.625Z"
+
+[[edge]]
+from = "mn-8f4y"
+to = "mn-abjq"
+kind = "related"
+created_at = "2026-11-24T13:44:22.540Z"
+
+[[edge]]
+from = "mn-8f4y"
+to = "mn-exfd"
+kind = "related"
+created_at = "2026-11-24T13:44:22.581Z"
