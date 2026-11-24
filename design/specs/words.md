@@ -40,7 +40,27 @@ The encoded message SHALL be one code byte followed by the remaining bytes. Code
 - **THEN** decode SHALL fail with a message saying so and write nothing to stdout
 
 ### Requirement: Decode checks as typed  {#r-7ff1}
-`meta-notes decode` SHALL prompt on stderr, check each line when Enter is pressed, and know the line and word counts from the header. On a terminal a bad line SHALL be rejected and typed again; a blank line SHALL ask again. On a non-terminal stdin a bad line, or end of input before the last line, SHALL exit non-zero. A whole-message mismatch SHALL exit non-zero. It SHALL write the exact bytes to stdout only after the whole check passes, and nothing otherwise.
+`meta-notes decode` SHALL read its input as one stream of words separated by any whitespace, ignoring line breaks, and group the words by the format: 5 for the header, then 4 data words and a check word per line, the last line's count coming from the header. It SHALL prompt on stderr only when it waits for more input, and check each group as soon as its last word arrives. On a terminal a bad group SHALL be reported with its line (for example "line 2 of 5"), the words buffered after it discarded, and that line asked again. On a non-terminal stdin a bad group, or end of input before the last line, SHALL exit non-zero. Words left after the last line SHALL exit non-zero with their count, unless only whitespace is left. A whole-message mismatch SHALL exit non-zero. It SHALL write the exact bytes to stdout only after the whole check passes, and nothing otherwise.
+
+#### Scenario: Words wrapped differently from encode  {#s-7db6}
+*Verification*: **non-executable**
+- **WHEN** the words are piped all on one line, one per line, or broken in the middle of a line, with any blank lines or spaces
+- **THEN** decode SHALL write the original bytes
+
+#### Scenario: Leftover words  {#s-7854}
+*Verification*: **non-executable**
+- **WHEN** words remain after the last line
+- **THEN** the command SHALL exit non-zero naming how many, with nothing on stdout
+
+#### Scenario: Whole text pasted at the prompt  {#s-0657}
+*Verification*: **non-executable**
+- **WHEN** the whole encoded text is pasted at the terminal prompt
+- **THEN** decode SHALL decode it without prompting between the pasted lines
+
+#### Scenario: Bad group at the prompt  {#s-8a5a}
+*Verification*: **non-executable**
+- **WHEN** a group fails its check word on a terminal
+- **THEN** decode SHALL report the line, discard the words buffered after it and ask for that line again
 
 #### Scenario: Early finish  {#s-81bc}
 *Verification*: **non-executable**

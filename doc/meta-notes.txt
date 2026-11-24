@@ -1455,10 +1455,13 @@ Commands ~
     armor, AWS key IDs, npm, PyPI, JWT) are coded short when they match
     exactly; anything else is encoded in full.
 
-    `decode` reads the lines, prompting on stderr, and checks each line when
-    Enter is pressed: on a terminal a bad line is rejected and typed again,
-    and a blank line asks again. From a pipe, a bad line or input ending
-    early is an error. It writes the exact bytes to stdout, so `| pbcopy`
+    `decode` reads the words as one stream: any whitespace, including line
+    breaks, may separate them, so a pipe or a paste wrapped any way works.
+    It checks each line as soon as its last word arrives and prompts on
+    stderr only while it waits for more. On a terminal a bad line is
+    reported by number, the words after it dropped, and the line typed
+    again. From a pipe, a bad line, input ending early or words left after
+    the last line are errors. It writes the exact bytes to stdout, so `| pbcopy`
     works, only after the whole message checks; otherwise it exits non-zero
     with nothing on stdout. A message that names a table entry this version
     lacks fails with a message saying so: update meta-notes. >

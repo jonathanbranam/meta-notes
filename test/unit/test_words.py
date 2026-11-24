@@ -18,7 +18,7 @@ from meta_notes import words  # noqa: E402
 
 def roundtrip(data):
     it = iter(words.encode(data))
-    return words.decode(lambda: next(it, '') + '\n')
+    return words.decode(lambda: next((x + '\n' for x in it), ''))
 
 
 def code_of(data):
@@ -113,6 +113,69 @@ def test_words_decode_interactive_bad_line_retyped():
     lines = words.encode(b'hello world, fake')
     typed = [lines[0], 'babab babab babab babab babab', lines[1], lines[2], lines[3]]
     assert decode_lines(typed, interactive=True) == b'hello world, fake'
+
+
+def stream_of(data):
+    return ' '.join(words.encode(data)).split()
+
+
+def test_words_decode_one_word_per_line():
+    ws = stream_of(b'fake secret value')
+    assert decode_lines([w + '\n' for w in ws]) == b'fake secret value'
+
+
+def test_words_decode_all_on_one_line():
+    ws = stream_of(b'fake secret value')
+    assert decode_lines(['  ' + ' \t '.join(ws) + '  \r\n']) == b'fake secret value'
+
+
+def test_words_decode_breaks_mid_line():
+    lines = words.encode(b'fake secret value')
+    ws = ' '.join(lines).split()
+    typed = [' '.join(ws[:3]) + '\n', ' '.join(ws[3:11]) + '\n\n', ' '.join(ws[11:]) + '\n']
+    assert decode_lines(typed) == b'fake secret value'
+
+
+def test_words_decode_leftover_words_rejected():
+    ws = stream_of(b'hello')
+    with pytest.raises(words.WordsError, match='2 more words'):
+        decode_lines([' '.join(ws + ['babab', 'babab']) + '\n'])
+
+
+def test_words_decode_trailing_whitespace_lines_allowed():
+    lines = words.encode(b'hello')
+    assert decode_lines([x + '\n' for x in lines] + ['\n', '  \n']) == b'hello'
+
+
+def test_words_decode_interactive_whole_pasted_blob():
+    ws = stream_of(b'fake secret value')
+    prompts = []
+    it = iter([' '.join(ws) + '\n'])
+    got = words.decode(lambda: next(it, ''), interactive=True, prompt=prompts.append)
+    assert got == b'fake secret value'
+    assert prompts == ['the header line']
+
+
+def test_words_decode_interactive_paste_prompts_only_when_waiting():
+    lines = words.encode(b'fake secret value')
+    queue = [x + '\n' for x in lines]
+    prompts = []
+    got = words.decode(lambda: queue.pop(0) if queue else '', interactive=True,
+                       prompt=prompts.append, pending=lambda: bool(queue))
+    assert got == b'fake secret value'
+    assert prompts == []
+
+
+def test_words_decode_interactive_bad_group_drops_buffer_and_asks_again():
+    lines = words.encode(b'fake secret value')
+    bad = 'babab babab babab babab babab'
+    typed = [lines[0] + '\n', bad + ' ' + lines[2] + '\n', lines[1] + '\n',
+             lines[2] + '\n', lines[3] + '\n']
+    reports = []
+    it = iter(typed)
+    got = words.decode(lambda: next(it, ''), interactive=True, report=reports.append)
+    assert got == b'fake secret value'
+    assert len(reports) == 1 and reports[0].startswith('line 1 of 3')
 
 
 def test_words_decode_not_a_word_rejected():
