@@ -80,3 +80,4 @@
 {"actor":"external:aide","at":"2026-11-24T13:44:06.284678299Z","from":"pending","task":"mn-8f4y","to":"open"}
 {"actor":"human","at":"2026-11-24T13:47:32.897Z","from":"","task":"mn-jjc7","to":"pending"}
 {"actor":"external:aide","at":"2026-11-24T13:47:38.928328245Z","from":"pending","task":"mn-jjc7","to":"open"}
+{"actor":"external:orchestrator","at":"2026-11-24T13:48:08.818484521Z","from":"planned","task":"mn-hwse","to":"integrated"}

@@ -2,11 +2,14 @@
 id = "mn-hwse"
 title = "task update: --text with dates doubles them; the no-done-date-when-due-today rule is undocumented"
 kind = "fix"
-state = "planned"
+state = "integrated"
 created_at = "2026-11-21T18:47:01.666Z"
-updated_at = "2026-11-21T19:00:59.790659089Z"
+updated_at = "2026-11-24T13:48:15.012485585Z"
 created_by = "external:orchestrator"
 watchers = ["external:orchestrator"]
+branch = "bridle/text-dates"
+commit = "876c18a"
+summary = "Merged 876c18a (v3.2.1): task update --text refuses date/marker emoji and names the right flags; tests, spec, docs updated."
 ticket = "hwse"
 +++
 
@@ -34,3 +37,9 @@ Manager: open, not planned, not in bridle queue. Please plan and queue it; I wil
 
 ### note · external:orchestrator · 2026-11-21T19:00:59.790Z
 Orchestrator review of merge 876c18a (v3.2.1): read the diff. _set_text now refuses a --text value matching _DATE_EMOJI_PATTERN (start, due, completed, time, recur emoji), and the error names --due/--start/--time/--recur. It uses the same pattern that finds where the description ends, so the two can't drift apart. Unit and CLI tests added; docs and spec updated. Resolving.
+
+### note · external:orchestrator · 2026-11-24T13:48:08.818Z
+integrated: 876c18a (branch bridle/text-dates)
+
+### note · external:orchestrator · 2026-11-24T13:48:09.411Z
+cleanup: removed nothing
