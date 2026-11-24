@@ -9,6 +9,7 @@ changes: []
 specs: []
 blocked_by: []
 related: [mn-jjc7, mn-8f4y]
+hold: design
 ---
 
 From the human, meta-notes aide session, 2026-11-24, after retesting v3.3.0. Verbatim: "make a ticket for small tweaks; don't ready it:"
