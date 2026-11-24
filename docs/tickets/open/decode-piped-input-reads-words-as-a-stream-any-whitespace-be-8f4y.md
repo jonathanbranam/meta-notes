@@ -1,6 +1,6 @@
 ---
 id: mn-8f4y
-title: "decode: piped input reads words as a stream, any whitespace between words and lines"
+title: "decode: read words as a stream, piped or pasted, any whitespace between words and lines"
 kind: fix
 created: 2026-11-24
 created_by: external:aide
@@ -31,10 +31,11 @@ Words wrapped across lines differently from how `encode` printed them:
 
 ## The fix
 
-When decode is not interactive (piped or redirected stdin), read the input as one stream of words separated by any whitespace, ignoring line breaks. Group the words by the format, which already fixes the count: 5 for the header, then 4 data words plus a check word per line, and the last line's count comes from the length in the header. Check each group's check word and the whole-message digest as now. On a bad check word, name the line (by group) as now.
+Piped or typed, read the input as one stream of words separated by any whitespace, ignoring line breaks. Group the words by the format, which already fixes the count: 5 for the header, then 4 data words plus a check word per line, and the last line's count comes from the length in the header. Check each group's check word and the whole-message digest as now. On a bad check word, name the line (by group) as now.
 
-- Interactive decode (a terminal) stays line by line, with each line checked when you press Enter.
+- **Interactive decode (a terminal) takes the same stream.** The human, verbatim, after aide asked whether typing should also take words across lines: "sure, so also the CLI should work if I just paste in the entire text as well". So pasting the whole encoded text at the prompt, in one go and wrapped any way, decodes. Typing line by line still works: each group is checked as soon as its last word arrives (at the Enter that completes it), so a typo is still caught per line.
+- On a bad group when interactive: report it, discard whatever was buffered after it, and ask for that line again (named as now, e.g. "line 2 of 5"). Prompts should not pile up while a paste is being read: prompt only when waiting for more input.
 - Words left over after the last line: an error naming the count, unless they are only whitespace.
 - No change to the encoded format or to encode.
 
-Update the spec (design/specs/words.md), tests (one word per line, all on one line, mid-line breaks, leftover words), Vim help and CHANGELOG. Use fake values only.
+Update the spec (design/specs/words.md), tests (one word per line, all on one line, mid-line breaks, leftover words; interactive: a whole pasted blob, a bad group then a retype), Vim help and CHANGELOG. Use fake values only.
