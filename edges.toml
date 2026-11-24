@@ -171,3 +171,15 @@ from = "mn-8f4y"
 to = "mn-exfd"
 kind = "related"
 created_at = "2026-11-24T13:44:22.581Z"
+
+[[edge]]
+from = "mn-jjc7"
+to = "mn-abjq"
+kind = "related"
+created_at = "2026-11-24T13:47:52.807Z"
+
+[[edge]]
+from = "mn-jjc7"
+to = "mn-8f4y"
+kind = "related"
+created_at = "2026-11-24T13:47:52.861Z"
