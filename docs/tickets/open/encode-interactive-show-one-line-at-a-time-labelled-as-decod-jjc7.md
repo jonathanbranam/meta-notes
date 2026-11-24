@@ -1,6 +1,6 @@
 ---
 id: mn-jjc7
-title: "encode --interactive: show one line at a time, labelled as decode asks for it, Enter for the next"
+title: "encode: --interactive shows one line at a time labelled as decode asks; the secret prompt echoes * per character"
 kind: feature
 created: 2026-11-24
 created_by: external:aide
@@ -34,6 +34,21 @@ From the human, meta-notes aide session, 2026-11-24, verbatim:
 
 Update the spec (design/specs/words.md), tests (labels match decode's prompts; Enter between lines; piped secret with `-i`; no terminal), Vim help (`:help meta-notes-cli-encode`), README if it lists flags, and CHANGELOG. Use fake values only.
 
+## Also: the hidden secret prompt echoes a `*` per character
+
+From the human, same session, verbatim:
+
+> also for the secret input I would like to see *** printed for every character typed or pasted; I do not like it when there is no response
+
+Today encode's hidden prompt is `getpass.getpass` (cli.py, "secret (hidden, no newline added): "), which echoes nothing. Replace it, for every encode that prompts (with or without `-i`), with a prompt that:
+
+- prints one `*` for each character typed or pasted (a paste of 40 characters shows 40 stars);
+- removes one `*` on Backspace and drops that character;
+- ends at Enter, adding no newline to the secret (as now); Ctrl-C aborts with no output, as now;
+- reads and restores the terminal mode safely (raw/cbreak via termios on `/dev/tty`, restored on every exit path, Ctrl-C included).
+
+Tests: the stars and the secret for typed, pasted and backspaced input (with a fake terminal); the terminal mode restored after Ctrl-C. The help text's "hidden prompt" wording should mention the stars.
+
 ## Not now
 
-Going back a line, or clearing the screen between lines: not asked for.
+Going back a line, or clearing the screen between lines: not asked for. Stars for decode's input: decode reads the encoded words, which are not secret, and echoes them as now.
