@@ -29,3 +29,8 @@ bridle_version = "0.8.0"
 id = "0004-ticket-links-in-frontmatter"
 applied_at = "2026-11-22T00:59:20.830566646Z"
 bridle_version = "0.8.0"
+
+[[applied]]
+id = "0009-gitignore-review-documents"
+applied_at = "2026-11-27T15:09:10.524775190Z"
+bridle_version = "0.8.1"
